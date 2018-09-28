@@ -1,0 +1,80 @@
+<div class="container" id="alfred-main">
+	<div class="page-header" id="header">
+		<div class="row">
+			<div class="span3 pagination-centered">
+				<img style="margin-top: 2%; margin-left: 2%;" src="{{ logo_url }}">
+			</div>
+		</div>
+	</div>
+	
+	<div class="row with-margin" id="main-area">
+		{% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.level }}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {% if message.title %}
+                	<strong>{{message.title}}</strong>
+                {% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    	{% endif %}
+
+
+		{% if corrective_hints is defined %}
+		<div class="row alert alert-block" id="correctiveBar">
+			<ul>
+		    {% for hint in corrective_hints %}
+		    	<li>{{ hint }}</li>
+		    {% endfor %}
+		    </ul>
+		</div>
+		{% endif %}
+		
+		{% if title is defined %}
+	    <h3 id="title">{{ title }}</h3>
+	    {% endif %}
+	    
+	    {% if subtitle is defined %}
+	    <h4 id="subtitle">{{ subtitle }}</h4>
+	    {% endif %}
+	    
+		<div class="span12" id="question-container">
+	    	{{ widget }}
+		</div>
+	</div>
+	<div class="row with-margin">
+		<div class="span12" id="statustext">
+			{{statustext}}
+		</div>
+	</div>
+	
+	<div class="row with-margin pagination-centered form-actions" id="controls">
+        {% if backward_text is defined %}
+            <button class = "btn" id="back_button" name="move" value="backward" submit="backward">{{ backward_text }}</button>
+        {% endif %}
+        {% if jumpList is defined %}
+            <select id="jumpList" class="span2">
+                <option value="---">Gehe zu...</option>
+                {% for item in jumpList %}
+                    <option value="{{ item[0] }}">{{ item[1] }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+        {% if forward_text is defined %}
+            <button class = "btn" id="forward_button" name="move" value="forward" submit="forward">{{ forward_text }}</button>
+        {% endif %}
+        {% if finish_text is defined %}
+            <button class = "btn" id="finish_button" name="move" value="forward" submit="forward">{{ finish_text }}</button>
+        {% endif %}
+	</div>
+	
+	<div class="row with-margin" id="footer">
+		<div class"span12">
+			<small>Alfredo Web Experiment</small>
+		</div>
+	</div>
+
+</div>
+
+<div id="appendbox"></div>

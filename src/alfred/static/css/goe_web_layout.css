@@ -1,0 +1,118 @@
+#alfred-main {
+	background-color: #F5F5F5;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	font-family: Arial,Helvetica,sans-serif;
+}
+
+#header {
+	background-color: #163776;
+	margin-bottom: 10px;
+	margin-top: 0px;
+}
+
+#header-text {
+	color: white;
+	margin-left: 2%;
+}
+
+#main-area {
+	min-height: 400px;
+	margin-left: 1%;
+	margin-right: 1%;
+}
+
+#title {
+	margin-top: 0px;
+	margin-bottom: 5px;
+}
+
+#statustext {
+  font-size: 14px;
+  font-weight: 200;
+  margin-left: 0px;
+}
+
+#question-container {
+	width: 920px;
+	margin-left: 0px;
+}
+
+#footer {
+	background-color: #163776;
+	text-align:center;
+	color: white;
+}
+
+#controls {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-bottom: 0px;
+	margin-top: 0px;
+	background-color: #C0C0C0;
+}
+
+#jumpList {
+	margin-bottom: 0px;
+}
+
+.with-margin {
+	margin-left: 0px;
+}
+
+.element {
+	font-family: Arial,Helvetica,sans-serif;
+	margin-bottom: 20px;
+	line-height: normal;
+}	
+
+.text-input {
+	font-family: Arial,Helvetica,sans-serif;
+	line-height: normal;
+}
+
+.element .text-element {
+}
+
+.element .text-entry-element {
+}
+
+.element .horizontal-line {
+border-width: 0;
+background-color: grey;
+height: 1px;
+}
+
+.corrective-hint {
+	color:red;
+}
+
+.containerpagination-centered {
+	margin: 0 auto 0 auto;
+  	float: none;	
+}
+
+.containerpagination-left {
+	margin: 0 auto 0 0;
+  	float: none;	
+}
+
+.containerpagination-right {
+	margin: 0 0 0 auto;
+  	float: none;	
+}
+
+body {
+	position: relative;
+}
+
+/* Deactivates spinner elements in NumberEntryElement because feature is html5 and not supported in current webkit version */
+/* TODO: Delete this entey when new webkit supports spin elements in number input field */
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0; }
+
+/* Deactivates annoying bootstrap table borders in likert element */
+.table th, .table td {
+    border-top: none;
+}
