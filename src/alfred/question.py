@@ -12,9 +12,9 @@ import time
 import os.path
 
 from ._core import QuestionCore, package_path, Direction
-from .element import Element, WebElementInterface, QtElementInterface, TextElement, ExperimenterMessages
 from .exceptions import AlfredError
 from . import element
+from .element import Element, WebElementInterface, QtElementInterface, TextElement, ExperimenterMessages
 from .helpmates.concurrent import AsyncTask
 import alfred.settings as settings
 
@@ -26,7 +26,7 @@ from functools import reduce
 
 
 class Question(QuestionCore):
-    def __init__(self, minimumDisplayTime=0, minimumDisplayTimeMsg=None,**kwargs):
+    def __init__(self, minimumDisplayTime=0, minimumDisplayTimeMsg=None, **kwargs):
         self._minimumDisplayTime = minimumDisplayTime
         if settings.debugmode and settings.debug.disableMinimumDisplayTime:
             self._minimumDisplayTime = 0
@@ -59,7 +59,6 @@ class Question(QuestionCore):
     def showCorrectiveHints(self, b):
         self._showCorrectiveHints = bool(b)
 
-
     @property
     def isClosed(self):
         return self._isClosed
@@ -69,7 +68,6 @@ class Question(QuestionCore):
         data = super(Question, self).data
         data.update(self._data)
         return data
-
 
     def _onShowingWidget(self):
         '''
@@ -94,7 +92,7 @@ class Question(QuestionCore):
 
         self._hasBeenHidden = True
 
-        #TODO: Sollten nicht onHiding closingtime und duration errechnet werden? Passiert momentan onClosing und funktioniert daher nicht in allen question groups!
+        # TODO: Sollten nicht onHiding closingtime und duration errechnet werden? Passiert momentan onClosing und funktioniert daher nicht in allen question groups!
 
     def onHidingWidget(self):
         pass
@@ -106,9 +104,9 @@ class Question(QuestionCore):
         if 'closingTime' not in self._data:
             self._data['closingTime'] = time.time()
         if 'duration' not in self._data \
-             and 'firstShowTime' in self._data \
-             and 'closingTime' in self._data:
-                 self._data['duration'] = self._data['closingTime'] - self._data['firstShowTime']
+                and 'firstShowTime' in self._data \
+                and 'closingTime' in self._data:
+            self._data['duration'] = self._data['closingTime'] - self._data['firstShowTime']
 
         self._isClosed = True
 
@@ -126,12 +124,10 @@ class Question(QuestionCore):
         '''
         return []
 
-
-
     def allowLeaving(self, direction):
         if 'firstShowTime' in self._data and \
-                time.time() - self._data['firstShowTime'] \
-                        < self._minimumDisplayTime:
+            time.time() - self._data['firstShowTime'] \
+                < self._minimumDisplayTime:
             try:
                 msg = self._minimumDisplayTimeMsg if self._minimumDisplayTimeMsg else self._experiment.settings.messages.minimum_display_time
             except:
@@ -158,6 +154,7 @@ class QtQuestionInterface(with_metaclass(ABCMeta, object)):
     @property
     def qtThumbnail(self):
         return None
+
 
 class WebQuestionInterface(with_metaclass(ABCMeta, object)):
     def prepareWebWidget(self):
@@ -187,7 +184,7 @@ class WebQuestionInterface(with_metaclass(ABCMeta, object)):
 
     @property
     def jsCode(self):
-        return  []
+        return []
 
     @property
     def jsURLs(self):
@@ -198,7 +195,7 @@ class WebQuestionInterface(with_metaclass(ABCMeta, object)):
 
 
 class CoreCompositeQuestion(Question):
-    def __init__(self, elements = None, **kwargs):
+    def __init__(self, elements=None, **kwargs):
         super(CoreCompositeQuestion, self).__init__(**kwargs)
 
         self._elementList = []
@@ -214,7 +211,7 @@ class CoreCompositeQuestion(Question):
         if not isinstance(element, Element):
             raise TypeError
 
-        expType = settings.experiment.type # 'web', 'qt' or 'qt-wk'
+        expType = settings.experiment.type  # 'web', 'qt' or 'qt-wk'
 
         if expType == 'web' and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
@@ -283,7 +280,6 @@ class CoreCompositeQuestion(Question):
         # get corrective hints for each element
         list_of_lists = []
 
-
         for element in self._elementList:
             if not element.canDisplayCorrectiveHintsInline and element.correctiveHints:
                 list_of_lists.append(element.correctiveHints)
@@ -294,6 +290,7 @@ class CoreCompositeQuestion(Question):
     def setData(self, dictionary):
         for element in self._elementList:
             element.setData(dictionary)
+
 
 class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
     def prepareWebWidget(self):
@@ -354,7 +351,8 @@ class QtCompositeQuestion(CoreCompositeQuestion, QtQuestionInterface):
     beim widget müssen die elements zusammengesetzt werden (for-Schleife wie früher)
 
     '''
-    def __init__(self, elements = None, **kwargs):
+
+    def __init__(self, elements=None, **kwargs):
         super(QtCompositeQuestion, self).__init__(elements, **kwargs)
         self._questionWidget = None
 
@@ -373,14 +371,14 @@ class QtCompositeQuestion(CoreCompositeQuestion, QtQuestionInterface):
             self._questionWidget = QWidget()
 
             self._contentLayout = QVBoxLayout()
-            self._contentLayout.setContentsMargins(0,0,0,0) #left,top,right,bottom
+            self._contentLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
             self._contentLayout.setSpacing(30)
 
             self._questionWidget.setLayout(self._contentLayout)
 
         widgetSet = True
 
-        #Hier das Layout leeren!
+        # Hier das Layout leeren!
         while widgetSet:
             widget = self._contentLayout.takeAt(0)
             if widget == None:
@@ -410,7 +408,6 @@ class QtCompositeQuestion(CoreCompositeQuestion, QtQuestionInterface):
 
         return self._questionWidget
 
-
     @property
     def qtThumbnail(self):
         if self._thumbnail_element:
@@ -425,12 +422,12 @@ class QtCompositeQuestion(CoreCompositeQuestion, QtQuestionInterface):
 class CompositeQuestion(QtCompositeQuestion, WebCompositeQuestion):
     pass
 
+
 class QuestionPlaceholder(Question, WebQuestionInterface):
     def __init__(self, extData={}, **kwargs):
         super(QuestionPlaceholder, self).__init__(**kwargs)
 
         self._extData = extData
-
 
     @property
     def webWidget(self):
@@ -459,11 +456,9 @@ class QuestionPlaceholder(Question, WebQuestionInterface):
         pass
 
 
-
 class DemographicQuestion(CompositeQuestion):
-    def __init__(self,  instruction=None, age=True, sex=True, courseOfStudies=True, semester=True, **kwargs):
+    def __init__(self, instruction=None, age=True, sex=True, courseOfStudies=True, semester=True, **kwargs):
         super(DemographicQuestion, self).__init__(**kwargs)
-
 
         if instruction:
             self.addElement(element.TextElement(instruction))
@@ -475,10 +470,10 @@ class DemographicQuestion(CompositeQuestion):
             self.addElement(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
         if courseOfStudies:
-            self.addElement(element.TextEntryElement(instruction=u"Dein Studiengang: ", name = 'courseOfStudies'))
+            self.addElement(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='courseOfStudies'))
 
         if semester:
-            self.addElement(element.TextEntryElement(instruction=u"Dein Fachsemester ", name = 'semester'))
+            self.addElement(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
 class AutoHideQuestion(CompositeQuestion):
@@ -500,7 +495,7 @@ class AutoHideQuestion(CompositeQuestion):
 
 class QtCountdownQuestion(QtCompositeQuestion):
     class Countdown(AsyncTask):
-        def doInBackground(self,params):
+        def doInBackground(self, params):
             delay, parent = params
             time.sleep(delay)
             return parent
@@ -520,7 +515,7 @@ class QtCountdownQuestion(QtCompositeQuestion):
     def onShowingWidget(self):
         super(QtCountdownQuestion, self).onShowingWidget()
         self._counter = self.Countdown()
-        self._counter.execute((self._t,self))
+        self._counter.execute((self._t, self))
 
     def onHidingWidget(self):
         super(QtCountdownQuestion, self).onHidingWidget()
@@ -532,7 +527,7 @@ class QtCountdownQuestion(QtCompositeQuestion):
 
 
 class QtKeyInputQuestion(with_metaclass(ABCMeta, QtCompositeQuestion)):
-    def __init__(self,keySequence = 'a', **kwargs):
+    def __init__(self, keySequence='a', **kwargs):
         super(QtKeyInputQuestion, self).__init__(**kwargs)
         self._keySequence = keySequence
 
@@ -558,13 +553,13 @@ class QtKeyInputQuestion(with_metaclass(ABCMeta, QtCompositeQuestion)):
 class ExperimentFinishQuestion(CompositeQuestion):
     def onShowingWidget(self):
         if 'firstShowTime' not in self._data:
-            exp_title = TextElement('Informationen zur Session:', font = 'big')
+            exp_title = TextElement('Informationen zur Session:', font='big')
 
-            exp_infos = '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>'+self._experiment.name+'</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Experimenttyp:</td><td>'+self._experiment.type+'</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Experimentversion:</td><td>'+self._experiment.version+'</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>'+self._experiment.uuid+'</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Log-ID:</td><td>'+self._experiment.uuid[:6]+'</td></tr>'
+            exp_infos = '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>' + self._experiment.name + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Experimenttyp:</td><td>' + self._experiment.type + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Experimentversion:</td><td>' + self._experiment.version + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>' + self._experiment.uuid + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Log-ID:</td><td>' + self._experiment.uuid[:6] + '</td></tr>'
             exp_infos = exp_infos + '</table>'
 
             exp_info_element = TextElement(exp_infos)
@@ -597,8 +592,8 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
     def data(self):
         if self._hide_data:
             # this is needed for some other functions to work properly
-            data = {'tag' : self.tag,
-                    'uid' : self.uid}
+            data = {'tag': self.tag,
+                    'uid': self.uid}
             return data
         else:
             return super(MongoSaveCompositeQuestion, self).data
@@ -622,7 +617,6 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
             if self._error != 'ignore':
                 raise e
         return rv
-
 
 
 ####################
@@ -696,9 +690,11 @@ class WebTimeoutForwardMixin(WebTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
         self._experiment.userInterfaceController.moveForward()
 
+
 class WebTimeoutCloseMixin(WebTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
         self.closeQuestion()
+
 
 class HideButtonsMixin(object):
     def _onShowingWidget(self):
@@ -717,9 +713,10 @@ class HideButtonsMixin(object):
 
         super(HideButtonsMixin, self)._onHidingWidget()
 
+
 class QtTimeoutMixin(object):
     class Countdown(AsyncTask):
-        def doInBackground(self,params):
+        def doInBackground(self, params):
             timeout, parent = params
             time.sleep(timeout)
             return parent
@@ -740,7 +737,7 @@ class QtTimeoutMixin(object):
 
         if self._run_timeout:
             self._counter = self.Countdown()
-            self._counter.execute((self._timeout,self))
+            self._counter.execute((self._timeout, self))
 
     def _onHidingWidget(self):
         self._counter.cancel()
@@ -754,17 +751,18 @@ class QtTimeoutMixin(object):
     def on_timeout(self, *args, **kwargs):
         pass
 
+
 class QtTimeoutForwardMixin(QtTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
         self._experiment.userInterfaceController.updateQtData()
         self._experiment.userInterfaceController.moveForward()
+
 
 class QtTimeoutCloseMixin(QtTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
         self._experiment.userInterfaceController.updateQtData()
         self.closeQuestion()
         self._experiment.userInterfaceController.render()
-
 
 
 ####################
@@ -774,11 +772,14 @@ class QtTimeoutCloseMixin(QtTimeoutMixin):
 class WebTimeoutForwardQuestion(WebTimeoutForwardMixin, WebCompositeQuestion):
     pass
 
+
 class WebTimeoutCloseQuestion(WebTimeoutCloseMixin, WebCompositeQuestion):
     pass
 
+
 class QtTimeoutForwardQuestion(QtTimeoutForwardMixin, QtCompositeQuestion):
     pass
+
 
 class QtTimeoutCloseQuestion(QtTimeoutCloseMixin, QtCompositeQuestion):
     pass
