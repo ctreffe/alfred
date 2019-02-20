@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Modul enthält alle allgemeinen Einstellungen (für die gesamte 
+Modul enthält alle allgemeinen Einstellungen (für die gesamte
 alfred Instanz, also nicht experimentspezifisch) sowie die Möglichkeit
-experimentspezifische Einstellungen vorzunehmen, die dann unter 
+experimentspezifische Einstellungen vorzunehmen, die dann unter
 Experiment.settings abgefragt werden können.
 """
 
@@ -60,7 +60,7 @@ else:
                      ]
 config_files += [os.path.join(os.getcwd(), 'config.conf')]
 
-config_files = [x for x in config_files if x != None]
+config_files = [x for x in config_files if x is not None]
 
 # create config parser
 _config_parser = configparser.ConfigParser()
@@ -142,7 +142,7 @@ class ExperimentSpecificSettings(object):
             os.path.join(package_path, 'files/default.conf'),
             os.environ.get('ALFRED_CONFIG_FILE'),
             os.path.join(os.getcwd(), 'config.conf'),
-        ] if x != None]
+        ] if x is not None]
 
         for configFile in config_files:
             if os.path.exists(configFile):
