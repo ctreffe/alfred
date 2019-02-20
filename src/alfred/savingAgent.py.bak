@@ -6,9 +6,6 @@
 """
 from __future__ import absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 from uuid import uuid4
 from abc import ABCMeta, abstractmethod
 
@@ -16,7 +13,7 @@ from abc import ABCMeta, abstractmethod
 import json
 import time
 import os
-import queue
+import Queue
 import threading
 
 import pymongo
@@ -25,7 +22,6 @@ import alfred.settings
 from .exceptions import SavingAgentRunException, SavingAgentException
 
 from . import alfredlog
-from future.utils import with_metaclass
 _logger = alfredlog.getLogger(__name__)
 
 def _save_worker():
@@ -33,7 +29,7 @@ def _save_worker():
         while True:
             try:
                 (i, event, data, data_time, level, sac) = _queue.get_nowait()
-            except queue.Empty:
+            except Queue.Empty:
                 break
             sac._do_saving(data, data_time, level)
             event.set()
@@ -57,7 +53,7 @@ def wait_for_saving_thread():
 
 
 # Setup an aplication wide saving thread
-_queue = queue.PriorityQueue()
+_queue = Queue.PriorityQueue()
 _quit_event = threading.Event()
 
 
@@ -323,7 +319,8 @@ class SavingAgentController(object):
             _logger.info("Data snapshot taken at %s will not be saved because a newer one (%s) was already saved." % (data_time, self._latest_data_time), self._experiment)
         self._lock.release()
 
-class SavingAgent(with_metaclass(ABCMeta, object)):
+class SavingAgent(object):
+    __metaclass__ = ABCMeta
     def __init__(self, activation_level=10, experiment=None):
         self.activation_level = activation_level
         
