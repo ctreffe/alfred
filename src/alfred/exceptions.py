@@ -6,7 +6,6 @@ Das Modul definiert alle Exceptions des Frameworks
 from __future__ import absolute_import
 
 import sys
-import logging
 from . import alfredlog
 import traceback
 
