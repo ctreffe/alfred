@@ -14,13 +14,10 @@ import os.path
 from ._core import QuestionCore, package_path, Direction
 from .exceptions import AlfredError
 from . import element
-from .element import Element, WebElementInterface, QtElementInterface, TextElement, ExperimenterMessages
+from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
 from .helpmates.concurrent import AsyncTask
 import alfred.settings as settings
 
-from PySide.QtGui import QWidget, QVBoxLayout, QShortcut, QSizePolicy, QScrollArea, QLayout
-from PySide.QtUiTools import QUiLoader
-from PySide.QtCore import QFile, Slot, Qt
 from future.utils import with_metaclass
 from functools import reduce
 
@@ -39,11 +36,8 @@ class Question(QuestionCore):
         super(Question, self).__init__(**kwargs)
 
     def addedToExperiment(self, experiment):
-        if experiment.type == 'web' and not isinstance(self, WebQuestionInterface):
+        if experiment.type not isinstance(self, WebQuestionInterface):
             raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebQuestionInterface.__name__))
-
-        if experiment.type == 'qt' and not isinstance(self, QtQuestionInterface):
-            raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, QtQuestionInterface.__name__))
 
         super(Question, self).addedToExperiment(experiment)
 
@@ -137,25 +131,6 @@ class Question(QuestionCore):
         return True
 
 
-class QtQuestionInterface(with_metaclass(ABCMeta, object)):
-    def prepareQtWidget(self):
-        '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
-        Nutzereingaben zwischen aufruf dieser funktion und dem anzeigen der
-        Frage kmmen koennen. Hier sollte die Frage, von
-        noch nicht gemachten user Eingaben unabhaengige und rechenintensive
-        verbereitungen fuer das anzeigen des widgets aufrufen. z.B. generieren
-        von grafiken'''
-        pass
-
-    @abstractproperty
-    def qtWidget(self):
-        pass
-
-    @property
-    def qtThumbnail(self):
-        return None
-
-
 class WebQuestionInterface(with_metaclass(ABCMeta, object)):
     def prepareWebWidget(self):
         '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
@@ -211,21 +186,13 @@ class CoreCompositeQuestion(Question):
         if not isinstance(element, Element):
             raise TypeError
 
-        expType = settings.experiment.type  # 'web', 'qt' or 'qt-wk'
+        expType = settings.experiment.type  # 'web' or 'qt-wk'
 
         if expType == 'web' and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
-        if expType == 'qt' and not isinstance(element, QtElementInterface):
-            raise TypeError("%s is not an instance of QtElementInterface" % type(element).__name__)
-
-        if isinstance(self, WebQuestionInterface) and not isinstance(self, QtQuestionInterface):
-            if not isinstance(element, WebElementInterface):
-                raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
-
-        if isinstance(self, QtQuestionInterface) and not isinstance(self, WebQuestionInterface):
-            if not isinstance(element, QtElementInterface):
-                raise TypeError("%s is not an instance of QtElementInterface" % type(element).__name__)
+        if isinstance(self, WebQuestionInterface) and not isinstance(element, WebElementInterface):
+            raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
         if element.name is None:
             element.name = ("%02d" % self._elementNameCounter) + '_' + element.__class__.__name__
@@ -312,8 +279,6 @@ class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
         '''
         gibt das thumbnail von self._thumbnail_element oder falls self._thumbnail_element nicht gesetzt, das erste thumbnail eines elements aus self._elementList zurueck.
 
-        gleiches gilt für qtThumbnail
-
         .. todo:: was ist im fall, wenn thumbnail element nicht gestzt ist? anders verhalten als jetzt???
 
         '''
@@ -345,81 +310,7 @@ class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
         return reduce(lambda l, element: l + element.jsURLs, self._elementList, [])
 
 
-class QtCompositeQuestion(CoreCompositeQuestion, QtQuestionInterface):
-    '''
-    hier muss das QuestionInterface (abstrakt) implementiert werden, mit prepare widget können rechenintensive aufgaben erledigt werden, z.b. daten laden...
-    beim widget müssen die elements zusammengesetzt werden (for-Schleife wie früher)
-
-    '''
-
-    def __init__(self, elements=None, **kwargs):
-        super(QtCompositeQuestion, self).__init__(elements, **kwargs)
-        self._questionWidget = None
-
-    def prepareQtWidget(self):
-
-        for element in self._elementList:
-            element.maximumWidgetWidth = self._experiment.userInterfaceController.layout.maximumWidgetWidth
-            element.prepareQtWidget()
-
-    @property
-    def qtWidget(self):
-        '''
-        '''
-        if self._questionWidget == None:
-
-            self._questionWidget = QWidget()
-
-            self._contentLayout = QVBoxLayout()
-            self._contentLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            self._contentLayout.setSpacing(30)
-
-            self._questionWidget.setLayout(self._contentLayout)
-
-        widgetSet = True
-
-        # Hier das Layout leeren!
-        while widgetSet:
-            widget = self._contentLayout.takeAt(0)
-            if widget == None:
-                widgetSet = False
-            elif isinstance(widget, QWidget):
-                widget.widget().setParent(None)
-                widget.hide()
-
-        for element in self._elementList:
-            if element.shouldBeShown:
-                elementWidget = element.qtWidget
-
-                elementLayout = QVBoxLayout()
-                elementLayout.addWidget(elementWidget)
-
-                elementLayout.setAlignment(Qt.AlignLeft)
-
-                if element.alignment == 'center':
-                    elementLayout.setAlignment(Qt.AlignHCenter)
-
-                if element.alignment == 'right':
-                    elementLayout.setAlignment(Qt.AlignRight)
-
-                self._contentLayout.addLayout(elementLayout)
-
-        self._contentLayout.addStretch()
-
-        return self._questionWidget
-
-    @property
-    def qtThumbnail(self):
-        if self._thumbnail_element:
-            return self._thumbnail_element.qtThumbnail
-        else:
-            for element in self._elementList:
-                if element.qtThumbnail and element.shouldBeShown:
-                    return element.qtThumbnail
-            return None
-
-
-class CompositeQuestion(QtCompositeQuestion, WebCompositeQuestion):
+class CompositeQuestion(WebCompositeQuestion):
     pass
 
 
@@ -491,63 +382,6 @@ class AutoHideQuestion(CompositeQuestion):
         super(AutoHideQuestion, self).closeQuestion()
         if self._onClosing:
             self.shouldBeShown = False
-
-
-class QtCountdownQuestion(QtCompositeQuestion):
-    class Countdown(AsyncTask):
-        def doInBackground(self, params):
-            delay, parent = params
-            time.sleep(delay)
-            return parent
-
-        def onPostExecute(self, parent):
-            parent.endOfCountDown()
-
-    def __init__(self, t=5, **kwargs):
-        super(QtCountdownQuestion, self).__init__(**kwargs)
-
-        self._started = False
-        self._t = t
-
-        if settings.debugmode and settings.debug.reduceCountdown:
-            self._t = int(settings.debug.reducedCountdownTime)
-
-    def onShowingWidget(self):
-        super(QtCountdownQuestion, self).onShowingWidget()
-        self._counter = self.Countdown()
-        self._counter.execute((self._t, self))
-
-    def onHidingWidget(self):
-        super(QtCountdownQuestion, self).onHidingWidget()
-        self._counter.cancel()
-
-    def endOfCountDown(self):
-        if not self._counter.isCancelled():
-            self._experiment.userInterfaceController.moveForward()
-
-
-class QtKeyInputQuestion(with_metaclass(ABCMeta, QtCompositeQuestion)):
-    def __init__(self, keySequence='a', **kwargs):
-        super(QtKeyInputQuestion, self).__init__(**kwargs)
-        self._keySequence = keySequence
-
-    @property
-    def qtWidget(self):
-        '''
-        '''
-        self._questionWidget = super(QtKeyInputQuestion, self).qtWidget
-
-        self._shortCut = QShortcut(self._keySequence, self._questionWidget)
-        self._shortCut.activated.connect(self.shortCutActivated)
-
-        self._questionWidget.grabKeyboard()
-
-        return self._questionWidget
-
-    @abstractmethod
-    @Slot()
-    def shortCutActivated(self):
-        pass
 
 
 class ExperimentFinishQuestion(CompositeQuestion):
@@ -714,57 +548,6 @@ class HideButtonsMixin(object):
         super(HideButtonsMixin, self)._onHidingWidget()
 
 
-class QtTimeoutMixin(object):
-    class Countdown(AsyncTask):
-        def doInBackground(self, params):
-            timeout, parent = params
-            time.sleep(timeout)
-            return parent
-
-        def onPostExecute(self, parent):
-            parent.callback()
-
-    def __init__(self, timeout, **kwargs):
-        super(QtTimeoutMixin, self).__init__(**kwargs)
-
-        self._run_timeout = True
-        self._timeout = timeout
-        if settings.debugmode and settings.debug.reduceCountdown:
-            self._timeout = int(settings.debug.reducedCountdownTime)
-
-    def _onShowingWidget(self):
-        super(QtTimeoutMixin, self)._onShowingWidget()
-
-        if self._run_timeout:
-            self._counter = self.Countdown()
-            self._counter.execute((self._timeout, self))
-
-    def _onHidingWidget(self):
-        self._counter.cancel()
-        self._run_timeout = False
-        super(QtTimeoutMixin, self)._onHidingWidget()
-
-    def callback(self, *args, **kwargs):
-        self._run_timeout = False
-        return self.on_timeout(*args, **kwargs)
-
-    def on_timeout(self, *args, **kwargs):
-        pass
-
-
-class QtTimeoutForwardMixin(QtTimeoutMixin):
-    def on_timeout(self, *args, **kwargs):
-        self._experiment.userInterfaceController.updateQtData()
-        self._experiment.userInterfaceController.moveForward()
-
-
-class QtTimeoutCloseMixin(QtTimeoutMixin):
-    def on_timeout(self, *args, **kwargs):
-        self._experiment.userInterfaceController.updateQtData()
-        self.closeQuestion()
-        self._experiment.userInterfaceController.render()
-
-
 ####################
 # Questions with Mixins
 ####################
@@ -774,12 +557,4 @@ class WebTimeoutForwardQuestion(WebTimeoutForwardMixin, WebCompositeQuestion):
 
 
 class WebTimeoutCloseQuestion(WebTimeoutCloseMixin, WebCompositeQuestion):
-    pass
-
-
-class QtTimeoutForwardQuestion(QtTimeoutForwardMixin, QtCompositeQuestion):
-    pass
-
-
-class QtTimeoutCloseQuestion(QtTimeoutCloseMixin, QtCompositeQuestion):
     pass
