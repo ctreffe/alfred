@@ -15,7 +15,6 @@ from ._core import QuestionCore, package_path, Direction
 from .exceptions import AlfredError
 from . import element
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
-from .helpmates.concurrent import AsyncTask
 import alfred.settings as settings
 
 from future.utils import with_metaclass
