@@ -3,17 +3,13 @@
 '''
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 '''
-from __future__ import absolute_import
 
-from builtins import str
-from builtins import range
-from . import alfredlog
-from functools import reduce
+import alfredlog
 logger = alfredlog.getLogger(__name__)
 
-from ._core import QuestionCore, Direction
-from .question import Question, HeadOpenQGCantClose
-from .exceptions import MoveError#
+from _core import QuestionCore, Direction
+from question import Question, HeadOpenQGCantClose
+from exceptions import MoveError#
 from random import shuffle
 
 class QuestionGroup(QuestionCore):
