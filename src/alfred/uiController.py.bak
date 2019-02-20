@@ -5,18 +5,13 @@
 
 Das Modul *uiController* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
 '''
-from __future__ import absolute_import
 
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 from os.path import abspath
 import os
 from abc import ABCMeta, abstractmethod, abstractproperty
 from uuid import uuid4
-from io import StringIO
+from cStringIO import StringIO
 import threading
 
 from PySide.QtGui import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
@@ -24,20 +19,19 @@ from PySide.QtCore import Qt
 import PySide.QtCore as QtCore
 from PySide.QtWebKit import QWebView
 
-from ._core import Direction
-from .question import WebQuestionInterface
-from .layout import BaseWebLayout, BaseQtLayout, GoeWebLayout
+from _core import Direction
+from question import WebQuestionInterface
+from layout import BaseWebLayout, BaseQtLayout, GoeWebLayout
 
 import alfred.settings
-from .helpmates import localserver as localserver
-from future.utils import with_metaclass
+import helpmates.localserver as localserver
 
-
-class UserInterfaceController(with_metaclass(ABCMeta, object)):
+class UserInterfaceController(object):
     '''
     Abstrakte Basisklasse, die die Grundfunktionalität für alle UserIntferaces bereitstellt
 
     '''
+    __metaclass__ = ABCMeta
 
     def __init__(self, experiment, layout=None):
         '''
@@ -57,6 +51,7 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
             self.changeLayout(BaseQtLayout() if experiment.type == 'qt' else BaseWebLayout())
         else:
             self.changeLayout(layout)
+
 
     @abstractmethod
     def render(self):
@@ -103,7 +98,6 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         self._experiment.questionController.enter()
         self._experiment.questionController.currentQuestion._onShowingWidget()
 
-
 class WebUserInterfaceController(UserInterfaceController):
     def __init__(self, experiment, layout=None):
 
@@ -120,6 +114,7 @@ class WebUserInterfaceController(UserInterfaceController):
 
     def render(self):
         self._experiment.questionController.currentQuestion.prepareWebWidget()
+
 
         jsScripts = []
         jsURLs = []
@@ -166,7 +161,6 @@ class WebUserInterfaceController(UserInterfaceController):
         html = html + "</form></body></html>"
 
         return html
-
     def renderHtml(self):
         return self.render()
 
@@ -241,6 +235,7 @@ except NameError:
     logger.warning("Can't create ThreadHelper. (Needed for Qt)")
 
 
+
 class QtWebKitUserInterfaceController(WebUserInterfaceController):
     def __init__(self, experiment, weblayout=None, qtlayout=None, fullScreen=True, **kwargs):
         self._helper = ThreadHelper(self)
@@ -257,7 +252,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         widget.setLayout(layout)
         self._webView = QWebView()
         self._qtMainScrollArea = QScrollArea()
-        self._qtMainScrollArea.setWidgetResizable(True)  # Must be set to True in order for layout to work properly
+        self._qtMainScrollArea.setWidgetResizable(True) #Must be set to True in order for layout to work properly
         self._qtMainScrollArea.setStyleSheet("QScrollArea {background: white; border: none}")
 
         layout.addWidget(self._webView)
@@ -289,10 +284,10 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
     def renderSlot(self):
         if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            self._qtMainScrollArea.hide()
-            self._webView.show()
-            # TODO: Check if this fix is ok!
-            # self._webView.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
+                self._qtMainScrollArea.hide()
+                self._webView.show()
+                #TODO: Check if this fix is ok!
+                #self._webView.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
         else:
             self._webView.hide()
             self._qtMainScrollArea.show()
@@ -362,6 +357,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         self._qtlayout.layoutWidget.show()
 
 
+
 class QtUserInterfaceController(UserInterfaceController):
     def __init__(self, experiment, layout=None, fullScreen=True, **kwargs):
         self._fullScreen = fullScreen
@@ -371,8 +367,9 @@ class QtUserInterfaceController(UserInterfaceController):
         self._qtWindow.setMinimumHeight(720)
         self._qtWindow.setMinimumWidth(1024)
 
+
         self._qtMainScrollArea = QScrollArea()
-        self._qtMainScrollArea.setWidgetResizable(True)  # Must be set to True in order for layout to work properly
+        self._qtMainScrollArea.setWidgetResizable(True) #Must be set to True in order for layout to work properly
         self._qtMainScrollArea.setStyleSheet("QScrollArea {background: white; border: none}")
 
         self._qtWindow.setCentralWidget(self._qtMainScrollArea)
@@ -412,6 +409,7 @@ class QtUserInterfaceController(UserInterfaceController):
         self._experiment.questionController.currentQuestion.prepareQtWidget()
         self._qtMainScrollArea.verticalScrollBar().setSliderPosition(0)
         self._layout.render()
+
 
     def moveForward(self):
         self.updateQtData()
