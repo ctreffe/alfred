@@ -3,14 +3,13 @@
 '''
 Das Modul definiert alle Exceptions des Frameworks
 '''
-from __future__ import absolute_import
 
 import sys
 import logging
-from . import alfredlog
+import alfredlog
 import traceback
 
-from . import settings
+import settings
 
 
 logger = alfredlog.getLogger(__name__)
