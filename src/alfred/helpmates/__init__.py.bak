@@ -5,16 +5,13 @@
 
 A package for convenience functions
 '''
-from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
 from os.path import abspath, isabs, join
 import xmltodict
 import string
 import csv
 import couchdb
-from urllib.parse import urlparse
+from urlparse import urlparse
 from alfred.exceptions import AlfredError
 import alfred.settings as settings
 
@@ -41,7 +38,7 @@ def parseXmlToDict(path,interface ='web'):
             path = join(settings.general.external_files_dir, path)
 
     def rec(input, replacement='<br>'):
-        if isinstance(input, str):
+        if isinstance(input, unicode):
             if input[0] == '\n':
                 input = input[1:]
             if input[-1] == '\n':
@@ -63,7 +60,7 @@ def parseXmlToDict(path,interface ='web'):
         rec(dataOut, '\n')
     else:
         raise ValueError('interface must be either "qt" or "web".')
-    for k in list(dataOut['instr'].keys()):
+    for k in dataOut['instr'].keys():
         if k == 'instr':
             raise RuntimeError("Do not use 'instr' as tag")
         dataOut[k] = dataOut['instr'][k]
@@ -114,7 +111,7 @@ def getCouchDBData(url = 'http://fpsych:14mgEisen@couchdb.e-scientifics.de', db_
     server = couchdb.Server(url)
     db = server[db_name]
     
-    print('fetching docs (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name), end=' ')
+    print 'fetching docs (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name),
     docs = []
     
     if expCondition == None:
@@ -125,7 +122,7 @@ def getCouchDBData(url = 'http://fpsych:14mgEisen@couchdb.e-scientifics.de', db_
         for row in db.view('default/exp_name_version_condition', key=[expName,expVersion,expCondition]):
                     docs.append(db[row.id])
                     
-    print('done. %i documents fetched.' % len(docs))
+    print 'done. %i documents fetched.' % len(docs)
         
     return docs
 
@@ -135,16 +132,16 @@ def writeCouchDBData(dataset, url = 'http://fpsych:14mgEisen@couchdb.e-scientifi
     server = couchdb.Server(url)
     db = server[db_name]
     
-    print('writing doc (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name), end=' ')
+    print 'writing doc (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name),
     db[dataset.id] = dataset
-    print('done.')
+    print 'done.'
 
 
 def findExternalExperimentDataByUid(data, uid):
     def worker(data, uid):
         if data['uid'] == uid:
             return data
-        elif 'subtreeData' in data:
+        elif data.has_key('subtreeData'):
             for item in data['subtreeData']:
                 try:
                     d = worker(item, uid)
