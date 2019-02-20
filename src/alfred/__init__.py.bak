@@ -8,7 +8,6 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 """
 from __future__ import absolute_import
 
-from builtins import object
 __version__ = '0.2b5'
 
 
