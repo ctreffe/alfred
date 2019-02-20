@@ -4,6 +4,7 @@ import logging
 import sys
 import os
 
+
 def init_logging(name='alfred'):
     from . import settings
     logger = logging.getLogger(name)
@@ -34,37 +35,39 @@ def init_logging(name='alfred'):
         handler = logging.FileHandler(path)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-    
+
     # set log level
-    if  settings.log.level == 'debug':
+    if settings.log.level == 'debug':
         logger.setLevel(logging.DEBUG)
-    elif  settings.log.level == 'info':
+    elif settings.log.level == 'info':
         logger.setLevel(logging.INFO)
-    elif  settings.log.level == 'warning':
+    elif settings.log.level == 'warning':
         logger.setLevel(logging.WARNING)
-    elif  settings.log.level == 'error':
+    elif settings.log.level == 'error':
         logger.setLevel(logging.ERROR)
-    elif  settings.log.level == 'critical':
+    elif settings.log.level == 'critical':
         logger.setLevel(logging.CRITICAL)
     else:
         raise ValueError("log level must be debug, info, warning, error or critical")
-    
+
     if settings.experiment.type == 'web':
         alfred_init('web')
     elif settings.experiment.type == 'qt':
         alfred_init('qt')
 
+
 def getLogger(module_name=None):
     return NewLogger(module_name)
 
+
 def alfred_init(expType):
     logger = getLogger(__name__)
-    
+
     if expType == 'web':
         logger.info("Alfred framework web startup! Logging system initialized.")
     elif expType == 'qt':
         logger.info("##################################### Starting new alfred qt experiment session #####################################")
-    
+
 
 class NewLogger(object):
     def __init__(self, module_name=None):
@@ -86,7 +89,6 @@ class NewLogger(object):
                 pass
         return self.logger.info(msg, *args, **kwargs)
 
-
     def warning(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
@@ -94,7 +96,6 @@ class NewLogger(object):
             except:
                 pass
         return self.logger.warning(msg, *args, **kwargs)
-
 
     def error(self, msg, experiment=None, *args, **kwargs):
         if experiment:
@@ -104,7 +105,6 @@ class NewLogger(object):
                 pass
         return self.logger.error(msg, *args, **kwargs)
 
-
     def critical(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
@@ -113,7 +113,6 @@ class NewLogger(object):
                 pass
         return self.logger.critical(msg, *args, **kwargs)
 
-
     def log(self, lvl, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
@@ -121,7 +120,6 @@ class NewLogger(object):
             except:
                 pass
         return self.logger.log(lvl, msg, *args, **kwargs)
-
 
     def exception(self, msg, experiment=None, *args):
         if experiment:
