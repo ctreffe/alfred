@@ -6,7 +6,6 @@ Das Modul definiert alle Exceptions des Frameworks
 from __future__ import absolute_import
 
 import sys
-import logging
 from . import alfredlog
 import traceback
 
@@ -17,9 +16,9 @@ logger = alfredlog.getLogger(__name__)
 
 if settings.experiment.type == 'qt':
     def excepthook(type, value, tb):
-        s = 'Unhandled exception: %s (%s)\n'%(type, value)
+        s = 'Unhandled exception: %s (%s)\n' % (type, value)
         s = s + 'Traceback:\n' + ''.join(traceback.format_tb(tb))
-        #logging.critical(s)
+        # logging.critical(s)
         logger.critical(s)
 
     sys.excepthook = excepthook
@@ -31,11 +30,14 @@ class AlfredError(Exception):
     '''
     pass
 
+
 class MoveError(AlfredError):
     pass
 
+
 class SavingAgentRunException(AlfredError):
     pass
+
 
 class SavingAgentException(AlfredError):
     pass
