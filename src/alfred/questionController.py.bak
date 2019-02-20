@@ -5,13 +5,11 @@
 
 In *questionController* wird die Basisklasse *QuestionController* bereit gestellt.
 '''
-from __future__ import absolute_import
-from builtins import object
 from alfred._core import Direction
 
-from .questionGroup import QuestionGroup
-from .question import CompositeQuestion, WebCompositeQuestion
-from .element import TextElement, WebExitEnabler
+from questionGroup import QuestionGroup
+from question import CompositeQuestion, WebCompositeQuestion
+from element import TextElement, WebExitEnabler
 
 class QuestionController(object):
     '''
