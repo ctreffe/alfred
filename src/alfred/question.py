@@ -36,7 +36,7 @@ class Question(QuestionCore):
         super(Question, self).__init__(**kwargs)
 
     def addedToExperiment(self, experiment):
-        if experiment.type not isinstance(self, WebQuestionInterface):
+        if not isinstance(self, WebQuestionInterface):
             raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebQuestionInterface.__name__))
 
         super(Question, self).addedToExperiment(experiment)
