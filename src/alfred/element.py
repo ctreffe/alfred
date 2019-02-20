@@ -47,9 +47,6 @@ from io import StringIO
 import os
 import jinja2
 
-from PySide.QtGui import QLabel, QHBoxLayout, QFont, QImage, QTextDocument, QWidget, QLineEdit, QSizePolicy, QPixmap, QLayout, QGridLayout, QProgressBar, QTextEdit, QVBoxLayout, QDoubleValidator, QButtonGroup, QRadioButton, QCheckBox, QFrame
-from PySide.QtCore import Qt
-
 from .exceptions import AlfredError
 from ._helper import fontsizeConverter, alignmentConverter
 import alfred.settings as settings
@@ -70,8 +67,8 @@ class Element(object):
     '''
 
     def __init__(self, name=None, shouldBeShownFilterFunction=None, **kwargs):
-        if not (isinstance(self, WebElementInterface) or isinstance(self, QtElementInterface)):
-            raise AlfredError("Element must implement WebElementInterface or QtElementInterface.")
+        if not isinstance(self, WebElementInterface):
+            raise AlfredError("Element must implement WebElementInterface.")
 
         if name is not None:
             if not re.match('^%s$' % '[-_A-Za-z0-9]*', name):
@@ -239,25 +236,7 @@ class WebElementInterface(with_metaclass(ABCMeta, object)):
         return []
 
 
-class QtElementInterface(with_metaclass(ABCMeta, object)):
-    '''
-    Abstract class **QtElementInterface** contains properties and methods allowing elements to be used  and displayed
-    in experiments of type 'qt'.
-    '''
-
-    @abstractproperty
-    def qtWidget(self):
-        pass
-
-    def prepareQtWidget(self):
-        pass
-
-    @property
-    def qtThumbnail(self):
-        return None
-
-
-class HorizontalLine(Element, WebElementInterface, QtElementInterface):
+class HorizontalLine(Element, WebElementInterface):
     def __init__(self, strength=1, color='black', **kwargs):
         '''
         **HorizontalLine** allows display of a simple divider in questions.
@@ -269,7 +248,6 @@ class HorizontalLine(Element, WebElementInterface, QtElementInterface):
 
         self._strength = strength
         self._color = color
-        self._elementQtWidget = None
 
     @property
     def webWidget(self):
@@ -278,24 +256,8 @@ class HorizontalLine(Element, WebElementInterface, QtElementInterface):
 
         return widget
 
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            '''
-            The following QWidget adjusts to maximumWidgetWidth. 
-            '''
-            self._elementQtWidget = QWidget()
-            line_palette = self._elementQtWidget.palette()
-            line_palette.setColor(self._elementQtWidget.backgroundRole(), self._color)
-            self._elementQtWidget.setPalette(line_palette)
-            self._elementQtWidget.setAutoFillBackground(True)
-            self._elementQtWidget.setMinimumSize(self._maximumWidgetWidth, self._strength)  # Set element width depending on layout width
-            self._elementQtWidget.setMaximumSize(self._maximumWidgetWidth, self._strength)
 
-        return self._elementQtWidget
-
-
-class ProgressBar(Element, WebElementInterface, QtElementInterface):
+class ProgressBar(Element, WebElementInterface):
     def __init__(self, instruction='', barRange=(0, 100), barValue=50, barWidth=None, instructionWidth=None, instructionHeight=None, **kwargs):
         '''
         **ProgressBar** allows display of a manually controlled progress bar.
@@ -313,7 +275,6 @@ class ProgressBar(Element, WebElementInterface, QtElementInterface):
         else:
             self._barWidth = None
 
-        self._elementQtWidget = None
         self._progressBar = None
 
     @property
@@ -344,91 +305,11 @@ class ProgressBar(Element, WebElementInterface, QtElementInterface):
 
         return widget
 
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            # Setting font size
-            fontSize = fontsizeConverter(self._fontSize)
 
-            # Creating progress bar
-            self._progressBar = QProgressBar()
-            self._progressBar.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-
-            self._progressBar.setRange(self._barRange[0], self._barRange[1])
-            self._progressBar.setValue(self._barValue)
-            self._progressBar.adjustSize()
-
-            if self._barWidth:
-                self._progressBar.setFixedWidth(self._barWidth)
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth - (self._progressBar.width() + 10):
-                tempWidth = self._maximumWidgetWidth - (self._progressBar.width() + 10)
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 2  # +2 for margins.
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight | Qt.AlignBottom)
-
-            # Erstellung des eigentlichen ElementWidget
-            progressBarLayout = QHBoxLayout()
-            progressBarLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            progressBarLayout.setSpacing(5)
-            progressBarLayout.addWidget(self._instructionText)
-            progressBarLayout.addWidget(self._progressBar)
-            progressBarLayout.setAlignment(self._progressBar, Qt.AlignBottom)
-
-            # Einstellen der inneren Elementausrichtung
-            if self._alignment == 'center':
-                progressBarLayout.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                progressBarLayout.setAlignment(Qt.AlignRight)
-            else:
-                progressBarLayout.setAlignment(Qt.AlignLeft)
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.addLayout(progressBarLayout)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget = QWidget()
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-        return self._elementQtWidget
-
-
-class TextElement(Element, WebElementInterface, QtElementInterface):
+class TextElement(Element, WebElementInterface):
     def __init__(self, text, textWidth=None, textHeight=None, **kwargs):
         '''
-        **TextElement** allows display of simple text labels and partially supports rich text in qt.
+        **TextElement** allows display of simple text labels.
 
         :param str text: Text to be displayed by TextElement (can contain html commands).
         :param str alignment: Alignment of TextElement in widget container ('left' as standard, 'center', 'right').
@@ -441,7 +322,6 @@ class TextElement(Element, WebElementInterface, QtElementInterface):
         self._text = text
         self._textWidth = textWidth
         self._textHeight = textHeight
-        self._elementQtWidget = None
         self._textLabel = None
 
     @property
@@ -461,57 +341,8 @@ class TextElement(Element, WebElementInterface, QtElementInterface):
 
         return widget
 
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            # Setting font size
-            fontSize = fontsizeConverter(self._fontSize)
 
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._text)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._textLabel = QLabel(self._text)
-
-            self._textLabel.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._textLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-
-            self._textLabel.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._textLabel.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth:
-                tempWidth = self._maximumWidgetWidth
-
-            if self._textWidth:
-                tempWidth = self._textWidth
-
-            self._textLabel.setFixedWidth(tempWidth)
-
-            self._textLabel.adjustSize()  # Updates label to correct size
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 2  # +2 for margins
-
-            if self._textHeight:
-                tempHeight = self._textHeight
-
-            self._textLabel.setFixedHeight(tempHeight)
-
-            # Setting text alignment
-            self._textLabel.setAlignment(Qt.AlignLeft)
-            if self._alignment == 'center':
-                self._textLabel.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                self._textLabel.setAlignment(Qt.AlignRight)
-
-            self._elementQtWidget = self._textLabel  # Setting final widget
-
-        return self._elementQtWidget
-
-
-class DataElement(Element, WebElementInterface, QtElementInterface):
+class DataElement(Element, WebElementInterface):
     def __init__(self, variable, **kwargs):
         '''
         **DataElement** returns no widget, but can save a variable of any type into experiment data.
@@ -520,7 +351,6 @@ class DataElement(Element, WebElementInterface, QtElementInterface):
         '''
         super(DataElement, self).__init__(**kwargs)
         self._variable = variable
-        self._elementQtWidget = None
 
     @property
     def variable(self):
@@ -533,15 +363,6 @@ class DataElement(Element, WebElementInterface, QtElementInterface):
     @property
     def webWidget(self):
         return ''
-
-    @property
-    def qtWidget(self):
-
-        if self._elementQtWidget == None:
-            self._elementQtWidget = QWidget()
-            self._elementQtWidget.hide()
-
-        return self._elementQtWidget
 
     @property
     def data(self):
@@ -616,7 +437,7 @@ class InputElement(Element):
             self._input = d.get(self.name, '')
 
 
-class TextEntryElement(InputElement, WebElementInterface, QtElementInterface):
+class TextEntryElement(InputElement, WebElementInterface):
     def __init__(self, instruction='', noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, prefix=None, suffix=None, **kwargs):
         '''
         **TextEntryElement*** returns a single line text edit with an instruction text on its' left.
@@ -635,7 +456,6 @@ class TextEntryElement(InputElement, WebElementInterface, QtElementInterface):
         self._instructionWidth = instructionWidth
         self._instructionHeight = instructionHeight
         self._instruction = instruction
-        self._elementQtWidget = None
         self._prefix = prefix
         self._suffix = suffix
         self._template = jinja2.Template('''
@@ -683,100 +503,6 @@ class TextEntryElement(InputElement, WebElementInterface, QtElementInterface):
         return self._template.render(d)
 
     @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            # Setting font size
-            fontSize = fontsizeConverter(self._fontSize)
-
-            # Creating LineEdits
-            self._textEntry = QLineEdit()
-            self._textEntry.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-            self._textEntry.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt; background-color: white; margin-bottom: -2px;' % fontSize)
-            self._textEntry.setPlaceholderText('Bitte Eingeben')
-            self._textEntry.adjustSize()
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth - (self._textEntry.width() + 10):
-                tempWidth = self._maximumWidgetWidth - (self._textEntry.width() + 10)
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 2  # +2 for margins.
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight | Qt.AlignBottom)
-
-            # Creating corrective hint
-            self._correctiveHint = QLabel('')
-            self._correctiveHint.setStyleSheet('color: red; font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % (fontSize - 1))
-
-            # Erstellung des eigentlichen ElementWidget
-            textEntryLayout = QHBoxLayout()
-            textEntryLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            textEntryLayout.setSpacing(5)
-            textEntryLayout.addWidget(self._instructionText)
-            textEntryLayout.addWidget(self._textEntry)
-            textEntryLayout.setAlignment(self._textEntry, Qt.AlignBottom)
-
-            # Einstellen der inneren Elementausrichtung
-            if self._alignment == 'center':
-                textEntryLayout.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                textEntryLayout.setAlignment(Qt.AlignRight)
-            else:
-                textEntryLayout.setAlignment(Qt.AlignLeft)
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.addLayout(textEntryLayout)
-            outerWidgetLayout.addWidget(self._correctiveHint)
-            outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignRight)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget = QWidget()
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-            self._textEntry.setText(str(self._input))
-
-        # Generelle Aktualisierung des Widgets, die bei jedem Aufruf durchgeführt wird
-
-        self._textEntry.setEnabled(self.enabled)
-
-        self._correctiveHint.hide()
-
-        if self.correctiveHints:
-            self._correctiveHint.setText(self.correctiveHints[0])
-            self._correctiveHint.show()
-
-        return self._elementQtWidget
-
-    @property
     def canDisplayCorrectiveHintsInline(self):
         return True
 
@@ -791,12 +517,10 @@ class TextEntryElement(InputElement, WebElementInterface, QtElementInterface):
     def setData(self, d):
         '''
         .. todo:: No data can be set when using qt interface (compare web interface functionality). Is this a problem?
+        .. update (20.02.2019) removed qt depencies
         '''
         if self.enabled:
-            if d == 'qt':
-                self._input = self._textEntry.text()
-            else:
-                super(TextEntryElement, self).setData(d)
+            super(TextEntryElement, self).setData(d)
 
 
 class TextAreaElement(TextEntryElement):
@@ -814,8 +538,6 @@ class TextAreaElement(TextEntryElement):
         :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
         :param bool forceInput: Sets user input to be mandatory (False as standard or True).
         :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
-
-        .. todo:: qt corrective hint always shown!
         '''
         super(TextAreaElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
 
@@ -842,112 +564,9 @@ class TextAreaElement(TextEntryElement):
     def cssCode(self):
         return [(99, ".TextareaElement { resize: none; }")]
 
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            # Einstellen der Schriftgröße
-            fontSize = fontsizeConverter(self._fontSize)
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.minimumSizeHint()  # Somehow (?) updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth:
-                tempWidth = self._maximumWidgetWidth
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 12  # +2 for margins. +10 for layout purposes
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight)
-
-            self._textEntry = QTextEdit()
-            self._textEntry.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            self._textEntry.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt; background-color: white;' % fontSize)
-            self._textEntry.setFixedSize(self._xSize, self._ySize)
-
-            self._correctiveHint = QLabel('')
-            self._correctiveHint.setStyleSheet('color: red; font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % (fontSize - 1))
-
-            # Erstellung des eigentlichen ElementWidget
-            textEntryLayout = QVBoxLayout()
-            textEntryLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            textEntryLayout.addWidget(self._instructionText)
-            textEntryLayout.addWidget(self._textEntry)
-
-            # Einstellen der inneren Elementausrichtung
-            if self._alignment == 'center':
-                textEntryLayout.setAlignment(self._instructionText, Qt.AlignHCenter)
-                textEntryLayout.setAlignment(self._textEntry, Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                textEntryLayout.setAlignment(self._instructionText, Qt.AlignRight)
-                textEntryLayout.setAlignment(self._textEntry, Qt.AlignRight)
-            else:
-                textEntryLayout.setAlignment(self._instructionText, Qt.AlignLeft)
-                textEntryLayout.setAlignment(self._textEntry, Qt.AlignLeft)
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.addLayout(textEntryLayout)
-            outerWidgetLayout.addWidget(self._correctiveHint)
-
-            # Ausrichten der corrective Hints
-            if self._alignment == 'center':
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignRight)
-            else:
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignLeft)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget = QWidget()
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
-            self._textEntry.setText(self._input)
-
-        # Generelle Aktualisierung des Widgets, die bei jedem Aufruf durchgeführt wird
-        self._textEntry.setEnabled(self.enabled)
-
-        self._correctiveHint.hide()
-
-        if self.correctiveHints:
-            self._correctiveHint.setText(self.correctiveHints[0])
-            self._correctiveHint.show()
-
-        return self._elementQtWidget
-
     def setData(self, d):
         if self.enabled:
-            if d == 'qt':
-                self._input = self._textEntry.toPlainText()
-            else:
-                super(TextAreaElement, self).setData(d)
+            super(TextAreaElement, self).setData(d)
 
 
 class RegEntryElement(TextEntryElement):
@@ -1025,7 +644,6 @@ class NumberEntryElement(RegEntryElement):
         :param bool forceInput: Sets user input to be mandatory (False as standard or True).
         :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
 
-        .. todo:: qt corrective hint always shown!
         '''
         super(NumberEntryElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, matchHint=matchHint, **kwargs)
 
@@ -1128,38 +746,11 @@ class NumberEntryElement(RegEntryElement):
 
     def setData(self, d):
         if self.enabled:
-            if d == 'qt':
-                val = self._textEntry.text()
-                if not isinstance(val, str) and not isinstance(val, str):
-                    val = str(val)
-                val = val.replace(',', '.')
-
-                self._input = val
-
-            else:
-                val = d.get(self.name, '')
-                if not isinstance(val, str) and not isinstance(val, str):
-                    val = str(val)
+            val = d.get(self.name, '')
+            if not isinstance(val, str) and not isinstance(val, str):
+                val = str(val)
                 val = val.replace(',', '.')
                 super(NumberEntryElement, self).setData({self.name: val})
-
-    @property
-    def qtWidget(self):
-        self._elementQtWidget = super(NumberEntryElement, self).qtWidget
-
-        if self._validator == None:
-            self._validator = QDoubleValidator()
-            self._validator.setDecimals(self._decimals)
-
-            if not self._min == None:
-                self._validator.setBottom(self._min)
-
-            if not self._max == None:
-                self._validator.setTop(self._max)
-
-            self._textEntry.setValidator(self._validator)
-
-        return self._elementQtWidget
 
     @property
     def match_hint(self):
@@ -1244,14 +835,6 @@ class PasswordElement(TextEntryElement):
 
         return widget
 
-    @property
-    def qtWidget(self):
-        self._elementQtWidget = super(PasswordElement, self).qtWidget
-
-        self._textEntry.setEchoMode(QLineEdit.Password)
-
-        return self._elementQtWidget
-
     def validateData(self):
         super(PasswordElement, self).validateData()
 
@@ -1285,7 +868,7 @@ class PasswordElement(TextEntryElement):
         return {}
 
 
-class LikertMatrix(InputElement, WebElementInterface, QtElementInterface):
+class LikertMatrix(InputElement, WebElementInterface):
     def __init__(self, instruction='', levels=7, items=4, topScaleLabels=None,
                  bottomScaleLabels=None, itemLabels=None, itemLabelWidth=None, spacing=30,
                  transpose=False, noInputCorrectiveHint=None, tableStriped=False, shuffle=False,
@@ -1335,8 +918,6 @@ class LikertMatrix(InputElement, WebElementInterface, QtElementInterface):
             raise ValueError(u"Es mussen keine oder %s OBERE (bei Transpose LINKE) Skalenlabels ubergeben werden." % self._levels)
         self._topScaleLabels = topScaleLabels
 
-        self._elementQtWidget = None
-
         if bottomScaleLabels is not None and not len(bottomScaleLabels) == self._levels:
             raise ValueError(u"Es mussen keine oder %s UNTERE (bei Transpose RECHTE) Skalenlabels ubergeben werden." % self._levels)
         self._bottomScaleLabels = bottomScaleLabels
@@ -1385,555 +966,6 @@ class LikertMatrix(InputElement, WebElementInterface, QtElementInterface):
             else:
                 rv.append('')
         return rv
-
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            self._elementQtWidget = QWidget()
-
-            fontSize = fontsizeConverter(self._fontSize)  # Converting fontSize into valid argument
-
-            maximumLeftLabelWidth = 0  # Variable will be used to determine uniform width of left item labels
-            maximumRightLabelWidth = 0  # Variable will be used to determine uniform width of right item labels
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth:
-                tempWidth = self._maximumWidgetWidth
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 12  # +2 for margins. +10 for layout purposes
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting instruction text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight)
-
-            # Creating central likert matrix layout
-
-            self._likertLayout = QGridLayout()
-            self._likertLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-
-            if not self._transpose:
-                '''
-                The following part constructs the likert matrix without transposing. Different items are therefore
-                shown in the vertical axis while different likert levels for each item are shown in the horizontal axis.
-                '''
-
-                # Setting general cell spacing
-
-                self._likertLayout.setVerticalSpacing(0)
-                self._likertLayout.setHorizontalSpacing(0)
-
-                labelWidthList = []  # Will be used to determine necessary cell width for each column of the likert matrix
-                labelHeightList = []  # Will be used to determine necessary cell height for each row of the likert matrix
-
-                if self._topScaleLabels:  # Top scale labels are shown directly above the first row of radio buttons
-                    i = 1
-                    for label in self._topScaleLabels:  # Each label is processed separately
-                        cellFrame = QFrame()  # Labels are embedded in separate frames which is necessary to color the label background
-                        cellLayout = QVBoxLayout()  # Cell frames need separate layout to which a label will be added
-                        cellLayout.setSpacing(0)  # No spacing in cell layout
-                        cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins in cell layout
-                        cellLayout.setAlignment(Qt.AlignHCenter)  # Center alignment for top labels
-
-                        tLabel = QLabel(label)  # Creating a specific top scale label
-                        tLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        tLabel.setAlignment(Qt.AlignCenter)  # Top scale labels will be centered above radio buttons
-                        tLabel.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                        fontMetrics = tLabel.fontMetrics()  # Gathering information on label size given the chosen font
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", label)
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                        if tempWidth < self._spacing:  # Top scale labels have to be at least as wide as spacing argument
-                            tempWidth = self._spacing
-
-                        labelWidthList.append(tempWidth)
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                        cellLayout.addWidget(tLabel)  # Adding label to cell layout
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, 0, i, 1, 1, alignment=4)  # Adding top scale label frame to correct cell in first row of likert matrix
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)  # Center alignment for top scale label frames
-                        i = i + 1
-
-                for i in range(self._items):  # Beginning new row for each likert item in matrix
-                    vars(self)['buttonGroup_' + str(self._permutation[i])] = QButtonGroup(self._elementQtWidget)  # Creating new button group for item using the permutated item list in case of shuffle
-
-                    if self._itemLabels:  # Item labels are shown left and right of each likert item in the matrix
-                        cellFrame = QFrame()  # Creating an empty frame for item label
-                        if i % 2 == 0 and self._tableStriped:  # Setting different background color to all odd rows if tableStriped flag is set
-                            cellFrame.setStyleSheet('background-color: white;')
-
-                        cellLayout = QVBoxLayout()  # New layout for label cell
-                        cellLayout.setSpacing(0)
-                        cellLayout.setContentsMargins(2, 2, 2, 2)
-                        cellLayout.setAlignment(Qt.AlignRight | Qt.AlignVCenter)  # All left item labels will be aligned right
-
-                        lLabel = QLabel(self._itemLabels[self._permutation[i] * 2])  # Creating the actual item label using the permutation list in case of shuffle
-                        lLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        lLabel.adjustSize()  # Update label size for correct layouting
-
-                        fontMetrics = lLabel.fontMetrics()  # Gathering font size information
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[self._permutation[i] * 2])
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Calculating necessary label size for correct display of itemlabel plus margin
-
-                        tempHeight = fontMetrics.size(0, temp_label_text).height() + 4  # plus margin
-                        labelHeightList.append(tempHeight)
-
-                        if self._itemLabelWidth:  # If argument is used tempWidth is overwritten by itemLabelWidth argument
-                            tempWidth = self._itemLabelWidth
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting width for label
-                        lLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)  # Left item label text alignment is set to right
-
-                        if maximumLeftLabelWidth < tempWidth:  # The following code determines the widest left itemlabel to give all item labels a uniform width
-                            maximumLeftLabelWidth = tempWidth
-
-                        cellLayout.addWidget(lLabel)  # Adding label to cell frame
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, i + 1, 0, 1, 1, alignment=4)
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignRight | Qt.AlignVCenter)  # Left item label frames are aligned right
-
-                    for j in range(self._levels):  # Adding Radiobuttons for each sclae level in each likert item
-                        cellFrame = QFrame()  # New empty frame for each radio button
-
-                        if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                            cellFrame.setStyleSheet('background-color: white;')
-                        cellFrame.setFixedWidth(self._spacing)  # Radio button frames need to be at leas as wide as spacing argument
-
-                        cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                        cellLayout.setSpacing(0)  # No spacing in cell layout
-                        cellLayout.setContentsMargins(0, 0, 0, 0)  # No margins around cell layout
-
-                        vars()['button_' + str(self._permutation[i]) + '_' + str(j)] = QRadioButton()  # Creating the actual radio button using permutation list in case of shuffle
-                        vars()['button_' + str(self._permutation[i]) + '_' + str(j)].setStyleSheet('QRadioButton{width: 0px; height: 0px; padding-left: 6px;} QRadioButton::indicator{width: 15px; height: 15px;}')  # Disabling text label in QRadioButton and centering indicator
-                        vars()['button_' + str(self._permutation[i]) + '_' + str(j)].adjustSize()
-
-                        vars(self)['buttonGroup_' + str(self._permutation[i])].addButton(vars()['button_' + str(self._permutation[i]) + '_' + str(j)], j)  # Button is added to correct button group using permutation list
-
-                        cellLayout.addWidget(vars()['button_' + str(self._permutation[i]) + '_' + str(j)])
-                        cellLayout.setAlignment(vars()['button_' + str(self._permutation[i]) + '_' + str(j)], Qt.AlignCenter)  # Radio buttons in cells are centered
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, i + 1, j + 1, 1, 1, alignment=4)  # Button is added to likert matrix with center alignment
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)  # RadioButtons are being centered
-
-                    if self._itemLabels:  # Item labels are shown left and right of each likert item in the matrix
-                        cellFrame = QFrame()  # Creating an empty frame for item label
-                        if i % 2 == 0 and self._tableStriped:  # Setting different background color to all odd rows if tableStriped flag is set
-                            cellFrame.setStyleSheet('background-color: white;')
-
-                        cellLayout = QVBoxLayout()  # New layout for label cell
-                        cellLayout.setSpacing(0)
-                        cellLayout.setContentsMargins(2, 2, 2, 2)
-                        cellLayout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # Alle right item labels will be aligned left
-
-                        rLabel = QLabel(self._itemLabels[(self._permutation[i] + 1) * 2 - 1])  # Creating actual right item label using permutation list in case of shuffle
-                        rLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        rLabel.adjustSize()  # Updating label size information for correct layouting
-
-                        fontMetrics = rLabel.fontMetrics()  # Gathering font size information
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[(self._permutation[i] + 1) * 2 - 1])
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Calculating necessary label size for correct display of itemlabel plus margin.
-
-                        if self._itemLabelWidth:  # If argument is used tempWidth is overwritten by itemLabelWidth argument
-                            tempWidth = self._itemLabelWidth
-
-                        tempHeight = fontMetrics.size(0, temp_label_text).height() + 4  # plus margin
-
-                        if labelHeightList[i] < tempHeight:  # Deciding if right or left item label is higher
-                            labelHeightList[i] = tempHeight
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting width for label
-                        rLabel.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # Right item label text alignment is set to left
-
-                        if maximumRightLabelWidth < tempWidth:  # The following code determines the widest right itemlabel to give all item labels a uniform width
-                            maximumRightLabelWidth = tempWidth
-
-                        cellLayout.addWidget(rLabel)  # Adding label to cell frame
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, i + 1, self._levels + 1, 1, 1, alignment=4)  # Adding right item label to correct cell in likert matrix
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignLeft | Qt.AlignVCenter)  # Right item label frames are aligned left
-
-                if self._bottomScaleLabels:
-                    i = 1
-
-                    for label in self._bottomScaleLabels:  # Each label is processed separately
-                        cellFrame = QFrame()  # Labels are embedded in separate frames which is necessary to color the label background
-                        cellLayout = QVBoxLayout()  # Cell frames need separate layout to which a label will be added
-                        cellLayout.setSpacing(0)  # No spacing in cell layout
-                        cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins in cell layout
-                        cellLayout.setAlignment(Qt.AlignHCenter)  # Center alignment for bottom labels
-
-                        bLabel = QLabel(label)  # Creating a specific bottom scale label
-                        bLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        bLabel.setAlignment(Qt.AlignCenter)  # Bottom scale labels will be centered under radio buttons
-                        bLabel.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                        fontMetrics = bLabel.fontMetrics()  # Gathering information on label size given the chosen font
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", label)
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                        if tempWidth < self._spacing:  # Bottom scale labels have to be at least as wide as spacing argument
-                            tempWidth = self._spacing
-
-                        if self._topScaleLabels:
-                            if labelWidthList[i - 1] < tempWidth:  # Deciding if top or bottom scale label is wider
-                                labelWidthList[i - 1] = tempWidth  # Setting the maximum width (either top or bottom scale label width)
-                            else:
-                                tempWidth = labelWidthList[i - 1]
-                        else:
-                            labelWidthList.append(tempWidth)
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                        cellLayout.addWidget(bLabel)
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, self._items + 1, i, 1, 1, alignment=4)
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)
-                        i = i + 1
-
-                '''
-                The following part deals with general matrix layout after each cell has been created
-                '''
-
-                if self._itemLabels:  # Setting all itemLabels to the same width (each side separately)
-                    for i in range(self._items):
-                        self._likertLayout.itemAtPosition(i + 1, self._levels + 1).widget().setFixedWidth(maximumRightLabelWidth)
-                        self._likertLayout.itemAtPosition(i + 1, 0).widget().setFixedWidth(maximumLeftLabelWidth)
-
-                        self._likertLayout.itemAtPosition(i + 1, 0).widget().setFixedHeight(labelHeightList[i] + 2)  # Adjusting 2px for margin
-                        self._likertLayout.itemAtPosition(i + 1, self._levels + 1).widget().setFixedHeight(labelHeightList[i] + 2)  # Adjusting 2px for margin
-
-                        for j in range(self._levels):
-                            self._likertLayout.itemAtPosition(i + 1, j + 1).widget().setFixedHeight(labelHeightList[i] + 2)  # Setting height for RadioButtons
-
-                if self._topScaleLabels or self._bottomScaleLabels:  # Setting all elements in each column to a uniform width
-                    for i in range(self._levels):
-                        if self._topScaleLabels:
-                            self._likertLayout.itemAtPosition(0, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for top scale labels
-
-                        for j in range(self._items):
-                            self._likertLayout.itemAtPosition(j + 1, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for radio buttons
-
-                        if self._bottomScaleLabels:
-                            self._likertLayout.itemAtPosition(self._items + 1, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for bottom scale labels
-
-            elif self._transpose:
-                '''
-                The following part constructs the likert matrix with transposing. Different items are therefore
-                shown in the horizontal axis while different likert levels for each item are shown in the vettical axis.
-
-                Caution!
-
-                Labels are still generated in the same order as in untransposed LikertMatrix elements, but functionalities
-                of item labels and scale labels have been switched. This might be confusing to developers!
-
-
-                '''
-                # Setting general cell spacing
-
-                self._likertLayout.setVerticalSpacing(0)
-                self._likertLayout.setHorizontalSpacing(0)
-
-                labelWidthList = []  # Will be used to determine necessary cell width for each column of the likert matrix
-                labelTopHeightList = []  # Will be used to determine necessary cell height for each row of the likert matrix
-                labelBottomHeightList = []  # Will be used to determine necessary cell height for each row of the likert matrix
-
-                if self._topScaleLabels:  # Top scale labels are shown directly above the first row of radio buttons
-                    i = 1
-                    for label in self._topScaleLabels:  # Each label is processed separately
-                        cellFrame = QFrame()  # Creating an empty frame for item label
-
-                        cellLayout = QVBoxLayout()  # New layout for label cell
-                        cellLayout.setSpacing(0)
-                        cellLayout.setContentsMargins(2, 2, 2, 2)
-                        cellLayout.setAlignment(Qt.AlignRight)  # All left item labels will be aligned right
-
-                        lLabel = QLabel(label)  # Creating the actual item label using the permutation list in case of shuffle
-                        lLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        lLabel.adjustSize()  # Update label size for correct layouting
-
-                        fontMetrics = lLabel.fontMetrics()  # Gathering font size information
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", label)
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Calculating necessary label size for correct display of itemlabel plus margin
-
-                        if self._itemLabelWidth:  # If argument is used tempWidth is overwritten by itemLabelWidth argument
-                            tempWidth = self._itemLabelWidth
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting width for label
-                        lLabel.setAlignment(Qt.AlignRight)  # Left item label text alignment is set to right
-
-                        if maximumLeftLabelWidth < tempWidth:  # The following code determines the widest left itemlabel to give all item labels a uniform width
-                            maximumLeftLabelWidth = tempWidth
-
-                        cellLayout.addWidget(lLabel)  # Adding label to cell frame
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, i, 0, 1, 1, alignment=4)
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignRight | Qt.AlignVCenter)  # Left item label frames are aligned right
-                        i = i + 1
-
-                for i in range(self._items):  # Beginning new row for each likert item in matrix
-                    vars(self)['buttonGroup_' + str(self._permutation[i])] = QButtonGroup(self._elementQtWidget)  # Creating new button group for item using the permutated item list in case of shuffle
-
-                    if self._itemLabels:  # Item labels are shown left and right of each likert item in the matrix
-                        cellFrame = QFrame()  # Labels are embedded in separate frames which is necessary to color the label background
-                        if i % 2 == 0 and self._tableStriped:  # Setting different background color to all odd rows if tableStriped flag is set
-                            cellFrame.setStyleSheet('background-color: white;')
-
-                        cellLayout = QVBoxLayout()  # Cell frames need separate layout to which a label will be added
-                        cellLayout.setSpacing(0)  # No spacing in cell layout
-                        cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins in cell layout
-                        cellLayout.setAlignment(Qt.AlignHCenter)  # Center alignment for top labels
-
-                        tLabel = QLabel(self._itemLabels[self._permutation[i] * 2])  # Creating a specific top scale label
-                        tLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        tLabel.setAlignment(Qt.AlignCenter)  # Top scale labels will be centered above radio buttons
-                        tLabel.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                        fontMetrics = tLabel.fontMetrics()  # Gathering information on label size given the chosen font
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[self._permutation[i] * 2])
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                        if tempWidth < self._spacing:  # Top scale labels have to be at least as wide as spacing argument
-                            tempWidth = self._spacing
-
-                        labelWidthList.append(tempWidth)
-
-                        tempHeight = fontMetrics.size(0, temp_label_text).height() + 4  # plus margin
-                        labelTopHeightList.append(tempHeight)
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                        cellLayout.addWidget(tLabel)  # Adding label to cell layout
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, 0, i + 1, 1, 1, alignment=4)  # Adding top scale label frame to correct cell in first row of likert matrix
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)  # Center alignment for top scale label frames
-
-                    for j in range(self._levels):  # Adding Radiobuttons for each sclae level in each likert item
-                        cellFrame = QFrame()  # New empty frame for each radio button
-                        if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                            cellFrame.setStyleSheet('background-color: white;')
-                        cellFrame.setFixedWidth(self._spacing)  # Radio button frames need to be at leas as wide as spacing argument
-
-                        cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                        cellLayout.setSpacing(0)  # No spacing in cell layout
-                        cellLayout.setContentsMargins(0, 0, 0, 0)  # No margins around cell layout
-
-                        vars()['button_' + str(self._permutation[i]) + '_' + str(j)] = QRadioButton()  # Creating the actual radio button using permutation list in case of shuffle
-                        vars()['button_' + str(self._permutation[i]) + '_' + str(j)].setStyleSheet('QRadioButton{width: 0px; height: 0px; padding-left: 6px;} QRadioButton::indicator{width: 15px; height: 15px;}')  # Disabling text label in QRadioButton and centering indicator
-                        vars()['button_' + str(self._permutation[i]) + '_' + str(j)].adjustSize()
-
-                        vars(self)['buttonGroup_' + str(self._permutation[i])].addButton(vars()['button_' + str(self._permutation[i]) + '_' + str(j)], j)  # Button is added to correct button group using permutation list
-
-                        cellLayout.addWidget(vars()['button_' + str(self._permutation[i]) + '_' + str(j)])
-                        cellLayout.setAlignment(vars()['button_' + str(self._permutation[i]) + '_' + str(j)], Qt.AlignCenter)  # Radio buttons in cells are centered
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, j + 1, i + 1, 1, 1, alignment=4)  # Button is added to likert matrix with center alignment
-
-                    if self._itemLabels:  # Item labels are shown left and right of each likert item in the matrix
-                        cellFrame = QFrame()  # Labels are embedded in separate frames which is necessary to color the label background
-                        if i % 2 == 0 and self._tableStriped:  # Setting different background color to all odd rows if tableStriped flag is set
-                            cellFrame.setStyleSheet('background-color: white')
-
-                        cellLayout = QVBoxLayout()  # Cell frames need separate layout to which a label will be added
-                        cellLayout.setSpacing(0)  # No spacing in cell layout
-                        cellLayout.setContentsMargins(2, 2, 2, 2)  # 2px margins in cell layout
-                        cellLayout.setAlignment(Qt.AlignHCenter)  # Center alignment for bottom labels
-
-                        bLabel = QLabel(self._itemLabels[(self._permutation[i] + 1) * 2 - 1])  # Creating a specific bottom scale label
-                        bLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        bLabel.setAlignment(Qt.AlignCenter)  # Bottom scale labels will be centered under radio buttons
-                        bLabel.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                        fontMetrics = bLabel.fontMetrics()  # Gathering information on label size given the chosen font
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[(self._permutation[i] + 1) * 2 - 1])
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                        if tempWidth < self._spacing:  # Bottom scale labels have to be at least as wide as spacing argument
-                            tempWidth = self._spacing
-
-                        if labelWidthList[i] < tempWidth:  # Deciding if top or bottom scale label is wider
-                            labelWidthList[i] = tempWidth  # Setting the maximum width (either top or bottom scale label width)
-                        else:
-                            tempWidth = labelWidthList[i]
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                        tempHeight = fontMetrics.size(0, temp_label_text).height() + 4  # plus margin
-
-                        labelBottomHeightList.append(tempHeight)
-
-                        cellLayout.addWidget(bLabel)
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, self._levels + 1, i + 1, 1, 1, alignment=4)
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)
-
-                if self._bottomScaleLabels:
-                    i = 1
-
-                    for label in self._bottomScaleLabels:  # Each label is processed separately
-                        cellFrame = QFrame()  # Creating an empty frame for item label
-
-                        cellLayout = QVBoxLayout()  # New layout for label cell
-                        cellLayout.setSpacing(0)
-                        cellLayout.setContentsMargins(2, 2, 2, 2)
-                        cellLayout.setAlignment(Qt.AlignLeft)  # Alle right item labels will be aligned left
-
-                        rLabel = QLabel(label)  # Creating actual right item label using permutation list in case of shuffle
-                        rLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                        rLabel.adjustSize()  # Updating label size information for correct layouting
-
-                        fontMetrics = rLabel.fontMetrics()  # Gathering font size information
-                        # Ignore all html tags in text sizing, except html line breaks
-                        temp_label_text = re.sub(r"<br>", "\n", label)
-                        temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                        tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Calculating necessary label size for correct display of itemlabel plus margin.
-
-                        if self._itemLabelWidth:  # If argument is used tempWidth is overwritten by itemLabelWidth argument
-                            tempWidth = self._itemLabelWidth
-
-                        cellFrame.setFixedWidth(tempWidth)  # Setting width for label
-                        rLabel.setAlignment(Qt.AlignLeft)  # Right item label text alignment is set to left
-
-                        if maximumRightLabelWidth < tempWidth:  # The following code determines the widest right itemlabel to give all item labels a uniform width
-                            maximumRightLabelWidth = tempWidth
-
-                        cellLayout.addWidget(rLabel)  # Adding label to cell frame
-                        cellFrame.setLayout(cellLayout)
-
-                        self._likertLayout.addWidget(cellFrame, i, self._items + 1, 1, 1, alignment=4)  # Adding right item label to correct cell in likert matrix
-                        self._likertLayout.setAlignment(cellFrame, Qt.AlignLeft | Qt.AlignVCenter)  # Right item label frames are aligned left
-                        i = i + 1
-
-                '''
-                The following part deals with general matrix layout after each cell has been created
-                '''
-
-                if self._topScaleLabels or self._bottomScaleLabels:  # Setting all itemLabels to the same width (each side separately)
-                    for i in range(self._levels):
-                        if self._bottomScaleLabels:
-                            self._likertLayout.itemAtPosition(i + 1, self._items + 1).widget().setFixedWidth(maximumRightLabelWidth)
-                        if self._topScaleLabels:
-                            self._likertLayout.itemAtPosition(i + 1, 0).widget().setFixedWidth(maximumLeftLabelWidth)
-
-                if self._itemLabels:  # Setting all elements in each column to a uniform width
-                    for i in range(self._items):
-                        if self._itemLabels:
-                            self._likertLayout.itemAtPosition(0, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for top scale labels
-                            self._likertLayout.itemAtPosition(0, i + 1).widget().setFixedHeight(max(labelTopHeightList) + 2)  # Adjusting 2px for margin
-
-                        for j in range(self._levels):
-                            self._likertLayout.itemAtPosition(j + 1, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for radio buttons
-
-                        if self._itemLabels:
-                            self._likertLayout.itemAtPosition(self._levels + 1, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for bottom scale labels
-                            self._likertLayout.itemAtPosition(self._levels + 1, i + 1).widget().setFixedHeight(max(labelBottomHeightList) + 2)  # Adjusting 2px for margin
-
-            self._correctiveHint = QLabel('')
-            self._correctiveHint.setStyleSheet('color: red; font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % (fontSize - 1))
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.setSpacing(5)
-            outerWidgetLayout.addWidget(self._instructionText)
-            outerWidgetLayout.addLayout(self._likertLayout)
-            outerWidgetLayout.addWidget(self._correctiveHint)
-
-            if self._alignment == 'center':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignHCenter)
-
-            elif self._alignment == 'right':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignRight)
-
-            else:
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignLeft)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
-            for i in range(self._items):
-                for j in range(self._levels):
-                    if self._input[i] == str(j):
-                        vars()['button_' + str(i) + '_' + str(j)].setChecked(True)
-
-        # Generelle Aktualisierung des Widgets, die bei jedem Aufruf durchgeführt wird
-        for i in range(self._items):
-            for button in vars(self)['buttonGroup_' + str(i)].buttons():
-                button.setEnabled(self.enabled)
-
-        self._correctiveHint.hide()
-
-        if self.correctiveHints:
-            self._correctiveHint.setText(self.correctiveHints[0])
-            self._correctiveHint.show()
-
-        return self._elementQtWidget
 
     @property
     def webWidget(self):
@@ -2036,12 +1068,8 @@ class LikertMatrix(InputElement, WebElementInterface, QtElementInterface):
 
     def setData(self, d):
         if self.enabled:
-            if d == 'qt':
-                for i in range(self._items):
-                    self._input[i] = str(vars(self)['buttonGroup_' + str(i)].checkedId())
-            else:
-                for i in range(self._items):
-                    self._input[i] = d.get(self.name + '_' + str(i), '-1')
+            for i in range(self._items):
+                self._input[i] = d.get(self.name + '_' + str(i), '-1')
 
     @property
     def correctiveHints(self):
@@ -2125,177 +1153,6 @@ class SingleChoiceElement(LikertElement):
             self._input = '-1'
 
     @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            self._elementQtWidget = QWidget()
-
-            fontSize = fontsizeConverter(self._fontSize)  # Converting fontSize into valid argument
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth:
-                tempWidth = self._maximumWidgetWidth
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 12  # +2 for margins. +10 for layout purposes
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting instruction text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight)
-
-            # Creating central likert matrix layout
-
-            self._likertLayout = QGridLayout()
-            self._likertLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            self._likertLayout.setHorizontalSpacing(0)
-            self._likertLayout.setVerticalSpacing(0)
-
-            maxLabelWidth = 0  # Will be used to determine necessary cell width for each column of the likert matrix
-
-            vars(self)['buttonGroup'] = QButtonGroup(self._elementQtWidget)  # Creating new button group for item
-
-            for i in range(self._items):  # Adding Radiobuttons for each sclae level in each likert item
-                cellFrame = QFrame()  # New empty frame for each radio button
-                if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                    cellFrame.setStyleSheet('background-color: white;')
-
-                cellFrame.setFixedWidth(30)  # Radio button frames need to be at leas as wide as spacing argument
-
-                if self._itemLabelHeight:
-                    cellFrame.setFixedHeight(self._itemLabelHeight)
-
-                cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                cellLayout.setSpacing(0)  # No spacing in cell layout
-                cellLayout.setContentsMargins(0, 0, 0, 0)  # No margins around cell layout
-
-                vars()['button_' + str(self._permutation[i])] = QRadioButton()  # Creating the actual radio button using permutation list in case of shuffle
-                vars()['button_' + str(self._permutation[i])].setStyleSheet('QRadioButton{width: 0px; height: 0px; padding-left: 6px;} QRadioButton::indicator{width: 15px; height: 15px;}')  # Disabling text label in QRadioButton
-                vars()['button_' + str(self._permutation[i])].adjustSize()
-
-                vars(self)['buttonGroup'].addButton(vars()['button_' + str(self._permutation[i])], self._permutation[i])  # Button is added to correct button group using permutation list
-
-                cellLayout.addWidget(vars()['button_' + str(self._permutation[i])])
-                cellLayout.setAlignment(vars()['button_' + str(self._permutation[i])], Qt.AlignHCenter)  # Radio buttons in cells are centered
-                cellFrame.setLayout(cellLayout)
-
-                self._likertLayout.addWidget(cellFrame, i, 0, 1, 1, alignment=4)  # Button is added to likert matrix with center alignment
-
-                # Creating Labels
-
-                cellFrame = QFrame()  # New empty frame for each label
-                if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                    cellFrame.setStyleSheet('background-color: white;')
-
-                cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                cellLayout.setSpacing(0)  # No spacing in cell layout
-                cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins around cell layout
-
-                label = QLabel(self._itemLabels[self._permutation[i]])  # Creating a specific top scale label
-                label.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                label.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-                label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # Top scale labels will be centered above radio buttons
-                label.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                fontMetrics = label.fontMetrics()  # Gathering information on label size given the chosen font
-                # Ignore all html tags in text sizing, except html line breaks
-                temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[self._permutation[i]])
-                temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                if self._itemLabelWidth:  # Top scale labels have to be at least as wide as spacing argument
-                    tempWidth = self._itemLabelWidth
-
-                if maxLabelWidth < tempWidth:
-                    maxLabelWidth = tempWidth
-
-                cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                if self._itemLabelHeight:
-                    cellFrame.setFixedHeight(self._itemLabelHeight)
-
-                cellLayout.addWidget(label)  # Adding label to cell layout
-                cellFrame.setLayout(cellLayout)
-
-                self._likertLayout.addWidget(cellFrame, i, 1, 1, 1, alignment=4)  # Adding frame to correct cell in first row of likert matrix
-                self._likertLayout.setAlignment(cellFrame, Qt.AlignLeft | Qt.AlignVCenter)  # Left alignment for label frames
-
-            for i in range(self._items):
-                self._likertLayout.itemAtPosition(i, 1).widget().setFixedWidth(maxLabelWidth)  # Setting column width for top scale labels
-
-            self._correctiveHint = QLabel('')
-            self._correctiveHint.setStyleSheet('color: red; font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % (fontSize - 1))
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.setSpacing(5)
-            outerWidgetLayout.addWidget(self._instructionText)
-            outerWidgetLayout.addLayout(self._likertLayout)
-            outerWidgetLayout.addWidget(self._correctiveHint)
-
-            if self._alignment == 'center':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignHCenter)
-
-            elif self._alignment == 'right':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignRight)
-
-            else:
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignLeft)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
-            for i in range(self._items):
-                if self._input == str(i):
-                    vars()['button_' + str(i)].setChecked(True)
-
-        # Generelle Aktualisierung des Widgets, die bei jedem Aufruf durchgeführt wird
-
-        for button in vars(self)['buttonGroup'].buttons():
-            button.setEnabled(self.enabled)
-
-        self._correctiveHint.hide()
-
-        if self.correctiveHints:
-            self._correctiveHint.setText(self.correctiveHints[0])
-            self._correctiveHint.show()
-
-        return self._elementQtWidget
-
-    @property
     def webWidget(self):
 
         widget = '<div class="single-choice-element"><table class="%s" style="clear: both; font-size: %spt; margin-bottom: 10px;"><tr><td %s>%s</td></tr></table>' % (alignmentConverter(self._alignment, 'container'), fontsizeConverter(self._fontSize), 'style="width: %spx;"' % self._instructionWidth if self._instructionWidth is not None else "", self._instruction)  # Extra Table for instruction
@@ -2319,10 +1176,7 @@ class SingleChoiceElement(LikertElement):
 
     def setData(self, d):
         if self.enabled:
-            if d == 'qt':
-                self._input = str(vars(self)['buttonGroup'].checkedId())
-            else:
-                self._input = d.get(self.name, '-1')
+            self._input = d.get(self.name, '-1')
 
     @property
     def data(self):
@@ -2458,173 +1312,6 @@ class MultipleChoiceElement(LikertElement):
         return widget
 
     @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            self._elementQtWidget = QWidget()
-
-            fontSize = fontsizeConverter(self._fontSize)  # Converting fontSize into valid argument
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth:
-                tempWidth = self._maximumWidgetWidth
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 12  # +2 for margins. +10 for layout purposes
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting instruction text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight)
-
-            # Creating central likert matrix layout
-
-            self._likertLayout = QGridLayout()
-            self._likertLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            self._likertLayout.setHorizontalSpacing(0)
-            self._likertLayout.setVerticalSpacing(0)
-
-            maxLabelWidth = 0  # Will be used to determine necessary cell width for each column of the likert matrix
-
-            for i in range(self._items):  # Adding Radiobuttons for each sclae level in each likert item
-                cellFrame = QFrame()  # New empty frame for each radio button
-                if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                    cellFrame.setStyleSheet('background-color: white;')
-
-                cellFrame.setFixedWidth(30)  # Radio button frames need to be at leas as wide as spacing argument
-
-                if self._itemLabelHeight:
-                    cellFrame.setFixedHeight(self._itemLabelHeight)
-
-                cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                cellLayout.setSpacing(0)  # No spacing in cell layout
-                cellLayout.setContentsMargins(0, 0, 0, 0)  # No margins around cell layout
-
-                vars(self)['box_' + str(self._permutation[i])] = QCheckBox()  # Creating the actual radio button using permutation list in case of shuffle
-                vars(self)['box_' + str(self._permutation[i])].setStyleSheet('QCheckBox{width: 0px; height: 0px; padding-left: 6px;} QCheckBox::indicator{width: 15px; height: 15px;}')  # Disabling text label in QRadioButton
-                vars(self)['box_' + str(self._permutation[i])].adjustSize()
-
-                cellLayout.addWidget(vars(self)['box_' + str(self._permutation[i])])
-                cellLayout.setAlignment(vars(self)['box_' + str(self._permutation[i])], Qt.AlignHCenter)  # Radio buttons in cells are centered
-                cellFrame.setLayout(cellLayout)
-
-                self._likertLayout.addWidget(cellFrame, i, 0, 1, 1, alignment=4)  # Button is added to likert matrix with center alignment
-
-                # Creating Labels
-
-                cellFrame = QFrame()  # New empty frame for each label
-                if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                    cellFrame.setStyleSheet('background-color: white;')
-
-                cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                cellLayout.setSpacing(0)  # No spacing in cell layout
-                cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins around cell layout
-
-                label = QLabel(self._itemLabels[self._permutation[i]])  # Creating a specific top scale label
-                label.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                label.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-                label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # Top scale labels will be centered above radio buttons
-                label.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                fontMetrics = label.fontMetrics()  # Gathering information on label size given the chosen font
-                # Ignore all html tags in text sizing, except html line breaks
-                temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[self._permutation[i]])
-                temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                if self._itemLabelWidth:  # Top scale labels have to be at least as wide as spacing argument
-                    tempWidth = self._itemLabelWidth
-
-                if maxLabelWidth < tempWidth:
-                    maxLabelWidth = tempWidth
-
-                cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                if self._itemLabelHeight:
-                    cellFrame.setFixedHeight(self._itemLabelHeight)
-
-                cellLayout.addWidget(label)  # Adding label to cell layout
-                cellFrame.setLayout(cellLayout)
-
-                self._likertLayout.addWidget(cellFrame, i, 1, 1, 1, alignment=4)  # Adding frame to correct cell in first row of likert matrix
-                self._likertLayout.setAlignment(cellFrame, Qt.AlignLeft | Qt.AlignVCenter)  # Left alignment for label frames
-
-            for i in range(self._items):
-                self._likertLayout.itemAtPosition(i, 1).widget().setFixedWidth(maxLabelWidth)  # Setting column width for top scale labels
-
-            self._correctiveHint = QLabel('')
-            self._correctiveHint.setStyleSheet('color: red; font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % (fontSize - 1))
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.setSpacing(5)
-            outerWidgetLayout.addWidget(self._instructionText)
-            outerWidgetLayout.addLayout(self._likertLayout)
-            outerWidgetLayout.addWidget(self._correctiveHint)
-
-            # Einstellen der Elementausrichtung
-            if self._alignment == 'center':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignRight)
-            else:
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignLeft)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
-            # Setzen des Checkstate (debug mode)
-
-            for i in range(self._items):
-                if self._input[self._permutation[i]] == '1':
-                    vars(self)['box_' + str(self._permutation[i])].setChecked(True)
-
-        # Generelle Aktualisierung des Widgets, die bei jedem Aufruf durchgeführt wird
-        for i in range(self._items):
-            vars(self)['box_' + str(i)].setEnabled(self._enabled)
-
-        self._correctiveHint.hide()
-
-        if self.correctiveHints:
-            self._correctiveHint.setText(self.correctiveHints[0])
-            self._correctiveHint.show()
-
-        return self._elementQtWidget
-
-    @property
     def data(self):
         mcData = {}
         for i in range(self._items):
@@ -2635,15 +1322,8 @@ class MultipleChoiceElement(LikertElement):
 
     def setData(self, d):
         if self.enabled:
-            if d == 'qt':
-                for i in range(self._items):
-                    if vars(self)['box_' + str(i)].isChecked():
-                        self._input[i] = '1'
-                    else:
-                        self._input[i] = '0'
-            else:
-                for i in range(self._items):
-                    self._input[i] = d.get(self.name + '_' + str(i), '0')
+            for i in range(self._items):
+                self._input[i] = d.get(self.name + '_' + str(i), '0')
 
     def validateData(self):
         if not self._forceInput or not self._shouldBeShown:
@@ -2690,7 +1370,7 @@ class MultipleChoiceElement(LikertElement):
         return super(InputElement, self).correctiveHints
 
 
-class LikertListElement(InputElement, WebElementInterface, QtElementInterface):
+class LikertListElement(InputElement, WebElementInterface):
     def __init__(self, instruction='', levels=7, topScaleLabels=None, bottomScaleLabels=None,
                  itemLabels=[], itemLabelHeight=None, itemLabelWidth=None, itemLabelAlignment='left',
                  tableStriped=False, spacing=30, shuffle=False, instructionWidth=None,
@@ -2747,8 +1427,6 @@ class LikertListElement(InputElement, WebElementInterface, QtElementInterface):
         else:
             self._input = ['-1' for i in itemLabels]
 
-        self._elementQtWidget = None
-
         self._template = jinja2.Template('''
             <div class="" style="font-size: {{fontsize}}pt; text-align: {{alignment}}">
                 {% if instruction %}<p>{{instruction}}</p>{% endif %}
@@ -2787,7 +1465,7 @@ class LikertListElement(InputElement, WebElementInterface, QtElementInterface):
                 {% for hint in hints%}
                     <p style="color: red;">{{hint}}</p>
                 {% endfor %}
-                
+
             </div>
             ''')
 
@@ -2827,298 +1505,8 @@ class LikertListElement(InputElement, WebElementInterface, QtElementInterface):
 
     def setData(self, d):
         if self._enabled:
-            if d == 'qt':
-                for i in range(len(self._itemLabels)):
-                    self._input[i] = str(vars(self)['buttonGroup_' + str(i)].checkedId())
-            else:
-                for i in range(len(self._itemLabels)):
-                    self._input[i] = d.get(self.name + '_' + str(i), '-1')
-
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            self._elementQtWidget = QWidget()
-
-            fontSize = fontsizeConverter(self._fontSize)  # Converting fontSize into valid argument
-
-            # Ignore all html tags in text sizing, except html line breaks
-            temp_text = re.sub(r"<br>", "\n", self._instruction)
-            temp_text = re.sub(r"<[^<>]*>", "", temp_text)
-
-            # Creating label
-            self._instructionText = QLabel(self._instruction)
-
-            self._instructionText.setWordWrap(True)  # Activates automatic Linebreaks in QLabel
-            self._instructionText.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-            self._instructionText.adjustSize()  # Updates label to correct size
-
-            fontMetrics = self._instructionText.fontMetrics()
-            tempWidth = fontMetrics.size(0, temp_text).width()
-
-            if tempWidth > self._maximumWidgetWidth:
-                tempWidth = self._maximumWidgetWidth
-
-            if self._instructionWidth:
-                tempWidth = self._instructionWidth
-
-            self._instructionText.setFixedWidth(tempWidth)
-
-            tempHeight = fontMetrics.boundingRect(0, 0, tempWidth, 10000, Qt.TextWordWrap, temp_text).height() + 12  # +2 for margins. +10 for layout purposes
-
-            if self._instructionHeight:
-                tempHeight = self._instructionHeight
-
-            self._instructionText.setFixedHeight(tempHeight)
-
-            # Setting instruction text alignment
-            self._instructionText.setAlignment(Qt.AlignLeft)
-            if self._alignment == 'center':
-                self._instructionText.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                self._instructionText.setAlignment(Qt.AlignRight)
-
-            # Erstellung des eigentlichen ElementWidget
-            self._likertLayout = QGridLayout()
-            self._likertLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            self._likertLayout.setHorizontalSpacing(0)
-            self._likertLayout.setVerticalSpacing(0)
-
-            labelWidthList = []  # Will be used to determine necessary cell width for each column of the likert matrix
-            labelHeightList = []  # Will be used to determine necessary cell height for each row of the likert matrix
-
-            maximumLeftLabelWidth = 0  # Variable will be used to determine uniform width of left item labels
-
-            if self._topScaleLabels:  # Top scale labels are shown directly above the first row of radio buttons
-                i = 1
-                for label in self._topScaleLabels:  # Each label is processed separately
-                    cellFrame = QFrame()  # Labels are embedded in separate frames which is necessary to color the label background
-                    cellLayout = QVBoxLayout()  # Cell frames need separate layout to which a label will be added
-                    cellLayout.setSpacing(0)  # No spacing in cell layout
-                    cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins in cell layout
-                    cellLayout.setAlignment(Qt.AlignHCenter)  # Center alignment for top labels
-
-                    tLabel = QLabel(label)  # Creating a specific top scale label
-                    tLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                    tLabel.setAlignment(Qt.AlignCenter)  # Top scale labels will be centered above radio buttons
-                    tLabel.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                    fontMetrics = tLabel.fontMetrics()  # Gathering information on label size given the chosen font
-                    # Ignore all html tags in text sizing, except html line breaks
-                    temp_label_text = re.sub(r"<br>", "\n", label)
-                    temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                    tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                    if tempWidth < self._spacing:  # Top scale labels have to be at least as wide as spacing argument
-                        tempWidth = self._spacing
-
-                    labelWidthList.append(tempWidth)
-
-                    cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                    cellLayout.addWidget(tLabel)  # Adding label to cell layout
-                    cellFrame.setLayout(cellLayout)
-
-                    self._likertLayout.addWidget(cellFrame, 0, i, 1, 1, alignment=4)  # Adding top scale label frame to correct cell in first row of likert matrix
-                    self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)  # Center alignment for top scale label frames
-                    i = i + 1
-
-            for i in range(len(self._itemLabels)):  # Beginning new row for item
-                vars(self)['buttonGroup_' + str(self._permutation[i])] = QButtonGroup(self._elementQtWidget)
-
-                cellFrame = QFrame()  # Creating an empty frame for item label
-                if i % 2 == 0 and self._tableStriped:  # Setting different background color to all odd rows if tableStriped flag is set
-                    cellFrame.setStyleSheet('background-color: white;')
-
-                cellLayout = QVBoxLayout()  # New layout for label cell
-                cellLayout.setSpacing(0)
-                cellLayout.setContentsMargins(2, 2, 2, 2)
-
-                if self._itemLabelAlign == 'left':
-                    cellLayout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # All left item labels will be aligned
-                if self._itemLabelAlign == 'center':
-                    cellLayout.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)  # All left item labels will be aligned
-                if self._itemLabelAlign == 'right':
-                    cellLayout.setAlignment(Qt.AlignRight | Qt.AlignVCenter)  # All left item labels will be aligned
-
-                lLabel = QLabel(self._itemLabels[self._permutation[i]])  # Creating the actual item label using the permutation list in case of shuffle
-                lLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                lLabel.adjustSize()  # Update label size for correct layouting
-
-                fontMetrics = lLabel.fontMetrics()  # Gathering font size information
-                # Ignore all html tags in text sizing, except html line breaks
-                temp_label_text = re.sub(r"<br>", "\n", self._itemLabels[self._permutation[i]])
-                temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Calculating necessary label size for correct display of itemlabel plus margin
-
-                if self._itemLabelWidth:  # If argument is used tempWidth is overwritten by itemLabelWidth argument
-                    tempWidth = self._itemLabelWidth
-
-                cellFrame.setFixedWidth(tempWidth)  # Setting width for label
-
-                if maximumLeftLabelWidth < tempWidth:  # The following code determines the widest left itemlabel to give all item labels a uniform width
-                    maximumLeftLabelWidth = tempWidth
-
-                tempHeight = fontMetrics.size(0, temp_label_text).height() + 4  # plus margin
-
-                if self._itemLabelHeight:
-                    tempHeight = self._itemLabelHeight
-
-                labelHeightList.append(tempHeight)
-
-                if self._itemLabelAlign == 'left':
-                    lLabel.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # Left item label text alignment is set
-                elif self._itemLabelAlign == 'center':
-                    lLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)  # Left item label text alignment is set
-                elif self._itemLabelAlign == 'right':
-                    lLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)  # Left item label text alignment is set
-
-                cellLayout.addWidget(lLabel)  # Adding label to cell frame
-                cellFrame.setLayout(cellLayout)
-
-                self._likertLayout.addWidget(cellFrame, i + 1, 0, 1, 1, alignment=4)
-                self._likertLayout.setAlignment(cellFrame, Qt.AlignRight | Qt.AlignVCenter)  # Left item label frames are aligned right
-
-                # Creating radio buttons
-
-                for j in range(self._levels):  # Adding Radiobuttons for each scale level in each likert item
-                    cellFrame = QFrame()  # New empty frame for each radio button
-
-                    if i % 2 == 0 and self._tableStriped:  # Changing background color in every odd row of likert items if tableStriped argument is used
-                        cellFrame.setStyleSheet('background-color: white;')
-                    cellFrame.setFixedWidth(self._spacing)  # Radio button frames need to be at leas as wide as spacing argument
-
-                    cellLayout = QVBoxLayout()  # New Layout for each frame around a radio button
-                    cellLayout.setSpacing(0)  # No spacing in cell layout
-                    cellLayout.setContentsMargins(0, 0, 0, 0)  # No margins around cell layout
-
-                    vars()['button_' + str(self._permutation[i]) + '_' + str(j)] = QRadioButton()  # Creating the actual radio button using permutation list in case of shuffle
-                    vars()['button_' + str(self._permutation[i]) + '_' + str(j)].setStyleSheet('QRadioButton{width: 0px; height: 0px; padding-left: 6px;} QRadioButton::indicator{width: 15px; height: 15px;}')  # Disabling text label in QRadioButton and centering indicator
-                    vars()['button_' + str(self._permutation[i]) + '_' + str(j)].adjustSize()
-
-                    vars(self)['buttonGroup_' + str(self._permutation[i])].addButton(vars()['button_' + str(self._permutation[i]) + '_' + str(j)], j)  # Button is added to correct button group using permutation list
-
-                    cellLayout.addWidget(vars()['button_' + str(self._permutation[i]) + '_' + str(j)])
-                    cellLayout.setAlignment(vars()['button_' + str(self._permutation[i]) + '_' + str(j)], Qt.AlignCenter)  # Radio buttons in cells are centered
-                    cellFrame.setLayout(cellLayout)
-
-                    self._likertLayout.addWidget(cellFrame, i + 1, j + 1, 1, 1, alignment=4)  # Button is added to likert matrix with center alignment
-                    self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)  # RadioButtons are being centered
-
-                self._likertLayout.itemAtPosition(i + 1, 0).widget().setFixedWidth(maximumLeftLabelWidth)
-
-            if self._bottomScaleLabels:
-                i = 1
-
-                for label in self._bottomScaleLabels:  # Each label is processed separately
-                    cellFrame = QFrame()  # Labels are embedded in separate frames which is necessary to color the label background
-                    cellLayout = QVBoxLayout()  # Cell frames need separate layout to which a label will be added
-                    cellLayout.setSpacing(0)  # No spacing in cell layout
-                    cellLayout.setContentsMargins(2, 2, 2, 2)  # No margins in cell layout
-                    cellLayout.setAlignment(Qt.AlignHCenter)  # Center alignment for bottom labels
-
-                    bLabel = QLabel(label)  # Creating a specific bottom scale label
-                    bLabel.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % fontSize)
-                    bLabel.setAlignment(Qt.AlignCenter)  # Bottom scale labels will be centered under radio buttons
-                    bLabel.adjustSize()  # Calling minimumSizeHint will update label sizeHint, which is needed for correct layouting
-
-                    fontMetrics = bLabel.fontMetrics()  # Gathering information on label size given the chosen font
-                    # Ignore all html tags in text sizing, except html line breaks
-                    temp_label_text = re.sub(r"<br>", "\n", label)
-                    temp_label_text = re.sub(r"<[^<>]*>", "", temp_label_text)
-
-                    tempWidth = fontMetrics.size(0, temp_label_text).width() + 4  # Width of label plus margin
-
-                    if tempWidth < self._spacing:  # Bottom scale labels have to be at least as wide as spacing argument
-                        tempWidth = self._spacing
-
-                    if self._topScaleLabels:
-                        if labelWidthList[i - 1] < tempWidth:  # Deciding if top or bottom scale label is wider
-                            labelWidthList[i - 1] = tempWidth  # Setting the maximum width (either top or bottom scale label width)
-                        else:
-                            tempWidth = labelWidthList[i - 1]
-                    else:
-                        labelWidthList.append(tempWidth)
-
-                    cellFrame.setFixedWidth(tempWidth)  # Setting exact size of label
-
-                    cellLayout.addWidget(bLabel)
-                    cellFrame.setLayout(cellLayout)
-
-                    self._likertLayout.addWidget(cellFrame, len(self._itemLabels) + 1, i, 1, 1, alignment=4)
-                    self._likertLayout.setAlignment(cellFrame, Qt.AlignCenter)
-                    i = i + 1
-
-            if self._itemLabels:  # Setting all itemLabels to the same width (each side separately)
-                for i in range(len(self._itemLabels)):
-                    self._likertLayout.itemAtPosition(i + 1, 0).widget().setFixedWidth(maximumLeftLabelWidth)
-
-                    self._likertLayout.itemAtPosition(i + 1, 0).widget().setFixedHeight(labelHeightList[i] + 2)  # Adjusting 2px for margin
-                    self._likertLayout.itemAtPosition(i + 1, self._levels).widget().setFixedHeight(labelHeightList[i] + 2)  # Adjusting 2px for margin
-
-                    for j in range(self._levels):
-                        self._likertLayout.itemAtPosition(i + 1, j + 1).widget().setFixedHeight(labelHeightList[i] + 2)  # Setting height for RadioButtons
-
-            if self._topScaleLabels or self._bottomScaleLabels:  # Setting all elements in each column to a uniform width
-                for i in range(self._levels):
-                    if self._topScaleLabels:
-                        self._likertLayout.itemAtPosition(0, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for top scale labels
-
-                    for j in range(len(self._itemLabels)):
-                        self._likertLayout.itemAtPosition(j + 1, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for radio buttons
-
-                    if self._bottomScaleLabels:
-                        self._likertLayout.itemAtPosition(len(self._itemLabels) + 1, i + 1).widget().setFixedWidth(labelWidthList[i])  # Setting column width for bottom scale labels
-
-            self._correctiveHint = QLabel('')
-            self._correctiveHint.setStyleSheet('color: red; font-family: Arial,Helvetica,sans-serif; font-size: %spt;' % (fontSize - 1))
-
-            # Erstellung des äußeren Containers für ElementWidget und CorrectiveHints
-            outerWidgetLayout = QVBoxLayout()
-            outerWidgetLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            outerWidgetLayout.setSpacing(5)
-            outerWidgetLayout.addWidget(self._instructionText)
-            outerWidgetLayout.addLayout(self._likertLayout)
-            outerWidgetLayout.addWidget(self._correctiveHint)
-
-            if self._alignment == 'center':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignHCenter)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignHCenter)
-
-            elif self._alignment == 'right':
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignRight)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignRight)
-
-            else:
-                outerWidgetLayout.setAlignment(self._instructionText, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._likertLayout, Qt.AlignLeft)
-                outerWidgetLayout.setAlignment(self._correctiveHint, Qt.AlignLeft)
-
-            # Erstellung des finalen Widgets
-            self._elementQtWidget.setLayout(outerWidgetLayout)
-
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-
             for i in range(len(self._itemLabels)):
-                for j in range(self._levels):
-                    if self._input[i] == str(j):
-                        vars()['button_' + str(i) + '_' + str(j)].setChecked(True)
-
-        # Generelle Aktualisierung des Widgets, die bei jedem Aufruf durchgeführt wird
-        for i in range(len(self._itemLabels)):
-            for button in vars(self)['buttonGroup_' + str(i)].buttons():
-                button.setEnabled(self.enabled)
-
-        self._correctiveHint.hide()
-
-        if self.correctiveHints:
-            self._correctiveHint.setText(self.correctiveHints[0])
-            self._correctiveHint.show()
-
-        return self._elementQtWidget
+                self._input[i] = d.get(self.name + '_' + str(i), '-1')
 
     @property
     def webWidget(self):
@@ -3166,7 +1554,7 @@ class LikertListElement(InputElement, WebElementInterface, QtElementInterface):
             return super(LikertListElement, self).correctiveHints
 
 
-class ImageElement(Element, WebElementInterface, QtElementInterface):
+class ImageElement(Element, WebElementInterface):
     def __init__(self, path=None, url=None, xSize=None, ySize=None, alt=None, maximizable=False, **kwargs):
         super(ImageElement, self).__init__(**kwargs)
 
@@ -3183,12 +1571,9 @@ class ImageElement(Element, WebElementInterface, QtElementInterface):
         self._ySize = ySize
         self._alt = alt
         self._image_url = None
-        self._elementQtWidget = None
         self._maximizable = maximizable
         self._min_times = []
         self._max_times = []
-        if maximizable and settings.experiment.type == 'qt':
-            raise RuntimeError('maximizable is not implemented for qt')
 
     def prepareWebWidget(self):
         if self._image_url is None:
@@ -3196,44 +1581,6 @@ class ImageElement(Element, WebElementInterface, QtElementInterface):
                 self._image_url = self._question._experiment.userInterfaceController.addStaticFile(self._path)
             elif self._url:
                 self._image_url = self._url
-
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            # Erstellen des Labels
-            self._imagePixmap = QPixmap(self._path)
-
-            if self._xSize and self._ySize:
-                self._imagePixmap = self._imagePixmap.scaled(self._xSize, self._ySize)
-
-            elif self._xSize and not self._ySize:
-                self._imagePixmap = self._imagePixmap.scaledToWidth(self._xSize)
-
-            elif self._ySize and not self._xSize:
-                self._imagePixmap = self._imagePixmap.scaledToHeight(self._ySize)
-
-            self._imageLabel = QLabel()
-            self._imageLabel.setPixmap(self._imagePixmap)
-
-            # Erstellung des eigentlichen Widgets
-            imageLayout = QHBoxLayout()
-            imageLayout.setContentsMargins(0, 0, 0, 0)  # left,top,right,bottom
-            imageLayout.addWidget(self._imageLabel)
-
-            # Einstellen der Elementausrichtung
-            if self._alignment == 'center':
-                imageLayout.setAlignment(Qt.AlignHCenter)
-            elif self._alignment == 'right':
-                imageLayout.setAlignment(Qt.AlignRight)
-            else:
-                imageLayout.setAlignment(Qt.AlignLeft)
-
-            self._elementQtWidget = QWidget()
-            self._elementQtWidget.setLayout(imageLayout)
-
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-
-        return self._elementQtWidget
 
     @property
     def webWidget(self):
@@ -3330,23 +1677,18 @@ class ImageElement(Element, WebElementInterface, QtElementInterface):
 
     def setData(self, d):
         if self.enabled and self._maximizable:
-            if d == 'qt':
-                raise RuntimeError("maximizable is not implemented for qt")
-            else:
-                try:
-                    self._min_times = json.loads(d.get(self.name + '_min_times', '[]'))
-                    self._max_times = json.loads(d.get(self.name + '_max_times', '[]'))
-                except:
-                    self._min_times = []
-                    self._max_times = []
+            try:
+                self._min_times = json.loads(d.get(self.name + '_min_times', '[]'))
+                self._max_times = json.loads(d.get(self.name + '_max_times', '[]'))
+            except:
+                self._min_times = []
+                self._max_times = []
 
 
-class TableElement(Element, WebElementInterface, QtElementInterface):
+class TableElement(Element, WebElementInterface):
     def __init__(self, elements=[], **kwargs):
         super(TableElement, self).__init__(**kwargs)
         self._elements = elements
-
-        self._elementQtWidget = None
 
     @property
     def name(self):
@@ -3362,45 +1704,6 @@ class TableElement(Element, WebElementInterface, QtElementInterface):
                 e = self._elements[row][column]
                 if not e.name:
                     e.name = self.name + '_' + e.__class__.__name__ + '_r' + str(row) + '_c' + str(column)
-
-    @property
-    def qtWidget(self):
-        if self._elementQtWidget == None:
-            self._elementQtWidget = QWidget()
-            self._elementQtWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-
-            rowLayout = QVBoxLayout()
-            rowLayout.setContentsMargins(0, 0, 0, 0)
-            rowLayout.setSpacing(5)
-
-            for l in self._elements:
-
-                lineLayout = QHBoxLayout()
-                lineLayout.setContentsMargins(0, 0, 0, 0)
-                lineLayout.setSpacing(5)
-
-                for e in l:
-                    if e.shouldBeShown:
-                        elementWidget = e.qtWidget
-                        lineLayout.addWidget(elementWidget)
-                        lineLayout.setAlignment(elementWidget, Qt.AlignLeft)
-
-                        if e.alignment == 'center':
-                            self._contentLayout.setAlignment(elementWidget, Qt.AlignHCenter)
-
-                        if e.alignment == 'right':
-                            self._contentLayout.setAlignment(elementWidget, Qt.AlignRight)
-
-                rowLayout.addLayout(lineLayout)
-
-                self._elementQtWidget.setLayout(rowLayout)
-
-        return self._elementQtWidget
-
-    def prepareQtWidget(self):
-        for e in self.flat_elements:
-            e.maximumWidgetWidth = self._question._experiment.userInterfaceController.layout.maximumWidgetWidth
-            e.prepareQtWidget()
 
     @property
     def flat_elements(self):
@@ -3727,60 +2030,6 @@ class ExperimenterMessages(TableElement):
             self._elements.append([message_element])
 
         super(ExperimenterMessages, self).prepareWebWidget()
-
-    def prepareQtWidget(self):
-
-        # First we need to delete old qtWidget
-
-        if self._elementQtWidget:
-            oldQtWidget = self._elementQtWidget
-            oldQtWidget.hide()
-            oldQtWidget.setParent(None)
-            self._elementQtWidget = None  # This will result in new rendering of widget every time it is shown.
-
-        self._elements = []
-        messages = self._question._experiment.experimenterMessageManager.getMessages()
-
-        for message in messages:
-            output = ''
-
-            if not message.title == '':
-                output = output + '<strong>' + message.title + '</strong> - '
-
-            output = output + message.msg
-
-            message_element = TextElement(output)
-
-            message_element.addedToQuestion(self._question)
-
-            if message.level == 'warning':
-                bg_color = '#FCF8E3'
-                text_color = '#C09853'
-
-            elif message.level == 'error':
-                bg_color = '#F2DEDE'
-                text_color = '#B94A48'
-
-            elif message.level == 'info':
-                bg_color = '#D9EDF7'
-                text_color = '#3A87AD'
-
-            elif message.level == 'success':
-                bg_color = '#DFF0D8'
-                text_color = '#468847'
-
-            # Warning Background: #FCF8E3 / Warning Color: #C09853
-            # Error Background: #F2DEDE / Error Color: #B94A48
-            # Info Background: #D9EDF7 / Info Color: #3A87AD
-            # Success Background: #DFF0D8 / Success Color: #468847
-
-            message_element.maximumWidgetWidth = self._question._experiment.userInterfaceController.layout.maximumWidgetWidth
-
-            message_element.qtWidget.setStyleSheet('font-family: Arial,Helvetica,sans-serif; font-size: 12pt; background-color: ' + bg_color + '; color: ' + text_color + '; padding: 3px; border-width: 1px; border-style: solid; border-radius: 4px; border-color: ' + text_color + ';')
-
-            self._elements.append([message_element])
-
-        super(ExperimenterMessages, self).prepareQtWidget()
 
 
 class WebExitEnabler(Element, WebElementInterface):
