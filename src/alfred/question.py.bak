@@ -3,26 +3,21 @@
 '''
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 '''
-from __future__ import absolute_import
 
-from builtins import str
-from builtins import object
 from abc import ABCMeta, abstractmethod, abstractproperty
 import time
 import os.path
 
-from ._core import QuestionCore, package_path, Direction
-from .element import Element, WebElementInterface, QtElementInterface, TextElement, ExperimenterMessages
-from .exceptions import AlfredError
-from . import element
-from .helpmates.concurrent import AsyncTask
+from _core import QuestionCore, package_path, Direction
+from element import Element, WebElementInterface, QtElementInterface, TextElement, ExperimenterMessages
+from exceptions import AlfredError
+import element
+from helpmates.concurrent import AsyncTask
 import alfred.settings as settings
 
 from PySide.QtGui import QWidget, QVBoxLayout, QShortcut, QSizePolicy, QScrollArea, QLayout
 from PySide.QtUiTools import QUiLoader
 from PySide.QtCore import QFile, Slot, Qt
-from future.utils import with_metaclass
-from functools import reduce
 
 
 class Question(QuestionCore):
@@ -103,11 +98,11 @@ class Question(QuestionCore):
         if not self.allowClosing:
             raise AlfredError()
 
-        if 'closingTime' not in self._data:
+        if not self._data.has_key('closingTime'):
             self._data['closingTime'] = time.time()
-        if 'duration' not in self._data \
-             and 'firstShowTime' in self._data \
-             and 'closingTime' in self._data:
+        if not self._data.has_key('duration') \
+             and self._data.has_key('firstShowTime') \
+             and self._data.has_key('closingTime'):
                  self._data['duration'] = self._data['closingTime'] - self._data['firstShowTime']
 
         self._isClosed = True
@@ -129,7 +124,7 @@ class Question(QuestionCore):
 
 
     def allowLeaving(self, direction):
-        if 'firstShowTime' in self._data and \
+        if self._data.has_key('firstShowTime') and \
                 time.time() - self._data['firstShowTime'] \
                         < self._minimumDisplayTime:
             try:
@@ -141,7 +136,9 @@ class Question(QuestionCore):
         return True
 
 
-class QtQuestionInterface(with_metaclass(ABCMeta, object)):
+class QtQuestionInterface(object):
+    __metaclass__ = ABCMeta
+
     def prepareQtWidget(self):
         '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
         Nutzereingaben zwischen aufruf dieser funktion und dem anzeigen der
@@ -159,7 +156,9 @@ class QtQuestionInterface(with_metaclass(ABCMeta, object)):
     def qtThumbnail(self):
         return None
 
-class WebQuestionInterface(with_metaclass(ABCMeta, object)):
+class WebQuestionInterface(object):
+    __metaclass__ = ABCMeta
+
     def prepareWebWidget(self):
         '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
         Nutzereingaben zwischen aufruf dieser funktion und dem anzeigen der
@@ -531,7 +530,9 @@ class QtCountdownQuestion(QtCompositeQuestion):
             self._experiment.userInterfaceController.moveForward()
 
 
-class QtKeyInputQuestion(with_metaclass(ABCMeta, QtCompositeQuestion)):
+class QtKeyInputQuestion(QtCompositeQuestion):
+    __metaclass__ = ABCMeta
+
     def __init__(self,keySequence = 'a', **kwargs):
         super(QtKeyInputQuestion, self).__init__(**kwargs)
         self._keySequence = keySequence
@@ -557,7 +558,7 @@ class QtKeyInputQuestion(with_metaclass(ABCMeta, QtCompositeQuestion)):
 
 class ExperimentFinishQuestion(CompositeQuestion):
     def onShowingWidget(self):
-        if 'firstShowTime' not in self._data:
+        if not self._data.has_key('firstShowTime'):
             exp_title = TextElement('Informationen zur Session:', font = 'big')
 
             exp_infos = '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>'+self._experiment.name+'</td></tr>'
