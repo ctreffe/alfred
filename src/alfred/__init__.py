@@ -14,7 +14,7 @@ __version__ = '0.2b5'
 
 # configure alfred logger
 #
-# to ensure that the logger is configured properly this must be at the top of the 
+# to ensure that the logger is configured properly this must be at the top of the
 # __init__.py module
 
 from .alfredlog import init_logging
