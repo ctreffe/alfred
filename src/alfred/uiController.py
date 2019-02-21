@@ -249,6 +249,7 @@ except NameError:
 
 class QtWebKitUserInterfaceController(WebUserInterfaceController):
     def __init__(self, experiment, weblayout=None, qtlayout=None, fullScreen=True, **kwargs):
+
         self._helper = ThreadHelper(self)
 
         localserver.setExperiment(experiment)
@@ -275,7 +276,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
         self._fullscreen = fullScreen
 
-        # super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
+        super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
         # self.changeQtLayout(qtlayout or BaseQtLayout())
 
     def _getLayout(self):
@@ -333,73 +334,3 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         # after leaving app this code will be executed
         from .savingAgent import wait_for_saving_thread
         wait_for_saving_thread()
-
-
-class QtUserInterfaceController(UserInterfaceController):
-    def __init__(self, experiment, layout=None, fullScreen=True, **kwargs):
-        self._fullScreen = fullScreen
-        self._app = QApplication([])
-
-        self._qtWindow = QMainWindow()
-        self._qtWindow.setMinimumHeight(720)
-        self._qtWindow.setMinimumWidth(1024)
-
-        self._qtMainScrollArea = QScrollArea()
-        self._qtMainScrollArea.setWidgetResizable(True)  # Must be set to True in order for layout to work properly
-        self._qtMainScrollArea.setStyleSheet("QScrollArea {background: white; border: none}")
-
-        self._qtWindow.setCentralWidget(self._qtMainScrollArea)
-
-        super(QtUserInterfaceController, self).__init__(experiment, layout)
-
-    def changeLayout(self, layout):
-        '''
-        '''
-        if self._layout:
-            self._layout.deactivate()
-            self._qtMainScrollArea.takeWidget()
-
-        self._layout = layout
-        self._layout.activate(self._experiment, self)
-
-        self._qtMainScrollArea.setWidget(self._layout.layoutWidget)
-
-        self._layout.layoutWidget.show()
-
-    def start(self):
-        super(QtUserInterfaceController, self).start()
-        if self._fullScreen:
-            self._qtWindow.showFullScreen()
-        else:
-            self._qtWindow.show()
-
-        self.render()
-
-        self._app.exec_()
-
-        # after leaving app this code will be executed
-        from .savingAgent import wait_for_saving_thread
-        wait_for_saving_thread()
-
-    def render(self):
-        self._experiment.questionController.currentQuestion.prepareQtWidget()
-        self._qtMainScrollArea.verticalScrollBar().setSliderPosition(0)
-        self._layout.render()
-
-    def moveForward(self):
-        self.updateQtData()
-        super(QtUserInterfaceController, self).moveForward()
-        self.render()
-
-    def moveBackward(self):
-        self.updateQtData()
-        super(QtUserInterfaceController, self).moveBackward()
-        self.render()
-
-    def moveToPosition(self, posList):
-        self.updateQtData()
-        super(QtUserInterfaceController, self).moveToPosition(posList)
-        self.render()
-
-    def updateQtData(self):
-        self._experiment.questionController.currentQuestion.setData('qt')

@@ -29,7 +29,7 @@ from .savingAgent import SavingAgentController
 from .dataManager import DataManager
 from .questionGroup import QuestionGroup
 from .questionController import QuestionController
-from .uiController import WebUserInterfaceController, QtUserInterfaceController, QtWebKitUserInterfaceController
+from .uiController import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
 from . import settings
 from . import messages

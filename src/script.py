@@ -41,7 +41,7 @@ text01 = TextElement()
 
 class Script(object):
     def generate_experiment(self):
-        exp = Experiment('web', 'myExperiment', '0.1')
+        exp = Experiment('qt-wk', 'myExperiment', '0.1')
 
         page01 = CompositeQuestion(title="Page 01")
         page02 = CompositeQuestion(title="Page 02")

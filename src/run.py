@@ -14,7 +14,7 @@ def socket_checker(port):
         return(False)
 
 
-if settings.experiment.type == 'qt' or settings.experiment.type == 'qt-wk':
+if settings.experiment.type == 'qt-wk':
     import script
     exp = script.generate_experiment()
     exp.start()
