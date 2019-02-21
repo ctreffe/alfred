@@ -1,5 +1,3 @@
-from builtins import map
-from builtins import object
 from flask import Flask, send_file, redirect, url_for, abort, request, make_response
 
 from ..settings import general, experiment
@@ -51,7 +49,7 @@ def experiment():
     if move is None and directjump is None and par is None and kwargs == {}:
         pass
     elif directjump and par:
-        posList = list(map(int, par.split('.')))
+        posList = map(int, par.split('.'))
         script.experiment.userInterfaceController.moveToPosition(posList)
     elif move == 'started':
         pass
@@ -60,7 +58,7 @@ def experiment():
     elif move == 'backward':
         script.experiment.userInterfaceController.moveBackward()
     elif move == 'jump' and par and re.match('^\d+(\.\d+)*$', par):
-        posList = list(map(int, par.split('.')))
+        posList = map(int, par.split('.'))
         script.experiment.userInterfaceController.moveToPosition(posList)
     else:
         abort(400)
