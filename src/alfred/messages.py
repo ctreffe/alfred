@@ -1,12 +1,13 @@
 import threading
 
+
 class MessageManager(object):
-    
+
     INFO = 'info'
     WARNING = 'warning'
     ERROR = 'error'
     SUCCESS = 'success'
-    
+
     def __init__(self):
         self._queue = []
         self._lock = threading.Lock()
@@ -23,6 +24,7 @@ class MessageManager(object):
         self._lock.release()
         return q
 
+
 class Message(object):
     def __init__(self, msg, title='', level=''):
         self._msg = msg
@@ -36,6 +38,7 @@ class Message(object):
     @property
     def level(self):
         return self._level
+
     @level.setter
     def level(self, level):
         self._level = level
@@ -46,5 +49,3 @@ class Message(object):
 
     def __unicode__(self):
         return self.msg
-
-

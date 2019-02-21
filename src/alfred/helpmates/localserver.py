@@ -1,6 +1,7 @@
 from builtins import map
 from builtins import object
 from flask import Flask, send_file, redirect, url_for, abort, request, make_response
+import re
 
 from ..settings import general, experiment
 
@@ -8,8 +9,11 @@ app = Flask(__name__)
 if experiment.type == 'web':
     app.debug = general.debug
 
+
 class C(object):
     experiment = None
+
+
 script = C()
 script.experiment = None
 script.generator = None
@@ -45,7 +49,7 @@ def experiment():
     kwargs.pop('move', None)
     kwargs.pop('directjump', None)
     kwargs.pop('par', None)
-    
+
     if kwargs != {}:
         script.experiment.userInterfaceController.updateWithUserInput(kwargs)
     if move is None and directjump is None and par is None and kwargs == {}:
@@ -70,11 +74,13 @@ def experiment():
     resp.cache_control.no_cache = True
     return resp
 
+
 @app.route('/staticfile/<identifier>')
 def staticfile(identifier):
     path, content_type = script.experiment.userInterfaceController.getStaticFile(identifier)
     resp = make_response(send_file(path, mimetype=content_type))
     return resp
+
 
 @app.route('/dynamicfile/<identifier>')
 def dynamicfile(identifier):
@@ -82,6 +88,7 @@ def dynamicfile(identifier):
     resp = make_response(send_file(strIO, mimetype=content_type))
     resp.cache_control.no_cache = True
     return resp
+
 
 @app.route('/callable/<identifier>', methods=['GET', 'POST'])
 def callable(identifier):
@@ -97,5 +104,3 @@ def callable(identifier):
         resp = make_response(redirect(url_for('experiment')))
     resp.cache_control.no_cache = True
     return resp
-
-

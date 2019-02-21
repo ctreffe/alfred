@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 u'''
-Experiment script using Alfred - A library for rapid experiment development. 
+Experiment script using Alfred - A library for rapid experiment development.
 
 Experiment name: Exemplary name
 
