@@ -19,10 +19,17 @@ from uuid import uuid4
 from io import StringIO
 import threading
 
-from PySide.QtGui import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
-from PySide.QtCore import Qt
-import PySide.QtCore as QtCore
-from PySide.QtWebKit import QWebView
+try:
+    from PySide.QtGui import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
+    from PySide.QtCore import Qt
+    import PySide.QtCore as QtCore
+    from PySide.QtWebKit import QWebView
+except ImportError:
+    from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
+    #from PySide2.QtGui import QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
+    from PySide2.QtCore import Qt
+    import PySide2.QtCore as QtCore
+    from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView
 
 from ._core import Direction
 from .question import WebQuestionInterface
@@ -256,76 +263,55 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         layout = QVBoxLayout()
         widget.setLayout(layout)
         self._webView = QWebView()
-        self._qtMainScrollArea = QScrollArea()
-        self._qtMainScrollArea.setWidgetResizable(True)  # Must be set to True in order for layout to work properly
-        self._qtMainScrollArea.setStyleSheet("QScrollArea {background: white; border: none}")
+        # self._qtMainScrollArea = QScrollArea()
+        # self._qtMainScrollArea.setWidgetResizable(True)  # Must be set to True in order for layout to work properly
+        # self._qtMainScrollArea.setStyleSheet("QScrollArea {background: white; border: none}")
 
         layout.addWidget(self._webView)
-        layout.addWidget(self._qtMainScrollArea)
+
         self._qtWindow.setCentralWidget(widget)
 
         self._current_main_widget = None
-        self._qtlayout = None
+        # self._qtlayout = None
 
         self._fullscreen = fullScreen
 
-        super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
-        self.changeQtLayout(qtlayout or BaseQtLayout())
+        # super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
+        # self.changeQtLayout(qtlayout or BaseQtLayout())
 
     def _getLayout(self):
-        if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            return self._layout
-        else:
-            return self._qtlayout
+        return self._layout
 
     def renderHtml(self):
-        if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            return super(QtWebKitUserInterfaceController, self).render()
-        else:
-            return "current question is qt question"
+
+        return super(QtWebKitUserInterfaceController, self).render()
 
     def render(self):
         self._helper.render()
 
     def renderSlot(self):
-        if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            self._qtMainScrollArea.hide()
-            self._webView.show()
-            # TODO: Check if this fix is ok!
-            # self._webView.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
-        else:
-            self._webView.hide()
-            self._qtMainScrollArea.show()
-            self._qtMainScrollArea.verticalScrollBar().setSliderPosition(0)
-            self._experiment.questionController.currentQuestion.prepareQtWidget()
-            self._qtlayout.render()
+
+            # self._qtMainScrollArea.hide()
+        self._webView.show()
+        # TODO: Check if this fix is ok!
+        # self._webView.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
 
     def moveForward(self):
-        if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            super(QtWebKitUserInterfaceController, self).moveForward()
-        else:
-            self.updateQtData()
-            super(QtWebKitUserInterfaceController, self).moveForward()
+
+        super(QtWebKitUserInterfaceController, self).moveForward()
+
         self.render()
 
     def moveBackward(self):
-        if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            super(QtWebKitUserInterfaceController, self).moveBackward()
-        else:
-            self.updateQtData()
-            super(QtWebKitUserInterfaceController, self).moveBackward()
+
+        super(QtWebKitUserInterfaceController, self).moveBackward()
+
         self.render()
 
     def moveToPosition(self, posList):
-        if isinstance(self._experiment.questionController.currentQuestion, WebQuestionInterface):
-            super(QtWebKitUserInterfaceController, self).moveForward()
-        else:
-            self.updateQtData()
-            super(QtWebKitUserInterfaceController, self).moveForward()
-        self.render()
 
-    def updateQtData(self):
-        self._experiment.questionController.currentQuestion.setData('qt')
+        super(QtWebKitUserInterfaceController, self).moveForward()
+        self.render()
 
     def start(self):
         super(QtWebKitUserInterfaceController, self).start()
@@ -334,7 +320,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         t.daemon = True
         t.start()
         import time
-        time.sleep(2)
+        time.sleep(2)  # TODO: What is this?
         self._webView.setUrl("http://127.0.0.1:5000/experiment")
 
         if self._fullscreen:
@@ -348,18 +334,6 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         # after leaving app this code will be executed
         from .savingAgent import wait_for_saving_thread
         wait_for_saving_thread()
-
-    def changeQtLayout(self, layout):
-        if self._qtlayout:
-            self._qtlayout.deactivate()
-            self._qtMainScrollArea.takeWidget()
-
-        self._qtlayout = layout
-        self._qtlayout.activate(self._experiment, self)
-
-        self._qtMainScrollArea.setWidget(self._qtlayout.layoutWidget)
-
-        self._qtlayout.layoutWidget.show()
 
 
 class QtUserInterfaceController(UserInterfaceController):
