@@ -5,7 +5,6 @@
 '''
 
 
-from builtins import object
 import os.path
 from uuid import uuid4
 
@@ -18,7 +17,7 @@ class QuestionCore(object):
                  shouldBeShownFilterFunction=None, **kwargs):
 
         if kwargs != {}:
-            raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
+            raise ValueError("parameter '%s' is not supported." % kwargs.keys()[0])
 
         self._tag = None
         self._uid = uid if uid is not None else uuid4().hex
@@ -64,7 +63,7 @@ class QuestionCore(object):
 
     @tag.setter
     def tag(self, tag):
-        if not (tag is None or isinstance(tag, str) or isinstance(tag, str)):
+        if not (tag is None or isinstance(tag, str) or isinstance(tag, unicode)):
             raise TypeError("tag must be an instance of str or unicode")
         if self._tag != None:
             raise ValueError("you're not allowed to change a tag.")
@@ -129,7 +128,7 @@ class QuestionCore(object):
 
     @jumptext.setter
     def jumptext(self, jumptext):
-        if not (isinstance(jumptext, str) or isinstance(jumptext, str)):
+        if not (isinstance(jumptext, str) or isinstance(jumptext, unicode)):
             raise TypeError("jumptext must be an instance of str or unicode")
         self._jumptext = jumptext
 
