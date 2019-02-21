@@ -2,13 +2,13 @@
 u'''
 Experiment script using Alfred - A library for rapid experiment development.
 
-Experiment name: Exemplary name
+Experiment name: Full Functionality Overview
 
 Experiment version: 0.1
 
-Experiment author: ctreffe <mail@adress.com>
+Experiment author: Johannes Brachem <jobrachem@posteo.de>
 
-Description: Here you should give a short description of your experiment and it's purpose
+Description: This experiment serves to showcase and test Alfred's full functionality.
 '''
 
 
@@ -28,20 +28,11 @@ from alfred import Experiment
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
-
-my_global_variable = ''
-
-
-def my_function():
-    pass
+text01 = TextElement()
 
 #################################
 # - Section 3: Custom classes - #
 #################################
-
-
-class MyClass(object):
-    pass
 
 
 ########################################
@@ -52,30 +43,20 @@ class Script(object):
     def generate_experiment(self):
         exp = Experiment('web', 'myExperiment', '0.1')
 
-        # exp._userInterfaceController.changeLayout(GoeWebLayout())
+        page01 = CompositeQuestion(title="Page 01")
+        page02 = CompositeQuestion(title="Page 02")
+        page03 = CompositeQuestion(title="Page 03")
+        page04 = CompositeQuestion(title="Page 04")
+        page05 = CompositeQuestion(title="Page 05")
 
-        myQ = CompositeQuestion(elements=[
-            TextElement("Hello W11orld!!!"),
-            TextEntryElement("as"),
-            # ImageElement("test.jpg"),
-            # ImageElement("test.png"),
-        ]
-        )
+        main = QuestionGroup()
+        group01 = HeadOpenQG()
+        group01.appendItems(page01, page02)
 
-        myQuestion = CompositeQuestion(
-            elements=[
-                TextElement(text='some text'),
-            ]
-        )
+        group02 = SegmentedQG()
+        group02.appendItems(page03, page04, page05)
 
-        myQuestion2 = CompositeQuestion(
-            elements=[
-                TextElement(text='some text'),
-            ]
-        )
-        myGroup = SegmentedQG()
-        myGroup.appendItems(myQ, myQuestion2, myQuestion
-                            )
+        main.appendItems(group01, group02)
 
         exp.questionController.appendItem(myGroup)
 
