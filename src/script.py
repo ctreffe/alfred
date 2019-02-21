@@ -50,7 +50,7 @@ class MyClass(object):
 
 class Script(object):
     def generate_experiment(self):
-        exp = Experiment('web', 'myExperiment', '0.1')
+        exp = Experiment('qt-wk', 'myExperiment', '0.1')
 
         # exp._userInterfaceController.changeLayout(GoeWebLayout())
 
