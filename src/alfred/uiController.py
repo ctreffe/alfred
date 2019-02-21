@@ -12,27 +12,18 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import object
-from os.path import abspath
 import os
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from uuid import uuid4
 from io import StringIO
 import threading
 
-try:
-    from PySide.QtGui import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
-    from PySide.QtCore import Qt
-    import PySide.QtCore as QtCore
-    from PySide.QtWebKit import QWebView
-except ImportError:
-    from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
-    from PySide2.QtCore import Qt
-    import PySide2.QtCore as QtCore
-    from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView
+from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QMainWindow
+import PySide2.QtCore as QtCore
+from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView
 
 from ._core import Direction
-from .question import WebQuestionInterface
-from .layout import BaseWebLayout, BaseQtLayout, GoeWebLayout
+from .layout import BaseWebLayout, BaseQtLayout
 
 import alfred.settings
 from .helpmates import localserver as localserver

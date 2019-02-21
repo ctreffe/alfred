@@ -12,12 +12,9 @@ from builtins import map
 from builtins import range
 from builtins import object
 import os.path
-from abc import ABCMeta, abstractmethod, abstractproperty
-from jinja2 import Template, Environment, PackageLoader
+from abc import ABCMeta, abstractmethod
+from jinja2 import Environment, PackageLoader
 from future.utils import with_metaclass
-
-import alfred.settings as settings
-
 
 from ._core import package_path
 

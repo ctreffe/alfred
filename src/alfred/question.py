@@ -7,11 +7,10 @@ from __future__ import absolute_import
 
 from builtins import str
 from builtins import object
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractproperty
 import time
-import os.path
 
-from ._core import QuestionCore, package_path, Direction
+from ._core import QuestionCore
 from .exceptions import AlfredError
 from . import element
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages

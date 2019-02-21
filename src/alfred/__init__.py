@@ -20,14 +20,12 @@ __version__ = '0.2b5'
 from .alfredlog import init_logging
 init_logging(__name__)
 
-from . import exceptions  # enables logging for unhandled exceptions
 
 import time
 from uuid import uuid4
 
 from .savingAgent import SavingAgentController
 from .dataManager import DataManager
-from .questionGroup import QuestionGroup
 from .questionController import QuestionController
 from .uiController import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
@@ -118,9 +116,6 @@ class Experiment(object):
 
         if self._type == 'web':
             self._userInterfaceController = WebUserInterfaceController(self, layout=web_layout)
-
-        elif self._type == 'qt':
-            self._userInterfaceController = QtUserInterfaceController(self, fullScreen=settings.experiment.qtFullScreen)
 
         elif self._type == 'qt-wk':
             logger.warning("Experiment type qt-wk is experimental!!!", self)

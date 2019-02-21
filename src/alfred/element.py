@@ -41,16 +41,13 @@ import re
 import string
 import random
 import json
-from abc import ABCMeta, abstractmethod, abstractproperty
-from os.path import abspath
-from io import StringIO
+from abc import ABCMeta, abstractproperty
 import os
 import jinja2
 
 from .exceptions import AlfredError
 from ._helper import fontsizeConverter, alignmentConverter
 import alfred.settings as settings
-from uuid import uuid4
 
 from . import alfredlog
 from future.utils import with_metaclass

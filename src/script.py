@@ -21,7 +21,6 @@ from alfred.questionGroup import *
 from alfred.element import *
 from alfred.layout import *
 from alfred.helpmates import *
-import alfred.settings as settings
 
 from alfred import Experiment
 

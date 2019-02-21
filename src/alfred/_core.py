@@ -9,8 +9,6 @@ from builtins import object
 import os.path
 from uuid import uuid4
 
-import alfred.settings
-
 
 class QuestionCore(object):
     def __init__(self, tag=None, uid=None, tagAndUid=None, isJumpable=True, jumptext=None,

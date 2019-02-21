@@ -9,7 +9,6 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-from uuid import uuid4
 from abc import ABCMeta, abstractmethod
 
 
