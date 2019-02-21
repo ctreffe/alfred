@@ -12,19 +12,13 @@ from builtins import map
 from builtins import range
 from builtins import object
 import os.path
-from abc import ABCMeta, abstractmethod, abstractproperty
-from jinja2 import Template, Environment, PackageLoader
+from abc import ABCMeta, abstractmethod
+from jinja2 import Environment, PackageLoader
 from future.utils import with_metaclass
 
-try:
-    from PySide.QtGui import QVBoxLayout, QHBoxLayout, QWidget, QLabel, QPushButton, QComboBox, QPixmap, QSizePolicy, QLayout
-    from PySide.QtUiTools import QUiLoader
-    from PySide.QtCore import QFile, Slot, Qt, QSize
-except ImportError:
-    from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, QPushButton, QComboBox, QSizePolicy, QLayout
-    from PySide2.QtGui import QPixmap
-    from PySide2.QtUiTools import QUiLoader
-    from PySide2.QtCore import QFile, Slot, Qt, QSize
+from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, QPushButton, QComboBox, QSizePolicy, QLayout
+from PySide2.QtGui import QPixmap
+from PySide2.QtCore import Slot, Qt
 
 import alfred.settings as settings
 
