@@ -1,10 +1,6 @@
 # -*- coding:utf-8 -*-
-u'''
+'''
 Experiment script using Alfred - A library for rapid experiment development.
-
-Experiment name: Full Functionality Overview
-
-Experiment version: 0.1
 
 Experiment author: Johannes Brachem <jobrachem@posteo.de>
 
@@ -27,6 +23,17 @@ from alfred import Experiment
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
+exp_type = "qt-wk"
+exp_name = "Full Functionality Overview"
+exp_version = "0.1"
+
+#################################
+# - Section 3: Custom classes - #
+#################################
+
+##########################################
+# - Section 4: Define Content Elements - #
+##########################################
 
 # HorizontalLine
 hline01 = HorizontalLine(name="hline1", strength=4, color="red")
@@ -43,53 +50,122 @@ pbar01 = ProgressBar(
 )
 
 # TextElement
-text01 = TextElement(text="Normal Centered Text", name="text1", alignment="center")
+text01 = TextElement(text="Normal Centered Text. Umlaut test: Äöüéû", name="text1", alignment="center")
 text02 = TextElement(text="Big Left Text", name="text2", alignment="left", fontSize="big")
 text03 = TextElement(text="Small Right Text", name="text3", alignment="right", fontSize=8)
 
 # DataElement
 data01 = DataElement(variable=10, name="data01")
 
+# TextEntryElement
+textentry01 = TextEntryElement(
+    instruction="Enter some text.",
+    name="textentry01",
+    alignment="center",                 # "left", "right"
+    fontSize=14,                        # Also possible: "normal", "big", "huge"
+    default="Default",
+    noInputCorrectiveHint="Please enter something",
+    forceInput=True,
+    debugString="textentry01_debug"
+)
 
-textentry01 = TextEntryElement(instruction="Geben Sie hier beliebigen Text ein.")
-textentry02 = TextEntryElement(instruction="Hier müssen Sie Text eingeben.", forceInput=True)
+textentry02 = TextEntryElement(instruction="Enter some text.",
+                               name="textentry02",
+                               noInputCorrectiveHint="Please enter something",
+                               forceInput=True
+                               )
 
+# TextAreaElement
+textarea01 = TextAreaElement(
+    instruction="Enter some more text.",
+    name="textarea01",
+    alignment="right",
+    fontSize=16,
+    xSize=450,              # horizontal size in pixels
+    ySize=300,              # vertical size in pixels
+    default="Default",
+    forceInput=True,
+    noInputCorrectiveHint="Please enter something",
+    debugString="textarea01_debug"
+)
 
-#################################
-# - Section 3: Custom classes - #
-#################################
+textarea02 = TextAreaElement(
+    instruction="Enter even more text.",
+    name="textarea02",
+    forceInput=True,
+    noInputCorrectiveHint="Please, oh please. You need to enter something.",
+)
 
+# RegEntryElement
+regentry01 = RegEntryElement(
+    name="regentry01",
+    instruction="Enter an E-Mail adress",
+    alignment="right",
+    fontSize="big",
+    regEx="[^@]+@[^\.]+\..+",
+    default="invalid input",
+    forceInput=True,
+    matchHint="Please check your input again.",
+    noInputCorrectiveHint="You need to enter something.",
+    debugString="regentry01_debug"
+)
+
+# NumberEntryElement
+
+###########################################
+# - Section 5: Define Pages & Structure - #
+###########################################
+
+# Initialize Pages
+page10 = CompositeQuestion(title="Page 1")
+page20 = CompositeQuestion(title="Page 2")
+page30 = CompositeQuestion(title="Page 3")
+page40 = CompositeQuestion(title="Page 4")
+page50 = CompositeQuestion(title="Page 5")
+
+# Fill Pages
+page10.addElements(text01, text02, text03, hline01, pbar01, data01)
+page20.addElements(textentry01, textentry02, textarea01, textarea02)
+page30.addElements(regentry01)
+
+# Initialize Groups
+main = SegmentedQG()
+group10 = HeadOpenQG()
+group20 = SegmentedQG()
+
+# Fill Groups
+group10.appendItems(page10, page20)
+group20.appendItems(page30, page40, page50)
+
+# Append to main group
+main.appendItems(group10, group20)
 
 ########################################
-# - Section 4: Experiment generation - #
+# - Section 6: Experiment generation - #
 ########################################
+
+# Todo: Section 6 in die run.py schieben?
+
 
 class Script(object):
+
+    def __init__(self, exp_type, exp_name, exp_version, main_pagegroup):
+        self.exp_type = exp_type
+        self.exp_name = exp_name
+        self.exp_version = exp_version
+        self.main_pagegroup = main_pagegroup
+
     def generate_experiment(self):
-        exp = Experiment('qt-wk', 'myExperiment', '0.1')
+        exp = Experiment(self.exp_type, self.exp_name, self.exp_version)
 
-        page01 = CompositeQuestion(title="Page 01")
-        page02 = CompositeQuestion(title="Page 02")
-        page03 = CompositeQuestion(title="Page 03")
-        page04 = CompositeQuestion(title="Page 04")
-        page05 = CompositeQuestion(title="Page 05")
-
-        page01.addElements(text01, text02, text03, hline01, pbar01, data01)
-        page02.addElements()
-
-        main = QuestionGroup()
-        # main = SegmentedQG()
-        group01 = HeadOpenQG()
-        group01.appendItems(page01, page02)
-
-        group02 = SegmentedQG()
-        group02.appendItems(page03, page04, page05)
-
-        main.appendItems(group01, group02)
-
-        exp.questionController.appendItem(main)
+        # Append Main Group to Experiment
+        exp.questionController.appendItem(self.main_pagegroup)
 
         return exp
 
 
-generate_experiment = Script().generate_experiment
+generate_experiment = Script(
+    exp_type=exp_type,
+    exp_name=exp_name,
+    exp_version=exp_version,
+    main_pagegroup=main).generate_experiment
