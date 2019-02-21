@@ -178,9 +178,9 @@ class CoreCompositeQuestion(Question):
             if not isinstance(elements, list):
                 raise TypeError
             for elmnt in elements:
-                self.addElement(elmnt)
+                self.addSingleElement(elmnt)
 
-    def addElement(self, element):
+    def addSingleElement(self, element):
         if not isinstance(element, Element):
             raise TypeError
 
@@ -199,9 +199,11 @@ class CoreCompositeQuestion(Question):
         self._elementList.append(element)
         element.addedToQuestion(self)
 
+        # raise DeprecationWarning("Deprecated Function. Used addElements() instead.")
+
     def addElements(self, *elements):
         for elmnt in elements:
-            self.addElement(elmnt)
+            self.addSingleElement(elmnt)
 
     @property
     def allowClosing(self):
@@ -350,19 +352,19 @@ class DemographicQuestion(CompositeQuestion):
         super(DemographicQuestion, self).__init__(**kwargs)
 
         if instruction:
-            self.addElement(element.TextElement(instruction))
-        self.addElement(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
+            self.addElements(element.TextElement(instruction))
+        self.addElements(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
         if age:
-            self.addElement(element.TextEntryElement(u"Dein Alter: ", name="age"))
+            self.addElements(element.TextEntryElement(u"Dein Alter: ", name="age"))
 
         if sex:
-            self.addElement(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
+            self.addElements(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
         if courseOfStudies:
-            self.addElement(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='courseOfStudies'))
+            self.addElements(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='courseOfStudies'))
 
         if semester:
-            self.addElement(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
+            self.addElements(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
 class AutoHideQuestion(CompositeQuestion):
@@ -405,7 +407,7 @@ class HeadOpenQGCantClose(CompositeQuestion):
     def __init__(self, **kwargs):
         super(HeadOpenQGCantClose, self).__init__(**kwargs)
 
-        self.addElement(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
+        self.addElements(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
 
 
 class MongoSaveCompositeQuestion(CompositeQuestion):
