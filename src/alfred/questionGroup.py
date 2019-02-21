@@ -13,23 +13,22 @@ logger = alfredlog.getLogger(__name__)
 
 from ._core import QuestionCore, Direction
 from .question import Question, HeadOpenQGCantClose
-from .exceptions import MoveError#
+from .exceptions import MoveError
 from random import shuffle
+
 
 class QuestionGroup(QuestionCore):
 
     def __init__(self, **kwargs):
         super(QuestionGroup, self).__init__(**kwargs)
 
-
         self._questionList = []
         self._currentQuestionIndex = 0
         self._shouldBeShown = True
 
     def __str__(self):
-        s = "QuestionGroup (tag = " + self.tag + ", questions:["+str(self._questionList)+"]"
+        s = "QuestionGroup (tag = " + self.tag + ", questions:[" + str(self._questionList) + "]"
         return s
-
 
     @property
     def questionList(self):
@@ -98,7 +97,6 @@ class QuestionGroup(QuestionCore):
 
         logger.debug(u"Leaving QuestionGroup %s in direction %s" % (self.tag, Direction.to_str(direction)), self._experiment)
 
-
     @property
     def jumplist(self):
         # return value: [([0,1], 'JumpText', coreQuestion), ([1], 'JumpText', coreQuestion), ...]
@@ -106,7 +104,6 @@ class QuestionGroup(QuestionCore):
         jumplist = []
         if self.isJumpable:
             jumplist = [([], self.jumptext, self)]
-
 
         for i in range(0, len(self._questionList)):
             if isinstance(self._questionList[i], QuestionGroup):
@@ -121,16 +118,14 @@ class QuestionGroup(QuestionCore):
 
         return jumplist
 
-
-    def randomize(self, deep = False):
+    def randomize(self, deep=False):
         self.generateUnsetTagsInSubtree()
         shuffle(self._questionList)
-        
+
         if deep:
             for item in self._questionList:
                 if isinstance(item, QuestionGroup):
                     item.randomize(True)
-        
 
     def addedToExperiment(self, exp):
         self._experiment = exp
@@ -147,7 +142,7 @@ class QuestionGroup(QuestionCore):
 
         if self._experiment is not None:
             item.addedToExperiment(self._experiment)
-        
+
         self.generateUnsetTagsInSubtree()
 
     def appendItems(self, *items):
@@ -155,9 +150,9 @@ class QuestionGroup(QuestionCore):
             self.appendItem(item)
 
     def generateUnsetTagsInSubtree(self):
-        for i in range(0,len(self._questionList)):
+        for i in range(0, len(self._questionList)):
             if self._questionList[i].tag is None:
-                self._questionList[i].tag = str(i+1)
+                self._questionList[i].tag = str(i + 1)
 
             if isinstance(self._questionList[i], QuestionGroup):
                 self._questionList[i].generateUnsetTagsInSubtree()
@@ -168,7 +163,6 @@ class QuestionGroup(QuestionCore):
             return True
 
         return reduce(lambda b, qCore: b or qCore.shouldBeShown, self._questionList[:self._currentQuestionIndex], False)
-
 
     @property
     def canMoveForward(self):
@@ -181,7 +175,6 @@ class QuestionGroup(QuestionCore):
         # test if moving is possible and leaving is allowed
         if not (self.canMoveForward and self.allowLeaving(Direction.FORWARD)):
             raise MoveError()
-
 
         if isinstance(self._questionList[self._currentQuestionIndex], QuestionGroup) \
                 and self._questionList[self._currentQuestionIndex].canMoveForward:
@@ -199,7 +192,6 @@ class QuestionGroup(QuestionCore):
                         self._coreQuestionAtIndex.enter()
                     break
 
-
     def moveBackward(self):
         if not (self.canMoveBackward and self.allowLeaving(Direction.BACKWARD)):
             raise MoveError()
@@ -209,7 +201,7 @@ class QuestionGroup(QuestionCore):
             self._questionList[self._currentQuestionIndex].moveBackward()
 
         else:
-        # if currentQuestion is QG: call leave
+            # if currentQuestion is QG: call leave
             if isinstance(self._coreQuestionAtIndex, QuestionGroup):
                 self._coreQuestionAtIndex.leave(Direction.BACKWARD)
             for index in range(self._currentQuestionIndex - 1, -1, -1):
@@ -252,7 +244,7 @@ class QuestionGroup(QuestionCore):
         if not self.allowLeaving(Direction.JUMP):
             raise MoveError()
 
-        if not isinstance(posList, list) or len(posList) == 0 or not reduce(lambda b, item: b and isinstance(item,int), posList, True):
+        if not isinstance(posList, list) or len(posList) == 0 or not reduce(lambda b, item: b and isinstance(item, int), posList, True):
             raise TypeError("posList must be an list of int with at least one item")
 
         if not 0 <= posList[0] < len(self._questionList):
@@ -279,6 +271,7 @@ class QuestionGroup(QuestionCore):
     def _coreQuestionAtIndex(self):
         return self._questionList[self._currentQuestionIndex]
 
+
 class HeadOpenQG(QuestionGroup):
     def __init__(self, **kwargs):
         super(HeadOpenQG, self).__init__(**kwargs)
@@ -292,14 +285,12 @@ class HeadOpenQG(QuestionGroup):
         if direction != Direction.FORWARD:
             return super(HeadOpenQG, self).allowLeaving(direction)
 
-
         # direction is Direction.FORWARD
-
 
         if isinstance(self._coreQuestionAtIndex, Question):
             HeadOpenQG._setShowCorrectiveHints(self._coreQuestionAtIndex, True)
             return self._coreQuestionAtIndex.allowClosing and super(HeadOpenQG, self).allowLeaving(direction)
-        else: # currentCoreQuestion is Group
+        else:  # currentCoreQuestion is Group
             if not self._coreQuestionAtIndex.canMoveForward:
                 HeadOpenQG._setShowCorrectiveHints(self._coreQuestionAtIndex, True)
                 return HeadOpenQG._allowClosingAllChildQuestions(self._coreQuestionAtIndex) and super(HeadOpenQG, self).allowLeaving(direction)
@@ -320,12 +311,12 @@ class HeadOpenQG(QuestionGroup):
             return True
         else:
             return super(HeadOpenQG, self).canMoveForward
-    
+
     @property
     def jumplist(self):
         '''
         .. todo:: Jumplist wird nicht richtig generiert
-    
+
         '''
         # return value: [([0,1], 'JumpText'), ([1], 'JumpText'), ...]
 
@@ -341,19 +332,18 @@ class HeadOpenQG(QuestionGroup):
         '''
         if self._maxQuestionIndex == self._currentQuestionIndex:
             if isinstance(self._coreQuestionAtIndex, Question):
-                    self._coreQuestionAtIndex.closeQuestion()
+                self._coreQuestionAtIndex.closeQuestion()
 
-            elif not self._coreQuestionAtIndex.canMoveForward: # self._coreQuestionAtIndex is instance of QuestionGroup and at the last item
+            elif not self._coreQuestionAtIndex.canMoveForward:  # self._coreQuestionAtIndex is instance of QuestionGroup and at the last item
                 if not HeadOpenQG._allowClosingAllChildQuestions(self._coreQuestionAtIndex):
                     # TODO handle if not all questions are closable.
                     self._coreQuestionAtIndex.appendItem(HeadOpenQGCantClose())
 
-                else: # all child question at current index allow closing
+                else:  # all child question at current index allow closing
                     HeadOpenQG._closeChildQuestions(self._coreQuestionAtIndex)
 
         super(HeadOpenQG, self).moveForward()
         self._maxQuestionIndex = self._currentQuestionIndex
-
 
     def moveToLast(self):
         self._currentQuestionIndex = self._maxQuestionIndex
@@ -373,17 +363,17 @@ class HeadOpenQG(QuestionGroup):
             else:
                 HeadOpenQG._closeChildQuestions(self._coreQuestionAtIndex)
         super(HeadOpenQG, self).leave(direction)
-    
+
     @staticmethod
-    def _allowClosingAllChildQuestions(questionGroup, l=None):
+    def _allowClosingAllChildQuestions(questionGroup, L=None):
         allowClosing = True
         for item in questionGroup._questionList:
             if isinstance(item, QuestionGroup):
-                allowClosing = allowClosing and HeadOpenQG._allowClosingAllChildQuestions(item, l)
-            elif not item.allowClosing: #item is instance of Question and does not allow closing
+                allowClosing = allowClosing and HeadOpenQG._allowClosingAllChildQuestions(item, L)
+            elif not item.allowClosing:  # item is instance of Question and does not allow closing
                 allowClosing = False
-                if l is not None:
-                    l.append(item)
+                if L is not None:
+                    L.append(item)
 
         return allowClosing
 
@@ -403,6 +393,7 @@ class HeadOpenQG(QuestionGroup):
             questionGroup = coreQuestion
             for item in questionGroup._questionList:
                 HeadOpenQG._setShowCorrectiveHints(item, b)
+
 
 class SegmentedQG(HeadOpenQG):
     @property
@@ -428,15 +419,14 @@ class SegmentedQG(HeadOpenQG):
         '''
         .. todo:: Besser implementieren und überlegen, wann jumplist angezeigt werden soll und wann nicht. Lösung auf höherer Ebene?
         .. todo:: Es zeigt sich, dass die implementierung nicht richtig durchdacht war
-    
+
         '''
         jumplist = []
         for item in super(HeadOpenQG, self).jumplist:
             if len(item[0]) == 0 or item[0][0] == self._currentQuestionIndex:
                 jumplist.append(item)
-        
-        #if len(jumplist) <= 1:
-            #jumplist = []
-        
-        return jumplist
 
+        # if len(jumplist) <= 1:
+            # jumplist = []
+
+        return jumplist

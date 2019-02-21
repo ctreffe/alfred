@@ -123,7 +123,7 @@ class Question(QuestionCore):
                 < self._minimumDisplayTime:
             try:
                 msg = self._minimumDisplayTimeMsg if self._minimumDisplayTimeMsg else self._experiment.settings.messages.minimum_display_time
-            except:
+            except Exception:
                 msg = "Can't access minimum display time message"
             self._experiment.messageManager.postMessage(msg.replace('${mdt}', str(self._minimumDisplayTime)))
             return False
@@ -178,8 +178,8 @@ class CoreCompositeQuestion(Question):
         if elements is not None:
             if not isinstance(elements, list):
                 raise TypeError
-            for element in elements:
-                self.addElement(element)
+            for elmnt in elements:
+                self.addElement(elmnt)
 
     def addElement(self, element):
         if not isinstance(element, Element):
@@ -201,8 +201,8 @@ class CoreCompositeQuestion(Question):
         element.addedToQuestion(self)
 
     def addElements(self, *elements):
-        for element in elements:
-            self.addElement(element)
+        for elmnt in elements:
+            self.addElement(elmnt)
 
     @property
     def allowClosing(self):
@@ -211,14 +211,14 @@ class CoreCompositeQuestion(Question):
     def closeQuestion(self):
         super(CoreCompositeQuestion, self).closeQuestion()
 
-        for element in self._elementList:
-            element.enabled = False
+        for elmnt in self._elementList:
+            elmnt.enabled = False
 
     @property
     def data(self):
         data = super(CoreCompositeQuestion, self).data
-        for element in self._elementList:
-            data.update(element.data)
+        for elmnt in self._elementList:
+            data.update(elmnt.data)
 
         return data
 
@@ -234,8 +234,8 @@ class CoreCompositeQuestion(Question):
     def showCorrectiveHints(self, b):
         b = bool(b)
         self._showCorrectiveHints = b
-        for element in self._elementList:
-            element.showCorrectiveHints = b
+        for elmnt in self._elementList:
+            elmnt.showCorrectiveHints = b
 
     @property
     def correctiveHints(self):
@@ -246,30 +246,30 @@ class CoreCompositeQuestion(Question):
         # get corrective hints for each element
         list_of_lists = []
 
-        for element in self._elementList:
-            if not element.canDisplayCorrectiveHintsInline and element.correctiveHints:
-                list_of_lists.append(element.correctiveHints)
+        for elmnt in self._elementList:
+            if not elmnt.canDisplayCorrectiveHintsInline and elmnt.correctiveHints:
+                list_of_lists.append(elmnt.correctiveHints)
 
         # flatten list
         return [item for sublist in list_of_lists for item in sublist]
 
     def setData(self, dictionary):
-        for element in self._elementList:
-            element.setData(dictionary)
+        for elmnt in self._elementList:
+            elmnt.setData(dictionary)
 
 
 class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
     def prepareWebWidget(self):
-        for element in self._elementList:
-            element.prepareWebWidget()
+        for elmnt in self._elementList:
+            elmnt.prepareWebWidget()
 
     @property
     def webWidget(self):
         html = ''
 
-        for element in self._elementList:
-            if element.webWidget != '' and element.shouldBeShown:
-                html = html + ('<div class="row with-margin"><div id="elid-%s" class="element">' % element.name) + element.webWidget + '</div></div>'
+        for elmnt in self._elementList:
+            if elmnt.webWidget != '' and elmnt.shouldBeShown:
+                html = html + ('<div class="row with-margin"><div id="elid-%s" class="element">' % elmnt.name) + elmnt.webWidget + '</div></div>'
 
         return html
 
@@ -287,9 +287,9 @@ class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
         if self._thumbnail_element:
             return self._thumbnail_element.webThumbnail
         else:
-            for element in self._elementList:
-                if element.webThumbnail and element.shouldBeShown:
-                    return element.webThumbnail
+            for elmnt in self._elementList:
+                if elmnt.webThumbnail and elmnt.shouldBeShown:
+                    return elmnt.webThumbnail
             return None
 
     @property

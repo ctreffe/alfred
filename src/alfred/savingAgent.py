@@ -28,6 +28,7 @@ from . import alfredlog
 from future.utils import with_metaclass
 _logger = alfredlog.getLogger(__name__)
 
+
 def _save_worker():
     try:
         while True:
@@ -38,21 +39,23 @@ def _save_worker():
             sac._do_saving(data, data_time, level)
             event.set()
             _queue.task_done()
-    except:
+    except Exception:
         import logging
         logger = logging.getLogger(__name__)
         logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!!")
+
 
 def _save_looper(sleeptime=1):
     while not _quit_event.is_set():
         _save_worker()
         time.sleep(sleeptime)
 
+
 def wait_for_saving_thread():
     '''
     .. todo:: implement endSession of Logger into this method and execute for all experiment types!
     '''
-    #_logger.info("waiting until saving queue is empty. %s items left." % _queue.qsize())
+    # _logger.info("waiting until saving queue is empty. %s items left." % _queue.qsize())
     _queue.join()
 
 
@@ -87,7 +90,7 @@ class SavingAgentController(object):
         self._agents = []
         '''run agents that run in normaly'''
         self._failure_agents = []
-        '''agents that run if running a normal agent fails ''' 
+        '''agents that run if running a normal agent fails '''
 
         if alfred.settings.debugmode and alfred.settings.debug.disable_saving:
             _logger.warning("Saving has been disabled!", self._experiment)
@@ -95,11 +98,10 @@ class SavingAgentController(object):
             self.initSavingAgents()
 
     def initSavingAgents(self):
-        
-        failed_to_add = False # will be used to decide whether fall back saving agents will be used
-        fallback_fail = False # will be used to decide whether second level fall back saving agent will be added
-        
-        
+
+        failed_to_add = False  # will be used to decide whether fall back saving agents will be used
+        fallback_fail = False  # will be used to decide whether second level fall back saving agent will be added
+
         # add failure saving agent first
         try:
             agent = LocalSavingAgent(
@@ -107,15 +109,14 @@ class SavingAgentController(object):
                 alfred.settings.failure_local_saving_agent.path,
                 alfred.settings.failure_local_saving_agent.level,
                 self._experiment
-                )
+            )
             self.addFailureSavingAgent(agent)
         except Exception as e:
             _logger.critical("Critical initialization abort! Adding failure SavingAgent failed with error '%s'" % e, self._experiment)
             raise SavingAgentException("Critical initialization abort! Error while adding failure SavingAgent: %s" % e)
-        
-        
+
         # add saving agents from settings
-        
+
         if self._experiment.settings.couchdb_saving_agent.use:
             try:
                 agent = CouchDBSavingAgent(
@@ -123,17 +124,17 @@ class SavingAgentController(object):
                     self._experiment.settings.couchdb_saving_agent.database,
                     self._experiment.settings.couchdb_saving_agent.level,
                     self._experiment
-                    )
+                )
                 self.addSavingAgent(agent)
             except Exception as e:
                 if self._experiment.settings.couchdb_saving_agent.assure_initialization:
-                    _logger.critical("Assured initialization abort! Initializing CouchDBSavingAgent failed with error '%s'" % e , self._experiment)
+                    _logger.critical("Assured initialization abort! Initializing CouchDBSavingAgent failed with error '%s'" % e, self._experiment)
                     raise SavingAgentException("Assured initialization abort! Error while initializing CouchDBSavingAgent: %s" % e)
                 else:
                     failed_to_add = True
                     _logger.warning("Initializing CouchDBSavingAgent failed with error '%s'" % e, self._experiment)
                     self._experiment.experimenterMessageManager.postMessage("Initializing CouchDBSavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
-                    
+
         if self._experiment.settings.mongo_saving_agent.use:
             try:
                 agent = MongoSavingAgent(
@@ -144,7 +145,7 @@ class SavingAgentController(object):
                     self._experiment.settings.mongo_saving_agent.password,
                     self._experiment.settings.mongo_saving_agent.level,
                     self._experiment
-                    )
+                )
                 self.addSavingAgent(agent)
             except Exception as e:
                 if self._experiment.settings.mongo_saving_agent.assure_initialization:
@@ -154,7 +155,7 @@ class SavingAgentController(object):
                     failed_to_add = True
                     _logger.warning("Initializing MongoSavingAgent failed with error '%s'" % e, self._experiment)
                     self._experiment.experimenterMessageManager.postMessage("Initializing MongoSavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
-                    
+
         if self._experiment.settings.local_saving_agent.use:
             try:
                 agent = LocalSavingAgent(
@@ -172,12 +173,11 @@ class SavingAgentController(object):
                     failed_to_add = True
                     _logger.warning("Initializing local SavingAgent failed with error '%s'" % e, self._experiment)
                     self._experiment.experimenterMessageManager.postMessage("Initializing local SavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
-                    
-        
-        ## Falback Agents ##
-        
+
+        # Falback Agents #
+
         if failed_to_add:
-        
+
             if self._experiment.settings.fallback_couchdb_saving_agent.use:
                 try:
                     agent = CouchDBSavingAgent(
@@ -185,7 +185,7 @@ class SavingAgentController(object):
                         self._experiment.settings.fallback_couchdb_saving_agent.database,
                         self._experiment.settings.fallback_couchdb_saving_agent.level,
                         self._experiment
-                        )
+                    )
                     self.addSavingAgent(agent)
                     self._experiment.experimenterMessageManager.postMessage("Adding fallback CouchDBSavingAgent succeeded!", "Fallback working!", self._experiment.messageManager.SUCCESS)
                 except Exception as e:
@@ -196,7 +196,7 @@ class SavingAgentController(object):
                         fallback_fail = True
                         _logger.warning("Initializing fallback CouchDBSavingAgent failed with error '%s'" % e, self._experiment)
                         self._experiment.experimenterMessageManager.postMessage("Initializing fallback CouchDBSavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
-                
+
             if self._experiment.settings.fallback_mongo_saving_agent.use:
                 try:
                     agent = MongoSavingAgent(
@@ -207,7 +207,7 @@ class SavingAgentController(object):
                         self._experiment.settings.fallback_mongo_saving_agent.password,
                         self._experiment.settings.fallback_mongo_saving_agent.level,
                         self._experiment
-                        )
+                    )
                     self.addSavingAgent(agent)
                     self._experiment.experimenterMessageManager.postMessage("Adding fallback MongoSavingAgent succeeded!", "Fallback working!", self._experiment.messageManager.SUCCESS)
                 except Exception as e:
@@ -218,7 +218,7 @@ class SavingAgentController(object):
                         fallback_fail = True
                         _logger.warning("Initializing fallback MongoSavingAgent failed with error '%s'" % e, self._experiment)
                         self._experiment.experimenterMessageManager.postMessage("Initializing fallback MongoSavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
-                
+
             if self._experiment.settings.fallback_local_saving_agent.use:
                 try:
                     agent = LocalSavingAgent(
@@ -238,12 +238,10 @@ class SavingAgentController(object):
                         _logger.warning("Initializing fallback local SavingAgent failed with error '%s'" % e, self._experiment)
                         self._experiment.experimenterMessageManager.postMessage("Initializing fallback local SavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
 
+        # Second level fallback agent
 
-
-        ## Second level fallback agent
-        
         if fallback_fail:
-        
+
             if self._experiment.settings.level2_fallback_local_saving_agent.use:
                 try:
                     agent = LocalSavingAgent(
@@ -262,17 +260,14 @@ class SavingAgentController(object):
                         _logger.warning("Initializing level 2 fallback local SavingAgent failed with error '%s'" % e, self._experiment)
                         self._experiment.experimenterMessageManager.postMessage("Initializing level 2 fallback local SavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.messageManager.WARNING)
 
-            
-        
         if self._agents == [] and not alfred.settings.debug.disable_saving:
             _logger.critical("Session abort! List of SavingAgents is empty, but saving is not disabled.", self._experiment)
             raise SavingAgentException("Session abort! List of SavingAgents is empty, but saving is not disabled.")
-            
 
     def addSavingAgent(self, savingAgent):
         if not isinstance(savingAgent, SavingAgent):
             raise TypeError
-            
+
         self._agents.append(savingAgent)
         if savingAgent.activation_level <= 1:
             _logger.info("Continuous SavingAgent %s added to experiment" % savingAgent, self._experiment)
@@ -286,7 +281,7 @@ class SavingAgentController(object):
         self._failure_agents.append(savingAgent)
 
     def runSavingAgents(self, level, sync=False):
-    
+
         priority = 1 if sync else 5
         e = threading.Event()
         data = self._experiment.dataManager.getData()
@@ -323,16 +318,17 @@ class SavingAgentController(object):
             _logger.info("Data snapshot taken at %s will not be saved because a newer one (%s) was already saved." % (data_time, self._latest_data_time), self._experiment)
         self._lock.release()
 
+
 class SavingAgent(with_metaclass(ABCMeta, object)):
     def __init__(self, activation_level=10, experiment=None):
         self.activation_level = activation_level
-        
-        if experiment == None:
+
+        if experiment is None:
             raise SavingAgentException("Saving Agents must be initialized with experiment instance.")
-        
+
         self._experiment = experiment
         self._lock = threading.Lock()
-        
+
     def saveData(self, data, level):
 
         self._lock.acquire()
@@ -343,15 +339,16 @@ class SavingAgent(with_metaclass(ABCMeta, object)):
             self._lock.release()
             raise e
         self._lock.release()
-    
+
     @abstractmethod
     def _save(self, data):
         pass
 
+
 class LocalSavingAgent(SavingAgent):
     def __init__(self, filename, filepath, activation_level=1, experiment=None):
         super(LocalSavingAgent, self).__init__(activation_level, experiment)
-        
+
         filepath = os.path.abspath(filepath)
         if not os.path.exists(filepath):
             os.makedirs(filepath)
@@ -359,7 +356,7 @@ class LocalSavingAgent(SavingAgent):
             raise RuntimeError("save path '%s' must be an directory" % filepath)
         if not os.access(filepath, os.W_OK):
             raise RuntimeError("save path '%s' must be writable" % filepath)
-        
+
         filename = '%s_%s_%s.json' % (time.strftime('%Y-%m-%dT%H%M%S'), filename, self._experiment.uuid)
         self._file = os.path.join(filepath, filename)
 
@@ -376,23 +373,23 @@ class LocalSavingAgent(SavingAgent):
 
     def __str__(self):
         return "<LocalSavingAgent [path: %s]>" % self._file
-            
+
 
 class CouchDBSavingAgent(SavingAgent):
     def __init__(self, url, database, activation_level=10, experiment=None):
         import couchdb
 
         super(CouchDBSavingAgent, self).__init__(activation_level, experiment)
-        
+
         try:
             self._server = couchdb.Server(url=url)
             self._db = self._server[database]
         except Exception as e:
-            raise SavingAgentException('Type: %s' % type(e))    
+            raise SavingAgentException('Type: %s' % type(e))
 
         self._doc_id = self._experiment.uuid
         self._doc_rev = None
-        
+
     def _save(self, data):
         if self._doc_rev:
             data['_rev'] = self._doc_rev
@@ -406,10 +403,11 @@ class CouchDBSavingAgent(SavingAgent):
     def __str__(self):
         return "<CouchDBSavingAgent [url: %s, database: %s]>" % (self._server.resource.url, self._db.name)
 
+
 class MongoSavingAgent(SavingAgent):
     def __init__(self, host, database, collection, user, password, activation_level=10, experiment=None):
         super(MongoSavingAgent, self).__init__(activation_level, experiment)
-        
+
         self._mc = pymongo.MongoClient(host)
         self._db = self._mc[database]
         if not self._db.authenticate(user, password):
@@ -418,7 +416,7 @@ class MongoSavingAgent(SavingAgent):
         self._col = self._db[collection]
 
         self._doc_id = self._experiment.uuid
-        
+
     def _save(self, data):
 
         try:

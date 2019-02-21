@@ -78,7 +78,7 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.debug(msg, *args, **kwargs)
 
@@ -86,7 +86,7 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.info(msg, *args, **kwargs)
 
@@ -94,7 +94,7 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.warning(msg, *args, **kwargs)
 
@@ -102,7 +102,7 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.error(msg, *args, **kwargs)
 
@@ -110,7 +110,7 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.critical(msg, *args, **kwargs)
 
@@ -118,7 +118,7 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.log(lvl, msg, *args, **kwargs)
 
@@ -126,6 +126,6 @@ class NewLogger(object):
         if experiment:
             try:
                 msg = 'id=%s' % experiment.uuid[:6] + ' - ' + msg
-            except:
+            except Exception:
                 pass
         return self.logger.exception(msg, *args)

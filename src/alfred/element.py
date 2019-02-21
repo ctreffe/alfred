@@ -475,13 +475,13 @@ class TextEntryElement(InputElement, WebElementInterface):
         {% if prefix or suffix %}
             </div>
         {% endif %}
-        
+
         </td></tr></table></td></tr>
         {% if corrective_hint %}
             <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
         {% endif %}
         </table></div>
-        
+
         ''')
 
     @property
@@ -669,13 +669,13 @@ class NumberEntryElement(RegEntryElement):
         {% if prefix or suffix %}
             </div>
         {% endif %}
-        
+
         </td></tr></table></td></tr>
         {% if corrective_hint %}
             <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
         {% endif %}
         </table></div>
-        
+
         ''')
 
     @property
@@ -712,7 +712,7 @@ class NumberEntryElement(RegEntryElement):
 
         try:
             f = float(self._input)
-        except:
+        except Exception:
             return False
 
         if self._min is not None:
@@ -734,12 +734,12 @@ class NumberEntryElement(RegEntryElement):
         if 0 < self._decimals:
             try:
                 tempInput = float(self._input)
-            except:
+            except Exception:
                 tempInput = ''
         else:
             try:
                 tempInput = int(self._input)
-            except:
+            except Exception:
                 tempInput = ''
 
         return({self.name: tempInput} if self.validateData() and tempInput != '' else {self.name: ''})
@@ -951,18 +951,18 @@ class LikertMatrix(InputElement, WebElementInterface):
         return lmData
 
     def _short_labels(self):
-        l = 6
+        L = 6
         rv = []
         for i in range(self._items):
             label = self._itemLabels[2 * i]
             if label != '':
                 label = label.replace('.', '')
                 words = label.split()
-                num = int(round((old_div(l, len(words))) + 0.5))
+                num = int(round((old_div(L, len(words))) + 0.5))
                 sl = ''
                 for w in words:
                     sl = sl + w[:num]
-                rv.append(sl[:l])
+                rv.append(sl[:L])
             else:
                 rv.append('')
         return rv
@@ -1063,7 +1063,7 @@ class LikertMatrix(InputElement, WebElementInterface):
                 value = int(self._input[i])
                 ret = ret and 0 <= value <= self._levels
             return ret
-        except:
+        except Exception:
             return False
 
     def setData(self, d):
@@ -1195,7 +1195,7 @@ class SingleChoiceElement(LikertElement):
             value = int(self._input)
             ret = ret and 0 <= value <= self._levels
             return ret
-        except:
+        except Exception:
             return False
 
     @property
@@ -1280,7 +1280,7 @@ class MultipleChoiceElement(LikertElement):
             else:
                 self._input = settings._config_parser.get('debug', debugString)
 
-            if self._input == True:
+            if self._input is True:
                 self._input = ['1' for i in range(len(self._itemLabels))]
             else:
                 self._input = ['0' for i in range(len(self._itemLabels))]
@@ -1474,17 +1474,17 @@ class LikertListElement(InputElement, WebElementInterface):
         return True
 
     def _short_labels(self):
-        l = 6
+        L = 6
         rv = []
         for label in self._itemLabels:
             if label != '':
                 label = label.replace('.', '')
                 words = label.split()
-                num = int(round((old_div(l, len(words))) + 0.5))
+                num = int(round((old_div(L, len(words))) + 0.5))
                 sl = ''
                 for w in words:
                     sl = sl + w[:num]
-                rv.append(sl[:l])
+                rv.append(sl[:L])
             else:
                 rv.append('')
         return rv
@@ -1541,7 +1541,7 @@ class LikertListElement(InputElement, WebElementInterface):
             for v in self._input:
                 ret = ret and 0 <= int(v) < self._levels
             return ret
-        except:
+        except Exception:
             return False
 
     @property
@@ -1680,7 +1680,7 @@ class ImageElement(Element, WebElementInterface):
             try:
                 self._min_times = json.loads(d.get(self.name + '_min_times', '[]'))
                 self._max_times = json.loads(d.get(self.name + '_max_times', '[]'))
-            except:
+            except Exception:
                 self._min_times = []
                 self._max_times = []
 
@@ -1845,9 +1845,9 @@ class WebSliderElement(InputElement, WebElementInterface):
 
             </table>
         </div>
-        
+
         <input type="hidden" value="{{ input }}" name="{{ name }}" />
-        
+
         <script>
         $('div[name={{ name }}]').slider({change: function( event, ui ) {
             $('input[name={{ name }}]').val(ui.value);
@@ -1864,7 +1864,7 @@ class WebSliderElement(InputElement, WebElementInterface):
 
 
         </script>
-        
+
         ''')
 
     @property

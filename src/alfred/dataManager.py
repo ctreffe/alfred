@@ -8,6 +8,7 @@ from __future__ import absolute_import
 from builtins import object
 from .exceptions import AlfredError
 
+
 class DataManager(object):
     def __init__(self, experiment):
         self._experiment = experiment
@@ -47,16 +48,15 @@ class DataManager(object):
             if data['uid'] == uid:
                 return data
             elif 'subtreeData' in data:
-                
+
                 for item in data['subtreeData']:
                     try:
                         d = worker(item, uid)
                         return d
-                    except:
+                    except Exception:
                         if item == data['subtreeData'][-1]:
                             raise AlfredError("did not find uuid in tree")
                 raise AlfredError("Custom Error")
             else:
                 raise AlfredError("did not find uuid in tree")
         return worker(data, uid)
-

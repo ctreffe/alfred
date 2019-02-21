@@ -66,7 +66,7 @@ class QuestionCore(object):
     def tag(self, tag):
         if not (tag is None or isinstance(tag, str) or isinstance(tag, str)):
             raise TypeError("tag must be an instance of str or unicode")
-        if self._tag != None:
+        if self._tag is not None:
             raise ValueError("you're not allowed to change a tag.")
         self._tag = tag
 

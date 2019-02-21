@@ -26,7 +26,6 @@ try:
     from PySide.QtWebKit import QWebView
 except ImportError:
     from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
-    #from PySide2.QtGui import QWidget, QVBoxLayout, QScrollArea, QMainWindow, QLabel
     from PySide2.QtCore import Qt
     import PySide2.QtCore as QtCore
     from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView

@@ -130,7 +130,7 @@ class BaseWebLayout(Layout):
         self._style_urls.append((99, self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/base_web_layout.css'), content_type="text/css")))
         self._style_urls.append((1, self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
         self._style_urls.append((2, self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/jquery-ui.css'), content_type="text/css")))
-        #self._style_urls.append(self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
+        # self._style_urls.append(self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
 
         # add js files
         self._js_urls.append((0o1,
@@ -517,7 +517,7 @@ class BaseQtLayout(Layout):
         # Hier das Layout leeren!
         while widgetSet:
             widget = self._messageLayout.takeAt(0)
-            if widget == None:
+            if widget is None:
                 widgetSet = False
             else:
                 widget.widget().setParent(None)
@@ -644,7 +644,7 @@ class GoeWebLayout(Layout):
         self._style_urls.append((99, self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/goe_web_layout.css'), content_type="text/css")))
         self._style_urls.append((1, self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
         self._style_urls.append((2, self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/jquery-ui.css'), content_type="text/css")))
-        #self._style_urls.append(self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
+        # self._style_urls.append(self._uiController.addStaticFile(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
 
         # add js files
         self._js_urls.append((0o1,
