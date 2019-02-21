@@ -23,7 +23,7 @@ import PySide2.QtCore as QtCore
 from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView
 
 from ._core import Direction
-from .layout import BaseWebLayout, BaseQtLayout
+from .layout import BaseWebLayout
 
 import alfred.settings
 from .helpmates import localserver as localserver

@@ -27,7 +27,7 @@ from alfred import Experiment
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
-text01 = TextElement()
+text01 = TextElement("This is a textelement.")
 
 #################################
 # - Section 3: Custom classes - #
@@ -48,7 +48,10 @@ class Script(object):
         page04 = CompositeQuestion(title="Page 04")
         page05 = CompositeQuestion(title="Page 05")
 
+        page01.addElements(text01)
+
         main = QuestionGroup()
+        # main = SegmentedQG()
         group01 = HeadOpenQG()
         group01.appendItems(page01, page02)
 
@@ -57,7 +60,7 @@ class Script(object):
 
         main.appendItems(group01, group02)
 
-        exp.questionController.appendItem(myGroup)
+        exp.questionController.appendItem(main)
 
         return exp
 
