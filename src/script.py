@@ -111,6 +111,54 @@ regentry01 = RegEntryElement(
 )
 
 # NumberEntryElement
+numberentry01 = NumberEntryElement(
+    name="numberentry01",
+    instruction="Enter a number",
+    alignment="center",
+    fontSize=14,
+    decimals=3,
+    min=1.3,
+    max=3.7,
+    default=0,
+    forceInput=True,
+    matchHint="Input not valid.",   # Standard match hint can be altered in config.conf
+    noInputCorrectiveHint="Please enter something.",
+    debugString="numberentry01_debug"
+)
+
+# PasswordElement
+password01 = PasswordElement(
+    name="password01",
+    instruction="Enter any password",
+    alignment="left",
+    fontSize="normal",
+    password="friend",
+    default="Speak friend and enter.",
+    forceInput=False,
+    noInputCorrectiveHint="Please enter something.",
+    debugString="password01_debug"
+)
+
+# LikertMatrix
+likertmatrix01 = LikertMatrix(
+    name="likertmatrix01",
+    instruction="Enter <b>something</b>",
+    alignment="left",
+    fontSize="normal",
+    levels=5,
+    items=3,
+    default=4,
+    itemLabels=[
+        "item 1, left", "item 1, right",
+        "item 2, left", "item 2, right",
+        "item 3, left", "item 3, right"
+    ],
+    topScaleLabels=["level 1", "level 2", "level 3", "level 4", "level 5"],
+    bottomScaleLabels=["level 1", "level 2", "level 3", "level 4", "level 5"],
+    transpose=False,        # this is the default
+    tableStriped=True,
+    shuffle=False,          # this is the default
+)
 
 ###########################################
 # - Section 5: Define Pages & Structure - #
