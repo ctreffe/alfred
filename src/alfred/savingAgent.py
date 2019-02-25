@@ -365,7 +365,7 @@ class LocalSavingAgent(SavingAgent):
 
     def _save(self, data):
         try:
-            with open(self._file, 'wb') as outfile:
+            with open(self._file, 'w') as outfile:
                 json.dump(data, outfile, indent=4, sort_keys=True)
         except Exception as e:
             raise SavingAgentRunException("Error while saving: %s" % e)
