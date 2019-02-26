@@ -797,7 +797,7 @@ class NumberEntryElement(RegEntryElement):
 
 
 class PasswordElement(TextEntryElement):
-    def __init__(self, instruction='', password='', forceInput=True, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, **kwargs):
+    def __init__(self, instruction='', password='', forceInput=True, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, wrong_password_hint=None, **kwargs):
         '''
         **PasswordElement*** desplays a single line text edit for entering a password (input is not visible) with an instruction text on its' left.
 
@@ -815,6 +815,7 @@ class PasswordElement(TextEntryElement):
         super(PasswordElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, forceInput=forceInput, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
 
         self._password = password
+        self.wrong_password_hint_user = wrong_password_hint
 
     @property
     def webWidget(self):
@@ -842,7 +843,9 @@ class PasswordElement(TextEntryElement):
 
     @property
     def wrong_password_hint(self):
-        if self._question and self._question._experiment\
+        if self.wrong_password_hint_user is not None:
+            return self.wrong_password_hint_user
+        elif self._question and self._question._experiment\
                 and 'corrective_password' in self._question._experiment.settings.hints:
             return self._question._experiment.settings.hints['corrective_password']
         logger.error("Can't access wrong_password_hint for %s " % type(self).__name__)
