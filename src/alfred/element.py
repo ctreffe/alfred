@@ -809,6 +809,7 @@ class PasswordElement(TextEntryElement):
         :param str/int font: Fontsize used in PasswordElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
         :param bool forceInput: Sets user input to be mandatory (True as standard or False).
         :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param str wrong_password_hint: Hint to be displayed if user input does not equal password.
 
         .. caution:: If forceInput is set to false, any input will be accepted, but still validated against correct password.
         '''
