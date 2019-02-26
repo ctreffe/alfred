@@ -17,7 +17,7 @@ class DataManager(object):
     def addAdditionalData(self, key, value):
         self._additionalData[key] = value
 
-    def getAddionalDataByKey(self, key):
+    def getAdditionalDataByKey(self, key):
         return self._additionalData[key]
 
     def getData(self):
