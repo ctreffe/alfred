@@ -47,17 +47,22 @@ class DynamicQuestion(CompositeQuestion):
 
         dynamic_text01 = TextElement(
             name="dynamic_text01",
-            text="Input 1: {input1}<br>Input 2: {input2}<br>Sum: {sum}".format(input1=num01, input2=num02, sum=input_sum)
+            text="Input 1: {}<br>Input 2: {}<br>Sum: {}".format(num01, num02, input_sum)
         )
 
         text01 = self._experiment.dataManager.findExperimentDataByUid('page20')['textentry01']
 
         dynamic_text02 = TextElement(
             name="dynamic_text02",
-            text="Input: {input}".format(input=text01)
+            text="Input: {}".format(text01)
         )
 
-        self.addElements(dynamic_text01, dynamic_text02)
+        # addAdditionalData and getAdditionalDataByKey test
+        self._experiment.dataManager.addAdditionalData("test", 3)
+        num03 = self._experiment.dataManager.getAdditionalDataByKey("test")
+        dynamic_text03 = TextElement(text="DataManager Test: {}".format(num03))
+
+        self.addElements(dynamic_text01, dynamic_text02, dynamic_text03)
 
 
 ##########################################
@@ -149,7 +154,7 @@ regentry01 = RegEntryElement(
     instruction="Enter an E-Mail adress",
     alignment="right",
     fontSize="big",
-    regEx="[^@]+@[^\.]+\..+",
+    regEx="[^@]+@[^\.]+\..+",       # very basic regex for email
     default="invalid input",
     forceInput=True,
     matchHint="Please check your input again.",
@@ -198,10 +203,10 @@ password01 = PasswordElement(
     fontSize="normal",
     password="friend",
     default="Speak friend and enter.",
-    forceInput=False,
+    forceInput=True,
     noInputCorrectiveHint="Speak friend and enter.",
-    # matchHint="Speak friend and enter.",
-    debugString="password01_debug"
+    debugString="password01_debug",
+    wrong_password_hint="Speak friend and enter. (wrong_password_hint)"
 )
 
 # --- Page 4 --- #
@@ -437,9 +442,19 @@ page60 = DynamicQuestion(title="Dynamic Page (Page 6)", uid="page60")
 # Fill Pages
 page10.addElements(text01, text02, text03, hline01, pbar01, data01, data02)
 page20.addElements(textentry01, textentry02, textarea01, textarea02)
-page30.addElements(regentry01, numberentry01, numberentry02, password01)
-page40.addElements(likertelement01, likertmatrix01, likertmatrix02,
-                   singlechoice01, multiplechoice01)
+page30.addElements(
+    regentry01,
+    numberentry01,
+    numberentry02,
+    password01
+)
+page40.addElements(
+    likertelement01,
+    likertmatrix01,
+    likertmatrix02,
+    singlechoice01,
+    multiplechoice01
+)
 page50.addElements(image01, table01)
 
 
