@@ -707,6 +707,8 @@ class NumberEntryElement(RegEntryElement):
         if not self._forceInput and self._input == '':
             return True
 
+        print("Test: " + self._input)
+
         try:
             f = float(self._input)
         except Exception:
@@ -720,7 +722,7 @@ class NumberEntryElement(RegEntryElement):
             if not f <= self._max:
                 return False
 
-        re_str = "^[+-]?\d+$" if self._decimals == 0 else "^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
+        re_str = r"^[+-]?\d+$" if self._decimals == 0 else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
         if re.match(re_str, str(self._input)):
             return True
 
