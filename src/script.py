@@ -172,7 +172,7 @@ numberentry01 = NumberEntryElement(
     # min=1.3,
     # max=3.7,
     default=None,
-    forceInput=False,
+    forceInput=True,
     matchHint="Input not valid.",   # Standard match hint can be altered in config.conf
     noInputCorrectiveHint="Please enter something.",
     debugString="numberentry01_debug"
@@ -188,7 +188,7 @@ numberentry02 = NumberEntryElement(
     # min=1.3,
     # max=3.7,
     default=None,
-    forceInput=False,
+    forceInput=True,
     matchHint="Input not valid.",   # Standard match hint can be altered in config.conf
     noInputCorrectiveHint="Please enter something.",
     debugString="numberentry02_debug"
@@ -443,10 +443,10 @@ page60 = DynamicQuestion(title="Dynamic Page (Page 6)", uid="page60")
 page10.addElements(text01, text02, text03, hline01, pbar01, data01, data02)
 page20.addElements(textentry01, textentry02, textarea01, textarea02)
 page30.addElements(
-    regentry01,
+    # regentry01,
     numberentry01,
-    numberentry02,
-    password01
+    # numberentry02,
+    # password01
 )
 page40.addElements(
     likertelement01,
@@ -467,16 +467,19 @@ group20 = SegmentedQG()
 # ----------------------------------------------- #
 # Fill Groups
 group10.appendItems(page10, page20)
-group20.appendItems(page30, page40, page50, page60)
+group20.appendItems(
+    page30,
+    # page40, page50, page60
+)
 
 # ----------------------------------------------- #
 # Append to main group #
 # ----------------------------------------------- #
 # Don't forget to add your question groups made up of loop-generated questions
 main.appendItems(
-    group10,
+    # group10,
     group20,
-    loopgroup
+    # loopgroup
 )
 
 ########################################
