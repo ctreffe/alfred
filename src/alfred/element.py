@@ -707,8 +707,6 @@ class NumberEntryElement(RegEntryElement):
         if not self._forceInput and self._input == '':
             return True
 
-        print("Test: " + self._input)
-
         try:
             f = float(self._input)
         except Exception:
@@ -744,12 +742,13 @@ class NumberEntryElement(RegEntryElement):
         return({self.name: tempInput} if self.validateData() and tempInput != '' else {self.name: ''})
 
     def setData(self, d):
+
         if self.enabled:
             val = d.get(self.name, '')
-            if not isinstance(val, str) and not isinstance(val, str):
+            if not isinstance(val, str):
                 val = str(val)
-                val = val.replace(',', '.')
-                super(NumberEntryElement, self).setData({self.name: val})
+            val = val.replace(',', '.')
+            super(NumberEntryElement, self).setData({self.name: val})
 
     @property
     def match_hint(self):
