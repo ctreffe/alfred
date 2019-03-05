@@ -68,7 +68,7 @@ class Element(object):
             raise AlfredError("Element must implement WebElementInterface.")
 
         if name is not None:
-            if not re.match('^%s$' % '[-_A-Za-z0-9]*', name):
+            if not re.match(r'^%s$' % '[-_A-Za-z0-9]*', name):
                 raise ValueError(u'Element names may only contain following charakters: A-Z a-z 0-9 _ -')
 
         self._name = name
@@ -614,7 +614,7 @@ class RegEntryElement(TextEntryElement):
     def correctiveHints(self):
         if not self.showCorrectiveHints:
             return []
-        elif re.match('^%s$' % self._regEx, self._input):
+        elif re.match(r'^%s$' % self._regEx, self._input):
             return []
         elif self._input == '' and not self._forceInput:
             return []
@@ -772,7 +772,7 @@ class NumberEntryElement(RegEntryElement):
         elif self._forceInput and self._input == '':
             return [self.no_input_hint]
         else:
-            re_str = "^[+-]?\d+$" if self._decimals == 0 else "^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
+            re_str = r"^[+-]?\d+$" if self._decimals == 0 else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
             if not re.match(re_str, str(self._input)) \
                     or (self._min is not None and not self._min <= float(self._input)) \
                     or (self._max is not None and not float(self._input) <= self._max):
