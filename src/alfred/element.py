@@ -595,7 +595,7 @@ class RegEntryElement(TextEntryElement):
         if not self._forceInput and self._input == '':
             return True
 
-        if re.match('^%s$' % self._regEx, str(self._input)):
+        if re.match(r'^%s$' % self._regEx, str(self._input)):
             return True
 
         return False
