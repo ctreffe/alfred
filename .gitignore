@@ -1,5 +1,8 @@
+*.DS_store
+
 # saved files from tests
 save/
+fallback_save/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
