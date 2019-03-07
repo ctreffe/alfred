@@ -1,4 +1,3 @@
-from builtins import range
 from distutils.core import setup
 from distutils.command.install import install as dist_install
 
