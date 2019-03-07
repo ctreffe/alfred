@@ -65,14 +65,15 @@ _quit_event = threading.Event()
 
 if alfred.settings.experiment.type == 'qt-wk':
     _logger.info("Starting saving thread for qt-wk experiment.")
-    _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    _thread.daemon = True
-    _thread.start()
+    # _thread = threading.Thread(target=_save_looper, name='DataSaver')
+    # _thread.daemon = True
+    # _thread.start()
 elif alfred.settings.experiment.type == 'web':
     _logger.info("Starting global saving thread for web experiments.")
-    _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    _thread.daemon = True
-    _thread.start()
+
+_thread = threading.Thread(target=_save_looper, name='DataSaver')
+_thread.daemon = True
+_thread.start()
 
 
 class SavingAgentController(object):
