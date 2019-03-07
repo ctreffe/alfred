@@ -2,16 +2,16 @@ from distutils.core import setup
 from distutils.command.install import install as dist_install
 
 name = 'alfred'
-version = '0.2b5' #major.minor[.patch[sub] e.g. 0.1.0 first experimental version, 1.0.1b2 second beta release of the first patch of 1.0
+version = '0.3b1' #major.minor[.patch[sub] e.g. 0.1.0 first experimental version, 1.0.1b2 second beta release of the first patch of 1.0
 desc = 'alfred : a library for rapid experiment development'
-author = 'Christian Treffenstaedt, Paul Wiemann'
+author = 'Christian Treffenstaedt, Paul Wiemann, Johannes Brachem'
 author_email = 'treffenstaedt@psych.uni-goettingen.de'
 license = 'MIT'
 url = 'http://www.the-experimenter.com/alfred'
 package_dir = {'':'src'}
-packages = ['alfred', 'alfred.helpmates', 'alfred.questionnaires']
+packages = ['alfred', 'alfred.helpmates']
 package_data = {'alfred' : ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*']}
-requires = ['jinja2 (>= 2.6)', 'PySide',  'PyMongo', 'CouchDB', 'Flask', 'xmltodict']
+requires = ['jinja2 (>= 2.6)', 'PySide',  'PyMongo', 'Flask', 'xmltodict']
 
 
 class install(dist_install):
@@ -44,7 +44,7 @@ class install(dist_install):
 
                 for i in range(len(lines)):
                     line = lines[i]
-                    if re.match("^\s*((import|from)\s+PySide|@.*Slot)", line):
+                    if re.match("^\s*((import|from)\s+PySide2|@.*Slot)", line):
                         self.debug_print("In \"%s\" wird Zeile %s \"%s\" auskommentiert" % (filename, i, line[:-1]))
                         lines[i] = '#' + line
 
