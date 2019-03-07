@@ -63,12 +63,7 @@ _queue = queue.PriorityQueue()
 _quit_event = threading.Event()
 
 
-if alfred.settings.experiment.type == 'qt':
-    _logger.info("Starting saving thread for qt experiment.")
-    _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    _thread.daemon = True
-    _thread.start()
-elif alfred.settings.experiment.type == 'qt-wk':
+if alfred.settings.experiment.type == 'qt-wk':
     _logger.info("Starting saving thread for qt-wk experiment.")
     _thread = threading.Thread(target=_save_looper, name='DataSaver')
     _thread.daemon = True
@@ -283,9 +278,9 @@ class SavingAgentController(object):
     def runSavingAgents(self, level, sync=False):
 
         priority = 1 if sync else 5
-        e = threading.Event()
-        data = self._experiment.dataManager.getData()
-        data['save_time'] = time.time()
+        e = threading.Event()                           # initialise empty threading event
+        data = self._experiment.dataManager.getData()   # dictionary of the .json data file of current session
+        data['save_time'] = time.time()                 # set data["save_time"] to current time
         _queue.put((priority, e, data, time.time(), level, self))
         if sync:
             e.wait()
