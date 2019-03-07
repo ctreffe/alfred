@@ -12,8 +12,6 @@ standard_library.install_aliases()
 from os.path import abspath, isabs, join
 import xmltodict
 import csv
-import couchdb
-from urllib.parse import urlparse
 from alfred.exceptions import AlfredError
 import alfred.settings as settings
 
@@ -107,40 +105,6 @@ def readCSVData(path):
     dataset.pop(0)
 
     return dataset
-
-
-def getCouchDBData(url='http://fpsych:14mgEisen@couchdb.e-scientifics.de', db_name='psyfw_experiments', expName=None, expVersion=None, expCondition=None):
-    '''
-    Diese Funktion ruft Datensets aus der standard CouchDB-Datenbank ab.
-    '''
-    server = couchdb.Server(url)
-    db = server[db_name]
-
-    print('fetching docs (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name), end=' ')
-    docs = []
-
-    if expCondition is None:
-        for row in db.view('default/exp_name_version', key=[expName, expVersion]):
-            docs.append(db[row.id])
-
-    elif expCondition is not None:
-        for row in db.view('default/exp_name_version_condition', key=[expName, expVersion, expCondition]):
-            docs.append(db[row.id])
-
-    print('done. %i documents fetched.' % len(docs))
-
-    return docs
-
-
-def writeCouchDBData(dataset, url='http://fpsych:14mgEisen@couchdb.e-scientifics.de', db_name='psyfw_experiments'):
-    '''
-    '''
-    server = couchdb.Server(url)
-    db = server[db_name]
-
-    print('writing doc (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name), end=' ')
-    db[dataset.id] = dataset
-    print('done.')
 
 
 def findExternalExperimentDataByUid(data, uid):
