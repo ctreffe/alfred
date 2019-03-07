@@ -40,9 +40,9 @@ class DynamicQuestion(CompositeQuestion):
 
         input_sum = num01 + num02
 
-        print("number 1: " + num01)
-        print("number 2: " + num02)
-        print("sum: " + input_sum)
+        print("number 1:", num01)
+        print("number 2:", num02)
+        print("sum:", input_sum)
         print("test")
 
         dynamic_text01 = TextElement(
@@ -154,7 +154,7 @@ regentry01 = RegEntryElement(
     instruction="Enter an E-Mail adress",
     alignment="right",
     fontSize="big",
-    regEx="[^@]+@[^\.]+\..+",       # very basic regex for email
+    regEx=r"[^@]+@[^\.]+\..+",       # very basic regex for email
     default="invalid input",
     forceInput=True,
     matchHint="Please check your input again.",
@@ -443,10 +443,10 @@ page60 = DynamicQuestion(title="Dynamic Page (Page 6)", uid="page60")
 page10.addElements(text01, text02, text03, hline01, pbar01, data01, data02)
 page20.addElements(textentry01, textentry02, textarea01, textarea02)
 page30.addElements(
-    # regentry01,
+    regentry01,
     numberentry01,
-    # numberentry02,
-    # password01
+    numberentry02,
+    password01
 )
 page40.addElements(
     likertelement01,
@@ -469,7 +469,7 @@ group20 = SegmentedQG()
 group10.appendItems(page10, page20)
 group20.appendItems(
     page30,
-    # page40, page50, page60
+    page40, page50, page60
 )
 
 # ----------------------------------------------- #
@@ -477,9 +477,9 @@ group20.appendItems(
 # ----------------------------------------------- #
 # Don't forget to add your question groups made up of loop-generated questions
 main.appendItems(
-    # group10,
+    group10,
     group20,
-    # loopgroup
+    loopgroup
 )
 
 ########################################
