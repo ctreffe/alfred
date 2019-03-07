@@ -32,7 +32,7 @@ def _save_worker():
     try:
         while True:
             try:
-                (i, event, data, data_time, level, sac) = _queue.get_nowait()
+                (i, data_time, level, event, data, sac) = _queue.get_nowait()
             except queue.Empty:
                 break
             sac._do_saving(data, data_time, level)
@@ -65,9 +65,6 @@ _quit_event = threading.Event()
 
 if alfred.settings.experiment.type == 'qt-wk':
     _logger.info("Starting saving thread for qt-wk experiment.")
-    # _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    # _thread.daemon = True
-    # _thread.start()
 elif alfred.settings.experiment.type == 'web':
     _logger.info("Starting global saving thread for web experiments.")
 
@@ -282,7 +279,7 @@ class SavingAgentController(object):
         e = threading.Event()                           # initialise empty threading event
         data = self._experiment.dataManager.getData()   # dictionary of the .json data file of current session
         data['save_time'] = time.time()                 # set data["save_time"] to current time
-        _queue.put((priority, e, data, time.time(), level, self))
+        _queue.put((priority, time.time(), level, e, data, self))
         if sync:
             e.wait()
 
