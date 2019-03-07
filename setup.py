@@ -36,7 +36,8 @@ class install(dist_install):
 
         for root, subFolders, files in os.walk(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src', 'alfred')):
             for file in files:
-                filelist.append(os.path.join(root, file))
+                if file.endswith(".py"):
+                    filelist.append(os.path.join(root, file))
 
         for filename in filelist:
             with open(filename, 'r+') as f:
