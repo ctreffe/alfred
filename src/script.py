@@ -26,6 +26,7 @@ from alfred import Experiment
 exp_type = "qt-wk"
 exp_name = "Full Functionality Overview"
 exp_version = "0.1"
+exp_author_mail = "jobrachem@posteo.de"
 
 #################################
 # - Section 3: Custom classes - #
@@ -491,14 +492,15 @@ main.appendItems(
 
 class Script(object):
 
-    def __init__(self, exp_type, exp_name, exp_version, main_pagegroup):
+    def __init__(self, exp_type, exp_name, exp_version, exp_author_mail, main_pagegroup):
         self.exp_type = exp_type
         self.exp_name = exp_name
         self.exp_version = exp_version
+        self.exp_author_mail = exp_author_mail
         self.main_pagegroup = main_pagegroup
 
     def generate_experiment(self):
-        exp = Experiment(self.exp_type, self.exp_name, self.exp_version)
+        exp = Experiment(self.exp_type, self.exp_name, self.exp_version, self.exp_author_mail)
 
         # Append Main Group to Experiment
         exp.questionController.appendItem(self.main_pagegroup)
@@ -510,4 +512,5 @@ generate_experiment = Script(
     exp_type=exp_type,
     exp_name=exp_name,
     exp_version=exp_version,
+    exp_author_mail=exp_author_mail,
     main_pagegroup=main).generate_experiment

@@ -43,11 +43,12 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, expType, expName, expVersion, config_string='', basepath=None, customLayout=None):
+    def __init__(self, expType, expName, expVersion, expAuthorMail, config_string='', basepath=None, customLayout=None):
         '''
         :param str expType: Typ des Experiments.
         :param str expName: Name des Experiments.
         :param str expVersion: Version des Experiments.
+        :param str expAuthorMail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
         :param layout customLayout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
 
         .. note:: mindestens expType und expName müssen beim Aufruf übergeben werden!
@@ -82,6 +83,8 @@ class Experiment(object):
         if type(expName) != str or expName == '' or type(expVersion) != str or expVersion == '' or not(expType == 'qt' or
                                                                                                        expType == 'web' or expType == 'qt-wk'):
             raise ValueError("expName and expVersion must be a non empty strings and expType must be 'qt' or 'web'")
+
+        self._author_mail = expAuthorMail
 
         #: Name des Experiments
         self._name = expName
@@ -161,6 +164,15 @@ class Experiment(object):
 
         # run savingAgentController
         self._savingAgentController.runSavingAgents(99)
+
+    @property
+    def author_mail(self):
+        '''
+        Achtung: *read-only*
+
+        :return: E-Mail des/der Autor*in **author_mail** (*str*)
+        '''
+        return self._author_mail
 
     @property
     def type(self):

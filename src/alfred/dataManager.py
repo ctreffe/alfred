@@ -22,6 +22,7 @@ class DataManager(object):
 
     def getData(self):
         data = self._experiment.questionController.data
+        data['expAuthorMail'] = self._experiment.author_mail
         data['expName'] = self._experiment.name
         data['expVersion'] = self._experiment.version
         data['expType'] = self._experiment.type
