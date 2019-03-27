@@ -16,6 +16,7 @@ import os
 import configparser
 import codecs
 import io
+import base64
 
 
 def _package_path():
@@ -178,6 +179,9 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.collection = config_parser.get('mongo_saving_agent', 'collection')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
         self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
+        self.mongo_saving_agent.use_ssl = config_parser.getboolean('mongo_saving_agent', 'use_ssl')
+        # self.mongo_saving_agent.user = base64.b64decode(config_parser.get('mongo_saving_agent', 'user')).decode("utf-8")
+        # self.mongo_saving_agent.password = base64.b64decode(config_parser.get('mongo_saving_agent', 'password')).decode("utf-8")
 
         self.fallback_local_saving_agent = _DictObj()
         self.fallback_local_saving_agent.use = config_parser.getboolean('fallback_local_saving_agent', 'use')
@@ -200,8 +204,8 @@ class ExperimentSpecificSettings(object):
         self.fallback_mongo_saving_agent.host = config_parser.get('fallback_mongo_saving_agent', 'host')
         self.fallback_mongo_saving_agent.database = config_parser.get('fallback_mongo_saving_agent', 'database')
         self.fallback_mongo_saving_agent.collection = config_parser.get('fallback_mongo_saving_agent', 'collection')
-        self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
-        self.fallback_mongo_saving_agent.password = config_parser.get('fallback_mongo_saving_agent', 'password')
+        self.fallback_mongo_saving_agent.user = base64.b64decode(config_parser.get('fallback_mongo_saving_agent', 'user')).decode("utf-8")
+        self.fallback_mongo_saving_agent.password = base64.b64decode(config_parser.get('fallback_mongo_saving_agent', 'password')).decode("utf-8")
 
         self.level2_fallback_local_saving_agent = _DictObj()
         self.level2_fallback_local_saving_agent.use = config_parser.getboolean('level2_fallback_local_saving_agent', 'use')

@@ -15,8 +15,12 @@ def socket_checker(port):
 
 
 if settings.experiment.type == 'qt-wk':
-    import script
-    exp = script.generate_experiment()
+    try:
+        import script
+        exp = script.generate_experiment()
+    except Exception:
+        from script import script
+        exp = script.generate_experiment()
     exp.start()
 elif settings.experiment.type == 'web':
     import sys

@@ -32,7 +32,7 @@ def _save_worker():
     try:
         while True:
             try:
-                (i, event, data, data_time, level, sac) = _queue.get_nowait()
+                (i, data_time, level, event, data, sac) = _queue.get_nowait()
             except queue.Empty:
                 break
             sac._do_saving(data, data_time, level)
@@ -63,21 +63,14 @@ _queue = queue.PriorityQueue()
 _quit_event = threading.Event()
 
 
-if alfred.settings.experiment.type == 'qt':
-    _logger.info("Starting saving thread for qt experiment.")
-    _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    _thread.daemon = True
-    _thread.start()
-elif alfred.settings.experiment.type == 'qt-wk':
+if alfred.settings.experiment.type == 'qt-wk':
     _logger.info("Starting saving thread for qt-wk experiment.")
-    _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    _thread.daemon = True
-    _thread.start()
 elif alfred.settings.experiment.type == 'web':
     _logger.info("Starting global saving thread for web experiments.")
-    _thread = threading.Thread(target=_save_looper, name='DataSaver')
-    _thread.daemon = True
-    _thread.start()
+
+_thread = threading.Thread(target=_save_looper, name='DataSaver')
+_thread.daemon = True
+_thread.start()
 
 
 class SavingAgentController(object):
@@ -142,6 +135,7 @@ class SavingAgentController(object):
                     self._experiment.settings.mongo_saving_agent.collection,
                     self._experiment.settings.mongo_saving_agent.user,
                     self._experiment.settings.mongo_saving_agent.password,
+                    self._experiment.settings.mongo_saving_agent.use_ssl,
                     self._experiment.settings.mongo_saving_agent.level,
                     self._experiment
                 )
@@ -282,10 +276,10 @@ class SavingAgentController(object):
     def runSavingAgents(self, level, sync=False):
 
         priority = 1 if sync else 5
-        e = threading.Event()
-        data = self._experiment.dataManager.getData()
-        data['save_time'] = time.time()
-        _queue.put((priority, e, data, time.time(), level, self))
+        e = threading.Event()                           # initialise empty threading event
+        data = self._experiment.dataManager.getData()   # dictionary of the .json data file of current session
+        data['save_time'] = time.time()                 # set data["save_time"] to current time
+        _queue.put((priority, time.time(), level, e, data, self))
         if sync:
             e.wait()
 
@@ -365,7 +359,7 @@ class LocalSavingAgent(SavingAgent):
 
     def _save(self, data):
         try:
-            with open(self._file, 'wb') as outfile:
+            with open(self._file, 'w') as outfile:
                 json.dump(data, outfile, indent=4, sort_keys=True)
         except Exception as e:
             raise SavingAgentRunException("Error while saving: %s" % e)
@@ -404,13 +398,13 @@ class CouchDBSavingAgent(SavingAgent):
 
 
 class MongoSavingAgent(SavingAgent):
-    def __init__(self, host, database, collection, user, password, activation_level=10, experiment=None):
+    def __init__(self, host, database, collection, user, password, use_ssl, activation_level=10, experiment=None):
         super(MongoSavingAgent, self).__init__(activation_level, experiment)
 
-        self._mc = pymongo.MongoClient(host)
+        self._mc = pymongo.MongoClient(host, ssl=use_ssl)
         self._db = self._mc[database]
-        if not self._db.authenticate(user, password):
-            raise RuntimeError("Could not authenticate with %s.%s" % (host, database))
+        # if not self._db.authenticate(user, password):
+        #     raise RuntimeError("Could not authenticate with %s.%s" % (host, database))
 
         self._col = self._db[collection]
 

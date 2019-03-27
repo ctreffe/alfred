@@ -16,7 +16,6 @@ from abc import ABCMeta, abstractmethod
 from jinja2 import Environment, PackageLoader
 from future.utils import with_metaclass
 
-
 from ._core import package_path
 
 jinja_env = Environment(loader=PackageLoader('alfred', 'templates'))

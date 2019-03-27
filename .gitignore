@@ -1,3 +1,10 @@
+*.DS_Store
+.DS_Store
+
+# saved files from tests
+save/
+fallback_save/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,3 +109,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+src/encode.py
+.DS_Store
+src/.DS_Store

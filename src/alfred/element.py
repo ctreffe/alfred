@@ -68,7 +68,7 @@ class Element(object):
             raise AlfredError("Element must implement WebElementInterface.")
 
         if name is not None:
-            if not re.match('^%s$' % '[-_A-Za-z0-9]*', name):
+            if not re.match(r'^%s$' % '[-_A-Za-z0-9]*', name):
                 raise ValueError(u'Element names may only contain following charakters: A-Z a-z 0-9 _ -')
 
         self._name = name
@@ -595,7 +595,7 @@ class RegEntryElement(TextEntryElement):
         if not self._forceInput and self._input == '':
             return True
 
-        if re.match('^%s$' % self._regEx, str(self._input)):
+        if re.match(r'^%s$' % self._regEx, str(self._input)):
             return True
 
         return False
@@ -614,7 +614,7 @@ class RegEntryElement(TextEntryElement):
     def correctiveHints(self):
         if not self.showCorrectiveHints:
             return []
-        elif re.match('^%s$' % self._regEx, self._input):
+        elif re.match(r'^%s$' % self._regEx, self._input):
             return []
         elif self._input == '' and not self._forceInput:
             return []
@@ -720,7 +720,7 @@ class NumberEntryElement(RegEntryElement):
             if not f <= self._max:
                 return False
 
-        re_str = "^[+-]?\d+$" if self._decimals == 0 else "^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
+        re_str = r"^[+-]?\d+$" if self._decimals == 0 else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
         if re.match(re_str, str(self._input)):
             return True
 
@@ -742,12 +742,13 @@ class NumberEntryElement(RegEntryElement):
         return({self.name: tempInput} if self.validateData() and tempInput != '' else {self.name: ''})
 
     def setData(self, d):
+
         if self.enabled:
             val = d.get(self.name, '')
-            if not isinstance(val, str) and not isinstance(val, str):
+            if not isinstance(val, str):
                 val = str(val)
-                val = val.replace(',', '.')
-                super(NumberEntryElement, self).setData({self.name: val})
+            val = val.replace(',', '.')
+            super(NumberEntryElement, self).setData({self.name: val})
 
     @property
     def match_hint(self):
@@ -771,7 +772,7 @@ class NumberEntryElement(RegEntryElement):
         elif self._forceInput and self._input == '':
             return [self.no_input_hint]
         else:
-            re_str = "^[+-]?\d+$" if self._decimals == 0 else "^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
+            re_str = r"^[+-]?\d+$" if self._decimals == 0 else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
             if not re.match(re_str, str(self._input)) \
                     or (self._min is not None and not self._min <= float(self._input)) \
                     or (self._max is not None and not float(self._input) <= self._max):
@@ -797,7 +798,7 @@ class NumberEntryElement(RegEntryElement):
 
 
 class PasswordElement(TextEntryElement):
-    def __init__(self, instruction='', password='', forceInput=True, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, **kwargs):
+    def __init__(self, instruction='', password='', forceInput=True, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, wrong_password_hint=None, **kwargs):
         '''
         **PasswordElement*** desplays a single line text edit for entering a password (input is not visible) with an instruction text on its' left.
 
@@ -809,12 +810,14 @@ class PasswordElement(TextEntryElement):
         :param str/int font: Fontsize used in PasswordElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
         :param bool forceInput: Sets user input to be mandatory (True as standard or False).
         :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param str wrong_password_hint: Hint to be displayed if user input does not equal password.
 
         .. caution:: If forceInput is set to false, any input will be accepted, but still validated against correct password.
         '''
         super(PasswordElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, forceInput=forceInput, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
 
         self._password = password
+        self.wrong_password_hint_user = wrong_password_hint
 
     @property
     def webWidget(self):
@@ -842,7 +845,9 @@ class PasswordElement(TextEntryElement):
 
     @property
     def wrong_password_hint(self):
-        if self._question and self._question._experiment\
+        if self.wrong_password_hint_user is not None:
+            return self.wrong_password_hint_user
+        elif self._question and self._question._experiment\
                 and 'corrective_password' in self._question._experiment.settings.hints:
             return self._question._experiment.settings.hints['corrective_password']
         logger.error("Can't access wrong_password_hint for %s " % type(self).__name__)
