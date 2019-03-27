@@ -156,7 +156,7 @@ class WebUserInterfaceController(UserInterfaceController):
         for i, cssScript in cssScripts:
             html = html + "<style type=\"text/css\">%s</style>" % cssScript
 
-        html = html + "</head><body><form id=\"form\" method=\"post\" action=\"%s/experiment\" autocomplete=\"off\" accept-charset=\"UTF-8\">" % self._basepath
+        html = html + "</head><body><form id=\"form\" method=\"post\" action=\"%s/alfredo/experiment\" autocomplete=\"off\" accept-charset=\"UTF-8\">" % self._basepath
 
         html = html + self._layout.render()
 
@@ -197,7 +197,7 @@ class WebUserInterfaceController(UserInterfaceController):
         while identifier in self._staticFilesDict:
             identifier = uuid4().hex
         self._staticFilesDict[identifier] = (path, content_type)
-        return self._basepath + '/staticfile/' + identifier
+        return self._basepath + '/alfredo/staticfile/' + identifier
 
     def getCallable(self, identifier):
         return self._callablesDict[identifier]
