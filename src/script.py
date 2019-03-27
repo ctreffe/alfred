@@ -24,8 +24,8 @@ from alfred import Experiment
 # - Section 2: Global variables and functions - #
 #################################################
 exp_type = "qt-wk"
-exp_name = "Full Functionality Overview"
-exp_version = "0.1"
+exp_name = "TEST2"
+exp_version = "0.3"
 exp_author_mail = "jobrachem@posteo.de"
 
 #################################
@@ -508,9 +508,9 @@ class Script(object):
         return exp
 
 
-generate_experiment = Script(
+script = Script(
     exp_type=exp_type,
     exp_name=exp_name,
     exp_version=exp_version,
     exp_author_mail=exp_author_mail,
-    main_pagegroup=main).generate_experiment
+    main_pagegroup=main)
