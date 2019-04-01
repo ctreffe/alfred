@@ -10,7 +10,7 @@ from builtins import object
 from abc import ABCMeta, abstractproperty
 import time
 
-from ._core import QuestionCore
+from ._core import PageCore
 from .exceptions import AlfredError
 from . import element
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
@@ -20,48 +20,48 @@ from future.utils import with_metaclass
 from functools import reduce
 
 
-class Question(QuestionCore):
-    def __init__(self, minimumDisplayTime=0, minimumDisplayTimeMsg=None, **kwargs):
-        self._minimumDisplayTime = minimumDisplayTime
+class Page(PageCore):
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs):
+        self._minimumDisplayTime = minimum_display_time
         if settings.debugmode and settings.debug.disableMinimumDisplayTime:
             self._minimumDisplayTime = 0
-        self._minimumDisplayTimeMsg = minimumDisplayTimeMsg
+        self._minimumDisplayTimeMsg = minimum_display_time_msg
 
         self._data = {}
         self._isClosed = False
         self._showCorrectiveHints = False
 
-        super(Question, self).__init__(**kwargs)
+        super(Page, self).__init__(**kwargs)
 
-    def addedToExperiment(self, experiment):
-        if not isinstance(self, WebQuestionInterface):
-            raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebQuestionInterface.__name__))
+    def added_to_experiment(self, experiment):
+        if not isinstance(self, WebPageInterface):
+            raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebPageInterface.__name__))
 
-        super(Question, self).addedToExperiment(experiment)
+        super(Page, self).added_to_experiment(experiment)
 
     @property
-    def showThumbnail(self):
+    def show_thumbnail(self):
         return True
 
     @property
-    def showCorrectiveHints(self):
+    def show_corrective_hints(self):
         return self._showCorrectiveHints
 
-    @showCorrectiveHints.setter
-    def showCorrectiveHints(self, b):
+    @show_corrective_hints.setter
+    def show_corrective_hints(self, b):
         self._showCorrectiveHints = bool(b)
 
     @property
-    def isClosed(self):
+    def is_closed(self):
         return self._isClosed
 
     @property
     def data(self):
-        data = super(Question, self).data
+        data = super(Page, self).data
         data.update(self._data)
         return data
 
-    def _onShowingWidget(self):
+    def _on_showing_widget(self):
         '''
         Method for internal processes on showing Widget
         '''
@@ -69,28 +69,28 @@ class Question(QuestionCore):
         if not self._hasBeenShown:
             self._data['firstShowTime'] = time.time()
 
-        self.onShowingWidget()
+        self.on_showing_widget()
 
         self._hasBeenShown = True
 
-    def onShowingWidget(self):
+    def on_showing_widget(self):
         pass
 
-    def _onHidingWidget(self):
+    def _on_hiding_widget(self):
         '''
         Method for internal processes on hiding Widget
         '''
-        self.onHidingWidget()
+        self.on_hiding_widget()
 
         self._hasBeenHidden = True
 
-        # TODO: Sollten nicht onHiding closingtime und duration errechnet werden? Passiert momentan onClosing und funktioniert daher nicht in allen question groups!
+        # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen question groups!
 
-    def onHidingWidget(self):
+    def on_hiding_widget(self):
         pass
 
     def closeQuestion(self):
-        if not self.allowClosing:
+        if not self.allow_closing:
             raise AlfredError()
 
         if 'closingTime' not in self._data:
@@ -102,13 +102,13 @@ class Question(QuestionCore):
 
         self._isClosed = True
 
-    def allowClosing(self):
+    def allow_closing(self):
         return True
 
-    def canDisplayCorrectiveHintsInline(self):
+    def can_display_corrective_hints_in_line(self):
         return False
 
-    def correctiveHints(self):
+    def corrective_hints(self):
         '''
         returns a list of corrective hints
 
@@ -116,7 +116,7 @@ class Question(QuestionCore):
         '''
         return []
 
-    def allowLeaving(self, direction):
+    def allow_leaving(self, direction):
         if 'firstShowTime' in self._data and \
             time.time() - self._data['firstShowTime'] \
                 < self._minimumDisplayTime:
@@ -124,13 +124,13 @@ class Question(QuestionCore):
                 msg = self._minimumDisplayTimeMsg if self._minimumDisplayTimeMsg else self._experiment.settings.messages.minimum_display_time
             except Exception:
                 msg = "Can't access minimum display time message"
-            self._experiment.messageManager.postMessage(msg.replace('${mdt}', str(self._minimumDisplayTime)))
+            self._experiment.message_manager.post_message(msg.replace('${mdt}', str(self._minimumDisplayTime)))
             return False
         return True
 
 
-class WebQuestionInterface(with_metaclass(ABCMeta, object)):
-    def prepareWebWidget(self):
+class WebPageInterface(with_metaclass(ABCMeta, object)):
+    def prepare_web_widget(self):
         '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
         Nutzereingaben zwischen aufruf dieser funktion und dem anzeigen der
         Frage kmmen koennen. Hier sollte die Frage, von
@@ -140,36 +140,36 @@ class WebQuestionInterface(with_metaclass(ABCMeta, object)):
         pass
 
     @abstractproperty
-    def webWidget(self):
+    def web_widget(self):
         pass
 
     @property
-    def webThumbnail(self):
+    def web_thumbnail(self):
         return None
 
     @property
-    def cssCode(self):
+    def css_code(self):
         return []
 
     @property
-    def cssURLs(self):
+    def css_urls(self):
         return []
 
     @property
-    def jsCode(self):
+    def js_code(self):
         return []
 
     @property
-    def jsURLs(self):
+    def js_urls(self):
         return []
 
-    def setData(self, dictionary):
+    def set_data(self, dictionary):
         pass
 
 
-class CoreCompositeQuestion(Question):
+class CoreCompositePage(Page):
     def __init__(self, elements=None, **kwargs):
-        super(CoreCompositeQuestion, self).__init__(**kwargs)
+        super(CoreCompositePage, self).__init__(**kwargs)
 
         self._elementList = []
         self._elementNameCounter = 1
@@ -178,18 +178,18 @@ class CoreCompositeQuestion(Question):
             if not isinstance(elements, list):
                 raise TypeError
             for elmnt in elements:
-                self.addElement(elmnt)
+                self.add_element(elmnt)
 
-    def addElement(self, element):
+    def add_element(self, element):
         if not isinstance(element, Element):
             raise TypeError
 
-        expType = settings.experiment.type  # 'web' or 'qt-wk'
+        exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
-        if expType == 'web' and not isinstance(element, WebElementInterface):
+        if exp_type == 'web' and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
-        if isinstance(self, WebQuestionInterface) and not isinstance(element, WebElementInterface):
+        if isinstance(self, WebPageInterface) and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
         if element.name is None:
@@ -197,193 +197,193 @@ class CoreCompositeQuestion(Question):
             self._elementNameCounter = self._elementNameCounter + 1
 
         self._elementList.append(element)
-        element.addedToQuestion(self)
+        element.added_to_page(self)
 
-    def addElements(self, *elements):
+    def add_elements(self, *elements):
         for elmnt in elements:
-            self.addElement(elmnt)
+            self.add_element(elmnt)
 
     @property
-    def allowClosing(self):
-        return reduce(lambda b, element: element.validateData() and b, self._elementList, True)
+    def allow_closing(self):
+        return reduce(lambda b, element: element.validate_data() and b, self._elementList, True)
 
     def closeQuestion(self):
-        super(CoreCompositeQuestion, self).closeQuestion()
+        super(CoreCompositePage, self).closeQuestion()
 
         for elmnt in self._elementList:
             elmnt.enabled = False
 
     @property
     def data(self):
-        data = super(CoreCompositeQuestion, self).data
+        data = super(CoreCompositePage, self).data
         for elmnt in self._elementList:
             data.update(elmnt.data)
 
         return data
 
     @property
-    def canDisplayCorrectiveHintsInline(self):
-        return reduce(lambda b, element: b and element.canDisplayCorrectiveHintsInline, self._elementList, True)
+    def can_display_corrective_hints_in_line(self):
+        return reduce(lambda b, element: b and element.can_display_corrective_hints_in_line, self._elementList, True)
 
     @property
-    def showCorrectiveHints(self):
+    def show_corrective_hints(self):
         return self._showCorrectiveHints
 
-    @showCorrectiveHints.setter
-    def showCorrectiveHints(self, b):
+    @show_corrective_hints.setter
+    def show_corrective_hints(self, b):
         b = bool(b)
         self._showCorrectiveHints = b
         for elmnt in self._elementList:
-            elmnt.showCorrectiveHints = b
+            elmnt.show_corrective_hints = b
 
     @property
-    def correctiveHints(self):
+    def corrective_hints(self):
         # only display hints if property is True
-        if not self.showCorrectiveHints:
+        if not self.show_corrective_hints:
             return []
 
         # get corrective hints for each element
         list_of_lists = []
 
         for elmnt in self._elementList:
-            if not elmnt.canDisplayCorrectiveHintsInline and elmnt.correctiveHints:
-                list_of_lists.append(elmnt.correctiveHints)
+            if not elmnt.can_display_corrective_hints_in_line and elmnt.corrective_hints:
+                list_of_lists.append(elmnt.corrective_hints)
 
         # flatten list
         return [item for sublist in list_of_lists for item in sublist]
 
-    def setData(self, dictionary):
+    def set_data(self, dictionary):
         for elmnt in self._elementList:
-            elmnt.setData(dictionary)
+            elmnt.set_data(dictionary)
 
 
-class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
-    def prepareWebWidget(self):
+class WebCompositePage(CoreCompositePage, WebPageInterface):
+    def prepare_web_widget(self):
         for elmnt in self._elementList:
-            elmnt.prepareWebWidget()
+            elmnt.prepare_web_widget()
 
     @property
-    def webWidget(self):
+    def web_widget(self):
         html = ''
 
         for elmnt in self._elementList:
-            if elmnt.webWidget != '' and elmnt.shouldBeShown:
-                html = html + ('<div class="row with-margin"><div id="elid-%s" class="element">' % elmnt.name) + elmnt.webWidget + '</div></div>'
+            if elmnt.web_widget != '' and elmnt.should_be_shown:
+                html = html + ('<div class="row with-margin"><div id="elid-%s" class="element">' % elmnt.name) + elmnt.web_widget + '</div></div>'
 
         return html
 
     @property
-    def webThumbnail(self):
+    def web_thumbnail(self):
         '''
         gibt das thumbnail von self._thumbnail_element oder falls self._thumbnail_element nicht gesetzt, das erste thumbnail eines elements aus self._elementList zurueck.
 
         .. todo:: was ist im fall, wenn thumbnail element nicht gestzt ist? anders verhalten als jetzt???
 
         '''
-        if not self.showThumbnail:
+        if not self.show_thumbnail:
             return None
 
         if self._thumbnail_element:
-            return self._thumbnail_element.webThumbnail
+            return self._thumbnail_element.web_thumbnail
         else:
             for elmnt in self._elementList:
-                if elmnt.webThumbnail and elmnt.shouldBeShown:
-                    return elmnt.webThumbnail
+                if elmnt.web_thumbnail and elmnt.should_be_shown:
+                    return elmnt.web_thumbnail
             return None
 
     @property
-    def cssCode(self):
-        return reduce(lambda l, element: l + element.cssCode, self._elementList, [])
+    def css_code(self):
+        return reduce(lambda l, element: l + element.css_code, self._elementList, [])
 
     @property
-    def cssURLs(self):
-        return reduce(lambda l, element: l + element.cssURLs, self._elementList, [])
+    def css_urls(self):
+        return reduce(lambda l, element: l + element.css_urls, self._elementList, [])
 
     @property
-    def jsCode(self):
-        return reduce(lambda l, element: l + element.jsCode, self._elementList, [])
+    def js_code(self):
+        return reduce(lambda l, element: l + element.js_code, self._elementList, [])
 
     @property
-    def jsURLs(self):
-        return reduce(lambda l, element: l + element.jsURLs, self._elementList, [])
+    def js_urls(self):
+        return reduce(lambda l, element: l + element.js_urls, self._elementList, [])
 
 
-class CompositeQuestion(WebCompositeQuestion):
+class CompositePage(WebCompositePage):
     pass
 
 
-class QuestionPlaceholder(Question, WebQuestionInterface):
-    def __init__(self, extData={}, **kwargs):
-        super(QuestionPlaceholder, self).__init__(**kwargs)
+class PagePlaceholder(Page, WebPageInterface):
+    def __init__(self, ext_data={}, **kwargs):
+        super(PagePlaceholder, self).__init__(**kwargs)
 
-        self._extData = extData
+        self._extData = ext_data
 
     @property
-    def webWidget(self):
+    def web_widget(self):
         return ''
 
     @property
     def data(self):
-        data = super(Question, self).data
+        data = super(Page, self).data
         data.update(self._extData)
         return data
 
     @property
-    def shouldBeShown(self):
+    def should_be_shown(self):
         return False
 
-    @shouldBeShown.setter
-    def shouldBeShown(self, b):
+    @should_be_shown.setter
+    def should_be_shown(self, b):
         pass
 
     @property
-    def isJumpable(self):
+    def is_jumpable(self):
         return False
 
-    @isJumpable.setter
-    def isJumpable(self, isJumpable):
+    @is_jumpable.setter
+    def is_jumpable(self, is_jumpable):
         pass
 
 
-class DemographicQuestion(CompositeQuestion):
-    def __init__(self, instruction=None, age=True, sex=True, courseOfStudies=True, semester=True, **kwargs):
-        super(DemographicQuestion, self).__init__(**kwargs)
+class DemographicPage(CompositePage):
+    def __init__(self, instruction=None, age=True, sex=True, course_of_studies=True, semester=True, **kwargs):
+        super(DemographicPage, self).__init__(**kwargs)
 
         if instruction:
-            self.addElement(element.TextElement(instruction))
-        self.addElement(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
+            self.add_element(element.TextElement(instruction))
+        self.add_element(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
         if age:
-            self.addElement(element.TextEntryElement(u"Dein Alter: ", name="age"))
+            self.add_element(element.TextEntryElement(u"Dein Alter: ", name="age"))
 
         if sex:
-            self.addElement(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
+            self.add_element(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
-        if courseOfStudies:
-            self.addElement(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='courseOfStudies'))
+        if course_of_studies:
+            self.add_element(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
 
         if semester:
-            self.addElement(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
+            self.add_element(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
-class AutoHideQuestion(CompositeQuestion):
-    def __init__(self, onHiding=False, onClosing=True, **kwargs):
-        super(AutoHideQuestion, self).__init__(**kwargs)
+class AutoHidePage(CompositePage):
+    def __init__(self, on_hiding=False, on_closing=True, **kwargs):
+        super(AutoHidePage, self).__init__(**kwargs)
 
-        self._onClosing = onClosing
-        self._onHiding = onHiding
+        self._onClosing = on_closing
+        self._onHiding = on_hiding
 
-    def onHidingWidget(self):
+    def on_hiding_widget(self):
         if self._onHiding:
-            self.shouldBeShown = False
+            self.should_be_shown = False
 
     def closeQuestion(self):
-        super(AutoHideQuestion, self).closeQuestion()
+        super(AutoHidePage, self).closeQuestion()
         if self._onClosing:
-            self.shouldBeShown = False
+            self.should_be_shown = False
 
 
-class ExperimentFinishQuestion(CompositeQuestion):
-    def onShowingWidget(self):
+class ExperimentFinishPage(CompositePage):
+    def on_showing_widget(self):
         if 'firstShowTime' not in self._data:
             exp_title = TextElement('Informationen zur Session:', font='big')
 
@@ -396,28 +396,28 @@ class ExperimentFinishQuestion(CompositeQuestion):
 
             exp_info_element = TextElement(exp_infos)
 
-            self.addElements(exp_title, exp_info_element, ExperimenterMessages())
+            self.add_elements(exp_title, exp_info_element, ExperimenterMessages())
 
-        super(ExperimentFinishQuestion, self).onShowingWidget()
+        super(ExperimentFinishPage, self).on_showing_widget()
 
 
-class HeadOpenQGCantClose(CompositeQuestion):
+class HeadOpenSectionCantClose(CompositePage):
     def __init__(self, **kwargs):
-        super(HeadOpenQGCantClose, self).__init__(**kwargs)
+        super(HeadOpenSectionCantClose, self).__init__(**kwargs)
 
-        self.addElement(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
+        self.add_element(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
 
 
-class MongoSaveCompositeQuestion(CompositeQuestion):
-    def __init__(self, host, database, collection, user, password, error='ignore', hideData=True, *args, **kwargs):
-        super(MongoSaveCompositeQuestion, self).__init__(*args, **kwargs)
+class MongoSaveCompositePage(CompositePage):
+    def __init__(self, host, database, collection, user, password, error='ignore', hide_data=True, *args, **kwargs):
+        super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
         self._host = host
         self._database = database
         self._collection = collection
         self._user = user
         self._password = password
         self._error = error
-        self._hide_data = hideData
+        self._hide_data = hide_data
         self._saved = False
 
     @property
@@ -428,10 +428,10 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
                     'uid': self.uid}
             return data
         else:
-            return super(MongoSaveCompositeQuestion, self).data
+            return super(MongoSaveCompositePage, self).data
 
     def closeQuestion(self):
-        rv = super(MongoSaveCompositeQuestion, self).closeQuestion()
+        rv = super(MongoSaveCompositePage, self).closeQuestion()
         if self._saved:
             return rv
         from pymongo import MongoClient
@@ -440,7 +440,7 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
             db = client[self._database]
             db.authenticate(self._user, self._password)
             col = db[self._collection]
-            data = super(MongoSaveCompositeQuestion, self).data
+            data = super(MongoSaveCompositePage, self).data
             data.pop('firstShowTime', None)
             data.pop('closingTime', None)
             col.insert(data)
@@ -452,7 +452,7 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
 
 
 ####################
-# Question Mixins
+# Page Mixins
 ####################
 
 class WebTimeoutMixin(object):
@@ -466,24 +466,24 @@ class WebTimeoutMixin(object):
         if settings.debugmode and settings.debug.reduceCountdown:
             self._timeout = int(settings.debug.reducedCountdownTime)
 
-    def addedToExperiment(self, experiment):
-        super(WebTimeoutMixin, self).addedToExperiment(experiment)
-        self._end_link = self._experiment.userInterfaceController.addCallable(self.callback)
+    def added_to_experiment(self, experiment):
+        super(WebTimeoutMixin, self).added_to_experiment(experiment)
+        self._end_link = self._experiment.user_interface_controller.add_callable(self.callback)
 
     def callback(self, *args, **kwargs):
         self._run_timeout = False
-        self._experiment.userInterfaceController.updateWithUserInput(kwargs)
+        self._experiment.user_interface_controller.update_with_user_input(kwargs)
         return self.on_timeout(*args, **kwargs)
 
-    def onHidingWidget(self):
+    def on_hiding_widget(self):
         self._run_timeout = False
-        super(WebTimeoutMixin, self).onHidingWidget()
+        super(WebTimeoutMixin, self).on_hiding_widget()
 
     def on_timeout(self, *args, **kwargs):
         pass
 
     @property
-    def jsCode(self):
+    def js_code(self):
         code = (5, '''
             $(document).ready(function(){
                 var start_time = new Date();
@@ -510,17 +510,17 @@ class WebTimeoutMixin(object):
                 setTimeout(timeout_function, timeout*1000);
             });
         ''' % (self._timeout, self._end_link))
-        jsCode = super(WebTimeoutMixin, self).jsCode
+        js_code = super(WebTimeoutMixin, self).js_code
         if self._run_timeout:
-            jsCode.append(code)
+            js_code.append(code)
         else:
-            jsCode.append((5, '''$(document).ready(function(){$(".timeout-label").html(0);});'''))
-        return jsCode
+            js_code.append((5, '''$(document).ready(function(){$(".timeout-label").html(0);});'''))
+        return js_code
 
 
 class WebTimeoutForwardMixin(WebTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
-        self._experiment.userInterfaceController.moveForward()
+        self._experiment.user_interface_controller.move_forward()
 
 
 class WebTimeoutCloseMixin(WebTimeoutMixin):
@@ -529,30 +529,30 @@ class WebTimeoutCloseMixin(WebTimeoutMixin):
 
 
 class HideButtonsMixin(object):
-    def _onShowingWidget(self):
-        self._experiment.userInterfaceController.layout.forwardEnabled = False
-        self._experiment.userInterfaceController.layout.backwardEnabled = False
-        self._experiment.userInterfaceController.layout.jumpListEnabled = False
-        self._experiment.userInterfaceController.layout.finishDisabled = True
+    def _on_showing_widget(self):
+        self._experiment.user_interface_controller.layout.forward_enabled = False
+        self._experiment.user_interface_controller.layout.backward_enabled = False
+        self._experiment.user_interface_controller.layout.jump_list_enabled = False
+        self._experiment.user_interface_controller.layout.finish_disabled = True
 
-        super(HideButtonsMixin, self)._onShowingWidget()
+        super(HideButtonsMixin, self)._on_showing_widget()
 
-    def _onHidingWidget(self):
-        self._experiment.userInterfaceController.layout.forwardEnabled = True
-        self._experiment.userInterfaceController.layout.backwardEnabled = True
-        self._experiment.userInterfaceController.layout.jumpListEnabled = True
-        self._experiment.userInterfaceController.layout.finishDisabled = False
+    def _on_hiding_widget(self):
+        self._experiment.user_interface_controller.layout.forward_enabled = True
+        self._experiment.user_interface_controller.layout.backward_enabled = True
+        self._experiment.user_interface_controller.layout.jump_list_enabled = True
+        self._experiment.user_interface_controller.layout.finish_disabled = False
 
-        super(HideButtonsMixin, self)._onHidingWidget()
+        super(HideButtonsMixin, self)._on_hiding_widget()
 
 
 ####################
 # Questions with Mixins
 ####################
 
-class WebTimeoutForwardQuestion(WebTimeoutForwardMixin, WebCompositeQuestion):
+class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
     pass
 
 
-class WebTimeoutCloseQuestion(WebTimeoutCloseMixin, WebCompositeQuestion):
+class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
