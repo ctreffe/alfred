@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from builtins import object
 from alfred._core import Direction
 
-from .questionGroup import PageGroup
+from .section import PageGroup
 from .question import CompositePage, WebCompositePage
 from .element import TextElement, WebExitEnabler
 

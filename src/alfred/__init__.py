@@ -24,10 +24,10 @@ init_logging(__name__)
 import time
 from uuid import uuid4
 
-from .savingAgent import SavingAgentController
+from .saving_agent import SavingAgentController
 from .data_manager import DataManager
 from .question_controller import PageController
-from .uiController import WebUserInterfaceController, QtWebKitUserInterfaceController
+from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
 from . import settings
 from . import messages
@@ -57,8 +57,8 @@ class Experiment(object):
 
         Beschreibung:
             | Bei Aufruf von *Experiment* werden :py:class:`question_controller.PageController`, :py:class:`data_manager.DataManager`
-            | und :py:class:`savingAgent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
-            | :py:mod:`.uiController` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
+            | und :py:class:`saving_agent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
+            | :py:mod:`.ui_controller` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
 
         |
 
@@ -66,10 +66,10 @@ class Experiment(object):
         **Momentan implementierte Typen für Experimente:**
 
         =========  =========================================== ===================================================
-        Typ        Beschreibung                                uiController
+        Typ        Beschreibung                                ui_controller
         =========  =========================================== ===================================================
-        **'qt'**   Lokales qt-Interface wird genutzt.          :py:class:`uiController.QtUserInterfaceController`
-        **'web'**  Bereitstellung als HTML-Seite via Webserver :py:class:`uiController.WebUserInterfaceController`
+        **'qt'**   Lokales qt-Interface wird genutzt.          :py:class:`ui_controller.QtUserInterfaceController`
+        **'web'**  Bereitstellung als HTML-Seite via Webserver :py:class:`ui_controller.WebUserInterfaceController`
         =========  =========================================== ===================================================
 
         |
@@ -142,7 +142,7 @@ class Experiment(object):
         '''
         Startet das Experiment, wenn die Bereitstellung lokal erfolgt.
 
-        Für Qt-Experimente wird :meth:`uiController.QtUserInterfaceController.start` aufgerufen.
+        Für Qt-Experimente wird :meth:`ui_controller.QtUserInterfaceController.start` aufgerufen.
         '''
         self.question_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
@@ -223,7 +223,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`uiController.QtUserInterfaceController` oder :py:class:`uiController.WebUserInterfaceController`
+        :return: :py:class:`ui_controller.QtUserInterfaceController` oder :py:class:`ui_controller.WebUserInterfaceController`
         '''
         return self._userInterfaceController
 
@@ -250,7 +250,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`savingAgent.SavingAgentController`
+        :return: :py:class:`saving_agent.SavingAgentController`
         '''
         return self._savingAgentController
 

@@ -13,7 +13,7 @@ Description: This experiment serves to showcase and test Alfred's full functiona
 #################################
 
 from alfred.question import *
-from alfred.questionGroup import *
+from alfred.section import *
 from alfred.element import *
 from alfred.layout import *
 from alfred.helpmates import *

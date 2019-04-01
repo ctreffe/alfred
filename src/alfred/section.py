@@ -365,9 +365,9 @@ class HeadOpenSection(PageGroup):
         super(HeadOpenSection, self).leave(direction)
 
     @staticmethod
-    def _allow_closing_all_child_questions(questionGroup, L=None):
+    def _allow_closing_all_child_questions(section, L=None):
         allow_closing = True
-        for item in questionGroup._questionList:
+        for item in section._questionList:
             if isinstance(item, PageGroup):
                 allow_closing = allow_closing and HeadOpenSection._allow_closing_all_child_questions(item, L)
             elif not item.allow_closing:  # item is instance of Page and does not allow closing
@@ -378,8 +378,8 @@ class HeadOpenSection(PageGroup):
         return allow_closing
 
     @staticmethod
-    def _close_child_questions(questionGroup):
-        for item in questionGroup._questionList:
+    def _close_child_questions(section):
+        for item in section._questionList:
             if isinstance(item, Page):
                 item.closeQuestion()
             else:
@@ -390,8 +390,8 @@ class HeadOpenSection(PageGroup):
         if isinstance(coreQuestion, Page):
             coreQuestion.show_corrective_hints = b
         else:
-            questionGroup = coreQuestion
-            for item in questionGroup._questionList:
+            section = coreQuestion
+            for item in section._questionList:
                 HeadOpenSection._set_show_corrective_hints(item, b)
 
 

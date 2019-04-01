@@ -34,9 +34,9 @@ class Layout(with_metaclass(ABCMeta, object)):
         self._jumpListEnabled = True
         self._jumpList = []
 
-    def activate(self, experiment, uiController):
+    def activate(self, experiment, ui_controller):
         self._experiment = experiment
-        self._uiController = uiController
+        self._uiController = ui_controller
 
     def deactivate(self):
         self._experiment = None
@@ -111,8 +111,8 @@ class BaseWebLayout(Layout):
         self._js_urls = []
         self._template = jinja_env.get_template('base_layout.html')
 
-    def activate(self, experiment, uiController):
-        super(BaseWebLayout, self).activate(experiment, uiController)
+    def activate(self, experiment, ui_controller):
+        super(BaseWebLayout, self).activate(experiment, ui_controller)
         # add css files
         self._style_urls.append((99, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/base_web_layout.css'), content_type="text/css")))
         self._style_urls.append((1, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
@@ -220,8 +220,8 @@ class GoeWebLayout(Layout):
         self._js_urls = []
         self._template = jinja_env.get_template('goe_layout.html')
 
-    def activate(self, experiment, uiController):
-        super(GoeWebLayout, self).activate(experiment, uiController)
+    def activate(self, experiment, ui_controller):
+        super(GoeWebLayout, self).activate(experiment, ui_controller)
         # add css files
         self._style_urls.append((99, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/goe_web_layout.css'), content_type="text/css")))
         self._style_urls.append((1, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))

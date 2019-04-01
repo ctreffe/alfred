@@ -257,21 +257,21 @@ class SavingAgentController(object):
             _logger.critical("Session abort! List of SavingAgents is empty, but saving is not disabled.", self._experiment)
             raise SavingAgentException("Session abort! List of SavingAgents is empty, but saving is not disabled.")
 
-    def add_saving_agent(self, savingAgent):
-        if not isinstance(savingAgent, SavingAgent):
+    def add_saving_agent(self, saving_agent):
+        if not isinstance(saving_agent, SavingAgent):
             raise TypeError
 
-        self._agents.append(savingAgent)
-        if savingAgent.activation_level <= 1:
-            _logger.info("Continuous SavingAgent %s added to experiment" % savingAgent, self._experiment)
-        elif savingAgent.activation_level > 1:
-            _logger.info("SavingAgent %s added to experiment" % savingAgent, self._experiment)
+        self._agents.append(saving_agent)
+        if saving_agent.activation_level <= 1:
+            _logger.info("Continuous SavingAgent %s added to experiment" % saving_agent, self._experiment)
+        elif saving_agent.activation_level > 1:
+            _logger.info("SavingAgent %s added to experiment" % saving_agent, self._experiment)
 
-    def add_failure_saving_agent(self, savingAgent):
-        if not isinstance(savingAgent, SavingAgent):
+    def add_failure_saving_agent(self, saving_agent):
+        if not isinstance(saving_agent, SavingAgent):
             raise TypeError
 
-        self._failure_agents.append(savingAgent)
+        self._failure_agents.append(saving_agent)
 
     def run_saving_agents(self, level, sync=False):
 

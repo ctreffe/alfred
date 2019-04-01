@@ -3,7 +3,7 @@
 '''
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
-Das Modul *uiController* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
+Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
 '''
 from __future__ import absolute_import
 
@@ -221,9 +221,9 @@ try:
     class ThreadHelper(QtCore.QObject):
         renderSignal = QtCore.Signal()
 
-        def __init__(self, uiController):
+        def __init__(self, ui_controller):
             super(ThreadHelper, self).__init__()
-            self._uiController = uiController
+            self._uiController = ui_controller
             self.renderSignal.connect(self.render_slot)
 
         def render(self):
@@ -323,5 +323,5 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         self._app.exec_()
 
         # after leaving app this code will be executed
-        from .savingAgent import wait_for_saving_thread
+        from .saving_agent import wait_for_saving_thread
         wait_for_saving_thread()
