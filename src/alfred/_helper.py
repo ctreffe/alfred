@@ -8,7 +8,7 @@ _helper contains internal functions which are not to be called by framework user
 """
 
 
-def fontsize_converter(fontArgument):
+def fontsizeConverter(fontArgument):
     '''
     FontsizeConverter checks any font arguments used in alfred and returns a fontsize variable compatible
     with any element or question in alfred.
@@ -30,7 +30,7 @@ def fontsize_converter(fontArgument):
     return fontArgument
 
 
-def alignment_converter(alignmentArgument, type='text'):
+def alignmentConverter(alignmentArgument, type='text'):
     '''
     AlignmentConverter checks any font arguments used in alfred and returns an alignment variable compatible
     for different element types in alfred.

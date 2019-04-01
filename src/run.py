@@ -26,7 +26,7 @@ elif settings.experiment.type == 'web':
     import sys
     import alfred.helpmates.localserver as ls
     import script
-    ls.set_generator(script)
+    ls.setGenerator(script)
     port = 5000
     while not socket_checker(port):
         port += 1

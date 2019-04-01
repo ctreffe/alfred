@@ -16,7 +16,7 @@ from alfred.exceptions import AlfredError
 import alfred.settings as settings
 
 
-def parse_xml_to_dict(path, interface='web'):
+def parseXmlToDict(path, interface='web'):
     '''
     parseXmlTpDict ermöglicht das Einlesen von XML in Dictionaries.
 
@@ -68,7 +68,7 @@ def parse_xml_to_dict(path, interface='web'):
     return dataOut
 
 
-def read_csv_data(path):
+def readCSVData(path):
     """
     Diese Funktion ermöglicht das Einlesen von Datensätzen,
     die innerhalb des Experimentes gebraucht werden, z.B.
@@ -107,7 +107,7 @@ def read_csv_data(path):
     return dataset
 
 
-def find_external_experiment_data_by_uid(data, uid):
+def findExternalExperimentDataByUid(data, uid):
     def worker(data, uid):
         if data['uid'] == uid:
             return data
@@ -125,7 +125,7 @@ def find_external_experiment_data_by_uid(data, uid):
     return worker(data, uid)
 
 
-def abs_external_file_path(filename):
+def absExternalFilePath(filename):
     path = join(settings.general.external_files_dir, filename)
     path = abspath(path)
     return path
