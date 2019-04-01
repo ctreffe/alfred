@@ -1,6 +1,8 @@
 *.DS_Store
 .DS_Store
 
+name_changelog.py
+names_changelog.md
 change_names.py
 class_names.json
 class_names_filled.json
