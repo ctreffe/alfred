@@ -25,15 +25,15 @@ import time
 from uuid import uuid4
 
 from .savingAgent import SavingAgentController
-from .data_manager import DataManager
-from .question_controller import QuestionController
-from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
+from .dataManager import DataManager
+from .questionController import QuestionController
+from .uiController import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
 from . import settings
 from . import messages
 
 from . import alfredlog
-logger = alfredlog.get_logger(__name__)
+logger = alfredlog.getLogger(__name__)
 
 
 class Experiment(object):
@@ -43,22 +43,22 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type, exp_name, exp_version, exp_author_mail, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, expType, expName, expVersion, expAuthorMail, config_string='', basepath=None, customLayout=None):
         '''
-        :param str exp_type: Typ des Experiments.
-        :param str exp_name: Name des Experiments.
-        :param str exp_version: Version des Experiments.
-        :param str exp_author_mail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
-        :param layout custom_layout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
+        :param str expType: Typ des Experiments.
+        :param str expName: Name des Experiments.
+        :param str expVersion: Version des Experiments.
+        :param str expAuthorMail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
+        :param layout customLayout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
 
-        .. note:: mindestens exp_type und exp_name müssen beim Aufruf übergeben werden!
+        .. note:: mindestens expType und expName müssen beim Aufruf übergeben werden!
 
         |
 
         Beschreibung:
-            | Bei Aufruf von *Experiment* werden :py:class:`question_controller.QuestionController`, :py:class:`data_manager.DataManager`
+            | Bei Aufruf von *Experiment* werden :py:class:`questionController.QuestionController`, :py:class:`dataManager.DataManager`
             | und :py:class:`savingAgent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
-            | :py:mod:`.ui_controller` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
+            | :py:mod:`.uiController` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
 
         |
 
@@ -66,10 +66,10 @@ class Experiment(object):
         **Momentan implementierte Typen für Experimente:**
 
         =========  =========================================== ===================================================
-        Typ        Beschreibung                                ui_controller
+        Typ        Beschreibung                                uiController
         =========  =========================================== ===================================================
-        **'qt'**   Lokales qt-Interface wird genutzt.          :py:class:`ui_controller.QtUserInterfaceController`
-        **'web'**  Bereitstellung als HTML-Seite via Webserver :py:class:`ui_controller.WebUserInterfaceController`
+        **'qt'**   Lokales qt-Interface wird genutzt.          :py:class:`uiController.QtUserInterfaceController`
+        **'web'**  Bereitstellung als HTML-Seite via Webserver :py:class:`uiController.WebUserInterfaceController`
         =========  =========================================== ===================================================
 
         |
@@ -80,20 +80,20 @@ class Experiment(object):
         |
         '''
 
-        if type(exp_name) != str or exp_name == '' or type(exp_version) != str or exp_version == '' or not(exp_type == 'qt' or
-                                                                                                       exp_type == 'web' or exp_type == 'qt-wk'):
-            raise ValueError("exp_name and exp_version must be a non empty strings and exp_type must be 'qt' or 'web'")
+        if type(expName) != str or expName == '' or type(expVersion) != str or expVersion == '' or not(expType == 'qt' or
+                                                                                                       expType == 'web' or expType == 'qt-wk'):
+            raise ValueError("expName and expVersion must be a non empty strings and expType must be 'qt' or 'web'")
 
-        self._author_mail = exp_author_mail
+        self._author_mail = expAuthorMail
 
         #: Name des Experiments
-        self._name = exp_name
+        self._name = expName
 
         #: Version des Experiments
-        self._version = exp_version
+        self._version = expVersion
 
         #: Typ des Experiments
-        self._type = exp_type
+        self._type = expType
         if self._type != settings.experiment.type:
             raise RuntimeError("experiment types must be equal in script and config file")
 
@@ -109,8 +109,8 @@ class Experiment(object):
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
-            if custom_layout:
-                web_layout = custom_layout
+            if customLayout:
+                web_layout = customLayout
             elif 'web_layout' in self._settings.experiment and hasattr(layout, self._settings.experiment.web_layout):
                 web_layout = getattr(layout, self._settings.experiment.web_layout)()
             elif 'web_layout' in self._settings.experiment and not hasattr(layout, self._settings.experiment.web_layout):
@@ -122,7 +122,7 @@ class Experiment(object):
 
         elif self._type == 'qt-wk':
             logger.warning("Experiment type qt-wk is experimental!!!", self)
-            self._userInterfaceController = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qtFullScreen, weblayout=web_layout)
+            self._userInterfaceController = QtWebKitUserInterfaceController(self, fullScreen=settings.experiment.qtFullScreen, weblayout=web_layout)
 
         else:
             ValueError("unknown type: '%s'" % self._type)
@@ -142,9 +142,9 @@ class Experiment(object):
         '''
         Startet das Experiment, wenn die Bereitstellung lokal erfolgt.
 
-        Für Qt-Experimente wird :meth:`ui_controller.QtUserInterfaceController.start` aufgerufen.
+        Für Qt-Experimente wird :meth:`uiController.QtUserInterfaceController.start` aufgerufen.
         '''
-        self.question_controller.generate_unset_tags_in_subtree()
+        self.questionController.generateUnsetTagsInSubtree()
         self._start_time = time.time()
         self._startTimeStamp = time.strftime('%Y-%m-%dT%H%M%S')
         logger.info("Experiment.start() called. Session is starting.", self)
@@ -152,7 +152,7 @@ class Experiment(object):
 
     def finish(self):
         '''
-        Beendet das Experiment. Ruft  :meth:`question_controller.QuestionController.change_to_finished_group` auf und setzt **self._finished** auf *True*.
+        Beendet das Experiment. Ruft  :meth:`questionController.QuestionController.changeToFinishedGroup` auf und setzt **self._finished** auf *True*.
 
         '''
         if self._finished:
@@ -160,10 +160,10 @@ class Experiment(object):
             return
         logger.info("Experiment.finish() called. Session is finishing.", self)
         self._finished = True
-        self._questionController.change_to_finished_group()
+        self._questionController.changeToFinishedGroup()
 
-        # run saving_agent_controller
-        self._savingAgentController.run_saving_agents(99)
+        # run savingAgentController
+        self._savingAgentController.runSavingAgents(99)
 
     @property
     def author_mail(self):
@@ -179,7 +179,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimenttyp **exp_type** (*str*)
+        :return: Experimenttyp **expType** (*str*)
         '''
 
         return self._type
@@ -189,7 +189,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentversion **exp_version** (*str*)
+        :return: Experimentversion **expVersion** (*str*)
         '''
         return self._version
 
@@ -198,20 +198,20 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentname **exp_name** (*str*)
+        :return: Experimentname **expName** (*str*)
         '''
         return self._name
 
     @property
-    def start_timestamp(self):
+    def startTimeStamp(self):
         return self._startTimeStamp
 
     @property
-    def message_manager(self):
+    def messageManager(self):
         return self._messageManager
 
     @property
-    def experimenter_message_manager(self):
+    def experimenterMessageManager(self):
         return self._experimenterMessageManager
 
     @property
@@ -219,34 +219,34 @@ class Experiment(object):
         return self._uuid
 
     @property
-    def user_interface_controller(self):
+    def userInterfaceController(self):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`ui_controller.QtUserInterfaceController` oder :py:class:`ui_controller.WebUserInterfaceController`
+        :return: :py:class:`uiController.QtUserInterfaceController` oder :py:class:`uiController.WebUserInterfaceController`
         '''
         return self._userInterfaceController
 
     @property
-    def question_controller(self):
+    def questionController(self):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`question_controller.QuestionController`
+        :return: :py:class:`questionController.QuestionController`
         '''
         return self._questionController
 
     @property
-    def data_manager(self):
+    def dataManager(self):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`data_manager.DataManager`
+        :return: :py:class:`dataManager.DataManager`
         '''
         return self._dataManager
 
     @property
-    def saving_agent_controller(self):
+    def savingAgentController(self):
         '''
         Achtung: *read-only*
 
@@ -268,7 +268,7 @@ class Experiment(object):
         return self._finished
 
     @property
-    def test_condition(self):
+    def testCondition(self):
         '''
         *read-only*
 
@@ -276,5 +276,5 @@ class Experiment(object):
         '''
         return self._testCondition
 
-    def add_test_condition(self, s):
+    def addTestCondition(self, s):
         self._testCondition = self._testCondition + '.' + s if self._testCondition else s

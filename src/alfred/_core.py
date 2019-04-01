@@ -11,9 +11,9 @@ from uuid import uuid4
 
 
 class QuestionCore(object):
-    def __init__(self, tag=None, uid=None, tagAndUid=None, is_jumpable=True, jumptext=None,
+    def __init__(self, tag=None, uid=None, tagAndUid=None, isJumpable=True, jumptext=None,
                  title=None, subtitle=None, statustext=None,
-                 should_be_shown_filter_function=None, **kwargs):
+                 shouldBeShownFilterFunction=None, **kwargs):
 
         if kwargs != {}:
             raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
@@ -21,7 +21,7 @@ class QuestionCore(object):
         self._tag = None
         self._uid = uid if uid is not None else uuid4().hex
         self._shouldBeShown = True
-        self._shouldBeShownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
+        self._shouldBeShownFilterFunction = shouldBeShownFilterFunction if shouldBeShownFilterFunction is not None else lambda exp: True
         self._parentGroup = None
         self._experiment = None
         self._jumptext = None
@@ -45,7 +45,7 @@ class QuestionCore(object):
         if jumptext is not None:
             self.jumptext = jumptext
 
-        self.is_jumpable = is_jumpable
+        self.isJumpable = isJumpable
 
         if title is not None:
             self.title = title
@@ -72,36 +72,36 @@ class QuestionCore(object):
     def uid(self):
         return self._uid
 
-    def set_should_be_shown_filter_function(self, f):
+    def setShouldBeShownFilterFunction(self, f):
         """
         Sets a filter function. f must take Experiment as parameter
         :type f: function
         """
         self._shouldBeShownFilterFunction = f
 
-    def remove_should_be_shown_filter_function(self):
+    def removeShouldBeShownFilterFunction(self):
         """
         remove the filter function
         """
         self._shouldBeShownFilterFunction = lambda exp: True
 
     @property
-    def should_be_shown(self):
+    def shouldBeShown(self):
         """
-        Returns True if should_be_shown is set to True (default) and all shouldBeShownFilterFunctions return True.
+        Returns True if shouldBeShown is set to True (default) and all shouldBeShownFilterFunctions return True.
         Otherwise False is returned
         """
         return self._shouldBeShown and self._shouldBeShownFilterFunction(self._experiment)
 
-    @should_be_shown.setter
-    def should_be_shown(self, b):
+    @shouldBeShown.setter
+    def shouldBeShown(self, b):
         """
-        sets should_be_shown to b.
+        sets shouldBeShown to b.
 
         :type b: bool
         """
         if not isinstance(b, bool):
-            raise TypeError("should_be_shown must be an instance of bool")
+            raise TypeError("shouldBeShown must be an instance of bool")
         self._shouldBeShown = b
 
     @property
@@ -112,14 +112,14 @@ class QuestionCore(object):
         return data
 
     @property
-    def is_jumpable(self):
+    def isJumpable(self):
         return self._isJumpable and self.jumptext is not None
 
-    @is_jumpable.setter
-    def is_jumpable(self, is_jumpable):
-        if not isinstance(is_jumpable, bool):
+    @isJumpable.setter
+    def isJumpable(self, isJumpable):
+        if not isinstance(isJumpable, bool):
             raise TypeError
-        self._isJumpable = is_jumpable
+        self._isJumpable = isJumpable
 
     @property
     def jumptext(self):
@@ -155,13 +155,13 @@ class QuestionCore(object):
     def statustext(self, title):
         self._statustext = title
 
-    def added_to_experiment(self, exp):
+    def addedToExperiment(self, exp):
         self._experiment = exp
 
-    def added_to_section(self, group):
+    def addedToQuestionGroup(self, group):
         self._parentGroup = group
 
-    def allow_leaving(self, direction):
+    def allowLeaving(self, direction):
         return True
 
 
