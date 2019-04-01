@@ -8,7 +8,7 @@ import os
 
 def init_logging(name='alfred'):
     from . import settings
-    logger = logging.getLogger(name)
+    logger = logging.get_logger(name)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     # configure handlers
@@ -57,12 +57,12 @@ def init_logging(name='alfred'):
         alfred_init('qt')
 
 
-def getLogger(module_name=None):
+def get_logger(module_name=None):
     return NewLogger(module_name)
 
 
 def alfred_init(expType):
-    logger = getLogger(__name__)
+    logger = get_logger(__name__)
 
     if expType == 'web':
         logger.info("Alfred framework web startup! Logging system initialized.")
@@ -72,7 +72,7 @@ def alfred_init(expType):
 
 class NewLogger(object):
     def __init__(self, module_name=None):
-        self.logger = logging.getLogger(module_name)
+        self.logger = logging.get_logger(module_name)
 
     def debug(self, msg, experiment=None, *args, **kwargs):
         if experiment:

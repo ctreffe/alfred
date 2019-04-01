@@ -25,15 +25,15 @@ import time
 from uuid import uuid4
 
 from .savingAgent import SavingAgentController
-from .dataManager import DataManager
-from .questionController import PageController
+from .data_manager import DataManager
+from .question_controller import PageController
 from .uiController import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
 from . import settings
 from . import messages
 
 from . import alfredlog
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.get_logger(__name__)
 
 
 class Experiment(object):
@@ -56,7 +56,7 @@ class Experiment(object):
         |
 
         Beschreibung:
-            | Bei Aufruf von *Experiment* werden :py:class:`questionController.PageController`, :py:class:`dataManager.DataManager`
+            | Bei Aufruf von *Experiment* werden :py:class:`question_controller.PageController`, :py:class:`data_manager.DataManager`
             | und :py:class:`savingAgent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
             | :py:mod:`.uiController` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
 
@@ -144,7 +144,7 @@ class Experiment(object):
 
         Für Qt-Experimente wird :meth:`uiController.QtUserInterfaceController.start` aufgerufen.
         '''
-        self.questionController.generateUnsetTagsInSubtree()
+        self.question_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
         self._startTimeStamp = time.strftime('%Y-%m-%dT%H%M%S')
         logger.info("Experiment.start() called. Session is starting.", self)
@@ -152,7 +152,7 @@ class Experiment(object):
 
     def finish(self):
         '''
-        Beendet das Experiment. Ruft  :meth:`questionController.PageController.changeToFinishedGroup` auf und setzt **self._finished** auf *True*.
+        Beendet das Experiment. Ruft  :meth:`question_controller.PageController.change_to_finished_group` auf und setzt **self._finished** auf *True*.
 
         '''
         if self._finished:
@@ -160,10 +160,10 @@ class Experiment(object):
             return
         logger.info("Experiment.finish() called. Session is finishing.", self)
         self._finished = True
-        self._questionController.changeToFinishedGroup()
+        self._questionController.change_to_finished_group()
 
-        # run savingAgentController
-        self._savingAgentController.runSavingAgents(99)
+        # run saving_agent_controller
+        self._savingAgentController.run_saving_agents(99)
 
     @property
     def author_mail(self):
@@ -203,15 +203,15 @@ class Experiment(object):
         return self._name
 
     @property
-    def startTimeStamp(self):
+    def start_timestamp(self):
         return self._startTimeStamp
 
     @property
-    def messageManager(self):
+    def message_manager(self):
         return self._messageManager
 
     @property
-    def experimenterMessageManager(self):
+    def experimenter_message_manager(self):
         return self._experimenterMessageManager
 
     @property
@@ -219,7 +219,7 @@ class Experiment(object):
         return self._uuid
 
     @property
-    def userInterfaceController(self):
+    def user_interface_controller(self):
         '''
         Achtung: *read-only*
 
@@ -228,25 +228,25 @@ class Experiment(object):
         return self._userInterfaceController
 
     @property
-    def questionController(self):
+    def question_controller(self):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`questionController.PageController`
+        :return: :py:class:`question_controller.PageController`
         '''
         return self._questionController
 
     @property
-    def dataManager(self):
+    def data_manager(self):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`dataManager.DataManager`
+        :return: :py:class:`data_manager.DataManager`
         '''
         return self._dataManager
 
     @property
-    def savingAgentController(self):
+    def saving_agent_controller(self):
         '''
         Achtung: *read-only*
 
@@ -268,7 +268,7 @@ class Experiment(object):
         return self._finished
 
     @property
-    def testCondition(self):
+    def test_condition(self):
         '''
         *read-only*
 
@@ -276,5 +276,5 @@ class Experiment(object):
         '''
         return self._testCondition
 
-    def addTestCondition(self, s):
+    def add_test_condition(self, s):
         self._testCondition = self._testCondition + '.' + s if self._testCondition else s

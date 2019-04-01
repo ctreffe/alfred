@@ -13,12 +13,12 @@ class MessageManager(object):
         self._queue = []
         self._lock = threading.Lock()
 
-    def postMessage(self, msg, title='', level=INFO):
+    def post_message(self, msg, title='', level=INFO):
         self._lock.acquire()
         self._queue.append(Message(msg, title, level))
         self._lock.release()
 
-    def getMessages(self):
+    def get_messages(self):
         self._lock.acquire()
         q = self._queue
         self._queue = []
