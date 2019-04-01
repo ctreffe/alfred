@@ -43,7 +43,7 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
 
         |
 
-        Bei Aufruf der Klasse wird mittels :meth:`.changeLayout` ein :attr:`.layout` gesetzt.
+        Bei Aufruf der Klasse wird mittels :meth:`.change_layout` ein :attr:`.layout` gesetzt.
 
         '''
         self._experiment = experiment
@@ -51,9 +51,9 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         self._oldQuestion = None
 
         if layout is None:
-            self.changeLayout(BaseQtLayout() if experiment.type == 'qt' else BaseWebLayout())
+            self.change_layout(BaseQtLayout() if experiment.type == 'qt' else BaseWebLayout())
         else:
-            self.changeLayout(layout)
+            self.change_layout(layout)
 
     @abstractmethod
     def render(self):
@@ -61,44 +61,44 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
 
     @property
     def layout(self):
-        return self._getLayout()
+        return self._get_layout()
 
-    def _getLayout(self):
+    def _get_layout(self):
         return self._layout
 
-    def changeLayout(self, layout):
+    def change_layout(self, layout):
         if self._layout is not None:
             self._layout.deactivate()
         self._layout = layout
         self._layout.activate(self._experiment, self)
 
-    def moveForward(self):
-        if self._experiment.questionController.allowLeaving(Direction.FORWARD):
-            self._experiment.questionController.currentQuestion._onHidingWidget()
-            if self._experiment.questionController.canMoveForward:
-                self._experiment.questionController.moveForward()
-                self._experiment.savingAgentController.runSavingAgents(1)
+    def move_forward(self):
+        if self._experiment.question_controller.allow_leaving(Direction.FORWARD):
+            self._experiment.question_controller.current_question._on_hiding_widget()
+            if self._experiment.question_controller.can_move_forward:
+                self._experiment.question_controller.move_forward()
+                self._experiment.saving_agent_controller.run_saving_agents(1)
             else:
                 self._experiment.finish()
-            self._experiment.questionController.currentQuestion._onShowingWidget()
+            self._experiment.question_controller.current_question._on_showing_widget()
 
-    def moveBackward(self):
-        if self._experiment.questionController.allowLeaving(Direction.BACKWARD):
-            self._experiment.questionController.currentQuestion._onHidingWidget()
-            self._experiment.questionController.moveBackward()
-            self._experiment.savingAgentController.runSavingAgents(1)
-            self._experiment.questionController.currentQuestion._onShowingWidget()
+    def move_backward(self):
+        if self._experiment.question_controller.allow_leaving(Direction.BACKWARD):
+            self._experiment.question_controller.current_question._on_hiding_widget()
+            self._experiment.question_controller.move_backward()
+            self._experiment.saving_agent_controller.run_saving_agents(1)
+            self._experiment.question_controller.current_question._on_showing_widget()
 
-    def moveToPosition(self, posList):
-        if self._experiment.questionController.allowLeaving(Direction.JUMP):
-            self._experiment.questionController.currentQuestion._onHidingWidget()
-            self._experiment.questionController.moveToPosition(posList)
-            self._experiment.savingAgentController.runSavingAgents(1)
-            self._experiment.questionController.currentQuestion._onShowingWidget()
+    def move_to_position(self, posList):
+        if self._experiment.question_controller.allow_leaving(Direction.JUMP):
+            self._experiment.question_controller.current_question._on_hiding_widget()
+            self._experiment.question_controller.move_to_position(posList)
+            self._experiment.saving_agent_controller.run_saving_agents(1)
+            self._experiment.question_controller.current_question._on_showing_widget()
 
     def start(self):
-        self._experiment.questionController.enter()
-        self._experiment.questionController.currentQuestion._onShowingWidget()
+        self._experiment.question_controller.enter()
+        self._experiment.question_controller.current_question._on_showing_widget()
 
 
 class WebUserInterfaceController(UserInterfaceController):
@@ -116,41 +116,41 @@ class WebUserInterfaceController(UserInterfaceController):
         return self._basepath
 
     def render(self):
-        self._experiment.questionController.currentQuestion.prepareWebWidget()
+        self._experiment.question_controller.current_question.prepare_web_widget()
 
         jsScripts = []
-        jsURLs = []
+        js_urls = []
         cssScripts = []
-        cssURLs = []
+        css_urls = []
 
         # update with layout
-        jsScripts = jsScripts + self._layout.javascriptCode
-        jsURLs = jsURLs + self._layout.javascriptURLs
-        cssScripts = cssScripts + self._layout.cssCode
-        cssURLs = cssURLs + self._layout.cssURLs
+        jsScripts = jsScripts + self._layout.javascript_code
+        js_urls = js_urls + self._layout.javascript_urls
+        cssScripts = cssScripts + self._layout.css_code
+        css_urls = css_urls + self._layout.css_urls
 
-        # update with currentQuestion
-        jsScripts = jsScripts + self._experiment.questionController.currentQuestion.jsCode
-        jsURLs = jsURLs + self._experiment.questionController.currentQuestion.jsURLs
-        cssScripts = cssScripts + self._experiment.questionController.currentQuestion.cssCode
-        cssURLs = cssURLs + self._experiment.questionController.currentQuestion.cssURLs
+        # update with current_question
+        jsScripts = jsScripts + self._experiment.question_controller.current_question.js_code
+        js_urls = js_urls + self._experiment.question_controller.current_question.js_urls
+        cssScripts = cssScripts + self._experiment.question_controller.current_question.css_code
+        css_urls = css_urls + self._experiment.question_controller.current_question.css_urls
 
         # sort lists by first item
         jsScripts.sort(key=lambda x: x[0])
-        jsURLs.sort(key=lambda x: x[0])
+        js_urls.sort(key=lambda x: x[0])
         cssScripts.sort(key=lambda x: x[0])
-        cssURLs.sort(key=lambda x: x[0])
+        css_urls.sort(key=lambda x: x[0])
 
         # build html code
         html = "<!DOCTYPE html>\n<html><head><title>ALFRED</title>"
 
-        for i, jsURL in jsURLs:
+        for i, jsURL in js_urls:
             html = html + "<script type=\"text/javascript\" src=\"%s\"></script>" % jsURL
 
         for i, jsScript in jsScripts:
             html = html + "<script type=\"text/javascript\">%s</script>" % jsScript
 
-        for i, cssURL in cssURLs:
+        for i, cssURL in css_urls:
             html = html + "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />" % cssURL
 
         for i, cssScript in cssScripts:
@@ -164,17 +164,17 @@ class WebUserInterfaceController(UserInterfaceController):
 
         return html
 
-    def renderHtml(self):
+    def render_html(self):
         return self.render()
 
-    def getDynamicFile(self, identifier):
+    def get_dynamic_file(self, identifier):
         fileObj, content_type = self._dynamicFilesDict[identifier]
         fileObj.seek(0)
         strIO = StringIO(fileObj.read())
         strIO.seek(0)
         return strIO, content_type
 
-    def addDynamicFile(self, file_obj, content_type=None):
+    def add_dynamic_file(self, file_obj, content_type=None):
         identifier = uuid4().hex
         while identifier in self._dynamicFilesDict:
             identifier = uuid4().hex
@@ -182,10 +182,10 @@ class WebUserInterfaceController(UserInterfaceController):
         self._dynamicFilesDict[identifier] = (file_obj, content_type)
         return self._basepath + '/dynamicfile/' + identifier
 
-    def getStaticFile(self, identifier):
+    def get_static_file(self, identifier):
         return self._staticFilesDict[identifier]
 
-    def addStaticFile(self, path, content_type=None):
+    def add_static_file(self, path, content_type=None):
         if not os.path.isabs(path):
             path = os.path.join(alfred.settings.general.external_files_dir, path)
         identifier = uuid4().hex
@@ -199,10 +199,10 @@ class WebUserInterfaceController(UserInterfaceController):
         self._staticFilesDict[identifier] = (path, content_type)
         return self._basepath + '/staticfile/' + identifier
 
-    def getCallable(self, identifier):
+    def get_callable(self, identifier):
         return self._callablesDict[identifier]
 
-    def addCallable(self, f):
+    def add_callable(self, f):
         identifier = uuid4().hex
         while identifier in self._callablesDict:
             identifier = uuid4().hex
@@ -210,10 +210,10 @@ class WebUserInterfaceController(UserInterfaceController):
         self._callablesDict[identifier] = f
         return self._basepath + '/callable/' + identifier
 
-    def updateWithUserInput(self, d):
-        self._experiment.questionController.currentQuestion.setData(d)
+    def update_with_user_input(self, d):
+        self._experiment.question_controller.current_question.set_data(d)
 
-    def jumpURLfromPosList(self, posList):
+    def jump_url_from_pos_list(self, posList):
         return self._basepath + '/experiment?move=jump&par=' + '.'.join(posList)
 
 
@@ -224,14 +224,14 @@ try:
         def __init__(self, uiController):
             super(ThreadHelper, self).__init__()
             self._uiController = uiController
-            self.renderSignal.connect(self.renderSlot)
+            self.renderSignal.connect(self.render_slot)
 
         def render(self):
             self.renderSignal.emit()
 
         @QtCore.Slot()
-        def renderSlot(self):
-            self._uiController.renderSlot()
+        def render_slot(self):
+            self._uiController.render_slot()
 except NameError:
     from .alfredlog import getLogger
     logger = getLogger((__name__))
@@ -243,7 +243,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
         self._helper = ThreadHelper(self)
 
-        localserver.setExperiment(experiment)
+        localserver.set_experiment(experiment)
 
         # initialize qt
         self._app = QApplication([])
@@ -270,38 +270,38 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
         # self.changeQtLayout(qtlayout or BaseQtLayout())
 
-    def _getLayout(self):
+    def _get_layout(self):
         return self._layout
 
-    def renderHtml(self):
+    def render_html(self):
 
         return super(QtWebKitUserInterfaceController, self).render()
 
     def render(self):
         self._helper.render()
 
-    def renderSlot(self):
+    def render_slot(self):
 
             # self._qtMainScrollArea.hide()
         self._webView.show()
         # TODO: Check if this fix is ok!
         # self._webView.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
 
-    def moveForward(self):
+    def move_forward(self):
 
-        super(QtWebKitUserInterfaceController, self).moveForward()
-
-        self.render()
-
-    def moveBackward(self):
-
-        super(QtWebKitUserInterfaceController, self).moveBackward()
+        super(QtWebKitUserInterfaceController, self).move_forward()
 
         self.render()
 
-    def moveToPosition(self, posList):
+    def move_backward(self):
 
-        super(QtWebKitUserInterfaceController, self).moveForward()
+        super(QtWebKitUserInterfaceController, self).move_backward()
+
+        self.render()
+
+    def move_to_position(self, posList):
+
+        super(QtWebKitUserInterfaceController, self).move_forward()
         self.render()
 
     def start(self):

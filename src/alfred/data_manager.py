@@ -14,37 +14,37 @@ class DataManager(object):
         self._experiment = experiment
         self._additionalData = {}
 
-    def addAdditionalData(self, key, value):
+    def add_additional_data(self, key, value):
         self._additionalData[key] = value
 
-    def getAdditionalDataByKey(self, key):
+    def get_additional_data_by_key(self, key):
         return self._additionalData[key]
 
-    def getData(self):
-        data = self._experiment.questionController.data
+    def get_data(self):
+        data = self._experiment.question_controller.data
         data['expAuthorMail'] = self._experiment.author_mail
         data['expName'] = self._experiment.name
         data['expVersion'] = self._experiment.version
         data['expType'] = self._experiment.type
         data['start_time'] = self._experiment._start_time
-        data['startTime'] = self._experiment.startTimeStamp
+        data['startTime'] = self._experiment.start_timestamp
         data['expFinished'] = self._experiment.finished
-        data['expTestCondition'] = self._experiment.testCondition
+        data['expTestCondition'] = self._experiment.test_condition
         data['expUuid'] = self._experiment.uuid
         data['additionalData'] = self._additionalData
 
         return data
 
-    def findExperimentDataByUid(self, uid):
+    def find_experiment_data_by_uid(self, uid):
         data = self._experiment._questionController.data
-        return DataManager._findByUid(data, uid)
+        return DataManager._find_by_uid(data, uid)
 
-    def findAdditionalDataByKeyAndUid(self, key, uid):
+    def find_additional_data_by_key_and_uid(self, key, uid):
         data = self._additionalData[key]
-        return DataManager._findByUid(data, uid)
+        return DataManager._find_by_uid(data, uid)
 
     @staticmethod
-    def _findByUid(data, uid):
+    def _find_by_uid(data, uid):
         def worker(data, uid):
             if data['uid'] == uid:
                 return data

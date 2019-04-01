@@ -35,9 +35,9 @@ exp_author_mail = "jobrachem@posteo.de"
 
 class DynamicPage(CompositePage):
 
-    def onShowingWidget(self):
-        num01 = self._experiment.dataManager.findExperimentDataByUid('page30')['numberentry01']
-        num02 = self._experiment.dataManager.findExperimentDataByUid('page30')['numberentry02']
+    def on_showing_widget(self):
+        num01 = self._experiment.data_manager.find_experiment_data_by_uid('page30')['numberentry01']
+        num02 = self._experiment.data_manager.find_experiment_data_by_uid('page30')['numberentry02']
 
         input_sum = num01 + num02
 
@@ -51,19 +51,19 @@ class DynamicPage(CompositePage):
             text="Input 1: {}<br>Input 2: {}<br>Sum: {}".format(num01, num02, input_sum)
         )
 
-        text01 = self._experiment.dataManager.findExperimentDataByUid('page20')['textentry01']
+        text01 = self._experiment.data_manager.find_experiment_data_by_uid('page20')['textentry01']
 
         dynamic_text02 = TextElement(
             name="dynamic_text02",
             text="Input: {}".format(text01)
         )
 
-        # addAdditionalData and getAdditionalDataByKey test
-        self._experiment.dataManager.addAdditionalData("test", 3)
-        num03 = self._experiment.dataManager.getAdditionalDataByKey("test")
+        # add_additional_data and get_additional_data_by_key test
+        self._experiment.data_manager.add_additional_data("test", 3)
+        num03 = self._experiment.data_manager.get_additional_data_by_key("test")
         dynamic_text03 = TextElement(text="DataManager Test: {}".format(num03))
 
-        self.addElements(dynamic_text01, dynamic_text02, dynamic_text03)
+        self.add_elements(dynamic_text01, dynamic_text02, dynamic_text03)
 
 
 ##########################################
@@ -81,7 +81,7 @@ hline01 = HorizontalLine(name="hline1", strength=4, color="red")
 pbar01 = ProgressBar(
     name="pbar",                    # name of the element
     barRange=(0, 99),               # tuple with range of values
-    barValue=30,                    # current value of progress, can be changed at any time
+    bar_value=30,                    # current value of progress, can be changed at any time
     barWidth=300,                   # width of bar
     instruction="Progress Bar",     # text next to bar
     fontSize="big",                 # fontsize
@@ -418,9 +418,9 @@ for i in range(4):
         alignment="center"
     )
 
-    page.addElements(text)
+    page.add_elements(text)
 
-    loopgroup.appendItems(page)
+    loopgroup.append_items(page)
 
 
 ############################################
@@ -441,22 +441,22 @@ page60 = DynamicPage(title="Dynamic Page (Page 6)", uid="page60")
 
 # ----------------------------------------------- #
 # Fill Pages
-page10.addElements(text01, text02, text03, hline01, pbar01, data01, data02)
-page20.addElements(textentry01, textentry02, textarea01, textarea02)
-page30.addElements(
+page10.add_elements(text01, text02, text03, hline01, pbar01, data01, data02)
+page20.add_elements(textentry01, textentry02, textarea01, textarea02)
+page30.add_elements(
     regentry01,
     numberentry01,
     numberentry02,
     password01
 )
-page40.addElements(
+page40.add_elements(
     likertelement01,
     likertmatrix01,
     likertmatrix02,
     singlechoice01,
     multiplechoice01
 )
-page50.addElements(image01, table01)
+page50.add_elements(image01, table01)
 
 
 # ----------------------------------------------- #
@@ -467,8 +467,8 @@ group20 = SegmentedSection()
 
 # ----------------------------------------------- #
 # Fill Groups
-group10.appendItems(page10, page20)
-group20.appendItems(
+group10.append_items(page10, page20)
+group20.append_items(
     page30,
     page40, page50, page60
 )
@@ -477,7 +477,7 @@ group20.appendItems(
 # Append to main group #
 # ----------------------------------------------- #
 # Don't forget to add your question groups made up of loop-generated questions
-main.appendItems(
+main.append_items(
     group10,
     group20,
     loopgroup
@@ -503,7 +503,7 @@ class Script(object):
         exp = Experiment(self.exp_type, self.exp_name, self.exp_version, self.exp_author_mail)
 
         # Append Main Group to Experiment
-        exp.questionController.appendItem(self.main_pagegroup)
+        exp.question_controller.append_item(self.main_pagegroup)
 
         return exp
 

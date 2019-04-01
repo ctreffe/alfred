@@ -19,20 +19,20 @@ script.experiment = None
 script.generator = None
 
 
-def setExperiment(exp):
+def set_experiment(exp):
     script.experiment = exp
 
 
-def setGenerator(generator):
+def set_generator(generator):
     script.generator = generator
 
 
 @app.route('/start', methods=['GET', 'POST'])
 def start():
     exp = script.generator.generate_experiment()
-    setExperiment(exp)
+    set_experiment(exp)
     exp.start()
-    # html = exp.userInterfaceController.renderHtml() # Deprecated Command? Breaks Messages
+    # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
     resp = make_response(redirect(url_for('experiment')))
     resp.cache_control.no_cache = True
     return resp
@@ -51,25 +51,25 @@ def experiment():
     kwargs.pop('par', None)
 
     if kwargs != {}:
-        script.experiment.userInterfaceController.updateWithUserInput(kwargs)
+        script.experiment.user_interface_controller.update_with_user_input(kwargs)
     if move is None and directjump is None and par is None and kwargs == {}:
         pass
     elif directjump and par:
         posList = list(map(int, par.split('.')))
-        script.experiment.userInterfaceController.moveToPosition(posList)
+        script.experiment.user_interface_controller.move_to_position(posList)
     elif move == 'started':
         pass
     elif move == 'forward':
-        script.experiment.userInterfaceController.moveForward()
+        script.experiment.user_interface_controller.move_forward()
     elif move == 'backward':
-        script.experiment.userInterfaceController.moveBackward()
+        script.experiment.user_interface_controller.move_backward()
     elif move == 'jump' and par and re.match('^\d+(\.\d+)*$', par):
         posList = list(map(int, par.split('.')))
-        script.experiment.userInterfaceController.moveToPosition(posList)
+        script.experiment.user_interface_controller.move_to_position(posList)
     else:
         abort(400)
 
-    html = script.experiment.userInterfaceController.renderHtml()
+    html = script.experiment.user_interface_controller.render_html()
     resp = make_response(html)
     resp.cache_control.no_cache = True
     return resp
@@ -77,14 +77,14 @@ def experiment():
 
 @app.route('/staticfile/<identifier>')
 def staticfile(identifier):
-    path, content_type = script.experiment.userInterfaceController.getStaticFile(identifier)
+    path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
     resp = make_response(send_file(path, mimetype=content_type))
     return resp
 
 
 @app.route('/dynamicfile/<identifier>')
 def dynamicfile(identifier):
-    strIO, content_type = script.experiment.userInterfaceController.getDynamicFile(identifier)
+    strIO, content_type = script.experiment.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
     resp.cache_control.no_cache = True
     return resp
@@ -92,7 +92,7 @@ def dynamicfile(identifier):
 
 @app.route('/callable/<identifier>', methods=['GET', 'POST'])
 def callable(identifier):
-    f = script.experiment.userInterfaceController.getCallable(identifier)
+    f = script.experiment.user_interface_controller.get_callable(identifier)
     if request.content_type == "application/json":
         values = request.get_json()
     else:
