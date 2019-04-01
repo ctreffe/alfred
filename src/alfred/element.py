@@ -4,7 +4,7 @@
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
 **element** contains general baseclass :class:`.element.Element` and its' children, which can be added to
-:class:`.question.CompositeQuestion` (see table for an overview). It also contains abstract baseclasses for
+:class:`.question.CompositePage` (see table for an overview). It also contains abstract baseclasses for
 different interfaces (:class:`.element.WebElementInterface`, :class:`.element.QtElementInterface`), which
 must also be inherited by new child elements of :class:`.element.Element` to establish interface compatibility.
 
@@ -112,7 +112,7 @@ class Element(object):
 
     def addedToQuestion(self, q):
         from . import question
-        if not isinstance(q, question.Question):
+        if not isinstance(q, question.Page):
             raise TypeError()
 
         self._question = q

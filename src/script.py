@@ -33,7 +33,7 @@ exp_author_mail = "jobrachem@posteo.de"
 #################################
 
 
-class DynamicQuestion(CompositeQuestion):
+class DynamicPage(CompositePage):
 
     def onShowingWidget(self):
         num01 = self._experiment.dataManager.findExperimentDataByUid('page30')['numberentry01']
@@ -403,11 +403,11 @@ table01 = TableElement(
 # - Section 5a: Looped Pages - #
 ###########################################
 
-loopgroup = QuestionGroup()
+loopgroup = PageGroup()
 
 for i in range(4):
     page_num = i + 1
-    page = CompositeQuestion(
+    page = CompositePage(
         title="Looped Page {number}".format(number=page_num),
         uid="page{number}".format(number=page_num)
     )
@@ -429,15 +429,15 @@ for i in range(4):
 
 # ----------------------------------------------- #
 # Static Pages
-page10 = CompositeQuestion(title="Page 1", uid="page10")
-page20 = CompositeQuestion(title="Page 2", uid="page20")
-page30 = CompositeQuestion(title="Page 3", uid="page30")
-page40 = CompositeQuestion(title="Page 4", uid="page40")
-page50 = CompositeQuestion(title="Page 5", uid="page50")
+page10 = CompositePage(title="Page 1", uid="page10")
+page20 = CompositePage(title="Page 2", uid="page20")
+page30 = CompositePage(title="Page 3", uid="page30")
+page40 = CompositePage(title="Page 4", uid="page40")
+page50 = CompositePage(title="Page 5", uid="page50")
 
 # ----------------------------------------------- #
 # Dynamic Pages
-page60 = DynamicQuestion(title="Dynamic Page (Page 6)", uid="page60")
+page60 = DynamicPage(title="Dynamic Page (Page 6)", uid="page60")
 
 # ----------------------------------------------- #
 # Fill Pages
@@ -461,9 +461,9 @@ page50.addElements(image01, table01)
 
 # ----------------------------------------------- #
 # Initialize Groups
-main = SegmentedQG()
-group10 = HeadOpenQG()
-group20 = SegmentedQG()
+main = SegmentedSection()
+group10 = HeadOpenSection()
+group20 = SegmentedSection()
 
 # ----------------------------------------------- #
 # Fill Groups

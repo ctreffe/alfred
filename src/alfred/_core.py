@@ -10,7 +10,7 @@ import os.path
 from uuid import uuid4
 
 
-class QuestionCore(object):
+class PageCore(object):
     def __init__(self, tag=None, uid=None, tagAndUid=None, isJumpable=True, jumptext=None,
                  title=None, subtitle=None, statustext=None,
                  shouldBeShownFilterFunction=None, **kwargs):

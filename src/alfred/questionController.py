@@ -3,35 +3,35 @@
 '''
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
-In *questionController* wird die Basisklasse *QuestionController* bereit gestellt.
+In *questionController* wird die Basisklasse *PageController* bereit gestellt.
 '''
 from __future__ import absolute_import
 from builtins import object
 from alfred._core import Direction
 
-from .questionGroup import QuestionGroup
-from .question import CompositeQuestion, WebCompositeQuestion
+from .questionGroup import PageGroup
+from .question import CompositePage, WebCompositePage
 from .element import TextElement, WebExitEnabler
 
 
-class QuestionController(object):
+class PageController(object):
     '''
-    | QuestionController stellt die obersten Fragengruppen des Experiments (*rootQuestionGroup* und *finishedQuestionGroup*)
+    | PageController stellt die obersten Fragengruppen des Experiments (*rootQuestionGroup* und *finishedQuestionGroup*)
     | bereit und ermöglicht den Zugriff auf auf deren Methoden und Attribute.
     '''
 
     def __init__(self, experiment):
         self._experiment = experiment
 
-        self._rootQuestionGroup = QuestionGroup(tag='rootQuestionGroup')
+        self._rootQuestionGroup = PageGroup(tag='rootQuestionGroup')
         self._rootQuestionGroup.addedToExperiment(experiment)
 
-        self._finishedQuestionGroup = QuestionGroup(tag='finishedQuestionGroup', title='Experiment beendet')
+        self._finishedQuestionGroup = PageGroup(tag='finishedQuestionGroup', title='Experiment beendet')
 
         if self._experiment.type == 'qt':
-            self._finishedQuestionGroup.appendItem(CompositeQuestion(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.')]))
+            self._finishedQuestionGroup.appendItem(CompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.')]))
         else:
-            self._finishedQuestionGroup.appendItem(WebCompositeQuestion(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.'), WebExitEnabler()]))
+            self._finishedQuestionGroup.appendItem(WebCompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.'), WebExitEnabler()]))
 
         self._finishedQuestionGroup.addedToExperiment(experiment)
 
@@ -61,13 +61,13 @@ class QuestionController(object):
 
     def appendItemToFinishQuestionGroup(self, item):
         '''
-        :param item: Element vom Typ Question oder QuestionGroup
+        :param item: Element vom Typ Page oder PageGroup
 
         .. todo:: Ist diese Funktion überhaupt nötig, wenn die finishedQuestionGroup in init bereits erstellt wird?
         '''
         if not self._finishedQuestionAdded:
             self._finishedQuestionAdded = True
-            self._finishedQuestionGroup = QuestionGroup(tag='finishedQuestionGroup')
+            self._finishedQuestionGroup = PageGroup(tag='finishedQuestionGroup')
             self._finishedQuestionGroup.addedToExperiment(self._experiment)
         self._finishedQuestionGroup.appendItem(item)
 

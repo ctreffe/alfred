@@ -26,7 +26,7 @@ from uuid import uuid4
 
 from .savingAgent import SavingAgentController
 from .dataManager import DataManager
-from .questionController import QuestionController
+from .questionController import PageController
 from .uiController import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
 from . import settings
@@ -56,7 +56,7 @@ class Experiment(object):
         |
 
         Beschreibung:
-            | Bei Aufruf von *Experiment* werden :py:class:`questionController.QuestionController`, :py:class:`dataManager.DataManager`
+            | Bei Aufruf von *Experiment* werden :py:class:`questionController.PageController`, :py:class:`dataManager.DataManager`
             | und :py:class:`savingAgent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
             | :py:mod:`.uiController` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
 
@@ -105,7 +105,7 @@ class Experiment(object):
         self._messageManager = messages.MessageManager()
         self._experimenterMessageManager = messages.MessageManager()
 
-        self._questionController = QuestionController(self)
+        self._questionController = PageController(self)
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
@@ -152,7 +152,7 @@ class Experiment(object):
 
     def finish(self):
         '''
-        Beendet das Experiment. Ruft  :meth:`questionController.QuestionController.changeToFinishedGroup` auf und setzt **self._finished** auf *True*.
+        Beendet das Experiment. Ruft  :meth:`questionController.PageController.changeToFinishedGroup` auf und setzt **self._finished** auf *True*.
 
         '''
         if self._finished:
@@ -232,7 +232,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`questionController.QuestionController`
+        :return: :py:class:`questionController.PageController`
         '''
         return self._questionController
 

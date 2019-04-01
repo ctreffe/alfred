@@ -10,7 +10,7 @@ from builtins import object
 from abc import ABCMeta, abstractproperty
 import time
 
-from ._core import QuestionCore
+from ._core import PageCore
 from .exceptions import AlfredError
 from . import element
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
@@ -20,7 +20,7 @@ from future.utils import with_metaclass
 from functools import reduce
 
 
-class Question(QuestionCore):
+class Page(PageCore):
     def __init__(self, minimumDisplayTime=0, minimumDisplayTimeMsg=None, **kwargs):
         self._minimumDisplayTime = minimumDisplayTime
         if settings.debugmode and settings.debug.disableMinimumDisplayTime:
@@ -31,13 +31,13 @@ class Question(QuestionCore):
         self._isClosed = False
         self._showCorrectiveHints = False
 
-        super(Question, self).__init__(**kwargs)
+        super(Page, self).__init__(**kwargs)
 
     def addedToExperiment(self, experiment):
-        if not isinstance(self, WebQuestionInterface):
-            raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebQuestionInterface.__name__))
+        if not isinstance(self, WebPageInterface):
+            raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebPageInterface.__name__))
 
-        super(Question, self).addedToExperiment(experiment)
+        super(Page, self).addedToExperiment(experiment)
 
     @property
     def showThumbnail(self):
@@ -57,7 +57,7 @@ class Question(QuestionCore):
 
     @property
     def data(self):
-        data = super(Question, self).data
+        data = super(Page, self).data
         data.update(self._data)
         return data
 
@@ -129,7 +129,7 @@ class Question(QuestionCore):
         return True
 
 
-class WebQuestionInterface(with_metaclass(ABCMeta, object)):
+class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepareWebWidget(self):
         '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
         Nutzereingaben zwischen aufruf dieser funktion und dem anzeigen der
@@ -167,9 +167,9 @@ class WebQuestionInterface(with_metaclass(ABCMeta, object)):
         pass
 
 
-class CoreCompositeQuestion(Question):
+class CoreCompositePage(Page):
     def __init__(self, elements=None, **kwargs):
-        super(CoreCompositeQuestion, self).__init__(**kwargs)
+        super(CoreCompositePage, self).__init__(**kwargs)
 
         self._elementList = []
         self._elementNameCounter = 1
@@ -189,7 +189,7 @@ class CoreCompositeQuestion(Question):
         if expType == 'web' and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
-        if isinstance(self, WebQuestionInterface) and not isinstance(element, WebElementInterface):
+        if isinstance(self, WebPageInterface) and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
         if element.name is None:
@@ -208,14 +208,14 @@ class CoreCompositeQuestion(Question):
         return reduce(lambda b, element: element.validateData() and b, self._elementList, True)
 
     def closeQuestion(self):
-        super(CoreCompositeQuestion, self).closeQuestion()
+        super(CoreCompositePage, self).closeQuestion()
 
         for elmnt in self._elementList:
             elmnt.enabled = False
 
     @property
     def data(self):
-        data = super(CoreCompositeQuestion, self).data
+        data = super(CoreCompositePage, self).data
         for elmnt in self._elementList:
             data.update(elmnt.data)
 
@@ -257,7 +257,7 @@ class CoreCompositeQuestion(Question):
             elmnt.setData(dictionary)
 
 
-class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
+class WebCompositePage(CoreCompositePage, WebPageInterface):
     def prepareWebWidget(self):
         for elmnt in self._elementList:
             elmnt.prepareWebWidget()
@@ -308,13 +308,13 @@ class WebCompositeQuestion(CoreCompositeQuestion, WebQuestionInterface):
         return reduce(lambda l, element: l + element.jsURLs, self._elementList, [])
 
 
-class CompositeQuestion(WebCompositeQuestion):
+class CompositePage(WebCompositePage):
     pass
 
 
-class QuestionPlaceholder(Question, WebQuestionInterface):
+class PagePlaceholder(Page, WebPageInterface):
     def __init__(self, extData={}, **kwargs):
-        super(QuestionPlaceholder, self).__init__(**kwargs)
+        super(PagePlaceholder, self).__init__(**kwargs)
 
         self._extData = extData
 
@@ -324,7 +324,7 @@ class QuestionPlaceholder(Question, WebQuestionInterface):
 
     @property
     def data(self):
-        data = super(Question, self).data
+        data = super(Page, self).data
         data.update(self._extData)
         return data
 
@@ -345,9 +345,9 @@ class QuestionPlaceholder(Question, WebQuestionInterface):
         pass
 
 
-class DemographicQuestion(CompositeQuestion):
+class DemographicPage(CompositePage):
     def __init__(self, instruction=None, age=True, sex=True, courseOfStudies=True, semester=True, **kwargs):
-        super(DemographicQuestion, self).__init__(**kwargs)
+        super(DemographicPage, self).__init__(**kwargs)
 
         if instruction:
             self.addElement(element.TextElement(instruction))
@@ -365,9 +365,9 @@ class DemographicQuestion(CompositeQuestion):
             self.addElement(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
-class AutoHideQuestion(CompositeQuestion):
+class AutoHidePage(CompositePage):
     def __init__(self, onHiding=False, onClosing=True, **kwargs):
-        super(AutoHideQuestion, self).__init__(**kwargs)
+        super(AutoHidePage, self).__init__(**kwargs)
 
         self._onClosing = onClosing
         self._onHiding = onHiding
@@ -377,12 +377,12 @@ class AutoHideQuestion(CompositeQuestion):
             self.shouldBeShown = False
 
     def closeQuestion(self):
-        super(AutoHideQuestion, self).closeQuestion()
+        super(AutoHidePage, self).closeQuestion()
         if self._onClosing:
             self.shouldBeShown = False
 
 
-class ExperimentFinishQuestion(CompositeQuestion):
+class ExperimentFinishPage(CompositePage):
     def onShowingWidget(self):
         if 'firstShowTime' not in self._data:
             exp_title = TextElement('Informationen zur Session:', font='big')
@@ -398,19 +398,19 @@ class ExperimentFinishQuestion(CompositeQuestion):
 
             self.addElements(exp_title, exp_info_element, ExperimenterMessages())
 
-        super(ExperimentFinishQuestion, self).onShowingWidget()
+        super(ExperimentFinishPage, self).onShowingWidget()
 
 
-class HeadOpenQGCantClose(CompositeQuestion):
+class HeadOpenSectionCantClose(CompositePage):
     def __init__(self, **kwargs):
-        super(HeadOpenQGCantClose, self).__init__(**kwargs)
+        super(HeadOpenSectionCantClose, self).__init__(**kwargs)
 
         self.addElement(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
 
 
-class MongoSaveCompositeQuestion(CompositeQuestion):
+class MongoSaveCompositePage(CompositePage):
     def __init__(self, host, database, collection, user, password, error='ignore', hideData=True, *args, **kwargs):
-        super(MongoSaveCompositeQuestion, self).__init__(*args, **kwargs)
+        super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
         self._host = host
         self._database = database
         self._collection = collection
@@ -428,10 +428,10 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
                     'uid': self.uid}
             return data
         else:
-            return super(MongoSaveCompositeQuestion, self).data
+            return super(MongoSaveCompositePage, self).data
 
     def closeQuestion(self):
-        rv = super(MongoSaveCompositeQuestion, self).closeQuestion()
+        rv = super(MongoSaveCompositePage, self).closeQuestion()
         if self._saved:
             return rv
         from pymongo import MongoClient
@@ -440,7 +440,7 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
             db = client[self._database]
             db.authenticate(self._user, self._password)
             col = db[self._collection]
-            data = super(MongoSaveCompositeQuestion, self).data
+            data = super(MongoSaveCompositePage, self).data
             data.pop('firstShowTime', None)
             data.pop('closingTime', None)
             col.insert(data)
@@ -452,7 +452,7 @@ class MongoSaveCompositeQuestion(CompositeQuestion):
 
 
 ####################
-# Question Mixins
+# Page Mixins
 ####################
 
 class WebTimeoutMixin(object):
@@ -550,9 +550,9 @@ class HideButtonsMixin(object):
 # Questions with Mixins
 ####################
 
-class WebTimeoutForwardQuestion(WebTimeoutForwardMixin, WebCompositeQuestion):
+class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
     pass
 
 
-class WebTimeoutCloseQuestion(WebTimeoutCloseMixin, WebCompositeQuestion):
+class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
