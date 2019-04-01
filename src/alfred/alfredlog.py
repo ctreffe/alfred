@@ -61,12 +61,12 @@ def getLogger(module_name=None):
     return NewLogger(module_name)
 
 
-def alfred_init(expType):
+def alfred_init(exp_type):
     logger = getLogger(__name__)
 
-    if expType == 'web':
+    if exp_type == 'web':
         logger.info("Alfred framework web startup! Logging system initialized.")
-    elif expType == 'qt':
+    elif exp_type == 'qt':
         logger.info("##################################### Starting new alfred qt experiment session #####################################")
 
 

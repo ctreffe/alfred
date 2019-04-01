@@ -21,11 +21,11 @@ from functools import reduce
 
 
 class Page(PageCore):
-    def __init__(self, minimumDisplayTime=0, minimumDisplayTimeMsg=None, **kwargs):
-        self._minimumDisplayTime = minimumDisplayTime
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs):
+        self._minimumDisplayTime = minimum_display_time
         if settings.debugmode and settings.debug.disableMinimumDisplayTime:
             self._minimumDisplayTime = 0
-        self._minimumDisplayTimeMsg = minimumDisplayTimeMsg
+        self._minimumDisplayTimeMsg = minimum_display_time_msg
 
         self._data = {}
         self._isClosed = False
@@ -84,7 +84,7 @@ class Page(PageCore):
 
         self._hasBeenHidden = True
 
-        # TODO: Sollten nicht onHiding closingtime und duration errechnet werden? Passiert momentan onClosing und funktioniert daher nicht in allen question groups!
+        # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen question groups!
 
     def on_hiding_widget(self):
         pass
@@ -184,9 +184,9 @@ class CoreCompositePage(Page):
         if not isinstance(element, Element):
             raise TypeError
 
-        expType = settings.experiment.type  # 'web' or 'qt-wk'
+        exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
-        if expType == 'web' and not isinstance(element, WebElementInterface):
+        if exp_type == 'web' and not isinstance(element, WebElementInterface):
             raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
 
         if isinstance(self, WebPageInterface) and not isinstance(element, WebElementInterface):
@@ -313,10 +313,10 @@ class CompositePage(WebCompositePage):
 
 
 class PagePlaceholder(Page, WebPageInterface):
-    def __init__(self, extData={}, **kwargs):
+    def __init__(self, ext_data={}, **kwargs):
         super(PagePlaceholder, self).__init__(**kwargs)
 
-        self._extData = extData
+        self._extData = ext_data
 
     @property
     def web_widget(self):
@@ -346,7 +346,7 @@ class PagePlaceholder(Page, WebPageInterface):
 
 
 class DemographicPage(CompositePage):
-    def __init__(self, instruction=None, age=True, sex=True, courseOfStudies=True, semester=True, **kwargs):
+    def __init__(self, instruction=None, age=True, sex=True, course_of_studies=True, semester=True, **kwargs):
         super(DemographicPage, self).__init__(**kwargs)
 
         if instruction:
@@ -358,19 +358,19 @@ class DemographicPage(CompositePage):
         if sex:
             self.add_element(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
-        if courseOfStudies:
-            self.add_element(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='courseOfStudies'))
+        if course_of_studies:
+            self.add_element(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
 
         if semester:
             self.add_element(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
 class AutoHidePage(CompositePage):
-    def __init__(self, onHiding=False, onClosing=True, **kwargs):
+    def __init__(self, on_hiding=False, on_closing=True, **kwargs):
         super(AutoHidePage, self).__init__(**kwargs)
 
-        self._onClosing = onClosing
-        self._onHiding = onHiding
+        self._onClosing = on_closing
+        self._onHiding = on_hiding
 
     def on_hiding_widget(self):
         if self._onHiding:
@@ -409,7 +409,7 @@ class HeadOpenSectionCantClose(CompositePage):
 
 
 class MongoSaveCompositePage(CompositePage):
-    def __init__(self, host, database, collection, user, password, error='ignore', hideData=True, *args, **kwargs):
+    def __init__(self, host, database, collection, user, password, error='ignore', hide_data=True, *args, **kwargs):
         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
         self._host = host
         self._database = database
@@ -417,7 +417,7 @@ class MongoSaveCompositePage(CompositePage):
         self._user = user
         self._password = password
         self._error = error
-        self._hide_data = hideData
+        self._hide_data = hide_data
         self._saved = False
 
     @property

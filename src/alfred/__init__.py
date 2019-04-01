@@ -43,15 +43,15 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, expType, expName, expVersion, expAuthorMail, config_string='', basepath=None, customLayout=None):
+    def __init__(self, exp_type, exp_name, exp_version, exp_author_mail, config_string='', basepath=None, custom_layout=None):
         '''
-        :param str expType: Typ des Experiments.
-        :param str expName: Name des Experiments.
-        :param str expVersion: Version des Experiments.
-        :param str expAuthorMail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
-        :param layout customLayout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
+        :param str exp_type: Typ des Experiments.
+        :param str exp_name: Name des Experiments.
+        :param str exp_version: Version des Experiments.
+        :param str exp_author_mail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
+        :param layout custom_layout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
 
-        .. note:: mindestens expType und expName müssen beim Aufruf übergeben werden!
+        .. note:: mindestens exp_type und exp_name müssen beim Aufruf übergeben werden!
 
         |
 
@@ -80,20 +80,20 @@ class Experiment(object):
         |
         '''
 
-        if type(expName) != str or expName == '' or type(expVersion) != str or expVersion == '' or not(expType == 'qt' or
-                                                                                                       expType == 'web' or expType == 'qt-wk'):
-            raise ValueError("expName and expVersion must be a non empty strings and expType must be 'qt' or 'web'")
+        if type(exp_name) != str or exp_name == '' or type(exp_version) != str or exp_version == '' or not(exp_type == 'qt' or
+                                                                                                       exp_type == 'web' or exp_type == 'qt-wk'):
+            raise ValueError("exp_name and exp_version must be a non empty strings and exp_type must be 'qt' or 'web'")
 
-        self._author_mail = expAuthorMail
+        self._author_mail = exp_author_mail
 
         #: Name des Experiments
-        self._name = expName
+        self._name = exp_name
 
         #: Version des Experiments
-        self._version = expVersion
+        self._version = exp_version
 
         #: Typ des Experiments
-        self._type = expType
+        self._type = exp_type
         if self._type != settings.experiment.type:
             raise RuntimeError("experiment types must be equal in script and config file")
 
@@ -109,8 +109,8 @@ class Experiment(object):
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
-            if customLayout:
-                web_layout = customLayout
+            if custom_layout:
+                web_layout = custom_layout
             elif 'web_layout' in self._settings.experiment and hasattr(layout, self._settings.experiment.web_layout):
                 web_layout = getattr(layout, self._settings.experiment.web_layout)()
             elif 'web_layout' in self._settings.experiment and not hasattr(layout, self._settings.experiment.web_layout):
@@ -122,7 +122,7 @@ class Experiment(object):
 
         elif self._type == 'qt-wk':
             logger.warning("Experiment type qt-wk is experimental!!!", self)
-            self._userInterfaceController = QtWebKitUserInterfaceController(self, fullScreen=settings.experiment.qtFullScreen, weblayout=web_layout)
+            self._userInterfaceController = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qtFullScreen, weblayout=web_layout)
 
         else:
             ValueError("unknown type: '%s'" % self._type)
@@ -179,7 +179,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimenttyp **expType** (*str*)
+        :return: Experimenttyp **exp_type** (*str*)
         '''
 
         return self._type
@@ -189,7 +189,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentversion **expVersion** (*str*)
+        :return: Experimentversion **exp_version** (*str*)
         '''
         return self._version
 
@@ -198,7 +198,7 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentname **expName** (*str*)
+        :return: Experimentname **exp_name** (*str*)
         '''
         return self._name
 

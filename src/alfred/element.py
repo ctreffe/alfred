@@ -63,7 +63,7 @@ class Element(object):
     :param str/int fontSize: Font size used in element ('normal' as standard, 'big', 'huge', or int value setting font size in pt).
     '''
 
-    def __init__(self, name=None, shouldBeShownFilterFunction=None, **kwargs):
+    def __init__(self, name=None, should_be_shown_filter_function=None, **kwargs):
         if not isinstance(self, WebElementInterface):
             raise AlfredError("Element must implement WebElementInterface.")
 
@@ -77,7 +77,7 @@ class Element(object):
         self._enabled = True
         self._showCorrectiveHints = False
         self._shouldBeShown = True
-        self._shouldBeShownFilterFunction = shouldBeShownFilterFunction if shouldBeShownFilterFunction is not None else lambda exp: True
+        self._shouldBeShownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
 
         self._alignment = kwargs.pop('alignment', 'left')
         self._fontSize = kwargs.pop('fontSize', 'normal')
@@ -255,20 +255,20 @@ class HorizontalLine(Element, WebElementInterface):
 
 
 class ProgressBar(Element, WebElementInterface):
-    def __init__(self, instruction='', barRange=(0, 100), bar_value=50, barWidth=None, instructionWidth=None, instructionHeight=None, **kwargs):
+    def __init__(self, instruction='', bar_range=(0, 100), bar_value=50, bar_width=None, instruction_width=None, instruction_height=None, **kwargs):
         '''
         **ProgressBar** allows display of a manually controlled progress bar.
         '''
         super(ProgressBar, self).__init__(**kwargs)
 
         self._instruction = instruction
-        self._instructionWidth = instructionWidth
-        self._instructionHeight = instructionHeight
-        self._barRange = barRange
+        self._instructionWidth = instruction_width
+        self._instructionHeight = instruction_height
+        self._barRange = bar_range
         self._barValue = float(bar_value)
 
-        if barWidth:
-            self._barWidth = barWidth
+        if bar_width:
+            self._barWidth = bar_width
         else:
             self._barWidth = None
 
@@ -288,7 +288,7 @@ class ProgressBar(Element, WebElementInterface):
     @property
     def web_widget(self):
         if self._barRange[1] - self._barRange[0] == 0:
-            raise ValueError('barRange in web progress bar must be greater than 0')
+            raise ValueError('bar_range in web progress bar must be greater than 0')
 
         widget = '<div class="progress-bar"><table class="%s" style="font-size: %spt;">' % (alignment_converter(self._alignment, 'container'), fontsize_converter(self._fontSize))
 
@@ -304,21 +304,21 @@ class ProgressBar(Element, WebElementInterface):
 
 
 class TextElement(Element, WebElementInterface):
-    def __init__(self, text, textWidth=None, textHeight=None, **kwargs):
+    def __init__(self, text, text_width=None, text_height=None, **kwargs):
         '''
         **TextElement** allows display of simple text labels.
 
         :param str text: Text to be displayed by TextElement (can contain html commands).
         :param str alignment: Alignment of TextElement in widget container ('left' as standard, 'center', 'right').
         :param str/int fontSize: Fontsize used in TextElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param int textWidth: Set the width of the label to a fixed size, still allowing for word wrapping and growing height of text.
-        :param int textHeight: Set the height of the label to a fixed size (sometimes necessary when using rich text).
+        :param int text_width: Set the width of the label to a fixed size, still allowing for word wrapping and growing height of text.
+        :param int text_height: Set the height of the label to a fixed size (sometimes necessary when using rich text).
         '''
         super(TextElement, self).__init__(**kwargs)
 
         self._text = text
-        self._textWidth = textWidth
-        self._textHeight = textHeight
+        self._textWidth = text_width
+        self._textHeight = text_height
         self._textLabel = None
 
     @property
@@ -370,19 +370,19 @@ class InputElement(Element):
     '''
     Class **InputElement** is the base class for any element allowing data input.
 
-    :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-    :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+    :param bool force_input: Sets user input to be mandatory (False as standard or True).
+    :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
 
     .. todo:: Parent class :class:`.element.Element` has method *corrective_hints()*, but not sure why this is necessary, since corrective_hints only make sense in input elements, right?
     '''
 
-    def __init__(self, forceInput=False, noInputCorrectiveHint=None, debugString=None, debugValue=None, default=None, **kwargs):
+    def __init__(self, force_input=False, no_input_corrective_hint=None, debug_string=None, debug_value=None, default=None, **kwargs):
         super(InputElement, self).__init__(**kwargs)
         self._input = ''
-        self._forceInput = forceInput
-        self._noInputCorrectiveHint = noInputCorrectiveHint
-        self._debugString = debugString
-        self._debugValue = debugValue
+        self._forceInput = force_input
+        self._noInputCorrectiveHint = no_input_corrective_hint
+        self._debugString = debug_string
+        self._debugValue = debug_value
 
         if settings.debugmode and settings.debug.defaultValues:
             if self._debugValue:
@@ -390,7 +390,7 @@ class InputElement(Element):
             elif not self._debugString:
                 self._input = settings.debug.get(self.__class__.__name__)
             else:
-                self._input = settings._config_parser.get('debug', debugString)
+                self._input = settings._config_parser.get('debug', debug_string)
 
         if default is not None:
             self._input = default
@@ -435,23 +435,23 @@ class InputElement(Element):
 
 
 class TextEntryElement(InputElement, WebElementInterface):
-    def __init__(self, instruction='', noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, prefix=None, suffix=None, **kwargs):
+    def __init__(self, instruction='', no_input_corrective_hint=None, instruction_width=None, instruction_height=None, prefix=None, suffix=None, **kwargs):
         '''
         **TextEntryElement*** returns a single line text edit with an instruction text on its' left.
 
         :param str name: Name of TextEntryElement and stored input variable.
         :param str instruction: Instruction to be displayed with line edit field (can contain html commands).
-        :param int instructionWidth: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instructionHeight: Minimum vertical size of instruction label (can be used for layouting purposes).
+        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
+        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
         :param str alignment: Alignment of TextEntryElement in widget container ('left' as standard, 'center', 'right').
         :param str/int fontSize: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
-        super(TextEntryElement, self).__init__(noInputCorrectiveHint=noInputCorrectiveHint, **kwargs)
+        super(TextEntryElement, self).__init__(no_input_corrective_hint=no_input_corrective_hint, **kwargs)
 
-        self._instructionWidth = instructionWidth
-        self._instructionHeight = instructionHeight
+        self._instructionWidth = instruction_width
+        self._instructionHeight = instruction_height
         self._instruction = instruction
         self._prefix = prefix
         self._suffix = suffix
@@ -521,25 +521,25 @@ class TextEntryElement(InputElement, WebElementInterface):
 
 
 class TextAreaElement(TextEntryElement):
-    def __init__(self, instruction='', xSize=300, ySize=150, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, **kwargs):
+    def __init__(self, instruction='', x_size=300, y_size=150, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, **kwargs):
         '''
         **TextAreaElement** returns a multiline text edit with an instruction on top.
 
         :param str name: Name of TextAreaElement and stored input variable.
         :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param int instructionWidth: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instructionHeight: Minimum vertical size of instruction label (can be used for layouting purposes).
-        :param int xSize: Horizontal size for visible text edit field in pixels.
-        :param int ySize: Vertical size for visible text edit field in pixels.
+        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
+        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
+        :param int x_size: Horizontal size for visible text edit field in pixels.
+        :param int y_size: Vertical size for visible text edit field in pixels.
         :param str alignment: Alignment of TextAreaElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
-        super(TextAreaElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
+        super(TextAreaElement, self).__init__(instruction, no_input_corrective_hint=no_input_corrective_hint, instruction_width=instruction_width, instruction_height=instruction_height, **kwargs)
 
-        self._xSize = xSize
-        self._ySize = ySize
+        self._xSize = x_size
+        self._ySize = y_size
 
     @property
     def web_widget(self):
@@ -567,24 +567,24 @@ class TextAreaElement(TextEntryElement):
 
 
 class RegEntryElement(TextEntryElement):
-    def __init__(self, instruction='', regEx='.*', noInputCorrectiveHint=None, matchHint=None, instructionWidth=None, instructionHeight=None, **kwargs):
+    def __init__(self, instruction='', reg_ex='.*', no_input_corrective_hint=None, match_hint=None, instruction_width=None, instruction_height=None, **kwargs):
         '''
         **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
         on the left side of the line edit field.
 
         :param str name: Name of TextAreaElement and stored input variable.
         :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param str regEx: Regular expression to match with user input.
+        :param str reg_ex: Regular expression to match with user input.
         :param str alignment: Alignment of TextAreaElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
 
-        super(RegEntryElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
+        super(RegEntryElement, self).__init__(instruction, no_input_corrective_hint=no_input_corrective_hint, instruction_width=instruction_width, instruction_height=instruction_height, **kwargs)
 
-        self._regEx = regEx
-        self._matchHint = matchHint
+        self._regEx = reg_ex
+        self._matchHint = match_hint
 
     def validate_data(self):
         super(RegEntryElement, self).validate_data()
@@ -625,7 +625,7 @@ class RegEntryElement(TextEntryElement):
 
 
 class NumberEntryElement(RegEntryElement):
-    def __init__(self, instruction='', decimals=0, min=None, max=None, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, matchHint=None, **kwargs):
+    def __init__(self, instruction='', decimals=0, min=None, max=None, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, match_hint=None, **kwargs):
         '''
         **NumberEntryElement*** displays a line edit, which only accepts numerical input. Instruction is shown
         on the left side of the line edit field.
@@ -638,11 +638,11 @@ class NumberEntryElement(RegEntryElement):
         :param int spacing: Minimum horizontal size of instruction label (can be used for layouting purposes).
         :param str alignment: Alignment of NumberEntryElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in NumberEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
 
         '''
-        super(NumberEntryElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, matchHint=matchHint, **kwargs)
+        super(NumberEntryElement, self).__init__(instruction, no_input_corrective_hint=no_input_corrective_hint, instruction_width=instruction_width, instruction_height=instruction_height, match_hint=match_hint, **kwargs)
 
         self._validator = None
         self._decimals = decimals
@@ -798,7 +798,7 @@ class NumberEntryElement(RegEntryElement):
 
 
 class PasswordElement(TextEntryElement):
-    def __init__(self, instruction='', password='', forceInput=True, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, wrong_password_hint=None, **kwargs):
+    def __init__(self, instruction='', password='', force_input=True, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, wrong_password_hint=None, **kwargs):
         '''
         **PasswordElement*** desplays a single line text edit for entering a password (input is not visible) with an instruction text on its' left.
 
@@ -808,13 +808,13 @@ class PasswordElement(TextEntryElement):
         :param int spacing: Minimum horizontal size of instruction label (can be used for layouting purposes).
         :param str alignment: Alignment of PasswordElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in PasswordElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (True as standard or False).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (True as standard or False).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         :param str wrong_password_hint: Hint to be displayed if user input does not equal password.
 
-        .. caution:: If forceInput is set to false, any input will be accepted, but still validated against correct password.
+        .. caution:: If force_input is set to false, any input will be accepted, but still validated against correct password.
         '''
-        super(PasswordElement, self).__init__(instruction, noInputCorrectiveHint=noInputCorrectiveHint, forceInput=forceInput, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
+        super(PasswordElement, self).__init__(instruction, no_input_corrective_hint=no_input_corrective_hint, force_input=force_input, instruction_width=instruction_width, instruction_height=instruction_height, **kwargs)
 
         self._password = password
         self.wrong_password_hint_user = wrong_password_hint
@@ -871,10 +871,10 @@ class PasswordElement(TextEntryElement):
 
 
 class LikertMatrix(InputElement, WebElementInterface):
-    def __init__(self, instruction='', levels=7, items=4, topScaleLabels=None,
-                 bottomScaleLabels=None, itemLabels=None, itemLabelWidth=None, spacing=30,
-                 transpose=False, noInputCorrectiveHint=None, tableStriped=False, shuffle=False,
-                 instructionWidth=None, instructionHeight=None, useShortLabels=False, **kwargs):
+    def __init__(self, instruction='', levels=7, items=4, top_scale_labels=None,
+                 bottom_scale_labels=None, item_labels=None, item_label_width=None, spacing=30,
+                 transpose=False, no_input_corrective_hint=None, table_striped=False, shuffle=False,
+                 instruction_width=None, instruction_height=None, useShortLabels=False, **kwargs):
         '''
         **LikertMatrix** displays a matrix of multiple likert items with adjustable scale levels per item.
         Instruction is shown above element.
@@ -883,30 +883,30 @@ class LikertMatrix(InputElement, WebElementInterface):
         :param str instruction: Instruction to be displayed above likert matrix (can contain html commands).
         :param int levels: Number of scale levels.
         :param int items: Number of items in matrix (rows or columns if transpose = True).
-        :param list topScaleLabels: Labels for each scale level on top of the Matrix.
-        :param list bottomScaleLabels: Labels for each scale level under the Matrix.
-        :param list itemLabels: Labels for each item on both sides of the scale.
+        :param list top_scale_labels: Labels for each scale level on top of the Matrix.
+        :param list bottom_scale_labels: Labels for each scale level under the Matrix.
+        :param list item_labels: Labels for each item on both sides of the scale.
         :param int spacing: Sets column width or row height (if transpose set to True) in likert matrix, can be used to ensure symmetric layout.
         :param bool transpose: If set to True matrix is layouted vertically instead of horizontally.
         :param str alignment: Alignment of LikertMatrix in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in LikertMatrix ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
 
-        super(LikertMatrix, self).__init__(noInputCorrectiveHint=noInputCorrectiveHint, **kwargs)
+        super(LikertMatrix, self).__init__(no_input_corrective_hint=no_input_corrective_hint, **kwargs)
 
         if spacing < 30:
             raise ValueError('Spacing must be greater or equal than 30!')
 
         self._instruction = instruction
-        self._instructionWidth = instructionWidth
-        self._instructionHeight = instructionHeight
+        self._instructionWidth = instruction_width
+        self._instructionHeight = instruction_height
         self._levels = levels
         self._items = items
-        self._itemLabelWidth = itemLabelWidth
+        self._itemLabelWidth = item_label_width
         self._spacing = spacing
-        self._tableStriped = tableStriped
+        self._tableStriped = table_striped
         self._transpose = transpose
         self._useShortLabels = useShortLabels
 
@@ -916,17 +916,17 @@ class LikertMatrix(InputElement, WebElementInterface):
         if shuffle:
             random.shuffle(self._permutation)
 
-        if topScaleLabels is not None and not len(topScaleLabels) == self._levels:
+        if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
             raise ValueError(u"Es mussen keine oder %s OBERE (bei Transpose LINKE) Skalenlabels ubergeben werden." % self._levels)
-        self._topScaleLabels = topScaleLabels
+        self._topScaleLabels = top_scale_labels
 
-        if bottomScaleLabels is not None and not len(bottomScaleLabels) == self._levels:
+        if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
             raise ValueError(u"Es mussen keine oder %s UNTERE (bei Transpose RECHTE) Skalenlabels ubergeben werden." % self._levels)
-        self._bottomScaleLabels = bottomScaleLabels
+        self._bottomScaleLabels = bottom_scale_labels
 
-        if itemLabels is not None and not len(itemLabels) == (2 * self._items):
+        if item_labels is not None and not len(item_labels) == (2 * self._items):
             raise ValueError(u"Es mussen keine oder %s Itemlabels ubergeben werden." % (2 * self._items))
-        self._itemLabels = itemLabels
+        self._itemLabels = item_labels
 
         if settings.debugmode and settings.debug.defaultValues:
             self._input = [str(int(self._input) - 1) for i in range(self._items)]
@@ -978,7 +978,7 @@ class LikertMatrix(InputElement, WebElementInterface):
 
         if not self._transpose:
             if self._topScaleLabels:
-                widget = widget + '<thead><tr><th></th>'  # Beginning row for top scalelabels, adding 1 column for left itemLabels
+                widget = widget + '<thead><tr><th></th>'  # Beginning row for top scalelabels, adding 1 column for left item_labels
                 for label in self._topScaleLabels:
                     widget = widget + '<th class="pagination-centered containerpagination-centered" style="text-align:center;width: %spx; vertical-align: bottom;">%s</th>' % (self._spacing, label)  # Adding top Scalelabels
 
@@ -990,7 +990,7 @@ class LikertMatrix(InputElement, WebElementInterface):
                 if self._itemLabels:
                     widget = widget + '<td style="text-align:right; vertical-align: middle;">%s</td>' % self._itemLabels[i * 2]  # Adding left itemlabel
                 else:
-                    widget = widget + '<td></td>'  # Placeholder if no itemLabels set
+                    widget = widget + '<td></td>'  # Placeholder if no item_labels set
 
                 for j in range(self._levels):  # Adding Radiobuttons for each level
                     widget = widget + '<td style="text-align:center; vertical-align: middle; margin: auto auto;"><input type="radio" style="margin: 4px 4px 4px 4px;" name="%s" value="%s" %s %s /></td>' % (self.name + '_' + str(i), j, " checked=\"checked\"" if self._input[i] == str(j) else "", "" if self.enabled else " disabled=\"disabled\"")
@@ -998,13 +998,13 @@ class LikertMatrix(InputElement, WebElementInterface):
                 if self._itemLabels:
                     widget = widget + '<td style="text-align:left;vertical-align: middle;">%s</td>' % self._itemLabels[(i + 1) * 2 - 1]  # Adding right itemlabel
                 else:
-                    widget = widget + '<td></td>'  # Placeholder if no itemLabels set
+                    widget = widget + '<td></td>'  # Placeholder if no item_labels set
 
                 widget = widget + '</tr>'  # Closing row for item
             widget = widget + '</tbody>'
 
             if self._bottomScaleLabels:
-                widget = widget + '<tfoot><tr><th></th>'  # Beginning row for bottom scalelabels, adding 1 column for left itemLabels
+                widget = widget + '<tfoot><tr><th></th>'  # Beginning row for bottom scalelabels, adding 1 column for left item_labels
                 for label in self._bottomScaleLabels:
                     widget = widget + '<th class="pagination-centered containerpagination-centered" style="text-align:center;width: %spx; vertical-align: top;">%s</th>' % (self._spacing, label)  # Adding bottom Scalelabels
 
@@ -1014,11 +1014,11 @@ class LikertMatrix(InputElement, WebElementInterface):
 
         else:  # If transposed is set to True
             if self._itemLabels:
-                widget = widget + '<tr><td></td>'  # Beginning row for top (left without transpose) itemLabels, adding 1 column for left (top without transpose) scalelabels
+                widget = widget + '<tr><td></td>'  # Beginning row for top (left without transpose) item_labels, adding 1 column for left (top without transpose) scalelabels
                 for i in range(old_div(len(self._itemLabels), 2)):
-                    widget = widget + '<td class="pagination-centered containerpagination-centered" style="text-align:center; vertical-align: bottom;">%s</td>' % self._itemLabels[i * 2]  # Adding top itemLabels
+                    widget = widget + '<td class="pagination-centered containerpagination-centered" style="text-align:center; vertical-align: bottom;">%s</td>' % self._itemLabels[i * 2]  # Adding top item_labels
 
-                widget = widget + "<td></td></tr>"  # adding 1 Column for right scalelabels, ending Row for top itemLabels
+                widget = widget + "<td></td></tr>"  # adding 1 Column for right scalelabels, ending Row for top item_labels
 
             for i in range(self._levels):
                 widget = widget + '<tr style="height: %spx;">' % self._spacing  # Beginning new row for level
@@ -1038,11 +1038,11 @@ class LikertMatrix(InputElement, WebElementInterface):
                 widget = widget + '</tr>'  # Closing row for level
 
             if self._itemLabels:
-                widget = widget + '<tr><td></td>'  # Beginning row for bottom (right without transpose) itemLabels, adding 1 column for left (top without transpose) scalelabels
+                widget = widget + '<tr><td></td>'  # Beginning row for bottom (right without transpose) item_labels, adding 1 column for left (top without transpose) scalelabels
                 for i in range(old_div(len(self._itemLabels), 2)):
-                    widget = widget + '<td class="pagination-centered containerpagination-centered" style="text-align:center; vertical-align: top;">%s</td>' % self._itemLabels[(i + 1) * 2 - 1]  # Adding bottom itemLabels
+                    widget = widget + '<td class="pagination-centered containerpagination-centered" style="text-align:center; vertical-align: top;">%s</td>' % self._itemLabels[(i + 1) * 2 - 1]  # Adding bottom item_labels
 
-                widget = widget + "<td></td></tr>"  # adding 1 Column for right scalelabels, ending Row for bottom itemLabels
+                widget = widget + "<td></td></tr>"  # adding 1 Column for right scalelabels, ending Row for bottom item_labels
 
             widget = widget + "</table>"  # Closing table for LikertMatrix
 
@@ -1084,7 +1084,7 @@ class LikertMatrix(InputElement, WebElementInterface):
 
 
 class LikertElement(LikertMatrix):
-    def __init__(self, instruction='', levels=7, topScaleLabels=None, bottomScaleLabels=None, itemLabels=None, itemLabelWidth=None, spacing=30, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, transpose=False, **kwargs):
+    def __init__(self, instruction='', levels=7, top_scale_labels=None, bottom_scale_labels=None, item_labels=None, item_label_width=None, spacing=30, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, transpose=False, **kwargs):
         '''
         **LikertElement** returns a single likert item with n scale levels and an instruction shown above the element.
 
@@ -1098,10 +1098,10 @@ class LikertElement(LikertMatrix):
         :param bool transpose: If True item is layouted vertically instead of horizontally.
         :param str alignment: Alignment of LikertElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in LikertElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
-        super(LikertElement, self).__init__(instruction=instruction, items=1, levels=levels, topScaleLabels=topScaleLabels, bottomScaleLabels=bottomScaleLabels, itemLabels=itemLabels, itemLabelWidth=itemLabelWidth, spacing=spacing, noInputCorrectiveHint=noInputCorrectiveHint, tableStriped=False, transpose=transpose, shuffle=False, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
+        super(LikertElement, self).__init__(instruction=instruction, items=1, levels=levels, top_scale_labels=top_scale_labels, bottom_scale_labels=bottom_scale_labels, item_labels=item_labels, item_label_width=item_label_width, spacing=spacing, no_input_corrective_hint=no_input_corrective_hint, table_striped=False, transpose=transpose, shuffle=False, instruction_width=instruction_width, instruction_height=instruction_height, **kwargs)
 
     @property
     def data(self):
@@ -1111,7 +1111,7 @@ class LikertElement(LikertMatrix):
 
 
 class SingleChoiceElement(LikertElement):
-    def __init__(self, instruction='', itemLabels=[], itemLabelWidth=None, itemLabelHeight=None, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, shuffle=False, tableStriped=False, **kwargs):
+    def __init__(self, instruction='', item_labels=[], item_label_width=None, item_label_height=None, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, shuffle=False, table_striped=False, **kwargs):
         '''
         **SingleChoiceElement** returns a vertically layouted item with adjustable choice alternatives (comparable to levels of likert scale),
         from which only one can be selected.
@@ -1123,27 +1123,27 @@ class SingleChoiceElement(LikertElement):
         :param int spacing: Sets row height in SingleChoiceElement, can be used to ensure symmetric layout.
         :param str alignment: Alignment of SingleChoiceElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in SingleChoiceElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
 
         kwargs.pop('transpose', None)  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
         kwargs.pop('items', None)  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
 
-        if len(itemLabels) == 0:
+        if len(item_labels) == 0:
             raise ValueError(u"Es müssen Itemlabels übergeben werden.")
 
-        super(SingleChoiceElement, self).__init__(instruction=instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
+        super(SingleChoiceElement, self).__init__(instruction=instruction, no_input_corrective_hint=no_input_corrective_hint, instruction_width=instruction_width, instruction_height=instruction_height, **kwargs)
 
-        self._permutation = list(range(len(itemLabels)))
+        self._permutation = list(range(len(item_labels)))
         if shuffle:
             random.shuffle(self._permutation)
 
-        self._itemLabelWidth = itemLabelWidth
-        self._itemLabelHeight = itemLabelHeight
-        self._tableStriped = tableStriped
-        self._items = len(itemLabels)
-        self._itemLabels = itemLabels
+        self._itemLabelWidth = item_label_width
+        self._itemLabelHeight = item_label_height
+        self._tableStriped = table_striped
+        self._items = len(item_labels)
+        self._itemLabels = item_labels
         self._suffle = shuffle
 
         if settings.debugmode and settings.debug.defaultValues:
@@ -1211,7 +1211,7 @@ class SingleChoiceElement(LikertElement):
 
 
 class MultipleChoiceElement(LikertElement):
-    def __init__(self, instruction='', itemLabels=[], minSelect=None, maxSelect=None, selectHint=None, itemLabelWidth=None, itemLabelHeight=None, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, shuffle=False, tableStriped=False, **kwargs):
+    def __init__(self, instruction='', item_labels=[], min_select=None, max_select=None, select_hint=None, item_label_width=None, item_label_height=None, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, shuffle=False, table_striped=False, **kwargs):
         '''
         **SingleChoiceElement** returns a vertically layouted item with adjustable choice alternatives (comparable to levels of likert scale)
         as checkboxes, from which one or more can be selected.
@@ -1223,53 +1223,53 @@ class MultipleChoiceElement(LikertElement):
         :param int spacing: Sets row height in MultipleChoiceElement, can be used to ensure symmetric layout.
         :param str alignment: Alignment of MultipleChoiceElement in widget container ('left' as standard, 'center', 'right').
         :param str/int font: Fontsize used in MultipleChoiceElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
 
         kwargs.pop('transpose', None)  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
         kwargs.pop('items', None)  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
 
         default = kwargs.pop('default', None)
-        debugString = kwargs.pop('debugString', None)
+        debug_string = kwargs.pop('debug_string', None)
 
-        if len(itemLabels) == 0:
+        if len(item_labels) == 0:
             raise ValueError(u"Es müssen Itemlabels übergeben werden.")
 
-        super(MultipleChoiceElement, self).__init__(instruction=instruction, noInputCorrectiveHint=noInputCorrectiveHint, instructionWidth=instructionWidth, instructionHeight=instructionHeight, **kwargs)
+        super(MultipleChoiceElement, self).__init__(instruction=instruction, no_input_corrective_hint=no_input_corrective_hint, instruction_width=instruction_width, instruction_height=instruction_height, **kwargs)
 
-        self._permutation = list(range(len(itemLabels)))
+        self._permutation = list(range(len(item_labels)))
         if shuffle:
             random.shuffle(self._permutation)
 
-        self._itemLabelWidth = itemLabelWidth
-        self._itemLabelHeight = itemLabelHeight
-        self._tableStriped = tableStriped
-        self._items = len(itemLabels)
+        self._itemLabelWidth = item_label_width
+        self._itemLabelHeight = item_label_height
+        self._tableStriped = table_striped
+        self._items = len(item_labels)
 
-        if minSelect and minSelect > self._items:
-            raise ValueError('minSelect must be smaller than number of items')
+        if min_select and min_select > self._items:
+            raise ValueError('min_select must be smaller than number of items')
 
-        if maxSelect and maxSelect < 2:
-            raise ValueError('maxSelect must be set to 2 or higher')
+        if max_select and max_select < 2:
+            raise ValueError('max_select must be set to 2 or higher')
 
-        self._minSelect = minSelect
-        self._maxSelect = maxSelect
+        self._minSelect = min_select
+        self._maxSelect = max_select
 
-        if selectHint:
-            self._select_hint = selectHint
+        if select_hint:
+            self._select_hint = select_hint
         else:
-            if minSelect and not maxSelect:
+            if min_select and not max_select:
                 self._select_hint = u"Bitte wählen Sie mindestens %i Optionen aus" % self._minSelect
-            elif maxSelect and not minSelect:
+            elif max_select and not min_select:
                 self._select_hint = u"Bitte wählen Sie höchstens %i Optionen aus" % self._maxSelect
-            elif maxSelect and minSelect:
+            elif max_select and min_select:
                 self._select_hint = u"Bitte wählen Sie mindestens %i und höchstens %i Optionen aus" % (self._minSelect, self._maxSelect)
 
         if self._minSelect:
             self._noInputCorrectiveHint = self._select_hint
 
-        self._itemLabels = itemLabels
+        self._itemLabels = item_labels
         self._suffle = shuffle
 
         # default values and debug values have to be implemented with the following workaround resulting from deducing LikertItem
@@ -1277,10 +1277,10 @@ class MultipleChoiceElement(LikertElement):
         self._input = ['0' for i in range(len(self._itemLabels))]
 
         if settings.debugmode and settings.debug.defaultValues:
-            if not debugString:
+            if not debug_string:
                 self._input = settings.debug.get(self.__class__.__name__)  # getting default value (True or False)
             else:
-                self._input = settings._config_parser.get('debug', debugString)
+                self._input = settings._config_parser.get('debug', debug_string)
 
             if self._input is True:
                 self._input = ['1' for i in range(len(self._itemLabels))]
@@ -1373,10 +1373,10 @@ class MultipleChoiceElement(LikertElement):
 
 
 class LikertListElement(InputElement, WebElementInterface):
-    def __init__(self, instruction='', levels=7, topScaleLabels=None, bottomScaleLabels=None,
-                 itemLabels=[], itemLabelHeight=None, itemLabelWidth=None, itemLabelAlignment='left',
-                 tableStriped=False, spacing=30, shuffle=False, instructionWidth=None,
-                 instructionHeight=None, useShortLabels=False, **kwargs):
+    def __init__(self, instruction='', levels=7, top_scale_labels=None, bottom_scale_labels=None,
+                 item_labels=[], item_label_height=None, item_label_width=None, itemLabelAlignment='left',
+                 table_striped=False, spacing=30, shuffle=False, instruction_width=None,
+                 instruction_height=None, useShortLabels=False, **kwargs):
         '''
         **LikertListElement** displays a likert item with images as labels.
         Instruction is shown above element.
@@ -1387,23 +1387,23 @@ class LikertListElement(InputElement, WebElementInterface):
         :param int spacing: Sets column width between radio buttons.
         :param str alignment: Alignment of WebLikertImageElement in widget container ('left' as default, 'center', 'right').
         :param str/int font: Fontsize used in WebLikertImageElement ('normal' as default, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as default or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as default or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
 
         super(LikertListElement, self).__init__(**kwargs)
 
         self._instruction = instruction
-        self._instructionWidth = instructionWidth
-        self._instructionHeight = instructionHeight
+        self._instructionWidth = instruction_width
+        self._instructionHeight = instruction_height
         self._levels = levels
-        self._topScaleLabels = topScaleLabels
-        self._bottomScaleLabels = bottomScaleLabels
-        self._itemLabels = itemLabels
-        self._itemLabelHeight = itemLabelHeight
-        self._itemLabelWidth = itemLabelWidth
+        self._topScaleLabels = top_scale_labels
+        self._bottomScaleLabels = bottom_scale_labels
+        self._itemLabels = item_labels
+        self._itemLabelHeight = item_label_height
+        self._itemLabelWidth = item_label_width
         self._itemLabelAlign = itemLabelAlignment
-        self._tableStriped = tableStriped
+        self._tableStriped = table_striped
         self._spacing = spacing
         self._defaultSet = False
         self._useShortLabels = useShortLabels
@@ -1411,23 +1411,23 @@ class LikertListElement(InputElement, WebElementInterface):
         if spacing < 30:
             raise ValueError(u'Spacing must be greater or equal than 30!')
 
-        if topScaleLabels is not None and not len(topScaleLabels) == self._levels:
+        if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
             raise ValueError(u"Es müssen keine oder %s OBERE Skalenlabels übergeben werden." % self._levels)
 
-        if bottomScaleLabels is not None and not len(bottomScaleLabels) == self._levels:
+        if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
             raise ValueError(u"Es müssen keine oder %s UNTERE Skalenlabels übergeben werden." % self._levels)
 
-        self._permutation = list(range(len(itemLabels)))
+        self._permutation = list(range(len(item_labels)))
         if shuffle:
             random.shuffle(self._permutation)
 
         if settings.debugmode and settings.debug.defaultValues:
-            self._input = [str(int(self._input) - 1) for i in itemLabels]
+            self._input = [str(int(self._input) - 1) for i in item_labels]
         elif not self._input == '':
-            self._input = [str(int(self._input) - 1) for i in itemLabels]
+            self._input = [str(int(self._input) - 1) for i in item_labels]
             self._defaultSet = True
         else:
-            self._input = ['-1' for i in itemLabels]
+            self._input = ['-1' for i in item_labels]
 
         self._template = jinja2.Template('''
             <div class="" style="font-size: {{fontsize}}pt; text-align: {{alignment}}">
@@ -1557,7 +1557,7 @@ class LikertListElement(InputElement, WebElementInterface):
 
 
 class ImageElement(Element, WebElementInterface):
-    def __init__(self, path=None, url=None, xSize=None, ySize=None, alt=None, maximizable=False, **kwargs):
+    def __init__(self, path=None, url=None, x_size=None, y_size=None, alt=None, maximizable=False, **kwargs):
         super(ImageElement, self).__init__(**kwargs)
 
         if not path and not url:
@@ -1569,8 +1569,8 @@ class ImageElement(Element, WebElementInterface):
         self._path = path
         self._url = url
 
-        self._xSize = xSize
-        self._ySize = ySize
+        self._xSize = x_size
+        self._ySize = y_size
         self._alt = alt
         self._image_url = None
         self._maximizable = maximizable
@@ -1793,36 +1793,36 @@ class TableElement(Element, WebElementInterface):
 
 
 class WebSliderElement(InputElement, WebElementInterface):
-    def __init__(self, instruction='', sliderWidth=200, min=0, max=100, step=1, noInputCorrectiveHint=None, instructionWidth=None, instructionHeight=None, itemLabels=None, topLabel=None, bottomLabel=None, **kwargs):
+    def __init__(self, instruction='', slider_width=200, min=0, max=100, step=1, no_input_corrective_hint=None, instruction_width=None, instruction_height=None, item_labels=None, top_label=None, bottom_label=None, **kwargs):
         '''
         **TextSliderElement*** returns a slider bar.
 
         :param str name: Name of TextEntryElement and stored input variable.
         :param str instruction: Instruction to be displayed with line edit field (can contain html commands).
-        :param int instructionWidth: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instructionHeight: Minimum vertical size of instruction label (can be used for layouting purposes).
+        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
+        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
         :param str alignment: Alignment of TextEntryElement in widget container ('left' as standard, 'center', 'right').
         :param str/int fontSize: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool forceInput: Sets user input to be mandatory (False as standard or True).
-        :param str noInputCorrectiveHint: Hint to be displayed if forceInput set to True and no user input registered.
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
 
         # TODO: Required image files from jquery-ui are missing! Widget will not be displayed correctly, but works nonetheless.
-        super(WebSliderElement, self).__init__(noInputCorrectiveHint=noInputCorrectiveHint, **kwargs)
+        super(WebSliderElement, self).__init__(no_input_corrective_hint=no_input_corrective_hint, **kwargs)
 
-        self._instructionWidth = instructionWidth
-        self._instructionHeight = instructionHeight
+        self._instructionWidth = instruction_width
+        self._instructionHeight = instruction_height
         self._instruction = instruction
-        self._sliderWidth = sliderWidth
+        self._sliderWidth = slider_width
         self._min = min
         self._max = max
         self._step = step
 
-        if itemLabels is not None and not len(itemLabels) == 2:
+        if item_labels is not None and not len(item_labels) == 2:
             raise ValueError(u"Es müssen keine oder 2 Itemlabels übergeben werden.")
-        self._itemLabels = itemLabels
-        self._topLabel = topLabel
-        self._bottomLabel = bottomLabel
+        self._itemLabels = item_labels
+        self._topLabel = top_label
+        self._bottomLabel = bottom_label
 
         self._template = jinja2.Template(
 
@@ -1835,7 +1835,7 @@ class WebSliderElement(InputElement, WebElementInterface):
                 <tr><table>
                     <tr><td align="center" colspan="3">{{ toplabel }}</td></tr>
                     <tr><td align="right">{{ l_label }}</td>
-                    <td valign="bottom"><div style="width: {{ sliderWidth }}px; margin-left: 15px; margin-right: 15px; margin-top: 5px; margin-bottom: 5px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %}></div></td>
+                    <td valign="bottom"><div style="width: {{ slider_width }}px; margin-left: 15px; margin-right: 15px; margin-top: 5px; margin-bottom: 5px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %}></div></td>
                     <td align="left">{{ r_label }}</td></tr>
                     <tr><td align="center" colspan="3">{{ bottomlabel }}</td></tr>
                     </table></tr>
@@ -1876,7 +1876,7 @@ class WebSliderElement(InputElement, WebElementInterface):
         d['alignment'] = alignment_converter(self._alignment, 'container')
         d['fontsize'] = fontsize_converter(self._fontSize)
         d['width'] = self._instructionWidth
-        d['sliderWidth'] = self._sliderWidth
+        d['slider_width'] = self._sliderWidth
         d['height'] = self._instructionHeight
         d['instruction'] = self._instruction
         d['l_label'] = self._itemLabels[0] if self._itemLabels else ''
@@ -1917,25 +1917,25 @@ class WebSliderElement(InputElement, WebElementInterface):
 
 
 class WebAudioElement(Element, WebElementInterface):
-    def __init__(self, wavURL=None, wavPath=None, oggURL=None, oggPath=None, mp3URL=None, mp3Path=None, controls=True, autoplay=False, loop=False, **kwargs):
+    def __init__(self, wav_url=None, wav_path=None, ogg_url=None, ogg_path=None, mp3_url=None, mp3_path=None, controls=True, autoplay=False, loop=False, **kwargs):
         '''
         TODO: Add docstring
         '''
         super(WebAudioElement, self).__init__(**kwargs)
-        if wavPath is not None and not os.path.isabs(wavPath):
-            wavPath = os.path.join(settings.general.external_files_dir, wavPath)
-        if oggPath is not None and not os.path.isabs(oggPath):
-            oggPath = os.path.join(settings.general.external_files_dir, oggPath)
-        if mp3Path is not None and not os.path.isabs(mp3Path):
-            mp3Path = os.path.join(settings.general.external_files_dir, mp3Path)
+        if wav_path is not None and not os.path.isabs(wav_path):
+            wav_path = os.path.join(settings.general.external_files_dir, wav_path)
+        if ogg_path is not None and not os.path.isabs(ogg_path):
+            ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
+        if mp3_path is not None and not os.path.isabs(mp3_path):
+            mp3_path = os.path.join(settings.general.external_files_dir, mp3_path)
 
-        self._wavPath = wavPath
-        self._oggPath = oggPath
-        self._mp3Path = mp3Path
+        self._wavPath = wav_path
+        self._oggPath = ogg_path
+        self._mp3Path = mp3_path
 
-        self._wav_audio_url = wavURL
-        self._ogg_audio_url = oggURL
-        self._mp3_audio_url = mp3URL
+        self._wav_audio_url = wav_url
+        self._ogg_audio_url = ogg_url
+        self._mp3_audio_url = mp3_url
 
         self._controls = controls
         self._autoplay = autoplay
@@ -1963,25 +1963,25 @@ class WebAudioElement(Element, WebElementInterface):
 
 
 class WebVideoElement(Element, WebElementInterface):
-    def __init__(self, width=None, height=None, mp4URL=None, mp4Path=None, oggURL=None, oggPath=None, webMURL=None, webMPath=None, controls=True, autoplay=False, loop=False, **kwargs):
+    def __init__(self, width=None, height=None, mp4_url=None, mp4_path=None, ogg_url=None, ogg_path=None, web_m_url=None, web_m_path=None, controls=True, autoplay=False, loop=False, **kwargs):
         '''
         TODO: Add docstring
         '''
         super(WebVideoElement, self).__init__(**kwargs)
-        if mp4Path is not None and not os.path.isabs(mp4Path):
-            mp4Path = os.path.join(settings.general.external_files_dir, mp4Path)
-        if oggPath is not None and not os.path.isabs(oggPath):
-            oggPath = os.path.join(settings.general.external_files_dir, oggPath)
-        if webMPath is not None and not os.path.isabs(webMPath):
-            webMPath = os.path.join(settings.general.external_files_dir, webMPath)
+        if mp4_path is not None and not os.path.isabs(mp4_path):
+            mp4_path = os.path.join(settings.general.external_files_dir, mp4_path)
+        if ogg_path is not None and not os.path.isabs(ogg_path):
+            ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
+        if web_m_path is not None and not os.path.isabs(web_m_path):
+            web_m_path = os.path.join(settings.general.external_files_dir, web_m_path)
 
-        self._mp4Path = mp4Path
-        self._oggPath = oggPath
-        self._webMPath = webMPath
+        self._mp4Path = mp4_path
+        self._oggPath = ogg_path
+        self._webMPath = web_m_path
 
-        self._mp4_video_url = mp4URL
-        self._ogg_video_url = oggURL
-        self._webM_video_url = webMURL
+        self._mp4_video_url = mp4_url
+        self._ogg_video_url = ogg_url
+        self._webM_video_url = web_m_url
 
         self._controls = controls
         self._autoplay = autoplay

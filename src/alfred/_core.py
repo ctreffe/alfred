@@ -13,7 +13,7 @@ from uuid import uuid4
 class PageCore(object):
     def __init__(self, tag=None, uid=None, tagAndUid=None, is_jumpable=True, jumptext=None,
                  title=None, subtitle=None, statustext=None,
-                 shouldBeShownFilterFunction=None, **kwargs):
+                 should_be_shown_filter_function=None, **kwargs):
 
         if kwargs != {}:
             raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
@@ -21,7 +21,7 @@ class PageCore(object):
         self._tag = None
         self._uid = uid if uid is not None else uuid4().hex
         self._shouldBeShown = True
-        self._shouldBeShownFilterFunction = shouldBeShownFilterFunction if shouldBeShownFilterFunction is not None else lambda exp: True
+        self._shouldBeShownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
         self._parentGroup = None
         self._experiment = None
         self._jumptext = None

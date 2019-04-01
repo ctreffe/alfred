@@ -239,7 +239,7 @@ except NameError:
 
 
 class QtWebKitUserInterfaceController(WebUserInterfaceController):
-    def __init__(self, experiment, weblayout=None, qtlayout=None, fullScreen=True, **kwargs):
+    def __init__(self, experiment, weblayout=None, qtlayout=None, full_scren=True, **kwargs):
 
         self._helper = ThreadHelper(self)
 
@@ -265,7 +265,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         self._current_main_widget = None
         # self._qtlayout = None
 
-        self._fullscreen = fullScreen
+        self._fullscreen = full_scren
 
         super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
         # self.changeQtLayout(qtlayout or BaseQtLayout())
