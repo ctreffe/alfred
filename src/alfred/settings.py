@@ -16,7 +16,16 @@ import os
 import configparser
 import codecs
 import io
-import base64
+from cryptography.fernet import Fernet
+
+
+# Fernet instance for decryption of login data
+if os.path.isfile("alfred_secrect.key"):
+    with open("alfred_secrect.key", "rb") as keyfile:
+        key = keyfile.read()
+else:
+    key = os.environ.get("ALFRED_SECRET_KEY")
+f = Fernet(key)
 
 
 def _package_path():
@@ -177,11 +186,9 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.host = config_parser.get('mongo_saving_agent', 'host')
         self.mongo_saving_agent.database = config_parser.get('mongo_saving_agent', 'database')
         self.mongo_saving_agent.collection = config_parser.get('mongo_saving_agent', 'collection')
-        self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
-        self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
+        self.mongo_saving_agent.user = f.decrypt(config_parser.get('mongo_saving_agent', 'user').encode()).decode()
+        self.mongo_saving_agent.password = f.decrypt(config_parser.get('mongo_saving_agent', 'password').encode()).decode()
         self.mongo_saving_agent.use_ssl = config_parser.getboolean('mongo_saving_agent', 'use_ssl')
-        # self.mongo_saving_agent.user = base64.b64decode(config_parser.get('mongo_saving_agent', 'user')).decode("utf-8")
-        # self.mongo_saving_agent.password = base64.b64decode(config_parser.get('mongo_saving_agent', 'password')).decode("utf-8")
 
         self.fallback_local_saving_agent = _DictObj()
         self.fallback_local_saving_agent.use = config_parser.getboolean('fallback_local_saving_agent', 'use')

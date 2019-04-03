@@ -401,7 +401,7 @@ class MongoSavingAgent(SavingAgent):
     def __init__(self, host, database, collection, user, password, use_ssl, activation_level=10, experiment=None):
         super(MongoSavingAgent, self).__init__(activation_level, experiment)
 
-        self._mc = pymongo.MongoClient(host, ssl=use_ssl)
+        self._mc = pymongo.MongoClient(host=host, username=user, password=password, ssl=use_ssl)
         self._db = self._mc[database]
         # if not self._db.authenticate(user, password):
         #     raise RuntimeError("Could not authenticate with %s.%s" % (host, database))
