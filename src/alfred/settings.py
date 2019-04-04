@@ -76,9 +76,9 @@ config_files = [x for x in config_files if x is not None]
 _config_parser = configparser.ConfigParser()
 
 # read _config_files
-for config_file in config_files:
-    if os.path.exists(config_file):
-        _config_parser.read_file(codecs.open(config_file, "r", "utf8"))
+for configFile in config_files:
+    if os.path.exists(configFile):
+        _config_parser.read_file(codecs.open(configFile, "r", "utf8"))
 
 # transform data from config_files to actual python objects
 
@@ -95,7 +95,7 @@ experiment = _DictObj()
 experiment.type = _config_parser.get('experiment', 'type')
 if not (experiment.type == 'qt' or experiment.type == 'web' or experiment.type == 'qt-wk'):
     raise ValueError("experiment.type must be qt, qt-wk or web")
-experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
+experiment.qtFullScreen = _config_parser.getboolean('experiment', 'qt_fullscreen')
 
 # logging
 log = _DictObj()
@@ -119,12 +119,12 @@ webserver.sql_alchemy_engine = _config_parser.get('webserver', 'sql_alchemy_engi
 
 # debug default values
 debug = _DictObj()
-debug.default_values = _config_parser.getboolean('debug', 'set_default_values')
-debug.disable_minimum_display_time = _config_parser.getboolean('debug', 'disable_minimum_display_time')
-debug.reduce_countdown = _config_parser.getboolean('debug', 'reduce_countdown')
-debug.reduced_countdown_time = _config_parser.get('debug', 'reduced_countdown_time')
-debug.log_levelOverride = _config_parser.getboolean('debug', 'log_level_override')
-debug.log_level = _config_parser.get('debug', 'log_level')
+debug.defaultValues = _config_parser.getboolean('debug', 'set_default_values')
+debug.disableMinimumDisplayTime = _config_parser.getboolean('debug', 'disable_minimumDisplayTime')
+debug.reduceCountdown = _config_parser.getboolean('debug', 'reduce_countdown')
+debug.reducedCountdownTime = _config_parser.get('debug', 'reduced_countdown_time')
+debug.logLevelOverride = _config_parser.getboolean('debug', 'logLevel_override')
+debug.logLevel = _config_parser.get('debug', 'logLevel')
 debug.disable_saving = _config_parser.getboolean('debug', 'disable_saving')
 
 debug.InputElement = _config_parser.get('debug', 'InputElement_default')
@@ -154,9 +154,9 @@ class ExperimentSpecificSettings(object):
             os.path.join(os.getcwd(), 'config.conf'),
         ] if x is not None]
 
-        for config_file in config_files:
-            if os.path.exists(config_file):
-                config_parser.readfp(codecs.open(config_file, "r", "utf8"))
+        for configFile in config_files:
+            if os.path.exists(configFile):
+                config_parser.readfp(codecs.open(configFile, "r", "utf8"))
         if config_string:
             config_parser.readfp(io.StringIO(config_string))
 

@@ -55,8 +55,8 @@ def experiment():
     if move is None and directjump is None and par is None and kwargs == {}:
         pass
     elif directjump and par:
-        pos_list = list(map(int, par.split('.')))
-        script.experiment.user_interface_controller.move_to_position(pos_list)
+        posList = list(map(int, par.split('.')))
+        script.experiment.user_interface_controller.move_to_position(posList)
     elif move == 'started':
         pass
     elif move == 'forward':
@@ -64,14 +64,12 @@ def experiment():
     elif move == 'backward':
         script.experiment.user_interface_controller.move_backward()
     elif move == 'jump' and par and re.match('^\d+(\.\d+)*$', par):
-        pos_list = list(map(int, par.split('.')))
-        script.experiment.user_interface_controller.move_to_position(pos_list)
+        posList = list(map(int, par.split('.')))
+        script.experiment.user_interface_controller.move_to_position(posList)
     else:
         abort(400)
 
-    page_token = "abc"
-
-    html = script.experiment.user_interface_controller.render_html(page_token)
+    html = script.experiment.user_interface_controller.render_html()
     resp = make_response(html)
     resp.cache_control.no_cache = True
     return resp

@@ -48,7 +48,7 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         '''
         self._experiment = experiment
         self._layout = None
-        self._old_question = None
+        self._oldQuestion = None
 
         if layout is None:
             self.change_layout(BaseQtLayout() if experiment.type == 'qt' else BaseWebLayout())
@@ -89,10 +89,10 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
             self._experiment.saving_agent_controller.run_saving_agents(1)
             self._experiment.question_controller.current_question._on_showing_widget()
 
-    def move_to_position(self, pos_list):
+    def move_to_position(self, posList):
         if self._experiment.question_controller.allow_leaving(Direction.JUMP):
             self._experiment.question_controller.current_question._on_hiding_widget()
-            self._experiment.question_controller.move_to_position(pos_list)
+            self._experiment.question_controller.move_to_position(posList)
             self._experiment.saving_agent_controller.run_saving_agents(1)
             self._experiment.question_controller.current_question._on_showing_widget()
 
@@ -104,9 +104,9 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
 class WebUserInterfaceController(UserInterfaceController):
     def __init__(self, experiment, layout=None):
 
-        self._callables_dict = {}
-        self._dynamic_files_dict = {}
-        self._static_files_dict = {}
+        self._callablesDict = {}
+        self._dynamicFilesDict = {}
+        self._staticFilesDict = {}
         self._basepath = alfred.settings.webserver.basepath
 
         super(WebUserInterfaceController, self).__init__(experiment, layout)
@@ -115,77 +115,75 @@ class WebUserInterfaceController(UserInterfaceController):
     def basepath(self):
         return self._basepath
 
-    def render(self, page_token):
+    def render(self):
         self._experiment.question_controller.current_question.prepare_web_widget()
 
-        js_scripts = []
+        jsScripts = []
         js_urls = []
-        css_scripts = []
+        cssScripts = []
         css_urls = []
 
         # update with layout
-        js_scripts = js_scripts + self._layout.javascript_code
+        jsScripts = jsScripts + self._layout.javascript_code
         js_urls = js_urls + self._layout.javascript_urls
-        css_scripts = css_scripts + self._layout.css_code
+        cssScripts = cssScripts + self._layout.css_code
         css_urls = css_urls + self._layout.css_urls
 
         # update with current_question
-        js_scripts = js_scripts + self._experiment.question_controller.current_question.js_code
+        jsScripts = jsScripts + self._experiment.question_controller.current_question.js_code
         js_urls = js_urls + self._experiment.question_controller.current_question.js_urls
-        css_scripts = css_scripts + self._experiment.question_controller.current_question.css_code
+        cssScripts = cssScripts + self._experiment.question_controller.current_question.css_code
         css_urls = css_urls + self._experiment.question_controller.current_question.css_urls
 
         # sort lists by first item
-        js_scripts.sort(key=lambda x: x[0])
+        jsScripts.sort(key=lambda x: x[0])
         js_urls.sort(key=lambda x: x[0])
-        css_scripts.sort(key=lambda x: x[0])
+        cssScripts.sort(key=lambda x: x[0])
         css_urls.sort(key=lambda x: x[0])
 
         # build html code
         html = "<!DOCTYPE html>\n<html><head><title>ALFRED</title>"
 
-        for i, js_url in js_urls:
-            html = html + "<script type=\"text/javascript\" src=\"%s\"></script>" % js_url
+        for i, jsURL in js_urls:
+            html = html + "<script type=\"text/javascript\" src=\"%s\"></script>" % jsURL
 
-        for i, js_script in js_scripts:
-            html = html + "<script type=\"text/javascript\">%s</script>" % js_script
+        for i, jsScript in jsScripts:
+            html = html + "<script type=\"text/javascript\">%s</script>" % jsScript
 
-        for i, css_url in css_urls:
-            html = html + "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />" % css_url
+        for i, cssURL in css_urls:
+            html = html + "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />" % cssURL
 
-        for i, css_script in css_scripts:
-            html = html + "<style type=\"text/css\">%s</style>" % css_script
+        for i, cssScript in cssScripts:
+            html = html + "<style type=\"text/css\">%s</style>" % cssScript
 
         html = html + "</head><body><form id=\"form\" method=\"post\" action=\"%s/experiment\" autocomplete=\"off\" accept-charset=\"UTF-8\">" % self._basepath
 
         html = html + self._layout.render()
 
-        html = html + f"<input type=\"hidden\" name=\"page_token\" value={page_token}>"
-
         html = html + "</form></body></html>"
 
         return html
 
-    def render_html(self, page_token):
-        return self.render(page_token)
+    def render_html(self):
+        return self.render()
 
     def get_dynamic_file(self, identifier):
-        file_obj, content_type = self._dynamic_files_dict[identifier]
-        file_obj.seek(0)
-        strIO = StringIO(file_obj.read())
+        fileObj, content_type = self._dynamicFilesDict[identifier]
+        fileObj.seek(0)
+        strIO = StringIO(fileObj.read())
         strIO.seek(0)
         return strIO, content_type
 
     def add_dynamic_file(self, file_obj, content_type=None):
         identifier = uuid4().hex
-        while identifier in self._dynamic_files_dict:
+        while identifier in self._dynamicFilesDict:
             identifier = uuid4().hex
 
-        self._dynamic_files_dict[identifier] = (file_obj, content_type)
+        self._dynamicFilesDict[identifier] = (file_obj, content_type)
         return self._basepath + '/dynamicfile/' + identifier
 
     def get_static_file(self, identifier):
-        return self._static_files_dict[identifier]
+        return self._staticFilesDict[identifier]
 
     def add_static_file(self, path, content_type=None):
         if not os.path.isabs(path):
@@ -196,47 +194,47 @@ class WebUserInterfaceController(UserInterfaceController):
                 self.sf_counter = 0
             self.sf_counter += 1
             identifier = str(self.sf_counter)
-        while identifier in self._static_files_dict:
+        while identifier in self._staticFilesDict:
             identifier = uuid4().hex
-        self._static_files_dict[identifier] = (path, content_type)
+        self._staticFilesDict[identifier] = (path, content_type)
         return self._basepath + '/staticfile/' + identifier
 
     def get_callable(self, identifier):
-        return self._callables_dict[identifier]
+        return self._callablesDict[identifier]
 
     def add_callable(self, f):
         identifier = uuid4().hex
-        while identifier in self._callables_dict:
+        while identifier in self._callablesDict:
             identifier = uuid4().hex
 
-        self._callables_dict[identifier] = f
+        self._callablesDict[identifier] = f
         return self._basepath + '/callable/' + identifier
 
     def update_with_user_input(self, d):
         self._experiment.question_controller.current_question.set_data(d)
 
-    def jump_url_from_pos_list(self, pos_list):
-        return self._basepath + '/experiment?move=jump&par=' + '.'.join(pos_list)
+    def jump_url_from_pos_list(self, posList):
+        return self._basepath + '/experiment?move=jump&par=' + '.'.join(posList)
 
 
 try:
     class ThreadHelper(QtCore.QObject):
-        render_signal = QtCore.Signal()
+        renderSignal = QtCore.Signal()
 
         def __init__(self, ui_controller):
             super(ThreadHelper, self).__init__()
-            self._ui_controller = ui_controller
-            self.render_signal.connect(self.render_slot)
+            self._uiController = ui_controller
+            self.renderSignal.connect(self.render_slot)
 
         def render(self):
-            self.render_signal.emit()
+            self.renderSignal.emit()
 
         @QtCore.Slot()
         def render_slot(self):
-            self._ui_controller.render_slot()
+            self._uiController.render_slot()
 except NameError:
-    from .alfredlog import get_logger
-    logger = get_logger((__name__))
+    from .alfredlog import getLogger
+    logger = getLogger((__name__))
     logger.warning("Can't create ThreadHelper. (Needed for Qt)")
 
 
@@ -249,20 +247,20 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
         # initialize qt
         self._app = QApplication([])
-        self._qt_window = QMainWindow()
-        self._qt_window.set_minimum_height(720)
-        self._qt_window.set_minimum_width(1024)
+        self._qtWindow = QMainWindow()
+        self._qtWindow.setMinimumHeight(720)
+        self._qtWindow.setMinimumWidth(1024)
         widget = QWidget()
         layout = QVBoxLayout()
-        widget.set_layout(layout)
-        self._web_view = QWebView()
-        # self._qt_main_scroll_area = QScrollArea()
-        # self._qt_main_scroll_area.set_widget_resizeable(True)  # Must be set to True in order for layout to work properly
-        # self._qt_main_scroll_area.set_style_sheet("QScrollArea {background: white; border: none}")
+        widget.setLayout(layout)
+        self._webView = QWebView()
+        # self._qtMainScrollArea = QScrollArea()
+        # self._qtMainScrollArea.setWidgetResizable(True)  # Must be set to True in order for layout to work properly
+        # self._qtMainScrollArea.setStyleSheet("QScrollArea {background: white; border: none}")
 
-        layout.add_widget(self._web_view)
+        layout.addWidget(self._webView)
 
-        self._qt_window.set_central_widget(widget)
+        self._qtWindow.setCentralWidget(widget)
 
         self._current_main_widget = None
         # self._qtlayout = None
@@ -270,7 +268,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         self._fullscreen = full_scren
 
         super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
-        # self.change_qt_layout(qtlayout or BaseQtLayout())
+        # self.changeQtLayout(qtlayout or BaseQtLayout())
 
     def _get_layout(self):
         return self._layout
@@ -284,10 +282,10 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
     def render_slot(self):
 
-            # self._qt_main_scroll_area.hide()
-        self._web_view.show()
+            # self._qtMainScrollArea.hide()
+        self._webView.show()
         # TODO: Check if this fix is ok!
-        # self._web_view.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
+        # self._webView.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
 
     def move_forward(self):
 
@@ -301,7 +299,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
         self.render()
 
-    def move_to_position(self, pos_list):
+    def move_to_position(self, posList):
 
         super(QtWebKitUserInterfaceController, self).move_forward()
         self.render()
@@ -314,12 +312,12 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         t.start()
         import time
         time.sleep(2)  # TODO: What is this?
-        self._web_view.set_url("http://127.0.0.1:5000/experiment")
+        self._webView.setUrl("http://127.0.0.1:5000/experiment")
 
         if self._fullscreen:
-            self._qt_window.show_full_screen()
+            self._qtWindow.showFullScreen()
         else:
-            self._qt_window.show()
+            self._qtWindow.show()
 
         self.render()
         self._app.exec_()

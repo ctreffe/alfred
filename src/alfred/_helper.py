@@ -8,29 +8,29 @@ _helper contains internal functions which are not to be called by framework user
 """
 
 
-def fontsize_converter(font_argument):
+def fontsize_converter(fontArgument):
     '''
     FontsizeConverter checks any font arguments used in alfred and returns a fontsize variable compatible
     with any element or question in alfred.
 
     '''
 
-    if font_argument == 'normal':
-        font_argument = 12
+    if fontArgument == 'normal':
+        fontArgument = 12
 
-    if font_argument == 'big':
-        font_argument = 16
+    if fontArgument == 'big':
+        fontArgument = 16
 
-    if font_argument == 'huge':
-        font_argument = 22
+    if fontArgument == 'huge':
+        fontArgument = 22
 
-    if not isinstance(font_argument, int):
-        font_argument = 12
+    if not isinstance(fontArgument, int):
+        fontArgument = 12
 
-    return font_argument
+    return fontArgument
 
 
-def alignment_converter(alignment_argument, type='text'):
+def alignment_converter(alignmentArgument, type='text'):
     '''
     AlignmentConverter checks any font arguments used in alfred and returns an alignment variable compatible
     for different element types in alfred.
@@ -38,33 +38,33 @@ def alignment_converter(alignment_argument, type='text'):
     '''
 
     if type == 'text':
-        if alignment_argument == 'left':
-            alignment_argument = 'pagination-left'
+        if alignmentArgument == 'left':
+            alignmentArgument = 'pagination-left'
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'pagination-centered'
+        elif alignmentArgument == 'center':
+            alignmentArgument = 'pagination-centered'
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'pagination-right'
+        elif alignmentArgument == 'right':
+            alignmentArgument = 'pagination-right'
 
     elif type == 'container':
-        if alignment_argument == 'left':
-            alignment_argument = 'containerpagination-left'
+        if alignmentArgument == 'left':
+            alignmentArgument = 'containerpagination-left'
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'containerpagination-centered'
+        elif alignmentArgument == 'center':
+            alignmentArgument = 'containerpagination-centered'
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'containerpagination-right'
+        elif alignmentArgument == 'right':
+            alignmentArgument = 'containerpagination-right'
 
     elif type == 'both':
-        if alignment_argument == 'left':
-            alignment_argument = 'pagination-left containerpagination-left'
+        if alignmentArgument == 'left':
+            alignmentArgument = 'pagination-left containerpagination-left'
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'pagination-centered containerpagination-centered'
+        elif alignmentArgument == 'center':
+            alignmentArgument = 'pagination-centered containerpagination-centered'
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'pagination-right containerpagination-right'
+        elif alignmentArgument == 'right':
+            alignmentArgument = 'pagination-right containerpagination-right'
 
-    return alignment_argument
+    return alignmentArgument
