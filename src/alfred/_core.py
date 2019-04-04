@@ -11,7 +11,7 @@ from uuid import uuid4
 
 
 class PageCore(object):
-    def __init__(self, tag=None, uid=None, tagAndUid=None, is_jumpable=True, jumptext=None,
+    def __init__(self, tag=None, uid=None, tag_and_uid=None, is_jumpable=True, jumptext=None,
                  title=None, subtitle=None, statustext=None,
                  should_be_shown_filter_function=None, **kwargs):
 
@@ -20,27 +20,27 @@ class PageCore(object):
 
         self._tag = None
         self._uid = uid if uid is not None else uuid4().hex
-        self._shouldBeShown = True
-        self._shouldBeShownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
-        self._parentGroup = None
+        self._should_be_shown = True
+        self._should_be_shownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
+        self._parent_group = None
         self._experiment = None
         self._jumptext = None
-        self._isJumpable = False
+        self._is_jumpable = False
         self._title = None
         self._subtitle = None
         self._statustext = None
-        self._hasBeenShown = False
-        self._hasBeenHidden = False
+        self._has_been_shown = False
+        self._has_been_hidden = False
 
         if tag is not None:
             self.tag = tag
 
-        if tagAndUid and (tag or uid):
-            raise ValueError('tagAndUid cannot be set together with tag or uid!')
+        if tag_and_uid and (tag or uid):
+            raise ValueError('tag_and_uid cannot be set together with tag or uid!')
 
-        if tagAndUid is not None:
-            self.tag = tagAndUid
-            self._uid = tagAndUid
+        if tag_and_uid is not None:
+            self.tag = tag_and_uid
+            self._uid = tag_and_uid
 
         if jumptext is not None:
             self.jumptext = jumptext
@@ -77,21 +77,21 @@ class PageCore(object):
         Sets a filter function. f must take Experiment as parameter
         :type f: function
         """
-        self._shouldBeShownFilterFunction = f
+        self._should_be_shownFilterFunction = f
 
     def remove_should_be_shown_filter_function(self):
         """
         remove the filter function
         """
-        self._shouldBeShownFilterFunction = lambda exp: True
+        self._should_be_shownFilterFunction = lambda exp: True
 
     @property
     def should_be_shown(self):
         """
-        Returns True if should_be_shown is set to True (default) and all shouldBeShownFilterFunctions return True.
+        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
         Otherwise False is returned
         """
-        return self._shouldBeShown and self._shouldBeShownFilterFunction(self._experiment)
+        return self._should_be_shown and self._should_be_shownFilterFunction(self._experiment)
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -102,7 +102,7 @@ class PageCore(object):
         """
         if not isinstance(b, bool):
             raise TypeError("should_be_shown must be an instance of bool")
-        self._shouldBeShown = b
+        self._should_be_shown = b
 
     @property
     def data(self):
@@ -113,13 +113,13 @@ class PageCore(object):
 
     @property
     def is_jumpable(self):
-        return self._isJumpable and self.jumptext is not None
+        return self._is_jumpable and self.jumptext is not None
 
     @is_jumpable.setter
     def is_jumpable(self, is_jumpable):
         if not isinstance(is_jumpable, bool):
             raise TypeError
-        self._isJumpable = is_jumpable
+        self._is_jumpable = is_jumpable
 
     @property
     def jumptext(self):
@@ -159,7 +159,7 @@ class PageCore(object):
         self._experiment = exp
 
     def added_to_section(self, group):
-        self._parentGroup = group
+        self._parent_group = group
 
     def allow_leaving(self, direction):
         return True

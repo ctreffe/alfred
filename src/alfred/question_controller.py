@@ -16,45 +16,45 @@ from .element import TextElement, WebExitEnabler
 
 class PageController(object):
     '''
-    | PageController stellt die obersten Fragengruppen des Experiments (*rootQuestionGroup* und *finishedQuestionGroup*)
+    | PageController stellt die obersten Fragengruppen des Experiments (*root_section* und *finished_section*)
     | bereit und ermöglicht den Zugriff auf auf deren Methoden und Attribute.
     '''
 
     def __init__(self, experiment):
         self._experiment = experiment
 
-        self._rootQuestionGroup = PageGroup(tag='rootQuestionGroup')
-        self._rootQuestionGroup.added_to_experiment(experiment)
+        self._rootSection = PageGroup(tag='root_section')
+        self._rootSection.added_to_experiment(experiment)
 
-        self._finishedQuestionGroup = PageGroup(tag='finishedQuestionGroup', title='Experiment beendet')
+        self._finished_section = PageGroup(tag='finished_section', title='Experiment beendet')
 
         if self._experiment.type == 'qt':
-            self._finishedQuestionGroup.append_item(CompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.')]))
+            self._finished_section.append_item(CompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.')]))
         else:
-            self._finishedQuestionGroup.append_item(WebCompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.'), WebExitEnabler()]))
+            self._finished_section.append_item(WebCompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.'), WebExitEnabler()]))
 
-        self._finishedQuestionGroup.added_to_experiment(experiment)
+        self._finished_section.added_to_experiment(experiment)
 
         self._finished = False
-        self._finishedQuestionAdded = False
+        self._finished_page_added = False
 
     def __getattr__(self, name):
         '''
         Die Funktion reicht die aufgerufenen Attribute und Methoden an die oberen Fragengruppen weiter.
 
-        Achtung: Nur bei Items in der switchList wird zwischen rootQuestionGroup und finishedQuestionGroup unterschieden.
+        Achtung: Nur bei Items in der switch_list wird zwischen root_section und finished_section unterschieden.
         '''
-        switchList = ['current_question', 'current_title', 'current_subtitle', 'current_status_text', 'should_be_shown',
+        switch_list = ['current_question', 'current_title', 'current_subtitle', 'current_status_text', 'should_be_shown',
                       'jumplist', 'can_move_backward', 'can_move_forward', 'move_backward', 'move_forward', 'move_to_first',
                       'move_to_last', 'move_to_position']
         try:
-            if name in switchList:
+            if name in switch_list:
                 if self._finished:
-                    return self._finishedQuestionGroup.__getattribute__(name)
+                    return self._finished_section.__getattribute__(name)
                 else:
-                    return self._rootQuestionGroup.__getattribute__(name)
+                    return self._rootSection.__getattribute__(name)
             else:
-                return self._rootQuestionGroup.__getattribute__(name)
+                return self._rootSection.__getattribute__(name)
         except AttributeError as e:
             raise e
             # raise AttributeError("'%s' has no Attribute '%s'" % (self.__class__.__name__, name))
@@ -63,27 +63,27 @@ class PageController(object):
         '''
         :param item: Element vom Typ Page oder PageGroup
 
-        .. todo:: Ist diese Funktion überhaupt nötig, wenn die finishedQuestionGroup in init bereits erstellt wird?
+        .. todo:: Ist diese Funktion überhaupt nötig, wenn die finished_section in init bereits erstellt wird?
         '''
-        if not self._finishedQuestionAdded:
-            self._finishedQuestionAdded = True
-            self._finishedQuestionGroup = PageGroup(tag='finishedQuestionGroup')
-            self._finishedQuestionGroup.added_to_experiment(self._experiment)
-        self._finishedQuestionGroup.append_item(item)
+        if not self._finished_page_added:
+            self._finished_page_added = True
+            self._finished_section = PageGroup(tag='finished_section')
+            self._finished_section.added_to_experiment(self._experiment)
+        self._finished_section.append_item(item)
 
     def added_to_experiment(self, exp):
         '''
-        Ersetzt __getattr___ und erreicht so sowohl die rootQuestionGroup als auch die finishedQuestionGroup
+        Ersetzt __getattr___ und erreicht so sowohl die root_section als auch die finished_section
 
         :param exp: Objekt vom Typ Experiment
         '''
         self._experiment = exp
-        self._rootQuestionGroup.added_to_experiment(exp)
-        self._finishedQuestionGroup.added_to_experiment(exp)
+        self._rootSection.added_to_experiment(exp)
+        self._finished_section.added_to_experiment(exp)
 
     def change_to_finished_group(self):
         self._finished = True
-        self._rootQuestionGroup.leave(Direction.FORWARD)
-        self._finishedQuestionGroup.enter()
-        self._finishedQuestionGroup.move_to_first()
+        self._rootSection.leave(Direction.FORWARD)
+        self._finished_section.enter()
+        self._finished_section.move_to_first()
         self._experiment.user_interface_controller.layout.finish_disabled = True
