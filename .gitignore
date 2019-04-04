@@ -12,6 +12,7 @@ function_names_filled.json
 parameter_names.json
 parameter_names_filled.json
 port_to_alfred_0.3.py
+additional_stuff/
 
 # saved files from tests
 save/
