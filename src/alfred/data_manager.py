@@ -29,7 +29,8 @@ class DataManager(object):
         data['start_time'] = self._experiment._start_time
         data['startTime'] = self._experiment.start_timestamp
         data['expFinished'] = self._experiment.finished
-        data['expTestCondition'] = self._experiment.test_condition
+        data['exp_session'] = self._experiment.session
+        data['exp_condition'] = self._experiment.condition
         data['expUuid'] = self._experiment.uuid
         data['additionalData'] = self._additionalData
 

@@ -81,7 +81,7 @@ class Experiment(object):
         '''
 
         if type(exp_name) != str or exp_name == '' or type(exp_version) != str or exp_version == '' or not(exp_type == 'qt' or
-                                                                                                       exp_type == 'web' or exp_type == 'qt-wk'):
+                                                                                                           exp_type == 'web' or exp_type == 'qt-wk'):
             raise ValueError("exp_name and exp_version must be a non empty strings and exp_type must be 'qt' or 'web'")
 
         self._author_mail = exp_author_mail
@@ -268,13 +268,25 @@ class Experiment(object):
         return self._finished
 
     @property
-    def test_condition(self):
+    def condition(self):
         '''
         *read-only*
 
         :return: Current TestCondition (*str or unicode*)
         '''
-        return self._testCondition
+        return self._condition
 
-    def add_test_condition(self, s):
-        self._testCondition = self._testCondition + '.' + s if self._testCondition else s
+    def add_condition(self, s):
+        self._condition = self._condition + '.' + s if self._condition else s
+
+    @property
+    def session(self):
+        '''
+        *read-only*
+
+        :return: Current TestCondition (*str or unicode*)
+        '''
+        return self._session
+
+    def add_session(self, s):
+        self._session = self._session + '.' + s if self._session else s
