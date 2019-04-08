@@ -63,7 +63,7 @@ def experiment():
         script.experiment.user_interface_controller.move_forward()
     elif move == 'backward':
         script.experiment.user_interface_controller.move_backward()
-    elif move == 'jump' and par and re.match('^\d+(\.\d+)*$', par):
+    elif move == 'jump' and par and re.match(r'^\d+(\.\d+)*$', par):
         posList = list(map(int, par.split('.')))
         script.experiment.user_interface_controller.move_to_position(posList)
     else:
