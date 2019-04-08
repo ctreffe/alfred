@@ -125,3 +125,4 @@ venv.bak/
 src/encode.py
 .DS_Store
 src/.DS_Store
+*.json
