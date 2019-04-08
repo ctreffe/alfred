@@ -26,7 +26,7 @@ from uuid import uuid4
 
 from .saving_agent import SavingAgentController
 from .data_manager import DataManager
-from .question_controller import PageController
+from .page_controller import PageController
 from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
 from . import layout
 from . import settings
@@ -56,7 +56,7 @@ class Experiment(object):
         |
 
         Beschreibung:
-            | Bei Aufruf von *Experiment* werden :py:class:`question_controller.PageController`, :py:class:`data_manager.DataManager`
+            | Bei Aufruf von *Experiment* werden :py:class:`page_controller.PageController`, :py:class:`data_manager.DataManager`
             | und :py:class:`saving_agent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
             | :py:mod:`.ui_controller` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
 
@@ -102,10 +102,10 @@ class Experiment(object):
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._name, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
-        self._messageManager = messages.MessageManager()
-        self._experimenterMessageManager = messages.MessageManager()
+        self._message_manager = messages.MessageManager()
+        self._experimenter_message_manager = messages.MessageManager()
 
-        self._questionController = PageController(self)
+        self._page_controller = PageController(self)
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
@@ -118,22 +118,22 @@ class Experiment(object):
                 web_layout = None
 
         if self._type == 'web':
-            self._userInterfaceController = WebUserInterfaceController(self, layout=web_layout)
+            self._user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
 
         elif self._type == 'qt-wk':
             logger.warning("Experiment type qt-wk is experimental!!!", self)
-            self._userInterfaceController = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qtFullScreen, weblayout=web_layout)
+            self._user_interface_controller = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qt_full_screen, weblayout=web_layout)
 
         else:
             ValueError("unknown type: '%s'" % self._type)
 
-        self._dataManager = DataManager(self)
-        self._savingAgentController = SavingAgentController(self)
+        self._data_manager = DataManager(self)
+        self._saving_agent_controller = SavingAgentController(self)
 
         self._condition = ''
         self._session = ''
         self._finished = False
-        self._startTimeStamp = None
+        self._start_timestamp = None
         self._start_time = None
 
         if basepath is not None:
@@ -145,15 +145,15 @@ class Experiment(object):
 
         Für Qt-Experimente wird :meth:`ui_controller.QtUserInterfaceController.start` aufgerufen.
         '''
-        self.question_controller.generate_unset_tags_in_subtree()
+        self.page_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
-        self._startTimeStamp = time.strftime('%Y-%m-%dT%H%M%S')
+        self._start_timestamp = time.strftime('%Y-%m-%d_t%H%M%S')
         logger.info("Experiment.start() called. Session is starting.", self)
-        self._userInterfaceController.start()
+        self._user_interface_controller.start()
 
     def finish(self):
         '''
-        Beendet das Experiment. Ruft  :meth:`question_controller.PageController.change_to_finished_group` auf und setzt **self._finished** auf *True*.
+        Beendet das Experiment. Ruft  :meth:`page_controller.PageController.change_to_finished_group` auf und setzt **self._finished** auf *True*.
 
         '''
         if self._finished:
@@ -161,10 +161,10 @@ class Experiment(object):
             return
         logger.info("Experiment.finish() called. Session is finishing.", self)
         self._finished = True
-        self._questionController.change_to_finished_group()
+        self._page_controller.change_to_finished_group()
 
         # run saving_agent_controller
-        self._savingAgentController.run_saving_agents(99)
+        self._saving_agent_controller.run_saving_agents(99)
 
     @property
     def author_mail(self):
@@ -205,15 +205,15 @@ class Experiment(object):
 
     @property
     def start_timestamp(self):
-        return self._startTimeStamp
+        return self._start_timestamp
 
     @property
     def message_manager(self):
-        return self._messageManager
+        return self._message_manager
 
     @property
     def experimenter_message_manager(self):
-        return self._experimenterMessageManager
+        return self._experimenter_message_manager
 
     @property
     def uuid(self):
@@ -226,16 +226,16 @@ class Experiment(object):
 
         :return: :py:class:`ui_controller.QtUserInterfaceController` oder :py:class:`ui_controller.WebUserInterfaceController`
         '''
-        return self._userInterfaceController
+        return self._user_interface_controller
 
     @property
-    def question_controller(self):
+    def page_controller(self):
         '''
         Achtung: *read-only*
 
-        :return: :py:class:`question_controller.PageController`
+        :return: :py:class:`page_controller.PageController`
         '''
-        return self._questionController
+        return self._page_controller
 
     @property
     def data_manager(self):
@@ -244,7 +244,7 @@ class Experiment(object):
 
         :return: :py:class:`data_manager.DataManager`
         '''
-        return self._dataManager
+        return self._data_manager
 
     @property
     def saving_agent_controller(self):
@@ -253,7 +253,7 @@ class Experiment(object):
 
         :return: :py:class:`saving_agent.SavingAgentController`
         '''
-        return self._savingAgentController
+        return self._saving_agent_controller
 
     @property
     def settings(self):

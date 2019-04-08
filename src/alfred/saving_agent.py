@@ -52,7 +52,7 @@ def _save_looper(sleeptime=1):
 
 def wait_for_saving_thread():
     '''
-    .. todo:: implement endSession of Logger into this method and execute for all experiment types!
+    .. todo:: implement end_session of Logger into this method and execute for all experiment types!
     '''
     # _logger.info("waiting until saving queue is empty. %s items left." % _queue.qsize())
     _queue.join()
@@ -350,7 +350,7 @@ class LocalSavingAgent(SavingAgent):
         if not os.access(filepath, os.W_OK):
             raise RuntimeError("save path '%s' must be writable" % filepath)
 
-        filename = '%s_%s_%s.json' % (time.strftime('%Y-%m-%dT%H%M%S'), filename, self._experiment.uuid)
+        filename = '%s_%s_%s.json' % (time.strftime('%Y-%m-%d_t%H%M%S'), filename, self._experiment.uuid)
         self._file = os.path.join(filepath, filename)
 
         if os.path.exists(self._file):

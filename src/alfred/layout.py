@@ -24,23 +24,23 @@ jinja_env = Environment(loader=PackageLoader('alfred', 'templates'))
 class Layout(with_metaclass(ABCMeta, object)):
     def __init__(self):
         self._experiment = None
-        self._uiController = None
-        self._backwardText = u"Zurück"
-        self._forwardText = u"Weiter"
-        self._finishText = u"Beenden"
-        self._backwardEnabled = True
-        self._forwardEnabled = True
-        self._finishedDisabled = False
-        self._jumpListEnabled = True
-        self._jumpList = []
+        self._ui_controller = None
+        self._backward_text = u"Zurück"
+        self._forward_text = u"Weiter"
+        self._finish_text = u"Beenden"
+        self._backward_enabled = True
+        self._forward_enabled = True
+        self._finished_diasbled = False
+        self._jump_list_enabled = True
+        self._jump_list = []
 
     def activate(self, experiment, ui_controller):
         self._experiment = experiment
-        self._uiController = ui_controller
+        self._ui_controller = ui_controller
 
     def deactivate(self):
         self._experiment = None
-        self._uiController = None
+        self._ui_controller = None
 
     @abstractmethod
     def render(self, widget):
@@ -48,59 +48,59 @@ class Layout(with_metaclass(ABCMeta, object)):
 
     @property
     def backward_enabled(self):
-        return self._backwardEnabled
+        return self._backward_enabled
 
     @backward_enabled.setter
     def backward_enabled(self, b):
-        self._backwardEnabled = b
+        self._backward_enabled = b
 
     @property
     def forward_enabled(self):
-        return self._forwardEnabled
+        return self._forward_enabled
 
     @forward_enabled.setter
     def forward_enabled(self, b):
-        self._forwardEnabled = b
+        self._forward_enabled = b
 
     @property
     def finish_disabled(self):
-        return self._finishedDisabled
+        return self._finished_diasbled
 
     @finish_disabled.setter
     def finish_disabled(self, b):
-        self._finishedDisabled = b
+        self._finished_diasbled = b
 
     @property
     def backward_text(self):
-        return self._backwardText
+        return self._backward_text
 
     @backward_text.setter
     def backward_text(self, text):
-        self._backwardText = text
+        self._backward_text = text
 
     @property
     def forward_text(self):
-        return self._forwardText
+        return self._forward_text
 
     @forward_text.setter
     def forward_text(self, text):
-        self._forwardText = text
+        self._forward_text = text
 
     @property
     def finish_text(self):
-        return self._finishText
+        return self._finish_text
 
     @finish_text.setter
     def finish_text(self, text):
-        self._finishText = text
+        self._finish_text = text
 
     @property
     def jump_list_enabled(self):
-        return self._jumpListEnabled
+        return self._jump_list_enabled
 
     @jump_list_enabled.setter
     def jump_list_enabled(self, b):
-        self._jumpListEnabled = b
+        self._jump_list_enabled = b
 
 
 class BaseWebLayout(Layout):
@@ -114,27 +114,27 @@ class BaseWebLayout(Layout):
     def activate(self, experiment, ui_controller):
         super(BaseWebLayout, self).activate(experiment, ui_controller)
         # add css files
-        self._style_urls.append((99, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/base_web_layout.css'), content_type="text/css")))
-        self._style_urls.append((1, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
-        self._style_urls.append((2, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/jquery-ui.css'), content_type="text/css")))
-        # self._style_urls.append(self._uiController.add_static_file(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
+        self._style_urls.append((99, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/base_web_layout.css'), content_type="text/css")))
+        self._style_urls.append((1, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
+        self._style_urls.append((2, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/jquery-ui.css'), content_type="text/css")))
+        # self._style_urls.append(self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
 
         # add js files
         self._js_urls.append((0o1,
-                              self._uiController.add_static_file(
+                              self._ui_controller.add_static_file(
                                   os.path.join(package_path(), 'static/js/jquery-1.8.3.min.js'),
                                   content_type="text/javascript")
                               ))
-        self._js_urls.append((0o2, self._uiController.add_static_file(os.path.join(package_path(), 'static/js/bootstrap.min.js'), content_type="text/javascript")))
-        self._js_urls.append((0o3, self._uiController.add_static_file(os.path.join(package_path(), 'static/js/jquery-ui.js'), content_type="text/javascript")))
+        self._js_urls.append((0o2, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/js/bootstrap.min.js'), content_type="text/javascript")))
+        self._js_urls.append((0o3, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/js/jquery-ui.js'), content_type="text/javascript")))
 
         self._js_urls.append((10,
-                              self._uiController.add_static_file(
+                              self._ui_controller.add_static_file(
                                   os.path.join(package_path(), 'static/js/baseweblayout.js'),
                                   content_type="text/javascript")
                               ))
 
-        self._logo_url = self._uiController.add_static_file(os.path.join(package_path(), 'static/img/alfred_logo.png'), content_type="image/png")
+        self._logo_url = self._ui_controller.add_static_file(os.path.join(package_path(), 'static/img/alfred_logo.png'), content_type="image/png")
 
     @property
     def css_code(self):
@@ -156,37 +156,37 @@ class BaseWebLayout(Layout):
 
         d = {}
         d['logo_url'] = self._logo_url
-        d['widget'] = self._experiment.question_controller.current_question.web_widget
+        d['widget'] = self._experiment.page_controller.current_page.web_widget
 
-        if self._experiment.question_controller.current_title:
-            d['title'] = self._experiment.question_controller.current_title
+        if self._experiment.page_controller.current_title:
+            d['title'] = self._experiment.page_controller.current_title
 
-        if self._experiment.question_controller.current_subtitle:
-            d['subtitle'] = self._experiment.question_controller.current_subtitle
+        if self._experiment.page_controller.current_subtitle:
+            d['subtitle'] = self._experiment.page_controller.current_subtitle
 
-        if self._experiment.question_controller.current_status_text:
-            d['statustext'] = self._experiment.question_controller.current_status_text
+        if self._experiment.page_controller.current_status_text:
+            d['statustext'] = self._experiment.page_controller.current_status_text
 
-        if not self._experiment.question_controller.current_question.can_display_corrective_hints_in_line \
-                and self._experiment.question_controller.current_question.corrective_hints:
-            d['corrective_hints'] = self._experiment.question_controller.current_question.corrective_hints
+        if not self._experiment.page_controller.current_page.can_display_corrective_hints_in_line \
+                and self._experiment.page_controller.current_page.corrective_hints:
+            d['corrective_hints'] = self._experiment.page_controller.current_page.corrective_hints
 
-        if self.backward_enabled and self._experiment.question_controller.can_move_backward:
+        if self.backward_enabled and self._experiment.page_controller.can_move_backward:
             d['backward_text'] = self.backward_text
 
         if self.forward_enabled:
-            if self._experiment.question_controller.can_move_forward:
+            if self._experiment.page_controller.can_move_forward:
                 d['forward_text'] = self.forward_text
             else:
-                if not self._finishedDisabled:
+                if not self._finished_diasbled:
                     d['finish_text'] = self.finish_text
 
-        if self.jump_list_enabled and self._experiment.question_controller.jumplist:
-            jmplist = self._experiment.question_controller.jumplist
+        if self.jump_list_enabled and self._experiment.page_controller.jumplist:
+            jmplist = self._experiment.page_controller.jumplist
             for i in range(len(jmplist)):
                 jmplist[i] = list(jmplist[i])
                 jmplist[i][0] = '.'.join(map(str, jmplist[i][0]))
-            d['jumpList'] = jmplist
+            d['jump_list'] = jmplist
 
         messages = self._experiment.message_manager.get_messages()
         if messages:
@@ -198,19 +198,19 @@ class BaseWebLayout(Layout):
 
     @property
     def backward_link(self):
-        return self._backwardLink
+        return self._backward_link
 
     @backward_link.setter
     def backward_link(self, link):
-        self._backwardLink = link
+        self._backward_link = link
 
     @property
     def forward_link(self):
-        return self._forwardLink
+        return self._forward_link
 
     @forward_link.setter
     def forward_link(self, link):
-        self._forwardLink = link
+        self._forward_link = link
 
 
 class GoeWebLayout(Layout):
@@ -223,27 +223,27 @@ class GoeWebLayout(Layout):
     def activate(self, experiment, ui_controller):
         super(GoeWebLayout, self).activate(experiment, ui_controller)
         # add css files
-        self._style_urls.append((99, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/goe_web_layout.css'), content_type="text/css")))
-        self._style_urls.append((1, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
-        self._style_urls.append((2, self._uiController.add_static_file(os.path.join(package_path(), 'static/css/jquery-ui.css'), content_type="text/css")))
-        # self._style_urls.append(self._uiController.add_static_file(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
+        self._style_urls.append((99, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/goe_web_layout.css'), content_type="text/css")))
+        self._style_urls.append((1, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/bootstrap.min.css'), content_type="text/css")))
+        self._style_urls.append((2, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/jquery-ui.css'), content_type="text/css")))
+        # self._style_urls.append(self._ui_controller.add_static_file(os.path.join(package_path(), 'static/css/app.css'), content_type="text/css"))
 
         # add js files
         self._js_urls.append((0o1,
-                              self._uiController.add_static_file(
+                              self._ui_controller.add_static_file(
                                   os.path.join(package_path(), 'static/js/jquery-1.8.3.min.js'),
                                   content_type="text/javascript")
                               ))
-        self._js_urls.append((0o2, self._uiController.add_static_file(os.path.join(package_path(), 'static/js/bootstrap.min.js'), content_type="text/javascript")))
-        self._js_urls.append((0o3, self._uiController.add_static_file(os.path.join(package_path(), 'static/js/jquery-ui.js'), content_type="text/javascript")))
+        self._js_urls.append((0o2, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/js/bootstrap.min.js'), content_type="text/javascript")))
+        self._js_urls.append((0o3, self._ui_controller.add_static_file(os.path.join(package_path(), 'static/js/jquery-ui.js'), content_type="text/javascript")))
 
         self._js_urls.append((10,
-                              self._uiController.add_static_file(
+                              self._ui_controller.add_static_file(
                                   os.path.join(package_path(), 'static/js/baseweblayout.js'),
                                   content_type="text/javascript")
                               ))
 
-        self._logo_url = self._uiController.add_static_file(os.path.join(package_path(), 'static/img/uni_goe_logo.png'), content_type="image/png")
+        self._logo_url = self._ui_controller.add_static_file(os.path.join(package_path(), 'static/img/uni_goe_logo.png'), content_type="image/png")
 
     @property
     def css_code(self):
@@ -265,37 +265,37 @@ class GoeWebLayout(Layout):
 
         d = {}
         d['logo_url'] = self._logo_url
-        d['widget'] = self._experiment.question_controller.current_question.web_widget
+        d['widget'] = self._experiment.page_controller.current_page.web_widget
 
-        if self._experiment.question_controller.current_title:
-            d['title'] = self._experiment.question_controller.current_title
+        if self._experiment.page_controller.current_title:
+            d['title'] = self._experiment.page_controller.current_title
 
-        if self._experiment.question_controller.current_subtitle:
-            d['subtitle'] = self._experiment.question_controller.current_subtitle
+        if self._experiment.page_controller.current_subtitle:
+            d['subtitle'] = self._experiment.page_controller.current_subtitle
 
-        if self._experiment.question_controller.current_status_text:
-            d['statustext'] = self._experiment.question_controller.current_status_text
+        if self._experiment.page_controller.current_status_text:
+            d['statustext'] = self._experiment.page_controller.current_status_text
 
-        if not self._experiment.question_controller.current_question.can_display_corrective_hints_in_line \
-                and self._experiment.question_controller.current_question.corrective_hints:
-            d['corrective_hints'] = self._experiment.question_controller.current_question.corrective_hints
+        if not self._experiment.page_controller.current_page.can_display_corrective_hints_in_line \
+                and self._experiment.page_controller.current_page.corrective_hints:
+            d['corrective_hints'] = self._experiment.page_controller.current_page.corrective_hints
 
-        if self.backward_enabled and self._experiment.question_controller.can_move_backward:
+        if self.backward_enabled and self._experiment.page_controller.can_move_backward:
             d['backward_text'] = self.backward_text
 
         if self.forward_enabled:
-            if self._experiment.question_controller.can_move_forward:
+            if self._experiment.page_controller.can_move_forward:
                 d['forward_text'] = self.forward_text
             else:
-                if not self._finishedDisabled:
+                if not self._finished_diasbled:
                     d['finish_text'] = self.finish_text
 
-        if self.jump_list_enabled and self._experiment.question_controller.jumplist:
-            jmplist = self._experiment.question_controller.jumplist
+        if self.jump_list_enabled and self._experiment.page_controller.jumplist:
+            jmplist = self._experiment.page_controller.jumplist
             for i in range(len(jmplist)):
                 jmplist[i] = list(jmplist[i])
                 jmplist[i][0] = '.'.join(map(str, jmplist[i][0]))
-            d['jumpList'] = jmplist
+            d['jump_list'] = jmplist
 
         messages = self._experiment.message_manager.get_messages()
         if messages:
@@ -307,16 +307,16 @@ class GoeWebLayout(Layout):
 
     @property
     def backward_link(self):
-        return self._backwardLink
+        return self._backward_link
 
     @backward_link.setter
     def backward_link(self, link):
-        self._backwardLink = link
+        self._backward_link = link
 
     @property
     def forward_link(self):
-        return self._forwardLink
+        return self._forward_link
 
     @forward_link.setter
     def forward_link(self, link):
-        self._forwardLink = link
+        self._forward_link = link
