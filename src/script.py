@@ -23,10 +23,10 @@ from alfred import Experiment
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
-exp_type = "web"
-exp_name = "TEST2"
-exp_version = "0.3"
-exp_author_mail = "jobrachem@posteo.de"
+EXP_TYPE = "web"
+EXP_NAME = "TEST2"
+EXP_VERSION = "0.3"
+EXP_AUTHOR_MAIL = "jobrachem@posteo.de"
 
 #################################
 # - Section 3: Custom classes - #
@@ -76,7 +76,7 @@ class DynamicPage(CompositePage):
 class Script(object):
 
     def generate_experiment(self):
-        exp = Experiment(exp_type, exp_name, exp_version, exp_author_mail)
+        exp = Experiment(EXP_TYPE, EXP_NAME, EXP_VERSION, EXP_AUTHOR_MAIL)
 
         ##########################################
         # - Section 4: Define Content Elements - #
