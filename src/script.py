@@ -95,14 +95,14 @@ class Script(object):
             bar_value=30,                    # current value of progress, can be changed at any time
             bar_width=300,                   # width of bar
             instruction="Progress Bar",     # text next to bar
-            fontSize="big",                 # fontsize
+            font_size="big",                 # fontsize
             alignment="center"              # alignment of bar
         )
 
         # TextElement
         text01 = TextElement(text="Normal Centered Text. Umlaut test: Äöüéû", name="text1", alignment="center")
-        text02 = TextElement(text="Big Left Text", name="text2", alignment="left", fontSize="big")
-        text03 = TextElement(text="Small Right Text", name="text3", alignment="right", fontSize=8)
+        text02 = TextElement(text="Big Left Text", name="text2", alignment="left", font_size="big")
+        text03 = TextElement(text="Small Right Text", name="text3", alignment="right", font_size=8)
 
         # DataElement
         data01 = DataElement(
@@ -123,7 +123,7 @@ class Script(object):
             instruction="Enter some text.",
             name="textentry01",
             alignment="center",                 # "left", "right"
-            fontSize=14,                        # Also possible: "normal", "big", "huge"
+            font_size=14,                        # Also possible: "normal", "big", "huge"
             default="Default",
             no_input_corrective_hint="Please enter something",
             force_input=True,
@@ -141,7 +141,7 @@ class Script(object):
             instruction="Enter some more text.",
             name="textarea01",
             alignment="right",
-            fontSize=16,
+            font_size=16,
             x_size=450,              # horizontal size in pixels
             y_size=300,              # vertical size in pixels
             default="Default",
@@ -165,7 +165,7 @@ class Script(object):
             name="regentry01",
             instruction="Enter an E-Mail adress",
             alignment="right",
-            fontSize="big",
+            font_size="big",
             reg_ex=r"[^@]+@[^\.]+\..+",       # very basic regex for email
             default="invalid input",
             force_input=True,
@@ -179,7 +179,7 @@ class Script(object):
             name="numberentry01",
             instruction="Enter a number",
             alignment="center",
-            fontSize=14,
+            font_size=14,
             decimals=3,
             # min=1.3,
             # max=3.7,
@@ -195,7 +195,7 @@ class Script(object):
             name="numberentry02",
             instruction="Enter a number",
             alignment="center",
-            fontSize="normal",
+            font_size="normal",
             decimals=0,
             # min=1.3,
             # max=3.7,
@@ -211,7 +211,7 @@ class Script(object):
             name="password01",
             instruction="Enter any password",
             alignment="left",
-            fontSize="normal",
+            font_size="normal",
             password="friend",
             default="Speak friend and enter.",
             force_input=True,
@@ -228,7 +228,7 @@ class Script(object):
             name="likertmatrix01",
             instruction="Enter <b>something</b>",
             alignment="left",       # this is the default
-            fontSize="normal",      # this is the default
+            font_size="normal",      # this is the default
             levels=5,               # default: 7
             items=3,                # default: 4
             default=4,              # default: None
@@ -253,7 +253,7 @@ class Script(object):
             name="likertmatrix02",
             instruction="Enter <b>something</b>",
             alignment="left",       # this is the default
-            fontSize="normal",      # this is the default
+            font_size="normal",      # this is the default
             levels=5,               # default: 7
             items=3,                # default: 4
             default=None,           # default: None
@@ -279,7 +279,7 @@ class Script(object):
             name="likertelement01",
             instruction="Enter something",
             alignment="left",   # this is the default
-            fontSize=14,        # default: "normal"
+            font_size=14,        # default: "normal"
             levels=7,           # this is the default
             default=None,       # this is the default
             item_labels=["left label", "right label"],
@@ -302,7 +302,7 @@ class Script(object):
             name="singlechoice01",
             instruction="Enter something",
             alignment="right",
-            fontSize=7,
+            font_size=7,
             default=3,
             table_striped=True,
             item_labels=["Choice 1", "Choice 2", "Choice 3"],
@@ -319,7 +319,7 @@ class Script(object):
             name="multiplechoice01",
             instruction="Enter something",
             alignment="center",         # default: "left"
-            fontSize="normal",          # default: "normal"
+            font_size="normal",          # default: "normal"
             default=["0", "0", "0"],    # default: None
             table_striped=True,          # default: False
             item_labels=["Choice 1", "Choice 2", "Choice 3"],
@@ -336,12 +336,12 @@ class Script(object):
             name="likertlist01",
             instruction="Enter something",
             alignment="center",         # default: "left"
-            fontSize="normal",          # default: "normal"
+            font_size="normal",          # default: "normal"
             default=4,                  # default: None
             table_striped=False,         # default: False
             levels=5,                   # default: 7
             item_labels=["1", "2", "3", "4", "5"],
-            itemLabelAlignment="right",     # default: "left"
+            item_label_alignment="right",     # default: "left"
             top_scale_labels=None,            # default: None
             bottom_scale_labels=None,         # default: None
             spacing=30,                     # default: 30
@@ -371,7 +371,7 @@ class Script(object):
             instruction="Enter some text.",
             name="textentry01",
             alignment="center",
-            fontSize="normal",
+            font_size="normal",
             default="Default",
             no_input_corrective_hint="Please enter something",
             force_input=True,
@@ -382,7 +382,7 @@ class Script(object):
             instruction="Enter some text.",
             name="textentry01",
             alignment="center",
-            fontSize="normal",
+            font_size="normal",
             default="Default",
             no_input_corrective_hint="Please enter something",
             force_input=True,
@@ -393,7 +393,7 @@ class Script(object):
             instruction="Enter some text.",
             name="textentry01",
             alignment="center",
-            fontSize="normal",
+            font_size="normal",
             default="Default",
             no_input_corrective_hint="Please enter something",
             force_input=True,
