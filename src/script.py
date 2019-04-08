@@ -23,7 +23,7 @@ from alfred import Experiment
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
-exp_type = "qt-wk"
+exp_type = "web"
 exp_name = "TEST2"
 exp_version = "0.3"
 exp_author_mail = "jobrachem@posteo.de"
