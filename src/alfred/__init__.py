@@ -33,7 +33,7 @@ from . import settings
 from . import messages
 
 from . import alfredlog
-logger = alfredlog.get_logger(__name__)
+logger = alfredlog.getLogger(__name__)
 
 
 class Experiment(object):
@@ -102,10 +102,10 @@ class Experiment(object):
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._name, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
-        self._message_manager = messages.MessageManager()
-        self._experimenter_message_manager = messages.MessageManager()
+        self._messageManager = messages.MessageManager()
+        self._experimenterMessageManager = messages.MessageManager()
 
-        self._page_controller = PageController(self)
+        self._questionController = PageController(self)
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
@@ -118,22 +118,22 @@ class Experiment(object):
                 web_layout = None
 
         if self._type == 'web':
-            self._user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
+            self._userInterfaceController = WebUserInterfaceController(self, layout=web_layout)
 
         elif self._type == 'qt-wk':
             logger.warning("Experiment type qt-wk is experimental!!!", self)
-            self._user_interface_controller = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qt_full_screen, weblayout=web_layout)
+            self._userInterfaceController = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qtFullScreen, weblayout=web_layout)
 
         else:
             ValueError("unknown type: '%s'" % self._type)
 
-        self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(self)
+        self._dataManager = DataManager(self)
+        self._savingAgentController = SavingAgentController(self)
 
         self._condition = ''
         self._session = ''
         self._finished = False
-        self._start_timestamp = None
+        self._startTimeStamp = None
         self._start_time = None
 
         if basepath is not None:
@@ -147,9 +147,9 @@ class Experiment(object):
         '''
         self.question_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
-        self._start_timestamp = time.strftime('%Y-%m-%d_t%H%M%S')
+        self._startTimeStamp = time.strftime('%Y-%m-%dT%H%M%S')
         logger.info("Experiment.start() called. Session is starting.", self)
-        self._user_interface_controller.start()
+        self._userInterfaceController.start()
 
     def finish(self):
         '''
@@ -161,10 +161,10 @@ class Experiment(object):
             return
         logger.info("Experiment.finish() called. Session is finishing.", self)
         self._finished = True
-        self._page_controller.change_to_finished_group()
+        self._questionController.change_to_finished_group()
 
         # run saving_agent_controller
-        self._saving_agent_controller.run_saving_agents(99)
+        self._savingAgentController.run_saving_agents(99)
 
     @property
     def author_mail(self):
@@ -205,15 +205,15 @@ class Experiment(object):
 
     @property
     def start_timestamp(self):
-        return self._start_timestamp
+        return self._startTimeStamp
 
     @property
     def message_manager(self):
-        return self._message_manager
+        return self._messageManager
 
     @property
     def experimenter_message_manager(self):
-        return self._experimenter_message_manager
+        return self._experimenterMessageManager
 
     @property
     def uuid(self):
@@ -226,7 +226,7 @@ class Experiment(object):
 
         :return: :py:class:`ui_controller.QtUserInterfaceController` oder :py:class:`ui_controller.WebUserInterfaceController`
         '''
-        return self._user_interface_controller
+        return self._userInterfaceController
 
     @property
     def question_controller(self):
@@ -235,7 +235,7 @@ class Experiment(object):
 
         :return: :py:class:`question_controller.PageController`
         '''
-        return self._page_controller
+        return self._questionController
 
     @property
     def data_manager(self):
@@ -244,7 +244,7 @@ class Experiment(object):
 
         :return: :py:class:`data_manager.DataManager`
         '''
-        return self._data_manager
+        return self._dataManager
 
     @property
     def saving_agent_controller(self):
@@ -253,7 +253,7 @@ class Experiment(object):
 
         :return: :py:class:`saving_agent.SavingAgentController`
         '''
-        return self._saving_agent_controller
+        return self._savingAgentController
 
     @property
     def settings(self):
