@@ -130,7 +130,8 @@ class Experiment(object):
         self._dataManager = DataManager(self)
         self._savingAgentController = SavingAgentController(self)
 
-        self._testCondition = ''
+        self._condition = ''
+        self._session = ''
         self._finished = False
         self._startTimeStamp = None
         self._start_time = None
