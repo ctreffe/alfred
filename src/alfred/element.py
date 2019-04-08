@@ -4,7 +4,7 @@
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
 **element** contains general baseclass :class:`.element.Element` and its' children, which can be added to
-:class:`.page.CompositePage` (see table for an overview). It also contains abstract baseclasses for
+:class:`.question.CompositePage` (see table for an overview). It also contains abstract baseclasses for
 different interfaces (:class:`.element.WebElementInterface`, :class:`.element.QtElementInterface`), which
 must also be inherited by new child elements of :class:`.element.Element` to establish interface compatibility.
 
@@ -51,7 +51,7 @@ import alfred.settings as settings
 
 from . import alfredlog
 from future.utils import with_metaclass
-logger = alfredlog.get_logger(__name__)
+logger = alfredlog.getLogger(__name__)
 
 
 class Element(object):
@@ -60,7 +60,7 @@ class Element(object):
 
     :param str name: Name of Element.
     :param str alignment: Alignment of element in widget container ('left' as standard, 'center', 'right').
-    :param str/int font_size: Font size used in element ('normal' as standard, 'big', 'huge', or int value setting font size in pt).
+    :param str/int fontSize: Font size used in element ('normal' as standard, 'big', 'huge', or int value setting font size in pt).
     '''
 
     def __init__(self, name=None, should_be_shown_filter_function=None, **kwargs):
@@ -75,13 +75,13 @@ class Element(object):
 
         self._question = None
         self._enabled = True
-        self._show_corrective_hints = False
-        self._should_be_shown = True
-        self._should_be_shownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
+        self._showCorrectiveHints = False
+        self._shouldBeShown = True
+        self._shouldBeShownFilterFunction = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
 
         self._alignment = kwargs.pop('alignment', 'left')
-        self._font_size = kwargs.pop('font_size', 'normal')
-        self._maximum_widget_width = None
+        self._fontSize = kwargs.pop('fontSize', 'normal')
+        self._maximumWidgetWidth = None
 
         if kwargs != {}:
             raise ValueError("Parameter '%s' is not supported." % list(kwargs.keys())[0])
@@ -102,17 +102,17 @@ class Element(object):
 
     @property
     def maximum_widget_width(self):
-        return self._maximum_widget_width
+        return self._maximumWidgetWidth
 
     @maximum_widget_width.setter
     def maximum_widget_width(self, maximum_widget_width):
         if not isinstance(maximum_widget_width, int):
             raise TypeError
-        self._maximum_widget_width = maximum_widget_width
+        self._maximumWidgetWidth = maximum_widget_width
 
     def added_to_page(self, q):
-        from . import page
-        if not isinstance(q, page.Page):
+        from . import question
+        if not isinstance(q, question.Page):
             raise TypeError()
 
         self._question = q
@@ -154,11 +154,11 @@ class Element(object):
 
     @property
     def show_corrective_hints(self):
-        return self._show_corrective_hints
+        return self._showCorrectiveHints
 
     @show_corrective_hints.setter
     def show_corrective_hints(self, b):
-        self._show_corrective_hints = bool(b)
+        self._showCorrectiveHints = bool(b)
 
     def validate_data(self):
         return True
@@ -168,21 +168,21 @@ class Element(object):
         Sets a filter function. f must take Experiment as parameter
         :type f: function
         """
-        self._should_be_shownFilterFunction = f
+        self._shouldBeShownFilterFunction = f
 
     def remove_should_be_shown_filter_function(self):
         """
         remove the filter function
         """
-        self._should_be_shownFilterFunction = lambda exp: True
+        self._shouldBeShownFilterFunction = lambda exp: True
 
     @property
     def should_be_shown(self):
         """
-        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
+        Returns True if should_be_shown is set to True (default) and all shouldBeShownFilterFunctions return True.
         Otherwise False is returned
         """
-        return self._should_be_shown and self._should_be_shownFilterFunction(self._question._experiment)
+        return self._shouldBeShown and self._shouldBeShownFilterFunction(self._question._experiment)
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -193,7 +193,7 @@ class Element(object):
         """
         if not isinstance(b, bool):
             raise TypeError("should_be_shown must be an instance of bool")
-        self._should_be_shown = b
+        self._shouldBeShown = b
 
 
 class WebElementInterface(with_metaclass(ABCMeta, object)):
@@ -236,7 +236,7 @@ class WebElementInterface(with_metaclass(ABCMeta, object)):
 class HorizontalLine(Element, WebElementInterface):
     def __init__(self, strength=1, color='black', **kwargs):
         '''
-        **HorizontalLine** allows display of a simple divider in pages.
+        **HorizontalLine** allows display of a simple divider in questions.
 
         :param int strength: Set line thickness (in pixel).
         :param str color: Set line color (color argument as string).
@@ -262,27 +262,27 @@ class ProgressBar(Element, WebElementInterface):
         super(ProgressBar, self).__init__(**kwargs)
 
         self._instruction = instruction
-        self._instruction_width = instruction_width
-        self._instruction_height = instruction_height
-        self._bar_range = bar_range
-        self._bar_value = float(bar_value)
+        self._instructionWidth = instruction_width
+        self._instructionHeight = instruction_height
+        self._barRange = bar_range
+        self._barValue = float(bar_value)
 
         if bar_width:
-            self._bar_width = bar_width
+            self._barWidth = bar_width
         else:
-            self._bar_width = None
+            self._barWidth = None
 
-        self._progress_bar = None
+        self._progressBar = None
 
     @property
     def bar_value(self):
-        return self._bar_value
+        return self._barValue
 
     @bar_value.setter
     def bar_value(self, value):
         self._barValue = value
         if self._progressBar:
-            self._progressBar.set_value(self._barValue)
+            self._progressBar.setValue(self._barValue)
             self._progressBar.repaint()
 
     @property
@@ -310,7 +310,7 @@ class TextElement(Element, WebElementInterface):
 
         :param str text: Text to be displayed by TextElement (can contain html commands).
         :param str alignment: Alignment of TextElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Fontsize used in TextElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
+        :param str/int fontSize: Fontsize used in TextElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
         :param int text_width: Set the width of the label to a fixed size, still allowing for word wrapping and growing height of text.
         :param int text_height: Set the height of the label to a fixed size (sometimes necessary when using rich text).
         '''
@@ -329,7 +329,7 @@ class TextElement(Element, WebElementInterface):
     def text(self, text):
         self._text = text
         if self._textLabel:
-            self._textLabel.set_text(self._text)
+            self._textLabel.setText(self._text)
             self._textLabel.repaint()
 
     @property
@@ -384,7 +384,7 @@ class InputElement(Element):
         self._debugString = debug_string
         self._debugValue = debug_value
 
-        if settings.debugmode and settings.debug.default_values:
+        if settings.debugmode and settings.debug.defaultValues:
             if self._debugValue:
                 self._input = self._debugValue
             elif not self._debugString:
@@ -418,9 +418,9 @@ class InputElement(Element):
         if self._question and self._question._experiment:
             hints = self._question._experiment.settings.hints
             name = type(self).__name__
-            no_input_name = ('no_input%s' % name).lower()
-            if no_input_name in hints:
-                return hints[no_input_name]
+            noInputName = ('noInput_%s' % name).lower()
+            if noInputName in hints:
+                return hints[noInputName]
 
         logger.error("Can't access default no input hint for element %s" % self)
         return "Can't access default no input hint for element %s" % type(self).__name__
@@ -444,7 +444,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
         :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
         :param str alignment: Alignment of TextEntryElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
+        :param str/int fontSize: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
         :param bool force_input: Sets user input to be mandatory (False as standard or True).
         :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
         '''
@@ -730,16 +730,16 @@ class NumberEntryElement(RegEntryElement):
     def data(self):
         if 0 < self._decimals:
             try:
-                temp_input = float(self._input)
+                tempInput = float(self._input)
             except Exception:
-                temp_input = ''
+                tempInput = ''
         else:
             try:
-                temp_input = int(self._input)
+                tempInput = int(self._input)
             except Exception:
-                temp_input = ''
+                tempInput = ''
 
-        return({self.name: temp_input} if self.validate_data() and temp_input != '' else {self.name: ''})
+        return({self.name: tempInput} if self.validate_data() and tempInput != '' else {self.name: ''})
 
     def set_data(self, d):
 
@@ -874,7 +874,7 @@ class LikertMatrix(InputElement, WebElementInterface):
     def __init__(self, instruction='', levels=7, items=4, top_scale_labels=None,
                  bottom_scale_labels=None, item_labels=None, item_label_width=None, spacing=30,
                  transpose=False, no_input_corrective_hint=None, table_striped=False, shuffle=False,
-                 instruction_width=None, instruction_height=None, use_short_labels=False, **kwargs):
+                 instruction_width=None, instruction_height=None, useShortLabels=False, **kwargs):
         '''
         **LikertMatrix** displays a matrix of multiple likert items with adjustable scale levels per item.
         Instruction is shown above element.
@@ -908,7 +908,7 @@ class LikertMatrix(InputElement, WebElementInterface):
         self._spacing = spacing
         self._tableStriped = table_striped
         self._transpose = transpose
-        self._useShortLabels = use_short_labels
+        self._useShortLabels = useShortLabels
 
         self._defaultSet = False
 
@@ -928,7 +928,7 @@ class LikertMatrix(InputElement, WebElementInterface):
             raise ValueError(u"Es mussen keine oder %s Itemlabels ubergeben werden." % (2 * self._items))
         self._itemLabels = item_labels
 
-        if settings.debugmode and settings.debug.default_values:
+        if settings.debugmode and settings.debug.defaultValues:
             self._input = [str(int(self._input) - 1) for i in range(self._items)]
         elif not self._input == '':
             self._input = [str(int(self._input) - 1) for i in range(self._items)]

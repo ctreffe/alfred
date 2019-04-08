@@ -24,23 +24,23 @@ jinja_env = Environment(loader=PackageLoader('alfred', 'templates'))
 class Layout(with_metaclass(ABCMeta, object)):
     def __init__(self):
         self._experiment = None
-        self._ui_controller = None
-        self._backward_text = u"Zurück"
-        self._forward_text = u"Weiter"
-        self._finish_text = u"Beenden"
-        self._backward_enabled = True
-        self._forward_enabled = True
-        self._finished_diasbled = False
-        self._jump_listEnabled = True
-        self._jump_list = []
+        self._uiController = None
+        self._backwardText = u"Zurück"
+        self._forwardText = u"Weiter"
+        self._finishText = u"Beenden"
+        self._backwardEnabled = True
+        self._forwardEnabled = True
+        self._finishedDisabled = False
+        self._jumpListEnabled = True
+        self._jumpList = []
 
     def activate(self, experiment, ui_controller):
         self._experiment = experiment
-        self._ui_controller = ui_controller
+        self._uiController = ui_controller
 
     def deactivate(self):
         self._experiment = None
-        self._ui_controller = None
+        self._uiController = None
 
     @abstractmethod
     def render(self, widget):
@@ -48,47 +48,47 @@ class Layout(with_metaclass(ABCMeta, object)):
 
     @property
     def backward_enabled(self):
-        return self._backward_enabled
+        return self._backwardEnabled
 
     @backward_enabled.setter
     def backward_enabled(self, b):
-        self._backward_enabled = b
+        self._backwardEnabled = b
 
     @property
     def forward_enabled(self):
-        return self._forward_enabled
+        return self._forwardEnabled
 
     @forward_enabled.setter
     def forward_enabled(self, b):
-        self._forward_enabled = b
+        self._forwardEnabled = b
 
     @property
     def finish_disabled(self):
-        return self._finished_diasbled
+        return self._finishedDisabled
 
     @finish_disabled.setter
     def finish_disabled(self, b):
-        self._finished_diasbled = b
+        self._finishedDisabled = b
 
     @property
     def backward_text(self):
-        return self._backward_text
+        return self._backwardText
 
     @backward_text.setter
     def backward_text(self, text):
-        self._backward_text = text
+        self._backwardText = text
 
     @property
     def forward_text(self):
-        return self._forward_text
+        return self._forwardText
 
     @forward_text.setter
     def forward_text(self, text):
-        self._forward_text = text
+        self._forwardText = text
 
     @property
     def finish_text(self):
-        return self._finish_text
+        return self._finishText
 
     @finish_text.setter
     def finish_text(self, text):
@@ -156,22 +156,22 @@ class BaseWebLayout(Layout):
 
         d = {}
         d['logo_url'] = self._logo_url
-        d['widget'] = self._experiment.page_controller.current_question.web_widget
+        d['widget'] = self._experiment.question_controller.current_question.web_widget
 
-        if self._experiment.page_controller.current_title:
-            d['title'] = self._experiment.page_controller.current_title
+        if self._experiment.question_controller.current_title:
+            d['title'] = self._experiment.question_controller.current_title
 
-        if self._experiment.page_controller.current_subtitle:
-            d['subtitle'] = self._experiment.page_controller.current_subtitle
+        if self._experiment.question_controller.current_subtitle:
+            d['subtitle'] = self._experiment.question_controller.current_subtitle
 
-        if self._experiment.page_controller.current_status_text:
-            d['statustext'] = self._experiment.page_controller.current_status_text
+        if self._experiment.question_controller.current_status_text:
+            d['statustext'] = self._experiment.question_controller.current_status_text
 
-        if not self._experiment.page_controller.current_question.can_display_corrective_hints_in_line \
-                and self._experiment.page_controller.current_question.corrective_hints:
-            d['corrective_hints'] = self._experiment.page_controller.current_question.corrective_hints
+        if not self._experiment.question_controller.current_question.can_display_corrective_hints_in_line \
+                and self._experiment.question_controller.current_question.corrective_hints:
+            d['corrective_hints'] = self._experiment.question_controller.current_question.corrective_hints
 
-        if self.backward_enabled and self._experiment.page_controller.can_move_backward:
+        if self.backward_enabled and self._experiment.question_controller.can_move_backward:
             d['backward_text'] = self.backward_text
 
         if self.forward_enabled:
@@ -186,7 +186,7 @@ class BaseWebLayout(Layout):
             for i in range(len(jmplist)):
                 jmplist[i] = list(jmplist[i])
                 jmplist[i][0] = '.'.join(map(str, jmplist[i][0]))
-            d['jump_list'] = jmplist
+            d['jumpList'] = jmplist
 
         messages = self._experiment.message_manager.get_messages()
         if messages:
@@ -295,7 +295,7 @@ class GoeWebLayout(Layout):
             for i in range(len(jmplist)):
                 jmplist[i] = list(jmplist[i])
                 jmplist[i][0] = '.'.join(map(str, jmplist[i][0]))
-            d['jump_list'] = jmplist
+            d['jumpList'] = jmplist
 
         messages = self._experiment.message_manager.get_messages()
         if messages:
