@@ -8,7 +8,7 @@ import os
 
 def init_logging(name='alfred'):
     from . import settings
-    logger = logging.get_logger(name)
+    logger = logging.getLogger(name)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     # configure handlers
@@ -17,8 +17,8 @@ def init_logging(name='alfred'):
 
     if settings.log.stderrlog:
         handler = logging.StreamHandler(sys.stderr)
-        handler.set_formatter(formatter)
-        logger.add_handler(handler)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     if settings.log.path:
         path = os.path.abspath(settings.log.path)
@@ -34,20 +34,20 @@ def init_logging(name='alfred'):
             if not os.access(path, os.W_OK) or not os.access(path, os.R_OK):
                 raise RuntimeError("'%s' must be readable and writable" % path)
         handler = logging.FileHandler(path)
-        handler.set_formatter(formatter)
-        logger.add_handler(handler)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     # set log level
     if settings.log.level == 'debug':
-        logger.set_level(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
     elif settings.log.level == 'info':
-        logger.set_level(logging.INFO)
+        logger.setLevel(logging.INFO)
     elif settings.log.level == 'warning':
-        logger.set_level(logging.WARNING)
+        logger.setLevel(logging.WARNING)
     elif settings.log.level == 'error':
-        logger.set_level(logging.ERROR)
+        logger.setLevel(logging.ERROR)
     elif settings.log.level == 'critical':
-        logger.set_level(logging.CRITICAL)
+        logger.setLevel(logging.CRITICAL)
     else:
         raise ValueError("log level must be debug, info, warning, error or critical")
 
@@ -57,12 +57,12 @@ def init_logging(name='alfred'):
         alfred_init('qt')
 
 
-def get_logger(module_name=None):
+def getLogger(module_name=None):
     return NewLogger(module_name)
 
 
 def alfred_init(exp_type):
-    logger = get_logger(__name__)
+    logger = getLogger(__name__)
 
     if exp_type == 'web':
         logger.info("Alfred framework web startup! Logging system initialized.")
@@ -72,7 +72,7 @@ def alfred_init(exp_type):
 
 class NewLogger(object):
     def __init__(self, module_name=None):
-        self.logger = logging.get_logger(module_name)
+        self.logger = logging.getLogger(module_name)
 
     def debug(self, msg, experiment=None, *args, **kwargs):
         if experiment:
