@@ -19,15 +19,6 @@ import io
 from cryptography.fernet import Fernet
 
 
-# Fernet instance for decryption of login data
-if os.path.isfile("alfred_secrect.key"):
-    with open("alfred_secrect.key", "rb") as keyfile:
-        key = keyfile.read()
-else:
-    key = os.environ.get("ALFRED_SECRET_KEY")
-f = Fernet(key)
-
-
 def _package_path():
     root = __file__
     if os.path.islink(root):
@@ -142,6 +133,14 @@ debug.LikertMatrix = _config_parser.get('debug', 'LikertMatrix_default')
 debug.WebLikertImageElement = _config_parser.get('debug', 'WebLikertImageElement_default')
 debug.WebLikertListElement = _config_parser.get('debug', 'WebLikertListElement_default')
 
+# Fernet instance for decryption of login data
+if os.path.isfile("alfred_secrect.key"):
+    with open("alfred_secrect.key", "rb") as keyfile:
+        key = keyfile.read()
+else:
+    key = os.environ.get("ALFRED_SECRET_KEY")
+f = Fernet(key)
+
 
 class ExperimentSpecificSettings(object):
     ''' This class contains experiment specific settings '''
@@ -186,9 +185,19 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.host = config_parser.get('mongo_saving_agent', 'host')
         self.mongo_saving_agent.database = config_parser.get('mongo_saving_agent', 'database')
         self.mongo_saving_agent.collection = config_parser.get('mongo_saving_agent', 'collection')
-        self.mongo_saving_agent.user = f.decrypt(config_parser.get('mongo_saving_agent', 'user').encode()).decode()
-        self.mongo_saving_agent.password = f.decrypt(config_parser.get('mongo_saving_agent', 'password').encode()).decode()
         self.mongo_saving_agent.use_ssl = config_parser.getboolean('mongo_saving_agent', 'use_ssl')
+        self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
+
+        # MongoDB login data
+        # First step: Get from environment variable
+        self.mongo_saving_agent.password = os.environ.get("ALFRED_MONGODB_PASSWORD")
+        # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
+        if config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data') and config_parser.get('mongo_saving_agent', 'password'):
+            self.mongo_saving_agent.password = f.decrypt(config_parser.get('mongo_saving_agent', 'password').encode()).decode()
+        # Third step: Get from raw user input
+        elif not config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data') and config_parser.get('mongo_saving_agent', 'password'):
+
+            self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
 
         self.fallback_local_saving_agent = _DictObj()
         self.fallback_local_saving_agent.use = config_parser.getboolean('fallback_local_saving_agent', 'use')
