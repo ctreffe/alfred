@@ -18,7 +18,7 @@ import alfred.settings as settings
 
 def parse_xml_to_dict(path, interface='web'):
     '''
-    parseXmlTpDict ermöglicht das Einlesen von XML in Dictionaries.
+    parse_xml_to_dict ermöglicht das Einlesen von XML in Dictionaries.
 
     die Variable Interface legt fest, wie Dictionary-Einträge
     optimiert werden. Vorerst geht es dabei nur um die Übersetzung
@@ -52,20 +52,20 @@ def parse_xml_to_dict(path, interface='web'):
             raise RuntimeError('input must be unicode or dict')
         return input
 
-    dataIn = open(path, 'rb').read()
-    dataIn.replace('\r\n', '\n')
-    dataOut = xmltodict.parse(dataIn)
+    data_in = open(path, 'rb').read()
+    data_in.replace('\r\n', '\n')
+    data_out = xmltodict.parse(data_in)
     if interface == 'web':
-        rec(dataOut, '<br>')
+        rec(data_out, '<br>')
     elif interface == 'qt':
-        rec(dataOut, '\n')
+        rec(data_out, '\n')
     else:
         raise ValueError('interface must be either "qt" or "web".')
-    for k in list(dataOut['instr'].keys()):
+    for k in list(data_out['instr'].keys()):
         if k == 'instr':
             raise RuntimeError("Do not use 'instr' as tag")
-        dataOut[k] = dataOut['instr'][k]
-    return dataOut
+        data_out[k] = data_out['instr'][k]
+    return data_out
 
 
 def read_csv_data(path):
@@ -111,13 +111,13 @@ def find_external_experiment_data_by_uid(data, uid):
     def worker(data, uid):
         if data['uid'] == uid:
             return data
-        elif 'subtreeData' in data:
-            for item in data['subtreeData']:
+        elif 'subtree_data' in data:
+            for item in data['subtree_data']:
                 try:
                     d = worker(item, uid)
                     return d
                 except Exception:
-                    if item == data['subtreeData'][-1]:
+                    if item == data['subtree_data'][-1]:
                         raise AlfredError("did not find uuid in tree")
             raise AlfredError("Custom Error")
         else:

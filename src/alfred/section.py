@@ -9,10 +9,10 @@ from builtins import str
 from builtins import range
 from . import alfredlog
 from functools import reduce
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.get_logger(__name__)
 
 from ._core import PageCore, Direction
-from .question import Page, HeadOpenSectionCantClose
+from .page import Page, HeadOpenSectionCantClose
 from .exceptions import MoveError
 from random import shuffle
 
@@ -22,37 +22,37 @@ class PageGroup(PageCore):
     def __init__(self, **kwargs):
         super(PageGroup, self).__init__(**kwargs)
 
-        self._questionList = []
-        self._currentQuestionIndex = 0
-        self._shouldBeShown = True
+        self._page_list = []
+        self._current_page_index = 0
+        self._should_be_shown = True
 
     def __str__(self):
-        s = "PageGroup (tag = " + self.tag + ", questions:[" + str(self._questionList) + "]"
+        s = "PageGroup (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
         return s
 
     @property
-    def question_list(self):
-        return self._questionList
+    def page_list(self):
+        return self._page_list
 
     @property
     def data(self):
         data = super(PageGroup, self).data
-        data['subtreeData'] = []
-        for qCore in self._questionList:
-            data['subtreeData'].append(qCore.data)
+        data['subtree_data'] = []
+        for q_core in self._page_list:
+            data['subtree_data'].append(q_core.data)
 
         return data
 
     @property
     def current_question(self):
-        return self._questionList[self._currentQuestionIndex].current_question if isinstance(self._questionList[self._currentQuestionIndex], PageGroup) else self._questionList[self._currentQuestionIndex]
+        return self._page_list[self._current_page_index].current_question if isinstance(self._page_list[self._current_page_index], PageGroup) else self._page_list[self._current_page_index]
 
     @property
     def current_title(self):
-        if isinstance(self._questionList[self._currentQuestionIndex], PageGroup) and self._questionList[self._currentQuestionIndex].current_title is not None:
-            return self._questionList[self._currentQuestionIndex].current_title
+        if isinstance(self._page_list[self._current_page_index], PageGroup) and self._page_list[self._current_page_index].current_title is not None:
+            return self._page_list[self._current_page_index].current_title
 
-        if isinstance(self._questionList[self._currentQuestionIndex], Page) and self._questionList[self._currentQuestionIndex].title is not None:
+        if isinstance(self._page_list[self._current_page_index], Page) and self._page_list[self._current_page_index].title is not None:
             return self._questionList[self._currentQuestionIndex].title
 
         return self.title
@@ -80,7 +80,7 @@ class PageGroup(PageCore):
     @PageCore.should_be_shown.getter
     def should_be_shown(self):
         '''return true wenn should_be_shown nicht auf False gesetzt wurde und mindestens eine Frage angezeigt werden will'''
-        return super(PageGroup, self).should_be_shown and reduce(lambda b, qCore: b or qCore.should_be_shown, self._questionList, False)
+        return super(PageGroup, self).should_be_shown and reduce(lambda b, q_core: b or q_core.should_be_shown, self._questionList, False)
 
     def allow_leaving(self, direction):
         return self._questionList[self._currentQuestionIndex].allow_leaving(direction)
@@ -99,7 +99,7 @@ class PageGroup(PageCore):
 
     @property
     def jumplist(self):
-        # return value: [([0,1], 'JumpText', coreQuestion), ([1], 'JumpText', coreQuestion), ...]
+        # return value: [([0,1], 'JumpText', core_page), ([1], 'JumpText', core_page), ...]
 
         jumplist = []
         if self.is_jumpable:
@@ -107,12 +107,12 @@ class PageGroup(PageCore):
 
         for i in range(0, len(self._questionList)):
             if isinstance(self._questionList[i], PageGroup):
-                for jumpItem in self._questionList[i].jumplist:
-                    assert len(jumpItem) == 3
-                    jumpItem[0].reverse()
-                    jumpItem[0].append(i)
-                    jumpItem[0].reverse()
-                    jumplist.append(jumpItem)
+                for jump_item in self._questionList[i].jumplist:
+                    assert len(jump_item) == 3
+                    jump_item[0].reverse()
+                    jump_item[0].append(i)
+                    jump_item[0].reverse()
+                    jumplist.append(jump_item)
             elif isinstance(self._questionList[i], Page) and self._questionList[i].is_jumpable:
                 jumplist.append(([i], self._questionList[i].jumptext, self._questionList[i]))
 
@@ -130,12 +130,12 @@ class PageGroup(PageCore):
     def added_to_experiment(self, exp):
         self._experiment = exp
 
-        for question in self._questionList:
-            question.added_to_experiment(self._experiment)
+        for page in self._questionList:
+            page.added_to_experiment(self._experiment)
 
     def append_item(self, item):
         if not isinstance(item, PageCore):
-            raise TypeError("question must be an instance of PageCore")
+            raise TypeError("page must be an instance of PageCore")
 
         self._questionList.append(item)
         item.added_to_section(self)
@@ -162,14 +162,14 @@ class PageGroup(PageCore):
         if isinstance(self._questionList[self._currentQuestionIndex], PageGroup) and self._questionList[self._currentQuestionIndex].can_move_backward:
             return True
 
-        return reduce(lambda b, qCore: b or qCore.should_be_shown, self._questionList[:self._currentQuestionIndex], False)
+        return reduce(lambda b, q_core: b or q_core.should_be_shown, self._questionList[:self._currentQuestionIndex], False)
 
     @property
     def can_move_forward(self):
         if isinstance(self._questionList[self._currentQuestionIndex], PageGroup) and self._questionList[self._currentQuestionIndex].can_move_forward:
             return True
 
-        return reduce(lambda b, qCore: b or qCore.should_be_shown, self._questionList[self._currentQuestionIndex + 1:], False)
+        return reduce(lambda b, q_core: b or q_core.should_be_shown, self._questionList[self._currentQuestionIndex + 1:], False)
 
     def move_forward(self):
         # test if moving is possible and leaving is allowed
@@ -240,11 +240,11 @@ class PageGroup(PageCore):
         else:
             self.move_backward()
 
-    def move_to_position(self, posList):
+    def move_to_position(self, pos_list):
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
 
-        if not isinstance(posList, list) or len(posList) == 0 or not reduce(lambda b, item: b and isinstance(item, int), posList, True):
+        if not isinstance(pos_list, list) or len(pos_list) == 0 or not reduce(lambda b, item: b and isinstance(item, int), posList, True):
             raise TypeError("posList must be an list of int with at least one item")
 
         if not 0 <= posList[0] < len(self._questionList):
@@ -336,10 +336,10 @@ class HeadOpenSection(PageGroup):
 
             elif not self._core_question_at_index.can_move_forward:  # self._core_question_at_index is instance of PageGroup and at the last item
                 if not HeadOpenSection._allow_closing_all_child_questions(self._core_question_at_index):
-                    # TODO handle if not all questions are closable.
+                    # TODO handle if not all pages are closable.
                     self._core_question_at_index.append_item(HeadOpenSectionCantClose())
 
-                else:  # all child question at current index allow closing
+                else:  # all child page at current index allow closing
                     HeadOpenSection._close_child_questions(self._core_question_at_index)
 
         super(HeadOpenSection, self).move_forward()
@@ -357,7 +357,7 @@ class HeadOpenSection(PageGroup):
 
     def leave(self, direction):
         if direction == Direction.FORWARD:
-            logger.debug("Leaving HeadOpenSection direction forward. closing last question.", self._experiment)
+            logger.debug("Leaving HeadOpenSection direction forward. closing last page.", self._experiment)
             if isinstance(self._core_question_at_index, Page):
                 self._core_question_at_index.closeQuestion()
             else:
