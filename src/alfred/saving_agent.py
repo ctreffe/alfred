@@ -136,6 +136,8 @@ class SavingAgentController(object):
                     self._experiment.settings.mongo_saving_agent.user,
                     self._experiment.settings.mongo_saving_agent.password,
                     self._experiment.settings.mongo_saving_agent.use_ssl,
+                    self._experiment.settings.mongo_saving_agent.ca_file_path,
+                    self._experiment.settings.mongo_saving_agent.cert_file_path,
                     self._experiment.settings.mongo_saving_agent.level,
                     self._experiment
                 )
@@ -398,10 +400,11 @@ class CouchDBSavingAgent(SavingAgent):
 
 
 class MongoSavingAgent(SavingAgent):
-    def __init__(self, host, database, collection, user, password, use_ssl, activation_level=10, experiment=None):
+    def __init__(self, host, database, collection, user, password, use_ssl, ca_file_path, cert_file_path, activation_level=10, experiment=None):
         super(MongoSavingAgent, self).__init__(activation_level, experiment)
 
-        self._mc = pymongo.MongoClient(host=host, username=user, password=password, ssl=use_ssl)
+        self._mc = pymongo.MongoClient(host=host, username=user, password=password,
+                                       ssl=use_ssl, ssl_ca_certs=ca_file_path, ssl_certfile=cert_file_path)
         self._db = self._mc[database]
         # if not self._db.authenticate(user, password):
         #     raise RuntimeError("Could not authenticate with %s.%s" % (host, database))

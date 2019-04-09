@@ -186,17 +186,21 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.database = config_parser.get('mongo_saving_agent', 'database')
         self.mongo_saving_agent.collection = config_parser.get('mongo_saving_agent', 'collection')
         self.mongo_saving_agent.use_ssl = config_parser.getboolean('mongo_saving_agent', 'use_ssl')
+        self.mongo_saving_agent.ca_file_path = config_parser.get('mongo_saving_agent', 'ca_file_path')
+        self.mongo_saving_agent.cert_file_path = config_parser.get('mongo_saving_agent', 'cert_file_path')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
 
         # MongoDB login data
-        # First step: Get from environment variable
-        self.mongo_saving_agent.password = os.environ.get("ALFRED_MONGODB_PASSWORD")
+        # First step: Get from encrypted environment variable
+        self.mongo_saving_agent.user = f.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
+        self.mongo_saving_agent.password = f.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
         # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
         if config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data') and config_parser.get('mongo_saving_agent', 'password'):
+            self.mongo_saving_agent.user = f.decrypt(config_parser.get('mongo_saving_agent', 'user').encode()).decode()
             self.mongo_saving_agent.password = f.decrypt(config_parser.get('mongo_saving_agent', 'password').encode()).decode()
         # Third step: Get from raw user input
         elif not config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data') and config_parser.get('mongo_saving_agent', 'password'):
-
+            self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
             self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
 
         self.fallback_local_saving_agent = _DictObj()
@@ -221,15 +225,21 @@ class ExperimentSpecificSettings(object):
         self.fallback_mongo_saving_agent.database = config_parser.get('fallback_mongo_saving_agent', 'database')
         self.fallback_mongo_saving_agent.collection = config_parser.get('fallback_mongo_saving_agent', 'collection')
         self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
+        self.fallback_mongo_saving_agent.use_ssl = config_parser.getboolean('fallback_mongo_saving_agent', 'use_ssl')
+        self.fallback_mongo_saving_agent.ca_file_path = config_parser.get('fallback_mongo_saving_agent', 'ca_file_path')
+        self.fallback_mongo_saving_agent.cert_file_path = config_parser.get('fallback_mongo_saving_agent', 'cert_file_path')
 
         # MongoDB login data
-        # First step: Get from environment variable
-        self.fallback_mongo_saving_agent.password = os.environ.get("ALFRED_FALLBACK_MONGODB_PASSWORD")
+        # First step: Get from encrypted environment variable
+        self.fallback_mongo_saving_agent.user = f.decrypt(os.environ.get("ALFRED__FALLBACK_MONGODB_USER").encode()).decode()
+        self.fallback_mongo_saving_agent.password = f.decrypt(os.environ.get("ALFRED_FALLBACK_MONGODB_PASSWORD").encode()).decode()
         # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
         if config_parser.getboolean('fallback_mongo_saving_agent', 'encrypted_login_data') and config_parser.get('fallback_mongo_saving_agent', 'password'):
+            self.fallback_mongo_saving_agent.user = f.decrypt(config_parser.get('fallback_mongo_saving_agent', 'user').encode()).decode()
             self.fallback_mongo_saving_agent.password = f.decrypt(config_parser.get('fallback_mongo_saving_agent', 'password').encode()).decode()
         # Third step: Get from raw user input
         elif not config_parser.getboolean('fallback_mongo_saving_agent', 'encrypted_login_data') and config_parser.get('fallback_mongo_saving_agent', 'password'):
+            self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
             self.fallback_mongo_saving_agent.password = config_parser.get('fallback_mongo_saving_agent', 'password')
 
         self.level2_fallback_local_saving_agent = _DictObj()
