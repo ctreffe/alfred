@@ -1,11 +1,13 @@
 from builtins import map
 from builtins import object
-from flask import Flask, send_file, redirect, url_for, abort, request, make_response
+from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session
 import re
+from uuid import uuid4
 
 from ..settings import general, experiment
 
 app = Flask(__name__)
+app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
 if experiment.type == 'web':
     app.debug = general.debug
 
@@ -32,6 +34,7 @@ def start():
     exp = script.generator.generate_experiment()
     set_experiment(exp)
     exp.start()
+    session['page_tokens'] = []
     # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
     resp = make_response(redirect(url_for('experiment')))
     resp.cache_control.no_cache = True
@@ -41,38 +44,87 @@ def start():
 @app.route('/experiment', methods=['GET', 'POST'])
 def experiment():
 
-    move = request.values.get('move', None)
-    directjump = request.values.get('directjump', None)
-    par = request.values.get('par', None)
+    if request.method == "POST":
 
-    kwargs = request.values.to_dict()
-    kwargs.pop('move', None)
-    kwargs.pop('directjump', None)
-    kwargs.pop('par', None)
+        move = request.values.get('move', None)
+        directjump = request.values.get('directjump', None)
+        par = request.values.get('par', None)
+        page_token = request.values.get('page_token', None)
 
-    if kwargs != {}:
+        try:
+            token_list = session['page_tokens']
+            token_list.remove(page_token)
+            session['page_tokens'] = token_list
+        except ValueError:
+            return redirect(url_for('experiment'))
+
+        kwargs = request.values.to_dict()
+        kwargs.pop('move', None)
+        kwargs.pop('directjump', None)
+        kwargs.pop('par', None)
+
         script.experiment.user_interface_controller.update_with_user_input(kwargs)
-    if move is None and directjump is None and par is None and kwargs == {}:
-        pass
-    elif directjump and par:
-        pos_list = list(map(int, par.split('.')))
-        script.experiment.user_interface_controller.move_to_position(pos_list)
-    elif move == 'started':
-        pass
-    elif move == 'forward':
-        script.experiment.user_interface_controller.move_forward()
-    elif move == 'backward':
-        script.experiment.user_interface_controller.move_backward()
-    elif move == 'jump' and par and re.match(r'^\d+(\.\d+)*$', par):
-        pos_list = list(map(int, par.split('.')))
-        script.experiment.user_interface_controller.move_to_position(pos_list)
-    else:
-        abort(400)
+        if move is None and directjump is None and par is None and kwargs == {}:
+            pass
+        elif directjump and par:
+            posList = list(map(int, par.split('.')))
+            script.experiment.user_interface_controller.move_to_position(posList)
+        elif move == 'started':
+            pass
+        elif move == 'forward':
+            script.experiment.user_interface_controller.move_forward()
+        elif move == 'backward':
+            script.experiment.user_interface_controller.move_backward()
+        elif move == 'jump' and par and re.match(r'^\d+(\.\d+)*$', par):
+            posList = list(map(int, par.split('.')))
+            script.experiment.user_interface_controller.move_to_position(posList)
+        else:
+            abort(400)
+        return redirect(url_for('experiment'))
 
-    html = script.experiment.user_interface_controller.render_html()
-    resp = make_response(html)
-    resp.cache_control.no_cache = True
-    return resp
+    elif request.method == "GET":
+        page_token = str(uuid4())
+
+        token_list = session['page_tokens']
+        token_list.append(page_token)
+        session['page_tokens'] = token_list
+
+        resp = make_response(script.experiment.user_interface_controller.render(page_token))
+        resp.cache_control.no_cache = True
+        return resp
+
+    # move = request.values.get('move', None)
+    # directjump = request.values.get('directjump', None)
+    # par = request.values.get('par', None)
+
+    # kwargs = request.values.to_dict()
+    # kwargs.pop('move', None)
+    # kwargs.pop('directjump', None)
+    # kwargs.pop('par', None)
+
+    # if kwargs != {}:
+    #     script.experiment.user_interface_controller.update_with_user_input(kwargs)
+    # if move is None and directjump is None and par is None and kwargs == {}:
+    #     pass
+    # elif directjump and par:
+    #     pos_list = list(map(int, par.split('.')))
+    #     script.experiment.user_interface_controller.move_to_position(pos_list)
+    # elif move == 'started':
+    #     pass
+    # elif move == 'forward':
+    #     script.experiment.user_interface_controller.move_forward()
+    # elif move == 'backward':
+    #     script.experiment.user_interface_controller.move_backward()
+    # elif move == 'jump' and par and re.match(r'^\d+(\.\d+)*$', par):
+    #     pos_list = list(map(int, par.split('.')))
+    #     script.experiment.user_interface_controller.move_to_position(pos_list)
+    # else:
+    #     abort(400)
+
+    # html = script.experiment.user_interface_controller.render_html()
+    # resp = make_response(html)
+    # resp.cache_control.no_cache = True
+    # return resp
 
 
 @app.route('/staticfile/<identifier>')

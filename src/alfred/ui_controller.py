@@ -115,7 +115,7 @@ class WebUserInterfaceController(UserInterfaceController):
     def basepath(self):
         return self._basepath
 
-    def render(self):
+    def render(self, page_token):
         self._experiment.page_controller.current_page.prepare_web_widget()
 
         js_scripts = []
@@ -159,6 +159,8 @@ class WebUserInterfaceController(UserInterfaceController):
         html = html + "</head><body><form id=\"form\" method=\"post\" action=\"%s/experiment\" autocomplete=\"off\" accept-charset=\"UTF-8\">" % self._basepath
 
         html = html + self._layout.render()
+
+        html = html + f"<input type=\"hidden\" name=\"page_token\" value={page_token}>"
 
         html = html + "</form></body></html>"
 
