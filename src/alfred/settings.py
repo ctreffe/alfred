@@ -51,7 +51,7 @@ class _DictObj(dict):
 
 # define settings files
 config_files = [  # most importent file last
-    os.path.join(package_path, 'files/global.conf'),
+    os.path.join(package_path, 'files/default.conf'),
 ]
 if os.environ.get('ALFRED_CONFIG_FILE'):
     config_files += [os.environ.get('ALFRED_CONFIG_FILE')]
