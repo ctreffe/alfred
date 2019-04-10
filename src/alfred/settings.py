@@ -187,7 +187,6 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.collection = config_parser.get('mongo_saving_agent', 'collection')
         self.mongo_saving_agent.use_ssl = config_parser.getboolean('mongo_saving_agent', 'use_ssl')
         self.mongo_saving_agent.ca_file_path = config_parser.get('mongo_saving_agent', 'ca_file_path')
-        self.mongo_saving_agent.cert_file_path = config_parser.get('mongo_saving_agent', 'cert_file_path')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
 
         # MongoDB login data
@@ -227,7 +226,6 @@ class ExperimentSpecificSettings(object):
         self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
         self.fallback_mongo_saving_agent.use_ssl = config_parser.getboolean('fallback_mongo_saving_agent', 'use_ssl')
         self.fallback_mongo_saving_agent.ca_file_path = config_parser.get('fallback_mongo_saving_agent', 'ca_file_path')
-        self.fallback_mongo_saving_agent.cert_file_path = config_parser.get('fallback_mongo_saving_agent', 'cert_file_path')
 
         # MongoDB login data
         # First step: Get from encrypted environment variable
