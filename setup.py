@@ -1,6 +1,7 @@
 from builtins import range
 from distutils.core import setup
 from distutils.command.install import install as dist_install
+import os
 
 name = 'alfred'
 version = '0.3b1'  # major.minor[.patch[sub] e.g. 0.1.0 first experimental version, 1.0.1b2 second beta release of the first patch of 1.0
@@ -12,7 +13,14 @@ url = 'http://www.the-experimenter.com/alfred'
 package_dir = {'': 'src'}
 packages = ['alfred', 'alfred.helpmates']
 package_data = {'alfred': ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*']}
-requires = ['jinja2 (>= 2.6)', 'PySide', 'PyMongo', 'Flask', 'xmltodict']
+# requires = ['jinja2 (>= 2.6)', 'PySide2', 'pymongo', 'flask', 'xmltodict']
+
+thelibFolder = os.path.dirname(os.path.realpath(__file__))
+requirementPath = thelibFolder + '/requirements.txt'
+install_requires = []
+if os.path.isfile(requirementPath):
+    with open(requirementPath) as f:
+        install_requires = f.read().splitlines()
 
 
 class install(dist_install):
@@ -64,6 +72,6 @@ setup(name=name,
       packages=packages,
       package_dir=package_dir,
       package_data=package_data,
-      requires=requires,
+      requires=install_requires,
       cmdclass=dict(install=install)
       )
