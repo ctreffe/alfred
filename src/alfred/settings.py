@@ -136,7 +136,10 @@ if os.path.isfile("alfred_secrect.key"):
         key = keyfile.read()
 else:
     key = os.environ.get("ALFRED_SECRET_KEY")
-f = Fernet(key)
+try:
+    f = Fernet(key)
+except Exception:
+    pass
 
 
 class ExperimentSpecificSettings(object):
@@ -191,7 +194,7 @@ class ExperimentSpecificSettings(object):
         try:
             self.mongo_saving_agent.user = f.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
             self.mongo_saving_agent.password = f.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
-        except AttributeError:
+        except (AttributeError, NameError):
             print("Incomplete DB login data in environment variables. Now trying to use custom login data.")
         # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
         if config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data') and config_parser.get('mongo_saving_agent', 'password'):
@@ -232,7 +235,7 @@ class ExperimentSpecificSettings(object):
         try:
             self.fallback_mongo_saving_agent.user = f.decrypt(os.environ.get("ALFRED__FALLBACK_MONGODB_USER").encode()).decode()
             self.fallback_mongo_saving_agent.password = f.decrypt(os.environ.get("ALFRED_FALLBACK_MONGODB_PASSWORD").encode()).decode()
-        except AttributeError:
+        except (AttributeError, NameError):
             print("Incomplete DB login data in environment variables. Now trying to use custom login data.")
         # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
         if config_parser.getboolean('fallback_mongo_saving_agent', 'encrypted_login_data') and config_parser.get('fallback_mongo_saving_agent', 'password'):
