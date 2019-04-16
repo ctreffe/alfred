@@ -18,6 +18,10 @@ additional_stuff/
 save/
 fallback_save/
 
+# PyCharm project files
+
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
