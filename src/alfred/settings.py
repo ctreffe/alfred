@@ -29,7 +29,40 @@ def _package_path():
 #: package_path is the absolute filepath where alfred package is installed
 package_path = _package_path()
 
+class Decrypter(object):
 
+    _decrypter = None
+
+    def decrypt_login(self, username=None, password=None, from_env=False):
+
+        if not self._decrypter:
+            # Fernet instance for decryption of login data
+            if os.path.isfile("alfred_secrect.key"):
+                with open("alfred_secrect.key", "rb") as keyfile:
+                    key = keyfile.read()
+            else:
+                key = os.environ.get("ALFRED_SECRET_KEY")
+            try:
+                self._decrypter = Fernet(key)
+            except Exception:
+                RuntimeError('Unable to initialize Fernet decrypter: Secret key not found!')
+
+        if from_env:
+            try:
+                decrypted_username = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
+                decrypted_password = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
+
+                return (decrypted_username, decrypted_password)
+
+            except (AttributeError, NameError):
+                print("Incomplete DB login data in environment variables. Now trying to decrypt login data from config.conf...")
+
+        decrypted_username = self._decrypter.decrypt(username.encode()).decode()
+        decrypted_password = self._decrypter.decrypt(password.encode()).decode()
+
+        return (decrypted_username, decrypted_password)
+
+    
 class _DictObj(dict):
     """
     This class allows dot notation to access dict elements
@@ -130,23 +163,12 @@ debug.LikertMatrix = _config_parser.get('debug', 'LikertMatrix_default')
 debug.WebLikertImageElement = _config_parser.get('debug', 'WebLikertImageElement_default')
 debug.WebLikertListElement = _config_parser.get('debug', 'WebLikertListElement_default')
 
-# Fernet instance for decryption of login data
-if os.path.isfile("alfred_secrect.key"):
-    with open("alfred_secrect.key", "rb") as keyfile:
-        key = keyfile.read()
-else:
-    key = os.environ.get("ALFRED_SECRET_KEY")
-try:
-    f = Fernet(key)
-except Exception:
-    pass
-
 
 class ExperimentSpecificSettings(object):
     ''' This class contains experiment specific settings '''
 
     def __init__(self, config_string=''):
-        config_parser = configparser.SafeConfigParser()
+        config_parser = configparser.ConfigParser()
         config_files = [x for x in [  # most importent file last
             os.path.join(package_path, 'files/default.conf'),
             os.environ.get('ALFRED_CONFIG_FILE'),
@@ -163,6 +185,8 @@ class ExperimentSpecificSettings(object):
         sections_by_hand = ['mongo_saving_agent', 'couchdb_saving_agent',
                             'local_saving_agent', 'fallback_mongo_saving_agent', 'fallback_couchdb_saving_agent',
                             'fallback_local_saving_agent', 'level2_fallback_local_saving_agent']
+
+        decrypter = Decrypter()
 
         self.local_saving_agent = _DictObj()
         self.local_saving_agent.use = config_parser.getboolean('local_saving_agent', 'use')
@@ -187,23 +211,15 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.collection = config_parser.get('mongo_saving_agent', 'collection')
         self.mongo_saving_agent.use_ssl = config_parser.getboolean('mongo_saving_agent', 'use_ssl')
         self.mongo_saving_agent.ca_file_path = config_parser.get('mongo_saving_agent', 'ca_file_path')
+        self.mongo_saving_agent.encrypted_login_data = config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data')
+        self.mongo_saving_agent.login_from_env = config_parser.getboolean('mongo_saving_agent', 'login_from_env')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
+        self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
 
-        # MongoDB login data
-        # First step: Get from encrypted environment variable
-        try:
-            self.mongo_saving_agent.user = f.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
-            self.mongo_saving_agent.password = f.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
-        except (AttributeError, NameError):
-            print("Incomplete DB login data in environment variables. Now trying to use custom login data.")
-        # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
-        if config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data') and config_parser.get('mongo_saving_agent', 'password'):
-            self.mongo_saving_agent.user = f.decrypt(config_parser.get('mongo_saving_agent', 'user').encode()).decode()
-            self.mongo_saving_agent.password = f.decrypt(config_parser.get('mongo_saving_agent', 'password').encode()).decode()
-        # Third step: Get from raw user input
-        elif config_parser.get('mongo_saving_agent', 'password') and not config_parser.getboolean('mongo_saving_agent', 'encrypted_login_data'):
-            self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
-            self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
+        if self.mongo_saving_agent.use and self.mongo_saving_agent.login_from_env:
+            self.mongo_saving_agent.user, self.mongo_saving_agent.password = decrypter.decrypt_login(from_env=True)
+        elif self.mongo_saving_agent.use and self.mongo_saving_agent.encrypted_login_data:
+            self.mongo_saving_agent.user, self.mongo_saving_agent.password = decrypter.decrypt_login(self.mongo_saving_agent.user, self.mongo_saving_agent.password)
 
         self.fallback_local_saving_agent = _DictObj()
         self.fallback_local_saving_agent.use = config_parser.getboolean('fallback_local_saving_agent', 'use')
@@ -226,25 +242,14 @@ class ExperimentSpecificSettings(object):
         self.fallback_mongo_saving_agent.host = config_parser.get('fallback_mongo_saving_agent', 'host')
         self.fallback_mongo_saving_agent.database = config_parser.get('fallback_mongo_saving_agent', 'database')
         self.fallback_mongo_saving_agent.collection = config_parser.get('fallback_mongo_saving_agent', 'collection')
-        self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
         self.fallback_mongo_saving_agent.use_ssl = config_parser.getboolean('fallback_mongo_saving_agent', 'use_ssl')
         self.fallback_mongo_saving_agent.ca_file_path = config_parser.get('fallback_mongo_saving_agent', 'ca_file_path')
+        self.fallback_mongo_saving_agent.encrypted_login_data = config_parser.getboolean('fallback_mongo_saving_agent', 'encrypted_login_data')
+        self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
+        self.fallback_mongo_saving_agent.password = config_parser.get('fallback_mongo_saving_agent', 'password')
 
-        # MongoDB login data
-        # First step: Get from encrypted environment variable
-        try:
-            self.fallback_mongo_saving_agent.user = f.decrypt(os.environ.get("ALFRED__FALLBACK_MONGODB_USER").encode()).decode()
-            self.fallback_mongo_saving_agent.password = f.decrypt(os.environ.get("ALFRED_FALLBACK_MONGODB_PASSWORD").encode()).decode()
-        except (AttributeError, NameError):
-            print("Incomplete DB login data in environment variables. Now trying to use custom login data.")
-        # Second step: Get from encrypted user input, key for decryption in environment variable or keyfile in exp. directory
-        if config_parser.getboolean('fallback_mongo_saving_agent', 'encrypted_login_data') and config_parser.get('fallback_mongo_saving_agent', 'password'):
-            self.fallback_mongo_saving_agent.user = f.decrypt(config_parser.get('fallback_mongo_saving_agent', 'user').encode()).decode()
-            self.fallback_mongo_saving_agent.password = f.decrypt(config_parser.get('fallback_mongo_saving_agent', 'password').encode()).decode()
-        # Third step: Get from raw user input
-        elif not config_parser.getboolean('fallback_mongo_saving_agent', 'encrypted_login_data') and config_parser.get('fallback_mongo_saving_agent', 'password'):
-            self.fallback_mongo_saving_agent.user = config_parser.get('fallback_mongo_saving_agent', 'user')
-            self.fallback_mongo_saving_agent.password = config_parser.get('fallback_mongo_saving_agent', 'password')
+        if self.fallback_mongo_saving_agent.use and self.fallback_mongo_saving_agent.encrypted_login_data:
+            self.fallback_mongo_saving_agent.user, self.fallback_mongo_saving_agent.password = decrypter.decrypt_login(self.fallback_mongo_saving_agent.user, self.fallback_mongo_saving_agent.password)
 
         self.level2_fallback_local_saving_agent = _DictObj()
         self.level2_fallback_local_saving_agent.use = config_parser.getboolean('level2_fallback_local_saving_agent', 'use')
