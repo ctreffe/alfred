@@ -22,8 +22,6 @@ if os.path.isfile(requirementPath):
     with open(requirementPath) as f:
         install_requires = f.read().splitlines()
 
-print(install_requires)
-
 class install(dist_install):
     user_options = dist_install.user_options + [('without-pyside', None, 'kommentiert alle pyside anweisungen aus')]
 
