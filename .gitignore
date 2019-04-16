@@ -17,6 +17,7 @@ additional_stuff/
 # saved files from tests
 save/
 fallback_save/
+log/
 
 # PyCharm project files
 
