@@ -22,6 +22,7 @@ if os.path.isfile(requirementPath):
     with open(requirementPath) as f:
         install_requires = f.read().splitlines()
 
+print(install_requires)
 
 class install(dist_install):
     user_options = dist_install.user_options + [('without-pyside', None, 'kommentiert alle pyside anweisungen aus')]
@@ -72,6 +73,6 @@ setup(name=name,
       packages=packages,
       package_dir=package_dir,
       package_data=package_data,
-      requires=install_requires,
+      install_requires=install_requires,
       cmdclass=dict(install=install)
       )
