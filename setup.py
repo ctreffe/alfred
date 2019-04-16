@@ -14,13 +14,14 @@ package_dir = {'': 'src'}
 packages = ['alfred', 'alfred.helpmates']
 package_data = {'alfred': ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*']}
 # requires = ['jinja2 (>= 2.6)', 'PySide2', 'pymongo', 'flask', 'xmltodict']
+install_requires = ['future', 'cryptography', 'jinja2', 'PySide2', 'pymongo', 'flask', 'xmltodict']
 
-thelibFolder = os.path.dirname(os.path.realpath(__file__))
-requirementPath = thelibFolder + '/requirements.txt'
-install_requires = []
-if os.path.isfile(requirementPath):
-    with open(requirementPath) as f:
-        install_requires = f.read().splitlines()
+# thelibFolder = os.path.dirname(os.path.realpath(__file__))
+# requirementPath = thelibFolder + '/requirements.txt'
+# install_requires = []
+# if os.path.isfile(requirementPath):
+#     with open(requirementPath) as f:
+#         install_requires = f.read().splitlines()
 
 class install(dist_install):
     user_options = dist_install.user_options + [('without-pyside', None, 'kommentiert alle pyside anweisungen aus')]
