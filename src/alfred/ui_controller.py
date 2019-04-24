@@ -160,7 +160,7 @@ class WebUserInterfaceController(UserInterfaceController):
 
         html = html + self._layout.render()
 
-        html = html + f"<input type=\"hidden\" name=\"page_token\" value={page_token}>"
+        html = html + "<input type=\"hidden\" name=\"page_token\" value=%s>" % page_token
 
         html = html + "</form></body></html>"
 
