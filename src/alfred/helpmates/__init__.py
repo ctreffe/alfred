@@ -5,40 +5,41 @@
 
 A package for convenience functions
 '''
+from __future__ import print_function
 
+from future import standard_library
+standard_library.install_aliases()
 from os.path import abspath, isabs, join
 import xmltodict
-import string
 import csv
-import couchdb
-from urlparse import urlparse
 from alfred.exceptions import AlfredError
 import alfred.settings as settings
 
-def parseXmlToDict(path,interface ='web'):
+
+def parse_xml_to_dict(path, interface='web'):
     '''
-    parseXmlTpDict ermöglicht das Einlesen von XML in Dictionaries.
-    
-    die Variable Interface legt fest, wie Dictionary-Einträge 
+    parse_xml_to_dict ermöglicht das Einlesen von XML in Dictionaries.
+
+    die Variable Interface legt fest, wie Dictionary-Einträge
     optimiert werden. Vorerst geht es dabei nur um die Übersetzung
     von LineBreak anweisungen für Qt oder HTML.
-    
+
     Das Dictionary wird abschließend daraufhin optimiert, dass
     keine Value mit einem LineBreak beginnt.
-    
+
     So kann man Text schreiben, der nicht geparst wird, so dass
     z.B. html Anweisungen normal interpretiert werden können:
-    
-    <![CDATA[ 
-    some input with html code   
+
+    <![CDATA[
+    some input with html code
     ]]>
     '''
 
     if not isabs(path):
-            path = join(settings.general.external_files_dir, path)
+        path = join(settings.general.external_files_dir, path)
 
     def rec(input, replacement='<br>'):
-        if isinstance(input, unicode):
+        if isinstance(input, str):
             if input[0] == '\n':
                 input = input[1:]
             if input[-1] == '\n':
@@ -50,31 +51,32 @@ def parseXmlToDict(path,interface ='web'):
         else:
             raise RuntimeError('input must be unicode or dict')
         return input
-    
-    dataIn = open(path,'rb').read()
-    dataIn.replace('\r\n', '\n')
-    dataOut = xmltodict.parse(dataIn)
+
+    data_in = open(path, 'rb').read()
+    data_in.replace('\r\n', '\n')
+    data_out = xmltodict.parse(data_in)
     if interface == 'web':
-        rec(dataOut, '<br>')
+        rec(data_out, '<br>')
     elif interface == 'qt':
-        rec(dataOut, '\n')
+        rec(data_out, '\n')
     else:
         raise ValueError('interface must be either "qt" or "web".')
-    for k in dataOut['instr'].keys():
+    for k in list(data_out['instr'].keys()):
         if k == 'instr':
             raise RuntimeError("Do not use 'instr' as tag")
-        dataOut[k] = dataOut['instr'][k]
-    return dataOut
+        data_out[k] = data_out['instr'][k]
+    return data_out
 
-def readCSVData(path):
+
+def read_csv_data(path):
     """
     Diese Funktion ermöglicht das Einlesen von Datensätzen,
-    die innerhalb des Experimentes gebraucht werden, z.B. 
+    die innerhalb des Experimentes gebraucht werden, z.B.
     verschiedene Schätzaufgaben eines Typs, die dann der VP
     randomisiert dargeboten werden. Die Daten müssen dabei
     als .csv Datei gespeichert sein. Dabei muss als Trenn-
     zeichen ein Semikolon ';' benutzt werden!
-    
+
     Die Funktion muss mit dem Dateinamen der entsprechenden
     Datei aufgerufen werden und gibt ein Array of
     Arrays zurück (Toplevel sind die einzelnen Lines, darin
@@ -83,7 +85,7 @@ def readCSVData(path):
     """
 
     if not isabs(path):
-            path = join(settings.general.external_files_dir, path)
+        path = join(settings.general.external_files_dir, path)
 
     dataset = []
     file_input = open(path, 'r')
@@ -91,7 +93,7 @@ def readCSVData(path):
     file_reader = csv.reader(file_input, delimiter=';')
 
     for row in file_reader:
-        
+
         temprow = []
         while row != []:
             tempstr = row.pop(0)
@@ -99,64 +101,31 @@ def readCSVData(path):
             temprow.append(tempstr)
         row = temprow
         dataset.append(row)
-    
+
     dataset.pop(0)
-    
+
     return dataset
 
-def getCouchDBData(url = 'http://fpsych:14mgEisen@couchdb.e-scientifics.de', db_name = 'psyfw_experiments', expName = None, expVersion = None, expCondition = None):
-    '''
-    Diese Funktion ruft Datensets aus der standard CouchDB-Datenbank ab.
-    '''
-    server = couchdb.Server(url)
-    db = server[db_name]
-    
-    print 'fetching docs (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name),
-    docs = []
-    
-    if expCondition == None:
-        for row in db.view('default/exp_name_version', key=[expName,expVersion]):
-            docs.append(db[row.id])
-    
-    elif not expCondition == None:    
-        for row in db.view('default/exp_name_version_condition', key=[expName,expVersion,expCondition]):
-                    docs.append(db[row.id])
-                    
-    print 'done. %i documents fetched.' % len(docs)
-        
-    return docs
 
-def writeCouchDBData(dataset, url = 'http://fpsych:14mgEisen@couchdb.e-scientifics.de', db_name = 'psyfw_experiments'):
-    '''
-    '''
-    server = couchdb.Server(url)
-    db = server[db_name]
-    
-    print 'writing doc (Server: %s, DB: %s)...' % (urlparse(url).hostname, db_name),
-    db[dataset.id] = dataset
-    print 'done.'
-
-
-def findExternalExperimentDataByUid(data, uid):
+def find_external_experiment_data_by_uid(data, uid):
     def worker(data, uid):
         if data['uid'] == uid:
             return data
-        elif data.has_key('subtreeData'):
-            for item in data['subtreeData']:
+        elif 'subtree_data' in data:
+            for item in data['subtree_data']:
                 try:
                     d = worker(item, uid)
                     return d
-                except:
-                    if item == data['subtreeData'][-1]:
+                except Exception:
+                    if item == data['subtree_data'][-1]:
                         raise AlfredError("did not find uuid in tree")
             raise AlfredError("Custom Error")
         else:
             raise AlfredError("did not find uuid in tree")
     return worker(data, uid)
 
-def absExternalFilePath(filename):
+
+def abs_external_file_path(filename):
     path = join(settings.general.external_files_dir, filename)
     path = abspath(path)
     return path
-
-
