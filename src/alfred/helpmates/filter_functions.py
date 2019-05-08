@@ -1,5 +1,6 @@
 __author__ = 'paul'
 
+
 def and_(*functions):
     def and_f(exp):
         ret = True
@@ -9,6 +10,7 @@ def and_(*functions):
 
     return and_f
 
+
 def or_(*functions):
     def or_f(exp):
         ret = False
@@ -17,6 +19,7 @@ def or_(*functions):
         return ret
 
     return or_f
+
 
 def not_(function):
     def not_f(exp):

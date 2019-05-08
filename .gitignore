@@ -1,3 +1,28 @@
+*.DS_Store
+.DS_Store
+
+name_changelog.py
+names_changelog.md
+change_names.py
+class_names.json
+class_names_filled.json
+extract_names.py
+function_names.json
+function_names_filled.json
+parameter_names.json
+parameter_names_filled.json
+port_to_alfred_0.3.py
+additional_stuff/
+
+# saved files from tests
+save/
+fallback_save/
+log/
+
+# PyCharm project files
+
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,3 +127,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+src/encode.py
+.DS_Store
+src/.DS_Store
+*.json
