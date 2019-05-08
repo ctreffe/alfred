@@ -1,4 +1,4 @@
-alfred
+alfred [![DOI](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371)
 ======
 
 Alfred - A library for rapid experiment development
