@@ -26,3 +26,8 @@ cd PATH-TO-FOLDER
 python3 setup.py install
 ```
 
+# Alfred Mailing List
+
+If you want to stay up to date with current developments, you can [join our mailing list](https://listserv.gwdg.de/mailman/listinfo/alfred).
+We use this list to announce new releases and spread important information concerning the use of Alfred. You can expect to receive at most one mail per month.
+
