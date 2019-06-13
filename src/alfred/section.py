@@ -17,17 +17,17 @@ from .exceptions import MoveError
 from random import shuffle
 
 
-class PageGroup(PageCore):
+class Section(PageCore):
 
     def __init__(self, **kwargs):
-        super(PageGroup, self).__init__(**kwargs)
+        super(Section, self).__init__(**kwargs)
 
         self._page_list = []
         self._currentPageIndex = 0
         self._should_be_shown = True
 
     def __str__(self):
-        s = "PageGroup (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
+        s = "Section (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
         return s
 
     @property
@@ -36,7 +36,7 @@ class PageGroup(PageCore):
 
     @property
     def data(self):
-        data = super(PageGroup, self).data
+        data = super(Section, self).data
         data['subtree_data'] = []
         for q_core in self._page_list:
             data['subtree_data'].append(q_core.data)
@@ -45,11 +45,11 @@ class PageGroup(PageCore):
 
     @property
     def current_page(self):
-        return self._page_list[self._currentPageIndex].current_page if isinstance(self._page_list[self._currentPageIndex], PageGroup) else self._page_list[self._currentPageIndex]
+        return self._page_list[self._currentPageIndex].current_page if isinstance(self._page_list[self._currentPageIndex], Section) else self._page_list[self._currentPageIndex]
 
     @property
     def current_title(self):
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) and self._page_list[self._currentPageIndex].current_title is not None:
+        if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].current_title is not None:
             return self._page_list[self._currentPageIndex].current_title
 
         if isinstance(self._page_list[self._currentPageIndex], Page) and self._page_list[self._currentPageIndex].title is not None:
@@ -59,7 +59,7 @@ class PageGroup(PageCore):
 
     @property
     def current_subtitle(self):
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) and self._page_list[self._currentPageIndex].current_subtitle is not None:
+        if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].current_subtitle is not None:
             return self._page_list[self._currentPageIndex].current_subtitle
 
         if isinstance(self._page_list[self._currentPageIndex], Page) and self._page_list[self._currentPageIndex].subtitle is not None:
@@ -69,7 +69,7 @@ class PageGroup(PageCore):
 
     @property
     def current_status_text(self):
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) and self._page_list[self._currentPageIndex].current_status_text is not None:
+        if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].current_status_text is not None:
             return self._page_list[self._currentPageIndex].current_status_text
 
         if isinstance(self._page_list[self._currentPageIndex], Page) and self._page_list[self._currentPageIndex].statustext is not None:
@@ -80,22 +80,22 @@ class PageGroup(PageCore):
     @PageCore.should_be_shown.getter
     def should_be_shown(self):
         '''return true wenn should_be_shown nicht auf False gesetzt wurde und mindestens eine Frage angezeigt werden will'''
-        return super(PageGroup, self).should_be_shown and reduce(lambda b, q_core: b or q_core.should_be_shown, self._page_list, False)
+        return super(Section, self).should_be_shown and reduce(lambda b, q_core: b or q_core.should_be_shown, self._page_list, False)
 
     def allow_leaving(self, direction):
         return self._page_list[self._currentPageIndex].allow_leaving(direction)
 
     def enter(self):
-        logger.debug(u"Entering PageGroup %s" % self.tag, self._experiment)
-        if isinstance(self._core_page_at_index, PageGroup):
+        logger.debug(u"Entering Section %s" % self.tag, self._experiment)
+        if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.enter()
 
     def leave(self, direction):
         assert(self.allow_leaving(direction))
-        if isinstance(self._core_page_at_index, PageGroup):
+        if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(direction)
 
-        logger.debug(u"Leaving PageGroup %s in direction %s" % (self.tag, Direction.to_str(direction)), self._experiment)
+        logger.debug(u"Leaving Section %s in direction %s" % (self.tag, Direction.to_str(direction)), self._experiment)
 
     @property
     def jumplist(self):
@@ -106,7 +106,7 @@ class PageGroup(PageCore):
             jumplist = [([], self.jumptext, self)]
 
         for i in range(0, len(self._page_list)):
-            if isinstance(self._page_list[i], PageGroup):
+            if isinstance(self._page_list[i], Section):
                 for jump_item in self._page_list[i].jumplist:
                     assert len(jump_item) == 3
                     jump_item[0].reverse()
@@ -124,7 +124,7 @@ class PageGroup(PageCore):
 
         if deep:
             for item in self._page_list:
-                if isinstance(item, PageGroup):
+                if isinstance(item, Section):
                     item.randomize(True)
 
     def added_to_experiment(self, exp):
@@ -154,19 +154,19 @@ class PageGroup(PageCore):
             if self._page_list[i].tag is None:
                 self._page_list[i].tag = str(i + 1)
 
-            if isinstance(self._page_list[i], PageGroup):
+            if isinstance(self._page_list[i], Section):
                 self._page_list[i].generate_unset_tags_in_subtree()
 
     @property
     def can_move_backward(self):
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) and self._page_list[self._currentPageIndex].can_move_backward:
+        if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].can_move_backward:
             return True
 
         return reduce(lambda b, q_core: b or q_core.should_be_shown, self._page_list[:self._currentPageIndex], False)
 
     @property
     def can_move_forward(self):
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) and self._page_list[self._currentPageIndex].can_move_forward:
+        if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].can_move_forward:
             return True
 
         return reduce(lambda b, q_core: b or q_core.should_be_shown, self._page_list[self._currentPageIndex + 1:], False)
@@ -176,18 +176,18 @@ class PageGroup(PageCore):
         if not (self.can_move_forward and self.allow_leaving(Direction.FORWARD)):
             raise MoveError()
 
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) \
+        if isinstance(self._page_list[self._currentPageIndex], Section) \
                 and self._page_list[self._currentPageIndex].can_move_forward:
             self._page_list[self._currentPageIndex].move_forward()
 
         else:
             # if current_page is QG: call leave
-            if isinstance(self._core_page_at_index, PageGroup):
+            if isinstance(self._core_page_at_index, Section):
                 self._core_page_at_index.leave(Direction.FORWARD)
             for index in range(self._currentPageIndex + 1, len(self._page_list)):
                 if self._page_list[index].should_be_shown:
                     self._currentPageIndex = index
-                    if isinstance(self._page_list[index], PageGroup):
+                    if isinstance(self._page_list[index], Section):
                         self._page_list[index].move_to_first()
                         self._core_page_at_index.enter()
                     break
@@ -196,18 +196,18 @@ class PageGroup(PageCore):
         if not (self.can_move_backward and self.allow_leaving(Direction.BACKWARD)):
             raise MoveError()
 
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup) \
+        if isinstance(self._page_list[self._currentPageIndex], Section) \
                 and self._page_list[self._currentPageIndex].can_move_backward:
             self._page_list[self._currentPageIndex].move_backward()
 
         else:
             # if current_page is QG: call leave
-            if isinstance(self._core_page_at_index, PageGroup):
+            if isinstance(self._core_page_at_index, Section):
                 self._core_page_at_index.leave(Direction.BACKWARD)
             for index in range(self._currentPageIndex - 1, -1, -1):
                 if self._page_list[index].should_be_shown:
                     self._currentPageIndex = index
-                    if isinstance(self._page_list[index], PageGroup):
+                    if isinstance(self._page_list[index], Section):
                         self._page_list[index].move_to_last()
                         self._core_page_at_index.enter()
                     break
@@ -216,11 +216,11 @@ class PageGroup(PageCore):
         logger.debug(u"QG %s: move to first" % self.tag, self._experiment)
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
-        if isinstance(self._core_page_at_index, PageGroup):
+        if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(Direction.JUMP)
         self._currentPageIndex = 0
         if self._page_list[0].should_be_shown:
-            if isinstance(self._page_list[0], PageGroup):
+            if isinstance(self._page_list[0], Section):
                 self._core_page_at_index.enter()
                 self._page_list[0].move_to_first()
         else:
@@ -230,11 +230,11 @@ class PageGroup(PageCore):
         logger.debug(u"QG %s: move to last" % self.tag, self._experiment)
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
-        if isinstance(self._core_page_at_index, PageGroup):
+        if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(Direction.JUMP)
         self._currentPageIndex = len(self._page_list) - 1
         if self._page_list[self._currentPageIndex].should_be_shown:
-            if isinstance(self._page_list[self._currentPageIndex], PageGroup):
+            if isinstance(self._page_list[self._currentPageIndex], Section):
                 self._core_page_at_index.enter()
                 self._page_list[0].move_to_last()
         else:
@@ -256,11 +256,11 @@ class PageGroup(PageCore):
         if isinstance(self._page_list[pos_list[0]], Page) and 1 < len(pos_list):
             raise MoveError("pos_list spezifiziert genauer als moeglich.")
 
-        if isinstance(self._core_page_at_index, PageGroup):
+        if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(Direction.JUMP)
 
         self._currentPageIndex = pos_list[0]
-        if isinstance(self._page_list[self._currentPageIndex], PageGroup):
+        if isinstance(self._page_list[self._currentPageIndex], Section):
             self._core_page_at_index.enter()
             if len(pos_list) == 1:
                 self._page_list[self._currentPageIndex].move_to_first()
@@ -272,7 +272,7 @@ class PageGroup(PageCore):
         return self._page_list[self._currentPageIndex]
 
 
-class HeadOpenSection(PageGroup):
+class HeadOpenSection(Section):
     def __init__(self, **kwargs):
         super(HeadOpenSection, self).__init__(**kwargs)
         self._maxPageIndex = 0
@@ -302,7 +302,7 @@ class HeadOpenSection(PageGroup):
         # wenn die aktuelle Fragengruppe oder Frage nicht geschlossen werden
         # kann, return true. Dann kann die HeadOpenSection darauf reagieren und die
         # Frage nochmal mit den corrective Hints anzeigen.
-        if isinstance(self._core_page_at_index, PageGroup) and \
+        if isinstance(self._core_page_at_index, Section) and \
                 not self._core_page_at_index.can_move_forward and \
                 not HeadOpenSection._allow_closing_all_child_pages(self._core_page_at_index):
             return True
@@ -334,7 +334,7 @@ class HeadOpenSection(PageGroup):
             if isinstance(self._core_page_at_index, Page):
                 self._core_page_at_index.close_page()
 
-            elif not self._core_page_at_index.can_move_forward:  # self._core_page_at_index is instance of PageGroup and at the last item
+            elif not self._core_page_at_index.can_move_forward:  # self._core_page_at_index is instance of Section and at the last item
                 if not HeadOpenSection._allow_closing_all_child_pages(self._core_page_at_index):
                     # TODO handle if not all pages are closable.
                     self._core_page_at_index.append_item(HeadOpenSectionCantClose())
@@ -349,7 +349,7 @@ class HeadOpenSection(PageGroup):
         self._currentPageIndex = self._maxPageIndex
 
         if self._page_list[self._currentPageIndex].should_be_shown:
-            if isinstance(self._page_list[self._currentPageIndex], PageGroup):
+            if isinstance(self._page_list[self._currentPageIndex], Section):
                 self._page_list[self._currentPageIndex].move_to_last()
             return
         else:
@@ -368,7 +368,7 @@ class HeadOpenSection(PageGroup):
     def _allow_closing_all_child_pages(section, L=None):
         allow_closing = True
         for item in section._page_list:
-            if isinstance(item, PageGroup):
+            if isinstance(item, Section):
                 allow_closing = allow_closing and HeadOpenSection._allow_closing_all_child_pages(item, L)
             elif not item.allow_closing:  # item is instance of Page and does not allow closing
                 allow_closing = False
@@ -398,7 +398,7 @@ class HeadOpenSection(PageGroup):
 class SegmentedSection(HeadOpenSection):
     @property
     def can_move_backward(self):
-        if isinstance(self._core_page_at_index, PageGroup):
+        if isinstance(self._core_page_at_index, Section):
             return self._core_page_at_index.can_move_backward
         return False
 
