@@ -58,10 +58,10 @@ class Script(object):
         # Append to main section #
         # ----------------------------------------------- #
 
-        main.append_items(page01)
+        main.append_pages(page01)
 
         # Append Main Group to Experiment
-        exp.page_controller.append_item(main)
+        exp.page_controller.append_pages(main)
 
         return exp
 

@@ -178,9 +178,9 @@ class CoreCompositePage(Page):
             if not isinstance(elements, list):
                 raise TypeError
             for elmnt in elements:
-                self.add_element(elmnt)
+                self.append_elements(elmnt)
 
-    def add_element(self, element):
+    def append_single_element(self, element):
         if not isinstance(element, Element):
             raise TypeError
 
@@ -199,9 +199,9 @@ class CoreCompositePage(Page):
         self._element_list.append(element)
         element.added_to_page(self)
 
-    def add_elements(self, *elements):
+    def append_elements(self, *elements):
         for elmnt in elements:
-            self.add_element(elmnt)
+            self.append_single_element(elmnt)
 
     @property
     def allow_closing(self):
@@ -350,19 +350,19 @@ class DemographicPage(CompositePage):
         super(DemographicPage, self).__init__(**kwargs)
 
         if instruction:
-            self.add_element(element.TextElement(instruction))
-        self.add_element(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
+            self.append_elements(element.TextElement(instruction))
+        self.append_elements(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
         if age:
-            self.add_element(element.TextEntryElement(u"Dein Alter: ", name="age"))
+            self.append_elements(element.TextEntryElement(u"Dein Alter: ", name="age"))
 
         if sex:
-            self.add_element(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
+            self.append_elements(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
         if course_of_studies:
-            self.add_element(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
+            self.append_elements(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
 
         if semester:
-            self.add_element(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
+            self.append_elements(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
 class AutoHidePage(CompositePage):
@@ -396,7 +396,7 @@ class ExperimentFinishPage(CompositePage):
 
             exp_info_element = TextElement(exp_infos)
 
-            self.add_elements(exp_title, exp_info_element, ExperimenterMessages())
+            self.append_elements(exp_title, exp_info_element, ExperimenterMessages())
 
         super(ExperimentFinishPage, self).on_showing_widget()
 
@@ -405,7 +405,7 @@ class HeadOpenSectionCantClose(CompositePage):
     def __init__(self, **kwargs):
         super(HeadOpenSectionCantClose, self).__init__(**kwargs)
 
-        self.add_element(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
+        self.append_elements(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
 
 
 class MongoSaveCompositePage(CompositePage):

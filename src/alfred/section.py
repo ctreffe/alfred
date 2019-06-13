@@ -133,7 +133,7 @@ class Section(PageCore):
         for page in self._page_list:
             page.added_to_experiment(self._experiment)
 
-    def append_item(self, item):
+    def append_single_page(self, item):
         if not isinstance(item, PageCore):
             raise TypeError("page must be an instance of PageCore")
 
@@ -145,9 +145,9 @@ class Section(PageCore):
 
         self.generate_unset_tags_in_subtree()
 
-    def append_items(self, *items):
+    def append_pages(self, *items):
         for item in items:
-            self.append_item(item)
+            self.append_single_page(item)
 
     def generate_unset_tags_in_subtree(self):
         for i in range(0, len(self._page_list)):
@@ -337,7 +337,7 @@ class HeadOpenSection(Section):
             elif not self._core_page_at_index.can_move_forward:  # self._core_page_at_index is instance of Section and at the last item
                 if not HeadOpenSection._allow_closing_all_child_pages(self._core_page_at_index):
                     # TODO handle if not all pages are closable.
-                    self._core_page_at_index.append_item(HeadOpenSectionCantClose())
+                    self._core_page_at_index.append_pages(HeadOpenSectionCantClose())
 
                 else:  # all child page at current index allow closing
                     HeadOpenSection._close_child_pages(self._core_page_at_index)
