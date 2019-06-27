@@ -12,12 +12,14 @@ import time
 
 from ._core import PageCore
 from .exceptions import AlfredError
-from . import element
+from . import element, alfredlog
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
 import alfred.settings as settings
 
 from future.utils import with_metaclass
 from functools import reduce
+
+logger = alfredlog.getLogger(__name__)
 
 
 class Page(PageCore):
@@ -184,7 +186,7 @@ class CoreCompositePage(Page):
         if not isinstance(element, Element):
             raise TypeError
 
-        print("add_element() is deprecated. Use append() instead.")
+        logger.warning("add_element() is deprecated. Use append() instead.")
 
         exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
@@ -202,7 +204,7 @@ class CoreCompositePage(Page):
         element.added_to_page(self)
 
     def add_elements(self, *elements):
-        print("add_elements() is deprecated. Use append() instead.")
+        logger.warning("add_elements() is deprecated. Use append() instead.")
         for elmnt in elements:
             self.add_element(elmnt)
 

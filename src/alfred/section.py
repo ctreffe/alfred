@@ -134,7 +134,7 @@ class Section(PageCore):
             page.added_to_experiment(self._experiment)
 
     def append_item(self, item):
-        print("append_item() is deprecated. Use append() instead.")
+        logger.warning("append_item() is deprecated. Use append() instead.")
 
         if not isinstance(item, PageCore):
             raise TypeError("page must be an instance of PageCore")
@@ -148,7 +148,7 @@ class Section(PageCore):
         self.generate_unset_tags_in_subtree()
 
     def append_items(self, *items):
-        print("append_items() is deprecated. Use append() instead.")
+        logger.warning("append_items() is deprecated. Use append() instead.")
 
         for item in items:
             self.append_item(item)
