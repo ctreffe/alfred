@@ -178,11 +178,13 @@ class CoreCompositePage(Page):
             if not isinstance(elements, list):
                 raise TypeError
             for elmnt in elements:
-                self.add_element(elmnt)
+                self.append(elmnt)
 
     def add_element(self, element):
         if not isinstance(element, Element):
             raise TypeError
+
+        raise DeprecationWarning("add_element() is deprecated. Use append() instead.")
 
         exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
@@ -200,8 +202,29 @@ class CoreCompositePage(Page):
         element.added_to_page(self)
 
     def add_elements(self, *elements):
+        raise DeprecationWarning("add_elements() is deprecated. Use append() instead.")
         for elmnt in elements:
             self.add_element(elmnt)
+
+    def append(self, *elements):
+        for elmnt in elements:
+            if not isinstance(element, Element):
+                raise TypeError
+
+            exp_type = settings.experiment.type  # 'web' or 'qt-wk'
+
+            if exp_type == 'web' and not isinstance(element, WebElementInterface):
+                raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
+
+            if isinstance(self, WebPageInterface) and not isinstance(element, WebElementInterface):
+                raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
+
+            if element.name is None:
+                element.name = ("%02d" % self._element_name_counter) + '_' + element.__class__.__name__
+                self._element_name_counter = self._element_name_counter + 1
+
+            self._element_list.append(element)
+            element.added_to_page(self)
 
     @property
     def allow_closing(self):
@@ -350,19 +373,19 @@ class DemographicPage(CompositePage):
         super(DemographicPage, self).__init__(**kwargs)
 
         if instruction:
-            self.add_element(element.TextElement(instruction))
-        self.add_element(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
+            self.append(element.TextElement(instruction))
+        self.append(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
         if age:
-            self.add_element(element.TextEntryElement(u"Dein Alter: ", name="age"))
+            self.append(element.TextEntryElement(u"Dein Alter: ", name="age"))
 
         if sex:
-            self.add_element(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
+            self.append(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
         if course_of_studies:
-            self.add_element(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
+            self.append(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
 
         if semester:
-            self.add_element(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
+            self.append(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
 
 
 class AutoHidePage(CompositePage):
@@ -396,7 +419,7 @@ class ExperimentFinishPage(CompositePage):
 
             exp_info_element = TextElement(exp_infos)
 
-            self.add_elements(exp_title, exp_info_element, ExperimenterMessages())
+            self.append(exp_title, exp_info_element, ExperimenterMessages())
 
         super(ExperimentFinishPage, self).on_showing_widget()
 
@@ -405,7 +428,7 @@ class HeadOpenSectionCantClose(CompositePage):
     def __init__(self, **kwargs):
         super(HeadOpenSectionCantClose, self).__init__(**kwargs)
 
-        self.add_element(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
+        self.append(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
 
 
 class MongoSaveCompositePage(CompositePage):
