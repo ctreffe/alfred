@@ -184,7 +184,7 @@ class CoreCompositePage(Page):
         if not isinstance(element, Element):
             raise TypeError
 
-        raise DeprecationWarning("add_element() is deprecated. Use append() instead.")
+        print("add_element() is deprecated. Use append() instead.")
 
         exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
@@ -202,12 +202,12 @@ class CoreCompositePage(Page):
         element.added_to_page(self)
 
     def add_elements(self, *elements):
-        raise DeprecationWarning("add_elements() is deprecated. Use append() instead.")
+        print("add_elements() is deprecated. Use append() instead.")
         for elmnt in elements:
             self.add_element(elmnt)
 
     def append(self, *elements):
-        for elmnt in elements:
+        for element in elements:
             if not isinstance(element, Element):
                 raise TypeError
 
