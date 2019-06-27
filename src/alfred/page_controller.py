@@ -29,9 +29,9 @@ class PageController(object):
         self._finishedSection = Section(tag='finishedSection', title='Experiment beendet')
 
         if self._experiment.type == 'qt':
-            self._finishedSection.append_item(CompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.')]))
+            self._finishedSection.append(CompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.')]))
         else:
-            self._finishedSection.append_item(WebCompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.'), WebExitEnabler()]))
+            self._finishedSection.append(WebCompositePage(elements=[TextElement(u'Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.'), WebExitEnabler()]))
 
         self._finishedSection.added_to_experiment(experiment)
 
@@ -45,8 +45,8 @@ class PageController(object):
         Achtung: Nur bei Items in der switch_list wird zwischen rootSection und finishedSection unterschieden.
         '''
         switch_list = ['current_page', 'current_title', 'current_subtitle', 'current_status_text', 'should_be_shown',
-                      'jumplist', 'can_move_backward', 'can_move_forward', 'move_backward', 'move_forward', 'move_to_first',
-                      'move_to_last', 'move_to_position']
+                       'jumplist', 'can_move_backward', 'can_move_forward', 'move_backward', 'move_forward', 'move_to_first',
+                       'move_to_last', 'move_to_position']
         try:
             if name in switch_list:
                 if self._finished:
@@ -69,7 +69,7 @@ class PageController(object):
             self._finishedPageAdded = True
             self._finishedSection = Section(tag='finishedSection')
             self._finishedSection.added_to_experiment(self._experiment)
-        self._finishedSection.append_item(item)
+        self._finishedSection.append(item)
 
     def added_to_experiment(self, exp):
         '''
