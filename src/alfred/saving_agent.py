@@ -5,26 +5,25 @@
 
 """
 from __future__ import absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 from abc import ABCMeta, abstractmethod
-
 
 import json
 import time
 import os
 import queue
 import threading
-
+import uuid
 import pymongo
-
 import alfred.settings
-from .exceptions import SavingAgentRunException, SavingAgentException
 
+from .exceptions import SavingAgentRunException, SavingAgentException
 from . import alfredlog
 from future.utils import with_metaclass
+
+
 _logger = alfredlog.getLogger(__name__)
 
 
@@ -32,7 +31,7 @@ def _save_worker():
     try:
         while True:
             try:
-                (i, data_time, level, event, data, sac) = _queue.get_nowait()
+                (i, data_time, level, snapshot_id, event, data, sac) = _queue.get_nowait()
             except queue.Empty:
                 break
             sac._do_saving(data, data_time, level)
@@ -280,7 +279,7 @@ class SavingAgentController(object):
         e = threading.Event()                           # initialise empty threading event
         data = self._experiment.data_manager.get_data()   # dictionary of the .json data file of current session
         data['save_time'] = time.time()                 # set data["save_time"] to current time
-        _queue.put((priority, time.time(), level, e, data, self))
+        _queue.put((priority, time.time(), level, str(uuid.uuid4()), e, data, self))
         if sync:
             e.wait()
 
