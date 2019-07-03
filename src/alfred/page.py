@@ -183,50 +183,33 @@ class CoreCompositePage(Page):
                 self.append(elmnt)
 
     def add_element(self, element):
-        if not isinstance(element, Element):
-            raise TypeError
-
         logger.warning("add_element() is deprecated. Use append() instead.")
-
-        exp_type = settings.experiment.type  # 'web' or 'qt-wk'
-
-        if exp_type == 'web' and not isinstance(element, WebElementInterface):
-            raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
-
-        if isinstance(self, WebPageInterface) and not isinstance(element, WebElementInterface):
-            raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
-
-        if element.name is None:
-            element.name = ("%02d" % self._element_name_counter) + '_' + element.__class__.__name__
-            self._element_name_counter = self._element_name_counter + 1
-
-        self._element_list.append(element)
-        element.added_to_page(self)
+        self.append(element)
 
     def add_elements(self, *elements):
         logger.warning("add_elements() is deprecated. Use append() instead.")
         for elmnt in elements:
-            self.add_element(elmnt)
+            self.append(elmnt)
 
     def append(self, *elements):
-        for element in elements:
-            if not isinstance(element, Element):
+        for elmnt in elements:
+            if not isinstance(elmnt, Element):
                 raise TypeError
 
             exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
-            if exp_type == 'web' and not isinstance(element, WebElementInterface):
-                raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
+            if exp_type == 'web' and not isinstance(elmnt, WebElementInterface):
+                raise TypeError("%s is not an instance of WebElementInterface" % type(elmnt).__name__)
 
-            if isinstance(self, WebPageInterface) and not isinstance(element, WebElementInterface):
-                raise TypeError("%s is not an instance of WebElementInterface" % type(element).__name__)
+            if isinstance(self, WebPageInterface) and not isinstance(elmnt, WebElementInterface):
+                raise TypeError("%s is not an instance of WebElementInterface" % type(elmnt).__name__)
 
-            if element.name is None:
-                element.name = ("%02d" % self._element_name_counter) + '_' + element.__class__.__name__
+            if elmnt.name is None:
+                elmnt.name = ("%02d" % self._element_name_counter) + '_' + elmnt.__class__.__name__
                 self._element_name_counter = self._element_name_counter + 1
 
-            self._element_list.append(element)
-            element.added_to_page(self)
+            self._element_list.append(elmnt)
+            elmnt.added_to_page(self)
 
     @property
     def allow_closing(self):
