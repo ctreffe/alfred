@@ -166,8 +166,8 @@ class WebUserInterfaceController(UserInterfaceController):
 
         return html
 
-    def render_html(self):
-        return self.render()
+    def render_html(self, page_token):
+        return self.render(page_token)
 
     def get_dynamic_file(self, identifier):
         file_obj, content_type = self._dynamic_files_dict[identifier]
@@ -275,9 +275,9 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
     def _get_layout(self):
         return self._layout
 
-    def render_html(self):
+    def render_html(self, page_token):
 
-        return super(QtWebKitUserInterfaceController, self).render()
+        return super(QtWebKitUserInterfaceController, self).render(page_token)
 
     def render(self):
         self._helper.render()

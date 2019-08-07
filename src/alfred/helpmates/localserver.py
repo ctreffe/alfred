@@ -85,11 +85,19 @@ def experiment():
     elif request.method == "GET":
         page_token = str(uuid4())
 
-        token_list = session['page_tokens']
+        # this block extracts the list "page_tokens", if it exists in the session
+        # it creates the list "page_tokens" as an empty list, if not. This is needed
+        # for qt-wk experiments because they don't call the route /start
+        try:
+            token_list = session['page_tokens']
+        except KeyError:
+            token_list = []
+
         token_list.append(page_token)
         session['page_tokens'] = token_list
 
-        resp = make_response(script.experiment.user_interface_controller.render(page_token))
+        html = script.experiment.user_interface_controller.render_html(page_token)
+        resp = make_response(html)
         resp.cache_control.no_cache = True
         return resp
 
