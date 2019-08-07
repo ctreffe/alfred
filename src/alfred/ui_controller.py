@@ -250,8 +250,8 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         # initialize qt
         self._app = QApplication([])
         self._qt_window = QMainWindow()
-        self._qt_window.set_minimum_height(720)
-        self._qt_window.set_minimum_width(1024)
+        self._qt_window.setMinimumHeight(720)
+        self._qt_window.setMinimumWidth(1024)
         widget = QWidget()
         layout = QVBoxLayout()
         widget.set_layout(layout)
