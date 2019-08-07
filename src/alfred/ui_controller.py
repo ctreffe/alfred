@@ -254,15 +254,15 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         self._qt_window.setMinimumWidth(1024)
         widget = QWidget()
         layout = QVBoxLayout()
-        widget.set_layout(layout)
+        widget.setLayout(layout)
         self._web_view = QWebView()
         # self._qt_main_scroll_area = QScrollArea()
         # self._qt_main_scroll_area.set_widget_resizeable(True)  # Must be set to True in order for layout to work properly
         # self._qt_main_scroll_area.set_style_sheet("QScrollArea {background: white; border: none}")
 
-        layout.add_widget(self._web_view)
+        layout.addWidget(self._web_view)
 
-        self._qt_window.set_central_widget(widget)
+        self._qt_window.setCentralWidget(widget)
 
         self._current_main_widget = None
         # self._qtlayout = None
@@ -314,7 +314,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
         t.start()
         import time
         time.sleep(2)  # TODO: What is this?
-        self._web_view.set_url("http://127.0.0.1:5000/experiment")
+        self._web_view.setUrl("http://127.0.0.1:5000/experiment")
 
         if self._fullscreen:
             self._qt_window.show_full_screen()
