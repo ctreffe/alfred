@@ -116,3 +116,7 @@ margin: 0; }
 .table th, .table td {
     border-top: none;
 }
+
+.hidden{
+	display:none;
+}

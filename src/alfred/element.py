@@ -41,6 +41,7 @@ import re
 import string
 import random
 import json
+from uuid import uuid4
 from abc import ABCMeta, abstractproperty
 import os
 import jinja2
@@ -337,6 +338,90 @@ class TextElement(Element, WebElementInterface):
         widget = '<div class="text-element"><p class="%s" style="font-size: %spt; %s %s">%s</p></div>' % (alignment_converter(self._alignment, 'both'), fontsize_converter(self._font_size), 'width: %spx;' % self._text_width if self._text_width is not None else "", 'height: %spx;' % self._text_height if self._text_height is not None else "", self._text)
 
         return widget
+
+
+class CodeElement(Element, WebElementInterface):
+    def __init__(self, text=None, lang=None, style="atom-one-light", first=True, toggle_button=True, button_label="Show / Hide Code", hide_by_default=True, **kwargs):
+        '''
+        **TextElement** allows display of simple text labels.
+
+        :param str text: Text to be displayed.
+        :param str/int font_size: Fontsize used in CodeElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
+        :param str lang: Programming language that is used in text.
+        :param str style: Highlighting style to use. Styles can be found at https://highlightjs.org/static/demo/
+        :param bool first: Indicates, whether the current CodeElement is the first CodeElement on the current page. If False, the highlight.js components are not imported again by the element.
+        :param bool toggle_button: If True, a button is included that allows users to toggle the display of the code block.
+        :param str button_label: Text to be shown on the toggle button.
+        :param bool hide_by_default: If True, the default state of the code block is hidden. Only works, if toggle_button is True.
+        '''
+        super(CodeElement, self).__init__(**kwargs)
+
+        self._text = text
+        self._lang = lang
+        self._style = style
+        self._first = first
+        self._id = str(uuid4())
+        self._toggle_button = toggle_button
+        self._button_label = button_label
+        if hide_by_default and toggle_button:
+            self._div_class = "hidden"
+        else:
+            self._div_class = ""
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    def text(self, text):
+        self._text = text
+        if self._text_label:
+            self._text_label.set_text(self._text)
+            self._text_label.repaint()
+
+    @property
+    def web_widget(self):
+        if self._toggle_button:
+            button = '<a class="btn" id="button-{id}" href="#">{button_label}</a>'.format(id=self._id, button_label=self._button_label)
+        else:
+            button = ''
+
+        widget = button + '<div id={id} class="{div_class}"><pre><code class="{lang}" style="font-size:{fontsize}">{text}</code></pre></div>'.format(id=self._id, div_class=self._div_class, lang=self._lang, text=self._text, fontsize=fontsize_converter(self._font_size))
+
+        return widget
+
+    @property
+    def css_urls(self):
+
+        if self._first:
+            css = '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.9/styles/{style}.min.css'.format(style=self._style)
+            return [(10, css)]
+        else:
+            return []
+
+    @property
+    def js_urls(self):
+
+        if self._first:
+            js = '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.9/highlight.min.js'
+            return [(10, js)]
+        else:
+            return []
+
+    @property
+    def js_code(self):
+
+        if self._toggle_button:
+            button_js = '$(function() {{$( "#button-{id}" ).click(function() {{$( "#{id}" ).toggle();}});}});'.format(id=self._id)
+        else:
+            button_js = ''
+
+        if self._first:
+            js = 'hljs.initHighlightingOnLoad();'
+            return [(11, js), (12, button_js)]
+        else:
+
+            return [(11, button_js)]
 
 
 class DataElement(Element, WebElementInterface):

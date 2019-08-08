@@ -67,4 +67,14 @@ def alignment_converter(alignment_argument, type='text'):
         elif alignment_argument == 'right':
             alignment_argument = 'pagination-right containerpagination-right'
 
+    elif type == 'div':
+        if alignment_argument == 'left':
+            alignment_argument = 'text-align:left'
+
+        elif alignment_argument == 'center':
+            alignment_argument = 'text-align:center'
+
+        elif alignment_argument == 'right':
+            alignment_argument = 'text-align:right'
+
     return alignment_argument
