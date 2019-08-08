@@ -1,5 +1,6 @@
 import alfred.settings as settings
 import socket
+import webbrowser
 
 
 def socket_checker(port):
@@ -26,6 +27,7 @@ elif settings.experiment.type == 'web':
     port = 5000
     while not socket_checker(port):
         port += 1
+    webbrowser.open('http://127.0.0.1:{port}/start'.format(port=port), new=2)
     sys.stderr.writelines([" * Start local experiment using http://127.0.0.1:%d/start\n" % port])
     ls.app.run(port=port, threaded=True)
 else:
