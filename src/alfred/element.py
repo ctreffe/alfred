@@ -343,7 +343,7 @@ class TextElement(Element, WebElementInterface):
 class CodeElement(Element, WebElementInterface):
     def __init__(self, text=None, lang="nohighlight", style="atom-one-light", first=True, toggle_button=True, button_label="Show / Hide Code", hide_by_default=True, **kwargs):
         '''
-        **TextElement** allows display of simple text labels.
+        **CodeElement** allows display of highlighted code blocks.
 
         :param str text: Text to be displayed.
         :param str/int font_size: Fontsize used in CodeElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
