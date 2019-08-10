@@ -341,13 +341,13 @@ class TextElement(Element, WebElementInterface):
 
 
 class CodeElement(Element, WebElementInterface):
-    def __init__(self, text=None, lang=None, style="atom-one-light", first=True, toggle_button=True, button_label="Show / Hide Code", hide_by_default=True, **kwargs):
+    def __init__(self, text=None, lang="nohighlight", style="atom-one-light", first=True, toggle_button=True, button_label="Show / Hide Code", hide_by_default=True, **kwargs):
         '''
         **TextElement** allows display of simple text labels.
 
         :param str text: Text to be displayed.
         :param str/int font_size: Fontsize used in CodeElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param str lang: Programming language that is used in text.
+        :param str lang: Programming language that is used in text. The default uses no highlighing.
         :param str style: Highlighting style to use. Styles can be found at https://highlightjs.org/static/demo/
         :param bool first: Indicates, whether the current CodeElement is the first CodeElement on the current page. If False, the highlight.js components are not imported again by the element.
         :param bool toggle_button: If True, a button is included that allows users to toggle the display of the code block.
