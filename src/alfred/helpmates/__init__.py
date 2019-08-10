@@ -9,11 +9,13 @@ from __future__ import print_function
 
 from future import standard_library
 standard_library.install_aliases()
-from os.path import abspath, isabs, join
+from os.path import abspath, isabs, join, isfile
 import xmltodict
 import csv
 from alfred.exceptions import AlfredError
 import alfred.settings as settings
+from alfred import alfredlog
+logger = alfredlog.getLogger(__name__)
 
 
 def parse_xml_to_dict(path, interface='web'):
@@ -35,8 +37,19 @@ def parse_xml_to_dict(path, interface='web'):
     ]]>
     '''
 
-    if not isabs(path):
-        path = join(settings.general.external_files_dir, path)
+    # if there is no file to be found under the given path, the function
+    # tries to look for the file in the "external files directory".
+    # This used to be default behavior.
+    # The new implementation allows for smoother handling of multiple
+    # directories and should be backwards-compatible in most cases.
+    # If issues are suspectetd, a warning is logged.
+    path2 = join(settings.general.external_files_dir, path)
+    if isfile(path) and isfile(path2):
+        logger.warning("parse_xml_to_dict: There is a file {p1}, but there is also a file {p2} in the external files directory. Previous versions of Alfred would have used {p2} by default, now {p1} is used. Please make sure that you are importing the correct file.".format(p1=path, p2=path2))
+
+    if not isfile(path):
+        path = path2
+        logger.warning("parse_xml_to_dict: Found no file under {p1}. Searching under {p2} now.".format(p1=path, p2=path2))
 
     def rec(input, replacement='<br>'):
         if isinstance(input, str):
