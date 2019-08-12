@@ -23,7 +23,7 @@ from alfred import alfredlog
 logger = alfredlog.getLogger(__name__)
 
 
-def parse_xml_to_dict(path, interface='web'):
+def parse_xml_to_dict(path, interface='web', code=False):
     '''
     parse_xml_to_dict ermöglicht das Einlesen von XML in Dictionaries.
 
@@ -73,9 +73,9 @@ def parse_xml_to_dict(path, interface='web'):
     data_in = open(path, 'r').read()
     data_in.replace('\r\n', '\n')
     data_out = xmltodict.parse(data_in)
-    if interface == 'web':
+    if interface == 'web' and not code:
         rec(data_out, '<br>')
-    elif interface == 'qt':
+    elif interface == 'qt' and not code:
         rec(data_out, '\n')
     else:
         raise ValueError('interface must be either "qt" or "web".')
