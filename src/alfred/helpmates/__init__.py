@@ -49,7 +49,7 @@ def parse_xml_to_dict(path, interface='web', code=False):
     # directories and should be backwards-compatible in most cases.
     # If issues are suspectetd, a warning is logged.
     path2 = join(settings.general.external_files_dir, path)
-    if isfile(path) and isfile(path2):
+    if isfile(path) and isfile(path2) and not path == path2:
         logger.warning("parse_xml_to_dict: There is a file {p1}, but there is also a file {p2} in the external files directory. Previous versions of Alfred would have used {p2} by default, now {p1} is used. Please make sure that you are importing the correct file.".format(p1=path, p2=path2))
 
     if not isfile(path):
@@ -77,6 +77,8 @@ def parse_xml_to_dict(path, interface='web', code=False):
         rec(data_out, '<br>')
     elif interface == 'qt' and not code:
         rec(data_out, '\n')
+    elif (interface == 'web' or interface == 'qt') and code:
+        continue
     else:
         raise ValueError('interface must be either "qt" or "web".')
     for k in list(data_out['instr'].keys()):
