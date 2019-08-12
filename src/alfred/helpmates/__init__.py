@@ -9,12 +9,17 @@ from __future__ import print_function
 
 from future import standard_library
 standard_library.install_aliases()
-from os.path import abspath, isabs, join, isfile
+
 import xmltodict
 import csv
-from alfred.exceptions import AlfredError
+import re
 import alfred.settings as settings
+
+from os.path import abspath, isabs, join, isfile
+from alfred.exceptions import AlfredError
 from alfred import alfredlog
+
+
 logger = alfredlog.getLogger(__name__)
 
 
@@ -142,3 +147,51 @@ def abs_external_file_path(filename):
     path = join(settings.general.external_files_dir, filename)
     path = abspath(path)
     return path
+
+
+# These functions import external .html, .css and .js files
+# .decode('utf-8') is needed to display special characters such as €, ä, etc.
+# .replace("\n", "") is used to collapse the file to a single line, so that we can easily use it elsewhere in alfred
+# re.sub() is used to remove comments from the code, because they would cause problems in the single line objects
+
+# ------------------------------------------------------------------- #
+# --- FUNCTION FOR READING IN HTML FILES --- #
+# ------------------------------------------------------------------- #
+
+
+def read_html(file):
+
+    with open(file, "r") as f:
+        data = f.read().decode('utf-8')
+        no_comments = re.sub(r"<--(.|\n)*-->", "", data)  # remove comments
+        out = no_comments.replace("\n", "")  # collapse to one line
+
+    return out
+
+# ------------------------------------------------------------------- #
+# --- FUNCTION FOR READING IN CSS FILES --- #
+# ------------------------------------------------------------------- #
+
+
+def read_css(file):
+
+    with open(file, "r") as f:
+        data = f.read().decode('utf-8')
+        no_comments = re.sub(r"/\*(.|\n)*\*/", "", data)  # remove comments
+        out = no_comments.replace("\n", "")  # collapse to one line
+
+    return out
+
+# ------------------------------------------------------------------- #
+# --- FUNCTION FOR READING IN JAVASCRIPT FILES --- #
+# ------------------------------------------------------------------- #
+
+
+def read_js(file):
+
+    with open(file, "r") as f:
+        data = f.read().decode('utf-8')
+        no_comments = re.sub(r"(//.*)|(/\*(.|\n)*\*/)", "", data)  # remove comments
+        out = no_comments.replace("\n", "")  # collapse to one line
+
+    return out
