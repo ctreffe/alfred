@@ -78,7 +78,7 @@ def parse_xml_to_dict(path, interface='web', code=False):
     elif interface == 'qt' and not code:
         rec(data_out, '\n')
     elif (interface == 'web' or interface == 'qt') and code:
-        continue
+        pass
     else:
         raise ValueError('interface must be either "qt" or "web".')
     for k in list(data_out['instr'].keys()):
