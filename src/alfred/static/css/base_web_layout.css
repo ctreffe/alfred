@@ -56,9 +56,9 @@
 	margin-bottom: 0px;
 }
 
-#pre {
-	overflow-x: scroll;
-	width:720px;
+pre {
+	overflow-x: auto;
+	width: 720px;
 }
 
 .with-margin {
