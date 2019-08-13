@@ -56,11 +56,6 @@
 	margin-bottom: 0px;
 }
 
-pre {
-	overflow-x: auto;
-	width: 720px;
-}
-
 .with-margin {
 	margin-left: 0px;
 }
@@ -109,6 +104,11 @@ height: 1px;
 
 body {
 	position: relative;
+}
+
+pre {
+	overflow-x: scroll;
+	width: 900px;
 }
 
 /* Deactivates spinner elements in NumberEntryElement because feature is html5 and not supported in current webkit version */
