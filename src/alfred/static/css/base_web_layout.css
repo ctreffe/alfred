@@ -106,10 +106,6 @@ body {
 	position: relative;
 }
 
-pre {
-	overflow-x: scroll;
-	width: 900px;
-}
 
 /* Deactivates spinner elements in NumberEntryElement because feature is html5 and not supported in current webkit version */
 /* TODO: Delete this entey when new webkit supports spin elements in number input field */

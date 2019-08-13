@@ -386,7 +386,10 @@ class CodeElement(Element, WebElementInterface):
         else:
             button = ''
 
-        widget = button + '<div id={id} class="{div_class}"><pre><code class="{lang}" style="font-size:{fontsize}">{text}</code></pre></div>'.format(id=self._id, div_class=self._div_class, lang=self._lang, text=self._text, fontsize=fontsize_converter(self._font_size))
+        widget = button + '<div id={id} class="{div_class}"><pre><code style="white-space: pre;" class="{lang}"\
+         style="font-size:{fontsize}">{text}</code></pre></div>'.format(id=self._id, div_class=self._div_class,
+                                                                        lang=self._lang, text=self._text,
+                                                                        fontsize=fontsize_converter(self._font_size))
 
         return widget
 
