@@ -56,6 +56,11 @@
 	margin-bottom: 0px;
 }
 
+#pre {
+	overflow: scroll;
+	width:720px;
+}
+
 .with-margin {
 	margin-left: 0px;
 }
