@@ -56,6 +56,10 @@ class PageCore(object):
         if statustext is not None:
             self.statustext = statustext
 
+    def get_data(self, page_uid=None):
+        data = self._experiment.data_manager.find_experiment_data_by_uid(page_uid)
+        return data
+
     @property
     def tag(self):
         return self._tag
