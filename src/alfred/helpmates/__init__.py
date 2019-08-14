@@ -14,6 +14,7 @@ import xmltodict
 import csv
 import re
 import alfred.settings as settings
+import socket
 
 from os.path import abspath, isabs, join, isfile
 from alfred.exceptions import AlfredError
@@ -149,6 +150,18 @@ def abs_external_file_path(filename):
     path = join(settings.general.external_files_dir, filename)
     path = abspath(path)
     return path
+
+
+def socket_checker(port):
+    try:
+        s = socket.socket()
+        s.bind(('127.0.0.1', port))
+        s.listen(1)
+        s.close()
+        return(True)
+    except Exception:
+        s.close()
+        return(False)
 
 
 # These functions import external .html, .css and .js files

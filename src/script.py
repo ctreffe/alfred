@@ -10,7 +10,7 @@ from alfred.section import SegmentedSection
 # from alfred.layout import *
 # from alfred.helpmates import *
 
-from alfred import Experiment
+from alfred import Experiment, run
 
 #################################################
 # - Section 2: Global variables and functions - #
@@ -25,7 +25,7 @@ from alfred import Experiment
 ########################################
 
 
-def generate_experiment():
+def generate_experiment(self):
     exp = Experiment()
 
     # --- Page 1 --- #
@@ -39,3 +39,6 @@ def generate_experiment():
     exp.page_controller.append(main)
 
     return exp
+
+
+run(generate_experiment)

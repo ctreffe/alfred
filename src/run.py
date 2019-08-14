@@ -1,19 +1,6 @@
 import alfred.settings as settings
-import socket
 import webbrowser
-
-
-def socket_checker(port):
-    try:
-        s = socket.socket()
-        s.bind(('127.0.0.1', port))
-        s.listen(1)
-        s.close()
-        return(True)
-    except Exception:
-        s.close()
-        return(False)
-
+from alfred.helpmates import socket_checker
 
 if settings.experiment.type == 'qt-wk':
     import script
