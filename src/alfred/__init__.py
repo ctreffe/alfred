@@ -83,28 +83,21 @@ class Experiment(object):
         '''
 
         # get experiment metadata
-        if not settings.experiment.mortimer:
-            # the if-else clauses ensure backwards compatibility, if users defined the metadata in script.py
-            self._author_mail = exp_author_mail if exp_author_mail else settings.experiment.author_mail
-            self._name = exp_name if exp_name else settings.experiment.title
-            self._version = exp_version if exp_version else settings.experiment.version
-            self._type = exp_type if exp_type else settings.experiment.type
+        # the if-else clauses ensure backwards compatibility, if users defined the metadata in script.py
+        self._author_mail = exp_author_mail if exp_author_mail else settings.experiment.author_mail
+        self._name = exp_name if exp_name else settings.experiment.title
+        self._version = exp_version if exp_version else settings.experiment.version
+        self._type = exp_type if exp_type else settings.experiment.type
 
-            # raise errors if user defined metadata in script.py that doesn't match the data given in config.conf
-            if self._name != settings.experiment.title:
-                raise RuntimeError("Experiment titles must be equal in script and config file.")
-            if self._author_mail != settings.experiment.author_mail:
-                raise RuntimeError("Experiment authors must be equal in script and config file.")
-            if self._version != settings.experiment.version:
-                raise RuntimeError("Experiment versions must be equal in script and config file")
-            if self._type != settings.experiment.type:
-                raise RuntimeError("Experiment types must be equal in script and config file.")
-        else:
-            self._author_mail = None
-            self._name = None
-            self._version = None
-            self._type = None
-
+        # raise errors if user defined metadata in script.py that doesn't match the data given in config.conf
+        if self._name != settings.experiment.title:
+            raise RuntimeError("Experiment titles must be equal in script and config file.")
+        if self._author_mail != settings.experiment.author_mail:
+            raise RuntimeError("Experiment authors must be equal in script and config file.")
+        if self._version != settings.experiment.version:
+            raise RuntimeError("Experiment versions must be equal in script and config file")
+        if self._type != settings.experiment.type:
+            raise RuntimeError("Experiment types must be equal in script and config file.")
 
         #: Uid des Experiments
         self._uuid = uuid4().hex
@@ -160,6 +153,7 @@ class Experiment(object):
         logger.info("Experiment.start() called. Session is starting.", self)
         self._user_interface_controller.start()
 
+
     def finish(self):
         '''
         Beendet das Experiment. Ruft  :meth:`page_controller.PageController.change_to_finished_group` auf und setzt **self._finished** auf *True*.
@@ -174,12 +168,6 @@ class Experiment(object):
 
         # run saving_agent_controller
         self._saving_agent_controller.run_saving_agents(99)
-
-    def update(self, exp_name, exp_version, exp_author_mail, exp_type="web"):
-        self._name = exp_name
-        self._version = exp_version
-        self._type = exp_type
-        self._author_mail = exp_author_mail
 
     @property
     def author_mail(self):
