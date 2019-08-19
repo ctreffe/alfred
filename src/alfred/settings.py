@@ -121,7 +121,6 @@ experiment.author_mail = _config_parser.get('experiment', 'author_mail')
 experiment.version = _config_parser.get('experiment', 'version')
 experiment.type = _config_parser.get('experiment', 'type')
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
-experiment.mortimer = _config_parser.getboolean('experiment', 'mortimer')
 
 # check if metadata is given correctly
 if not experiment.title:
