@@ -166,6 +166,10 @@ class Experiment(object):
         # run saving_agent_controller
         self._saving_agent_controller.run_saving_agents(99)
 
+    def append(self, *items):
+        for item in items:
+            self.page_controller.append(item)
+
     @property
     def author_mail(self):
         '''

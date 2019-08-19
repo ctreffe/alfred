@@ -61,7 +61,7 @@ class Script(object):
         main.append_items(page01)
 
         # Append Main Group to Experiment
-        exp.page_controller.append_item(main)
+        exp.append(main)
 
         return exp
 
