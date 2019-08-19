@@ -1,5 +1,6 @@
 from builtins import map
 from builtins import object
+from builtins import callable as builtins_callable
 from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session
 import re
 from uuid import uuid4
@@ -16,6 +17,11 @@ class C(object):
     experiment = None
 
 
+class Generator(object):
+    def generate_experiment(self):
+        pass
+
+
 script = C()
 script.experiment = None
 script.generator = None
@@ -26,7 +32,13 @@ def set_experiment(exp):
 
 
 def set_generator(generator):
-    script.generator = generator
+    # if the script.py contains generate_experiment directly, not as a class method
+    if builtins_callable(generator):
+        script.generator = Generator()
+        script.generator.generate_experiment = generator.__get__(script.generator, Generator)
+    # if the script.py contains Script.generate_experiment()
+    elif builtins_callable(generator.generate_experiment):
+        script.generator = generator
 
 
 @app.route('/start', methods=['GET', 'POST'])
