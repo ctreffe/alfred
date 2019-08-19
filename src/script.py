@@ -7,7 +7,6 @@ Experiment author: Johannes Brachem <jobrachem@posteo.de>
 Description: This is a basic template for an alfred experiment.
 '''
 
-
 #################################
 # - Section 1: Module imports - #
 #################################
@@ -17,16 +16,11 @@ from alfred.section import *
 from alfred.element import *
 from alfred.layout import *
 from alfred.helpmates import *
-
 from alfred import Experiment
 
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
-EXP_TYPE = "web"
-EXP_NAME = "template"
-EXP_VERSION = "0.1"
-EXP_AUTHOR_MAIL = "your@email.com"
 
 #################################
 # - Section 3: Custom classes - #
@@ -40,7 +34,7 @@ EXP_AUTHOR_MAIL = "your@email.com"
 class Script(object):
 
     def generate_experiment(self):
-        exp = Experiment(EXP_TYPE, EXP_NAME, EXP_VERSION, EXP_AUTHOR_MAIL)
+        exp = Experiment()
 
         # --- Page 1 --- #
         # -------------------------------------- #
