@@ -43,7 +43,7 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type=None, exp_name=None, exp_version=None, exp_author_mail=None, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, exp_type, exp_name, exp_version, exp_author_mail, config_string='', basepath=None, custom_layout=None):
         '''
         :param str exp_type: Typ des Experiments.
         :param str exp_name: Name des Experiments.
@@ -80,22 +80,22 @@ class Experiment(object):
         |
         '''
 
-        # get experiment metadata
-        # the if-else clauses ensure backwards compatibility, if users defined the metadata in script.py
-        self._author_mail = exp_author_mail if exp_author_mail else settings.experiment.author_mail
-        self._name = exp_name if exp_name else settings.experiment.title
-        self._version = exp_version if exp_version else settings.experiment.version
-        self._type = exp_type if exp_type else settings.experiment.type
+        if type(exp_name) != str or exp_name == '' or type(exp_version) != str or exp_version == '' or not(exp_type == 'qt' or
+                                                                                                           exp_type == 'web' or exp_type == 'qt-wk'):
+            raise ValueError("exp_name and exp_version must be a non empty strings and exp_type must be 'qt' or 'web'")
 
-        # raise errors if user defined metadata in script.py that doesn't match the data given in config.conf
-        if self._name != settings.experiment.title:
-            raise RuntimeError("Experiment titles must be equal in script and config file.")
-        if self._author_mail != settings.experiment.author_mail:
-            raise RuntimeError("Experiment authors must be equal in script and config file.")
-        if self._version != settings.experiment.version:
-            raise RuntimeError("Experiment versions must be equal in script and config file")
+        self._author_mail = exp_author_mail
+
+        #: Name des Experiments
+        self._name = exp_name
+
+        #: Version des Experiments
+        self._version = exp_version
+
+        #: Typ des Experiments
+        self._type = exp_type
         if self._type != settings.experiment.type:
-            raise RuntimeError("Experiment types must be equal in script and config file.")
+            raise RuntimeError("experiment types must be equal in script and config file")
 
         #: Uid des Experiments
         self._uuid = uuid4().hex
