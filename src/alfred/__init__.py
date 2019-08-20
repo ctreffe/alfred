@@ -139,6 +139,11 @@ class Experiment(object):
         if basepath is not None:
             logger.warning("Usage of basepath is depricated.", self)
 
+    def update(self, name, version, author):
+        self._name = name
+        self._version = version
+        self._author_mail = author
+
     def start(self):
         '''
         Startet das Experiment, wenn die Bereitstellung lokal erfolgt.
