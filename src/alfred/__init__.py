@@ -43,15 +43,13 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type=None, exp_name=None, exp_version=None, exp_author_mail=None, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, type=None, title=None, version=None, author=None, config_string='', basepath=None, custom_layout=None):
         '''
-        :param str exp_type: Typ des Experiments.
-        :param str exp_name: Name des Experiments.
-        :param str exp_version: Version des Experiments.
-        :param str exp_author_mail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
-        :param layout custom_layout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
-
-        .. note:: mindestens exp_type und exp_name müssen beim Aufruf übergeben werden!
+        :param str type: Experiment type.
+        :param str title: Experiment title.
+        :param str version: Experiment version.
+        :param str author: Experiment author. If a local experiment saves data to mortimer, this should be the mortimer username.
+        :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
         |
 
@@ -82,15 +80,16 @@ class Experiment(object):
 
         # get experiment metadata
         # the if-else clauses ensure backwards compatibility, if users defined the metadata in script.py
-        self._author_mail = exp_author_mail if exp_author_mail else settings.experiment.author_mail
-        self._name = exp_name if exp_name else settings.experiment.title
-        self._version = exp_version if exp_version else settings.experiment.version
-        self._type = exp_type if exp_type else settings.experiment.type
+        self._author = author if author else settings.experiment.author
+        self._title = title if title else settings.experiment.title
+        self._version = version if version else settings.experiment.version
+        self._type = type if type else settings.experiment.type
 
+        # FOR BACKWARDS COMPATIBILITY
         # raise errors if user defined metadata in script.py that doesn't match the data given in config.conf
-        if self._name != settings.experiment.title:
+        if self._title != settings.experiment.title:
             raise RuntimeError("Experiment titles must be equal in script and config file.")
-        if self._author_mail != settings.experiment.author_mail:
+        if self._author != settings.experiment.author:
             raise RuntimeError("Experiment authors must be equal in script and config file.")
         if self._version != settings.experiment.version:
             raise RuntimeError("Experiment versions must be equal in script and config file")
@@ -99,7 +98,7 @@ class Experiment(object):
 
         #: Uid des Experiments
         self._uuid = uuid4().hex
-        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._name, self._version), self)
+        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
         self._message_manager = messages.MessageManager()
@@ -139,10 +138,11 @@ class Experiment(object):
         if basepath is not None:
             logger.warning("Usage of basepath is depricated.", self)
 
-    def update(self, name, version, author):
-        self._name = name
+    def update(self, title, version, author, type="web"):
+        self._title = title
         self._version = version
-        self._author_mail = author
+        self._author = author
+        self._type = type
 
     def start(self):
         '''
@@ -172,20 +172,20 @@ class Experiment(object):
         self._saving_agent_controller.run_saving_agents(99)
 
     @property
-    def author_mail(self):
+    def author(self):
         '''
         Achtung: *read-only*
 
-        :return: E-Mail des/der Autor*in **author_mail** (*str*)
+        :return: Experiment author **author** (*str*)
         '''
-        return self._author_mail
+        return self._author
 
     @property
     def type(self):
         '''
         Achtung: *read-only*
 
-        :return: Experimenttyp **exp_type** (*str*)
+        :return: Type of experiment **type** (*str*)
         '''
 
         return self._type
@@ -195,18 +195,18 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentversion **exp_version** (*str*)
+        :return: Experiment version **version** (*str*)
         '''
         return self._version
 
     @property
-    def name(self):
+    def title(self):
         '''
         Achtung: *read-only*
 
-        :return: Experimentname **exp_name** (*str*)
+        :return: Experiment title **title** (*str*)
         '''
-        return self._name
+        return self._title
 
     @property
     def start_timestamp(self):

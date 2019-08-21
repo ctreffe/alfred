@@ -22,8 +22,8 @@ class DataManager(object):
 
     def get_data(self):
         data = self._experiment.page_controller.data
-        data['exp_author_mail'] = self._experiment.author_mail
-        data['exp_name'] = self._experiment.name
+        data['exp_author'] = self._experiment.author
+        data['exp_title'] = self._experiment.title
         data['exp_version'] = self._experiment.version
         data['exp_type'] = self._experiment.type
         data['start_time'] = self._experiment._start_time

@@ -117,7 +117,7 @@ if not os.path.isabs(general.external_files_dir):
 # experiment
 experiment = _DictObj()
 experiment.title = _config_parser.get('experiment', 'title')
-experiment.author_mail = _config_parser.get('experiment', 'author_mail')
+experiment.author = _config_parser.get('experiment', 'author')
 experiment.version = _config_parser.get('experiment', 'version')
 experiment.type = _config_parser.get('experiment', 'type')
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
@@ -125,8 +125,8 @@ experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscre
 # check if metadata is given correctly
 if not experiment.title:
     raise ValueError("You need to define an experiment title in config.conf")
-if not experiment.author_mail:
-    raise ValueError("You need to define 'author_mail' in config.conf")
+if not experiment.author:
+    raise ValueError("You need to define an author in config.conf")
 if not experiment.version:
     raise ValueError("You need to define an experiment version in config.conf")
 if not (experiment.type == 'qt' or experiment.type == 'web' or experiment.type == 'qt-wk'):
