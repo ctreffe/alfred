@@ -125,11 +125,12 @@ class Experiment(object):
         if basepath is not None:
             logger.warning("Usage of basepath is depricated.", self)
 
-    def update(self, title, version, author, type="web"):
+    def update(self, title, version, author, uuid, type="web"):
         self._title = title
         self._version = version
         self._author = author
         self._type = type
+        self._uuid = uuid
 
     def start(self):
         '''
