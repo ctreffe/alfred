@@ -96,10 +96,6 @@ config_files += [os.path.join(os.getcwd(), 'config.conf')]
 
 config_files = [x for x in config_files if x is not None]
 
-print("\n\n\n")
-print(config_files)
-print("\n\n\n")
-
 # create config parser
 _config_parser = configparser.ConfigParser()
 
