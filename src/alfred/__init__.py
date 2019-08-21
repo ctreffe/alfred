@@ -43,12 +43,8 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, type=None, title=None, version=None, author=None, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, config_string='', basepath=None, custom_layout=None):
         '''
-        :param str type: Experiment type.
-        :param str title: Experiment title.
-        :param str version: Experiment version.
-        :param str author: Experiment author. If a local experiment saves data to mortimer, this should be the mortimer username.
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
         |
@@ -79,22 +75,10 @@ class Experiment(object):
         '''
 
         # get experiment metadata
-        # the if-else clauses ensure backwards compatibility, if users defined the metadata in script.py
-        self._author = author if author else settings.experiment.author
-        self._title = title if title else settings.experiment.title
-        self._version = version if version else settings.experiment.version
-        self._type = type if type else settings.experiment.type
-
-        # FOR BACKWARDS COMPATIBILITY
-        # raise errors if user defined metadata in script.py that doesn't match the data given in config.conf
-        if self._title != settings.experiment.title:
-            raise RuntimeError("Experiment titles must be equal in script and config file.")
-        if self._author != settings.experiment.author:
-            raise RuntimeError("Experiment authors must be equal in script and config file.")
-        if self._version != settings.experiment.version:
-            raise RuntimeError("Experiment versions must be equal in script and config file")
-        if self._type != settings.experiment.type:
-            raise RuntimeError("Experiment types must be equal in script and config file.")
+        self._author = settings.experiment.author
+        self._title = settings.experiment.title
+        self._version = settings.experiment.version
+        self._type = settings.experiment.type
 
         #: Uid des Experiments
         self._uuid = uuid4().hex
