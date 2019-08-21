@@ -124,11 +124,13 @@ experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscre
 
 # check if metadata is given correctly
 if not experiment.title:
-    raise ValueError("You need to define an experiment title in config.conf")
+    raise ValueError("You need to define an experiment title in config.conf. Make sure to remove title definition from script.py")
 if not experiment.author:
-    raise ValueError("You need to define an author in config.conf")
+    raise ValueError("You need to define an author in config.conf. Make sure to remove author definition from script.py")
 if not experiment.version:
-    raise ValueError("You need to define an experiment version in config.conf")
+    raise ValueError("You need to define an experiment version in config.conf. Make sure to remove version definition from script.py")
+if not experiment.type:
+    raise ValueError("You need to define an experiment type in config.conf. Make sure to remove type definition from script.py")
 if not (experiment.type == 'qt' or experiment.type == 'web' or experiment.type == 'qt-wk'):
     raise ValueError("experiment.type must be qt, qt-wk or web")
 
