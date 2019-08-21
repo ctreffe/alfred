@@ -43,7 +43,7 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, exp_type=None, exp_name=None, exp_version=None, config_string='', basepath=None, custom_layout=None):
         '''
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
@@ -73,6 +73,9 @@ class Experiment(object):
         |
         |
         '''
+
+        if exp_type or exp_name or exp_version:
+            raise SyntaxError("The definition of experiment title, type, or version in script.py is deprecated. Please define these parameters in config.conf. In your script.py, just use 'exp = Experiment()'.")
 
         # get experiment metadata
         self._author = settings.experiment.author
