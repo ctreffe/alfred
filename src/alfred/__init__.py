@@ -304,7 +304,7 @@ class Generator(object):
         pass
 
 
-def run(generator):
+def run(generator, auto_start=True):
     if settings.experiment.type == "qt-wk":
         gen = Generator()
         gen.generate_experiment = generator.__get__(gen, Generator)
@@ -317,7 +317,8 @@ def run(generator):
         port = 5000
         while not socket_checker(port):
             port += 1
-        webbrowser.open('http://127.0.0.1:{port}/start'.format(port=port), new=2)
+        if auto_start:
+            webbrowser.open('http://127.0.0.1:{port}/start'.format(port=port), new=2)
         sys.stderr.writelines([" * Start local experiment using http://127.0.0.1:%d/start\n" % port])
         ls.app.run(port=port, threaded=True)
     else:
