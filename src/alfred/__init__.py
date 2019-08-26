@@ -45,15 +45,9 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type, exp_name, exp_version, exp_author_mail, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, exp_type=None, exp_name=None, exp_version=None, config_string='', basepath=None, custom_layout=None):
         '''
-        :param str exp_type: Typ des Experiments.
-        :param str exp_name: Name des Experiments.
-        :param str exp_version: Version des Experiments.
-        :param str exp_author_mail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
-        :param layout custom_layout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
-
-        .. note:: mindestens exp_type und exp_name müssen beim Aufruf übergeben werden!
+        :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
         |
 
@@ -82,26 +76,21 @@ class Experiment(object):
         |
         '''
 
-        if type(exp_name) != str or exp_name == '' or type(exp_version) != str or exp_version == '' or not(exp_type == 'qt' or
-                                                                                                           exp_type == 'web' or exp_type == 'qt-wk'):
-            raise ValueError("exp_name and exp_version must be a non empty strings and exp_type must be 'qt' or 'web'")
+        if exp_type or exp_name or exp_version:
+            raise SyntaxError("The definition of experiment title, type, or version in script.py is deprecated. Please define these parameters in config.conf. In your script.py, just use 'exp = Experiment()'.")
 
-        self._author_mail = exp_author_mail
+        # get experiment metadata
+        self._author = settings.experiment.author
+        self._title = settings.experiment.title
+        self._version = settings.experiment.version
+        self._type = settings.experiment.type
 
-        #: Name des Experiments
-        self._name = exp_name
-
-        #: Version des Experiments
-        self._version = exp_version
-
-        #: Typ des Experiments
-        self._type = exp_type
-        if self._type != settings.experiment.type:
-            raise RuntimeError("experiment types must be equal in script and config file")
-
-        #: Uid des Experiments
+        # Uids for experiment and session
         self._uuid = uuid4().hex
-        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._name, self._version), self)
+        self._sessionid = uuid4().hex
+
+        # Experiment startup message
+        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
         self._message_manager = messages.MessageManager()
@@ -141,6 +130,13 @@ class Experiment(object):
         if basepath is not None:
             logger.warning("Usage of basepath is depricated.", self)
 
+    def update(self, title, version, author, uuid, type="web"):
+        self._title = title
+        self._version = version
+        self._author = author
+        self._type = type
+        self._uuid = uuid
+
     def start(self):
         '''
         Startet das Experiment, wenn die Bereitstellung lokal erfolgt.
@@ -173,20 +169,20 @@ class Experiment(object):
             self.page_controller.append(item)
 
     @property
-    def author_mail(self):
+    def author(self):
         '''
         Achtung: *read-only*
 
-        :return: E-Mail des/der Autor*in **author_mail** (*str*)
+        :return: Experiment author **author** (*str*)
         '''
-        return self._author_mail
+        return self._author
 
     @property
     def type(self):
         '''
         Achtung: *read-only*
 
-        :return: Experimenttyp **exp_type** (*str*)
+        :return: Type of experiment **type** (*str*)
         '''
 
         return self._type
@@ -196,18 +192,18 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentversion **exp_version** (*str*)
+        :return: Experiment version **version** (*str*)
         '''
         return self._version
 
     @property
-    def name(self):
+    def title(self):
         '''
         Achtung: *read-only*
 
-        :return: Experimentname **exp_name** (*str*)
+        :return: Experiment title **title** (*str*)
         '''
-        return self._name
+        return self._title
 
     @property
     def start_timestamp(self):
@@ -224,6 +220,10 @@ class Experiment(object):
     @property
     def uuid(self):
         return self._uuid
+
+    @property
+    def sessionid(self):
+        return self._sessionid
 
     @property
     def user_interface_controller(self):
