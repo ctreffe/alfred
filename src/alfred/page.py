@@ -398,7 +398,8 @@ class ExperimentFinishPage(CompositePage):
             exp_infos = '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>' + self._experiment.name + '</td></tr>'
             exp_infos = exp_infos + '<tr><td>Experimenttyp:</td><td>' + self._experiment.type + '</td></tr>'
             exp_infos = exp_infos + '<tr><td>Experimentversion:</td><td>' + self._experiment.version + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>' + self._experiment.uuid + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Experiment-ID:</td><td>' + self._experiment.uuid + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>' + self._experiment.sessionid + '</td></tr>'
             exp_infos = exp_infos + '<tr><td>Log-ID:</td><td>' + self._experiment.uuid[:6] + '</td></tr>'
             exp_infos = exp_infos + '</table>'
 
