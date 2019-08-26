@@ -77,7 +77,7 @@ class NewLogger(object):
     def debug(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.debug(msg, *args, **kwargs)
@@ -85,7 +85,7 @@ class NewLogger(object):
     def info(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.info(msg, *args, **kwargs)
@@ -93,7 +93,7 @@ class NewLogger(object):
     def warning(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.warning(msg, *args, **kwargs)
@@ -101,7 +101,7 @@ class NewLogger(object):
     def error(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.error(msg, *args, **kwargs)
@@ -109,7 +109,7 @@ class NewLogger(object):
     def critical(self, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.critical(msg, *args, **kwargs)
@@ -117,7 +117,7 @@ class NewLogger(object):
     def log(self, lvl, msg, experiment=None, *args, **kwargs):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.log(lvl, msg, *args, **kwargs)
@@ -125,7 +125,7 @@ class NewLogger(object):
     def exception(self, msg, experiment=None, *args):
         if experiment:
             try:
-                msg = 'experiment id={exp}, session id={session}'.format(exp=experiment.uuid[:6], session=experiment.sessionid) + ' - ' + msg
+                msg = 'session id={session}'.format(session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.exception(msg, *args)

@@ -85,9 +85,9 @@ class Experiment(object):
         self._version = settings.experiment.version
         self._type = settings.experiment.type
 
-        # Uids for experiment and session
-        self._uuid = uuid4().hex
-        self._sessionid = uuid4().hex
+        # Uids for experiment (when hosted by mortimer) and session
+        self._mortimer_id = '(Local experiment without Mortimer ID)'
+        self._session_id = uuid4().hex
 
         # Experiment startup message
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
@@ -218,12 +218,12 @@ class Experiment(object):
         return self._experimenter_message_manager
 
     @property
-    def uuid(self):
-        return self._uuid
+    def mortimer_id(self):
+        return self._mortimer_id
 
     @property
-    def sessionid(self):
-        return self._sessionid
+    def session_id(self):
+        return self._session_id
 
     @property
     def user_interface_controller(self):

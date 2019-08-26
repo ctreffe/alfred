@@ -31,8 +31,8 @@ class DataManager(object):
         data['exp_finished'] = self._experiment.finished
         data['exp_session'] = self._experiment.session
         data['exp_condition'] = self._experiment.condition
-        data['exp_uuid'] = self._experiment.uuid
-        data['session_id'] = self._experiment.sessionid
+        data['mortimer_id'] = self._experiment.mortimer_id
+        data['session_id'] = self._experiment.session_id
         data['additional_data'] = self._additional_data
 
         return data

@@ -350,7 +350,7 @@ class LocalSavingAgent(SavingAgent):
         if not os.access(filepath, os.W_OK):
             raise RuntimeError("save path '%s' must be writable" % filepath)
 
-        filename = '%s_%s_%s.json' % (time.strftime('%Y-%m-%d_t%H%M%S'), filename, self._experiment.sessionid)
+        filename = '%s_%s_%s.json' % (time.strftime('%Y-%m-%d_t%H%M%S'), filename, self._experiment.session_id)
         self._file = os.path.join(filepath, filename)
 
         if os.path.exists(self._file):
@@ -380,7 +380,7 @@ class CouchDBSavingAgent(SavingAgent):
         except Exception as e:
             raise SavingAgentException('Type: %s' % type(e))
 
-        self._doc_id = self._experiment.sessionid
+        self._doc_id = self._experiment.session_id
         self._doc_rev = None
 
     def _save(self, data):
@@ -416,7 +416,7 @@ class MongoSavingAgent(SavingAgent):
 
         self._col = self._db[collection]
 
-        self._doc_id = self._experiment.sessionid
+        self._doc_id = self._experiment.session_id
 
     def _save(self, data):
 
