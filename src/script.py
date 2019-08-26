@@ -1,11 +1,4 @@
 # -*- coding:utf-8 -*-
-'''
-Experiment script using Alfred - A library for rapid experiment development.
-
-Experiment author: Johannes Brachem <jobrachem@posteo.de>
-
-Description: This is a basic template for an alfred experiment.
-'''
 
 #################################
 # - Section 1: Module imports - #
@@ -16,7 +9,7 @@ from alfred.section import *
 from alfred.element import *
 from alfred.layout import *
 from alfred.helpmates import *
-from alfred import Experiment
+from alfred import Experiment, run
 
 #################################################
 # - Section 2: Global variables and functions - #
@@ -31,33 +24,20 @@ from alfred import Experiment
 ########################################
 
 
-class Script(object):
+def generate_experiment(self):
 
-    def generate_experiment(self):
-        exp = Experiment()
+    # --- Page 1 --- #
+    page01 = WebCompositePage(title="Hello, world!")
 
-        # --- Page 1 --- #
-        # -------------------------------------- #
+    # Sections
+    main = SegmentedSection()
+    main.append_items(page01)
 
-        page01 = WebCompositePage(title="Hello, world!")
+    # Initialize and fill experiment
+    exp = Experiment()
+    exp.append(main)
 
-        # ----------------------------------------------- #
-        # Initialize Sections
-        main = SegmentedSection()
-
-        # ----------------------------------------------- #
-        # Fill Sections
-
-        # ----------------------------------------------- #
-        # Append to main section #
-        # ----------------------------------------------- #
-
-        main.append_items(page01)
-
-        # Append Main Group to Experiment
-        exp.append(main)
-
-        return exp
+    return exp
 
 
-generate_experiment = Script().generate_experiment
+run(generate_experiment)
