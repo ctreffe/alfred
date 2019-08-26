@@ -83,8 +83,11 @@ class Experiment(object):
         self._version = settings.experiment.version
         self._type = settings.experiment.type
 
-        #: Uid des Experiments
+        # Uids for experiment and session
         self._uuid = uuid4().hex
+        self._sessionid = uuid4().hex
+
+        # Experiment startup message
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
@@ -211,6 +214,10 @@ class Experiment(object):
     @property
     def uuid(self):
         return self._uuid
+
+    @property
+    def sessionid(self):
+        return self._sessionid
 
     @property
     def user_interface_controller(self):
