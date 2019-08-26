@@ -22,12 +22,14 @@ init_logging(__name__)
 
 
 import time
+import webbrowser
 from uuid import uuid4
 
 from .saving_agent import SavingAgentController
 from .data_manager import DataManager
 from .page_controller import PageController
 from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
+from .helpmates import socket_checker
 from . import layout
 from . import settings
 from . import messages
@@ -295,3 +297,29 @@ class Experiment(object):
 
     def add_session(self, s):
         self._session = self._session + '.' + s if self._session else s
+
+
+class Generator(object):
+    def generate_experiment(self):
+        pass
+
+
+def run(generator, open=True, window=1):
+    if settings.experiment.type == "qt-wk":
+        gen = Generator()
+        gen.generate_experiment = generator.__get__(gen, Generator)
+        exp = gen.generate_experiment()
+        exp.start()
+    elif settings.experiment.type == "web":
+        import sys
+        import alfred.helpmates.localserver as ls
+        ls.set_generator(generator)
+        port = 5000
+        while not socket_checker(port):
+            port += 1
+        if open:
+            webbrowser.open('http://127.0.0.1:{port}/start'.format(port=port), new=window)
+        sys.stderr.writelines([" * Start local experiment using http://127.0.0.1:%d/start\n" % port])
+        ls.app.run(port=port, threaded=True)
+    else:
+        RuntimeError("Unexpected value of experiment type")

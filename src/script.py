@@ -18,7 +18,7 @@ from alfred.element import *
 from alfred.layout import *
 from alfred.helpmates import *
 
-from alfred import Experiment
+from alfred import Experiment, run
 
 #################################################
 # - Section 2: Global variables and functions - #
@@ -37,33 +37,31 @@ EXP_AUTHOR_MAIL = "your@email.com"
 ########################################
 
 
-class Script(object):
+def generate_experiment(self):
+    exp = Experiment(EXP_TYPE, EXP_NAME, EXP_VERSION, EXP_AUTHOR_MAIL)
 
-    def generate_experiment(self):
-        exp = Experiment(EXP_TYPE, EXP_NAME, EXP_VERSION, EXP_AUTHOR_MAIL)
+    # --- Page 1 --- #
+    # -------------------------------------- #
 
-        # --- Page 1 --- #
-        # -------------------------------------- #
+    page01 = WebCompositePage(title="Hello, world!")
 
-        page01 = WebCompositePage(title="Hello, world!")
+    # ----------------------------------------------- #
+    # Initialize Sections
+    main = SegmentedSection()
 
-        # ----------------------------------------------- #
-        # Initialize Sections
-        main = SegmentedSection()
+    # ----------------------------------------------- #
+    # Fill Sections
 
-        # ----------------------------------------------- #
-        # Fill Sections
+    # ----------------------------------------------- #
+    # Append to main section #
+    # ----------------------------------------------- #
 
-        # ----------------------------------------------- #
-        # Append to main section #
-        # ----------------------------------------------- #
+    main.append_items(page01)
 
-        main.append_items(page01)
+    # Append Main Group to Experiment
+    exp.append(main)
 
-        # Append Main Group to Experiment
-        exp.append(main)
-
-        return exp
+    return exp
 
 
-generate_experiment = Script().generate_experiment
+run(generate_experiment)
