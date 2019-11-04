@@ -116,10 +116,10 @@ if not os.path.isabs(general.external_files_dir):
 
 # experiment
 experiment = _DictObj()
-experiment.title = _config_parser.get('experiment', 'title').decode('utf-8')
-experiment.author = _config_parser.get('experiment', 'author').decode('utf-8')
-experiment.version = _config_parser.get('experiment', 'version').decode('utf-8')
-experiment.type = _config_parser.get('experiment', 'type').decode('utf-8')
+experiment.title = _config_parser.get('experiment', 'title')
+experiment.author = _config_parser.get('experiment', 'author')
+experiment.version = _config_parser.get('experiment', 'version')
+experiment.type = _config_parser.get('experiment', 'type')
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
 
 # check if metadata is given correctly
