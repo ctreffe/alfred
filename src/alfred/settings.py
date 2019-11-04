@@ -39,7 +39,7 @@ class Decrypter(object):
             # Fernet instance for decryption of login data
             if os.path.isfile("alfred_secrect.key"):
                 with open("alfred_secrect.key", "rb") as keyfile:
-                    key = keyfile.read().decode('utf-8')
+                    key = keyfile.read()
             else:
                 key = os.environ.get("ALFRED_SECRET_KEY")
             try:
