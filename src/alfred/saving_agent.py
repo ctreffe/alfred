@@ -417,11 +417,12 @@ class MongoSavingAgent(SavingAgent):
         self._col = self._db[collection]
 
         self._doc_id = self._experiment.session_id
+        self._mortimer_id = self._experiment.mortimer_id
 
     def _save(self, data):
 
         try:
-            data['_id'] = self._doc_id
+            data['_id'] = self._mortimer_id if self._mortimer_id
             self._col.save(data)
         except Exception as e:
             raise SavingAgentRunException("Error while saving: %s" % e)
