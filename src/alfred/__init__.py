@@ -135,7 +135,7 @@ class Experiment(object):
         self._version = version
         self._author = author
         self._type = type
-        self._morrtimer_id = uuid
+        self._mortimer_id = uuid
 
     def start(self):
         '''
