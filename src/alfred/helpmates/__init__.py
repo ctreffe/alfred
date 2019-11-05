@@ -71,10 +71,11 @@ def parse_xml_to_dict(path, interface='web', code=False):
             raise RuntimeError('input must be unicode or dict')
         return input
 
-    with open(path, 'r').read().decode('utf-8') as f:
-        f = data_in
-    data_in.replace('\r\n', '\n')
+    with open(path, 'rb', encoding='utf-8').read() as f:
+        data_in = f.replace('\r\n', '\n')
+    
     data_out = xmltodict.parse(data_in)
+
     if interface == 'web' and not code:
         rec(data_out, '<br>')
     elif interface == 'qt' and not code:
@@ -83,10 +84,12 @@ def parse_xml_to_dict(path, interface='web', code=False):
         pass
     else:
         raise ValueError('interface must be either "qt" or "web".')
+
     for k in list(data_out['instr'].keys()):
         if k == 'instr':
             raise RuntimeError("Do not use 'instr' as tag")
         data_out[k] = data_out['instr'][k]
+
     return data_out
 
 
