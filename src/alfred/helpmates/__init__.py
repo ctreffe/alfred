@@ -71,7 +71,7 @@ def parse_xml_to_dict(path, interface='web', code=False):
             raise RuntimeError('input must be unicode or dict')
         return input
 
-    with open(path, 'rb', encoding='utf-8').read() as f:
+    with open(path, 'r', encoding='utf-8').read() as f:
         data_in = f.replace('\r\n', '\n')
     
     data_out = xmltodict.parse(data_in)
