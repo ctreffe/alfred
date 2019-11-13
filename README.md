@@ -12,13 +12,13 @@ If you are publishing research conducted using Alfred, please cite:
 
 # Installation
 
-Detailed step-by-step guides to installing Alfred from scratch can be found in the wiki: [Alfred Wiki](https://github.com/ctreffe/alfred/wiki)
+Detailed step-by-step guides to installing alfred from scratch can be found in the wiki: [Alfred Wiki](https://github.com/ctreffe/alfred/wiki)
 
 ## MacOs
 
-You need to have Python 3 installed on your system. We recommend installing alfred into a virtual environment.
+You need to have Python 3 installed on your system. We recommend installing Alfred into a virtual environment.
 
-1. Download the newest Alfred release from zenodo and extract the .zip archive by double-clicking on it. Link: [Alfred on zenodo](https://zenodo.org/record/2677731#.XNlzxtNLjBI) (where is the download button? [it's marked red here](https://i.imgur.com/wkPQzTX.png))  
+1. Download the newest Alfred release from zenodo and extract the .zip archive by double-clicking on it. Link: [Alfred on zenodo](https://zenodo.org/record/2677731#.XNlzxtNLjBI).
 1. Then **switch to the path** of your extracted folder in terminal and execute **setup.py** via python by pasting the following commands into terminal:
 
 ```bash
