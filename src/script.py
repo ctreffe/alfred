@@ -9,7 +9,7 @@ from alfred.section import *
 from alfred.element import *
 from alfred.layout import *
 from alfred.helpmates import *
-from alfred import Experiment, run
+from alfred import Experiment
 
 #################################################
 # - Section 2: Global variables and functions - #
@@ -38,6 +38,3 @@ def generate_experiment(self):
     exp.append(main)
 
     return exp
-
-
-run(generate_experiment)

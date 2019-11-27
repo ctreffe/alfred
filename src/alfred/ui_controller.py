@@ -245,7 +245,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
         self._helper = ThreadHelper(self)
 
-        localserver.set_experiment(experiment)
+        localserver.script.set_experiment(experiment)
 
         # initialize qt
         self._app = QApplication([])

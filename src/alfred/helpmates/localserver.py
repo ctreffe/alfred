@@ -1,11 +1,11 @@
-from builtins import map
-from builtins import object
+from builtins import map, object
 from builtins import callable as builtins_callable
 from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session
-import re
 from uuid import uuid4
-
 from ..settings import general, experiment
+
+import re
+
 
 app = Flask(__name__)
 app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
@@ -18,34 +18,33 @@ class C(object):
 
 
 class Generator(object):
+
+    def __init__(self, exp=None):
+        self.experiment = exp
+
     def generate_experiment(self):
         pass
 
+    def set_experiment(self, exp):
+        self.experiment = exp
 
-script = C()
-script.experiment = None
-script.generator = None
+    def set_generator(self, generator):
+        # if the script.py contains generate_experiment directly, not as a class method
+        if builtins_callable(generator):
+            script.generator = Generator()
+            self.generate_experiment = generator.__get__(self, Generator)
+        # if the script.py contains Script.generate_experiment()
+        elif builtins_callable(generator.generate_experiment):
+            self.generate_experiment = generator.generate_experiment(self, Generator)
 
-
-def set_experiment(exp):
-    script.experiment = exp
-
-
-def set_generator(generator):
-    # if the script.py contains generate_experiment directly, not as a class method
-    if builtins_callable(generator):
-        script.generator = Generator()
-        script.generator.generate_experiment = generator.__get__(script.generator, Generator)
-    # if the script.py contains Script.generate_experiment()
-    elif builtins_callable(generator.generate_experiment):
-        script.generator = generator
-
+script = Generator()
 
 @app.route('/start', methods=['GET', 'POST'])
 def start():
-    exp = script.generator.generate_experiment()
-    set_experiment(exp)
-    exp.start()
+    exp = script.generate_experiment()
+    script.set_experiment(exp)
+    script.experiment.start()
+    
     session['page_tokens'] = []
     # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
     resp = make_response(redirect(url_for('experiment')))
