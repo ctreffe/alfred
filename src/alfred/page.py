@@ -23,7 +23,8 @@ logger = alfredlog.getLogger(__name__)
 
 
 class Page(PageCore):
-    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs):
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict={}, **kwargs):
+
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
@@ -32,8 +33,12 @@ class Page(PageCore):
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
+        self.values = values
 
         super(Page, self).__init__(**kwargs)
+
+        if not isinstance(self.values, dict):
+            raise TypeError("The parameter 'values' requires a dictionary as input.")
 
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
