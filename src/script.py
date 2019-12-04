@@ -21,7 +21,7 @@ from alfred import Experiment
 
 class Welcome(Page):
 
-    def on_showing_widget(self):
+    def on_showing(self):
         el = TextElement(self.values.lol)
         self.append(el)
 

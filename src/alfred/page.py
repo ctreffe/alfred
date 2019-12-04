@@ -77,10 +77,14 @@ class PageCore(ContentCore):
             self._data['first_show_time'] = time.time()
 
         self.on_showing_widget()
+        self.on_showing()
 
         self._has_been_shown = True
 
     def on_showing_widget(self):
+        pass
+
+    def on_showing(self):
         pass
 
     def _on_hiding_widget(self):
@@ -88,12 +92,16 @@ class PageCore(ContentCore):
         Method for internal processes on hiding Widget
         '''
         self.on_hiding_widget()
+        self.on_hiding()
 
         self._has_been_hidden = True
 
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
     def on_hiding_widget(self):
+        pass
+
+    def on_hiding(self):
         pass
 
     def close_page(self):
