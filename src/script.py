@@ -28,7 +28,7 @@ def generate_experiment(self):
     exp = Experiment()
 
     # --- Page 1 --- #
-    page01 = WebCompositePage(title="Hello, world!")
+    page01 = Page(title="Hello, world!")
     el = TextElement("test")
     page01.append(el)
 
