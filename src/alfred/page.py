@@ -10,7 +10,7 @@ from builtins import object
 from abc import ABCMeta, abstractproperty
 import time
 
-from ._core import PageCore
+from ._core import ContentCore
 from .exceptions import AlfredError
 from . import element, alfredlog
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
@@ -22,7 +22,7 @@ from functools import reduce
 logger = alfredlog.getLogger(__name__)
 
 
-class Page(PageCore):
+class PageCore(ContentCore):
     def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
@@ -33,13 +33,13 @@ class Page(PageCore):
         self._is_closed = False
         self._show_corrective_hints = False
 
-        super(Page, self).__init__(**kwargs)
+        super(PageCore, self).__init__(**kwargs)
 
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
             raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebPageInterface.__name__))
 
-        super(Page, self).added_to_experiment(experiment)
+        super(PageCore, self).added_to_experiment(experiment)
 
     @property
     def show_thumbnail(self):
@@ -59,7 +59,7 @@ class Page(PageCore):
 
     @property
     def data(self):
-        data = super(Page, self).data
+        data = super(PageCore, self).data
         data.update(self._data)
         return data
 
@@ -169,7 +169,7 @@ class WebPageInterface(with_metaclass(ABCMeta, object)):
         pass
 
 
-class CoreCompositePage(Page):
+class CoreCompositePage(PageCore):
     def __init__(self, elements=None, **kwargs):
         super(CoreCompositePage, self).__init__(**kwargs)
 
@@ -319,8 +319,11 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 class CompositePage(WebCompositePage):
     pass
 
+class Page(WebCompositePage):
+    pass
 
-class PagePlaceholder(Page, WebPageInterface):
+
+class PagePlaceholder(PageCore, WebPageInterface):
     def __init__(self, ext_data={}, **kwargs):
         super(PagePlaceholder, self).__init__(**kwargs)
 
@@ -332,7 +335,7 @@ class PagePlaceholder(Page, WebPageInterface):
 
     @property
     def data(self):
-        data = super(Page, self).data
+        data = super(PageCore, self).data
         data.update(self._ext_data)
         return data
 
