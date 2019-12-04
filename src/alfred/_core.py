@@ -10,7 +10,7 @@ import os.path
 from uuid import uuid4
 
 
-class PageCore(object):
+class ContentCore(object):
     def __init__(self, tag=None, uid=None, tag_and_uid=None, is_jumpable=True, jumptext=None,
                  title=None, subtitle=None, statustext=None,
                  should_be_shown_filter_function=None, **kwargs):
