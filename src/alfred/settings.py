@@ -17,6 +17,7 @@ import configparser
 import codecs
 import io
 from cryptography.fernet import Fernet
+from ._helper import _DictObj, Decrypter
 
 
 def _package_path():
@@ -28,54 +29,6 @@ def _package_path():
 
 #: package_path is the absolute filepath where alfred package is installed
 package_path = _package_path()
-
-class Decrypter(object):
-
-    _decrypter = None
-
-    def decrypt_login(self, username=None, password=None, from_env=False):
-
-        if not self._decrypter:
-            # Fernet instance for decryption of login data
-            if os.path.isfile("alfred_secrect.key"):
-                with open("alfred_secrect.key", "rb") as keyfile:
-                    key = keyfile.read()
-            else:
-                key = os.environ.get("ALFRED_SECRET_KEY")
-            try:
-                self._decrypter = Fernet(key)
-            except Exception:
-                RuntimeError('Unable to initialize Fernet decrypter: Secret key not found!')
-
-        if from_env:
-            try:
-                decrypted_username = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
-                decrypted_password = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
-
-                return (decrypted_username, decrypted_password)
-
-            except (AttributeError, NameError):
-                print("Incomplete DB login data in environment variables. Now trying to decrypt login data from config.conf...")
-
-        decrypted_username = self._decrypter.decrypt(username.encode()).decode()
-        decrypted_password = self._decrypter.decrypt(password.encode()).decode()
-
-        return (decrypted_username, decrypted_password)
-
-    
-class _DictObj(dict):
-    """
-    This class allows dot notation to access dict elements
-
-    Example:
-    d = _DictObj()
-    d.hello = "Hello World"
-    print d.hello # Hello World
-    """
-
-    __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
 
 ##########################################################################
 # Global Settings

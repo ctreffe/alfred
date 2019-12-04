@@ -12,6 +12,7 @@ import time
 
 from ._core import ContentCore
 from .exceptions import AlfredError
+from ._helper import _DictObj
 from . import element, alfredlog
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
 import alfred.settings as settings
@@ -23,7 +24,7 @@ logger = alfredlog.getLogger(__name__)
 
 
 class PageCore(ContentCore):
-    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs):
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict={}, **kwargs):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
@@ -32,11 +33,11 @@ class PageCore(ContentCore):
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
-        self.values = values
+        self.values = _DictObj(values)
 
         super(PageCore, self).__init__(**kwargs)
 
-        if not isinstance(self.values, dict):
+        if not isinstance(values, dict):
             raise TypeError("The parameter 'values' requires a dictionary as input.")
 
     def added_to_experiment(self, experiment):

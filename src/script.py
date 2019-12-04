@@ -19,6 +19,12 @@ from alfred import Experiment
 # - Section 3: Custom classes - #
 #################################
 
+class Welcome(Page):
+
+    def on_showing_widget(self):
+        el = TextElement(self.values.lol)
+        self.append(el)
+
 ########################################
 # - Section 4: Experiment generation - #
 ########################################
@@ -28,9 +34,7 @@ def generate_experiment(self):
     exp = Experiment()
 
     # --- Page 1 --- #
-    page01 = Page(title="Hello, world!")
-    el = TextElement("test")
-    page01.append(el)
+    page01 = Welcome(title="Hello, world!", values={"lol": "test"})
 
     # Sections
     main = SegmentedSection()
