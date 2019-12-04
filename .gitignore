@@ -1,6 +1,7 @@
 *.DS_Store
 .DS_Store
 
+
 name_changelog.py
 names_changelog.md
 change_names.py
@@ -132,3 +133,6 @@ src/encode.py
 src/.DS_Store
 *.json
 alfred_log.md
+src/files/
+src/test.py
+src/_script.py
