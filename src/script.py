@@ -30,8 +30,8 @@ class Welcome(Page):
 ########################################
 
 
-def generate_experiment(self):
-    exp = Experiment()
+def generate_experiment(self, custom_settings=None):
+    exp = Experiment(custom_settings=custom_settings)
 
     # --- Page 1 --- #
     page01 = Welcome(title="Hello, world!", basket={"lol": "test"})
