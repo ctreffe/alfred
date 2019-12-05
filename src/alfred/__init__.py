@@ -84,6 +84,7 @@ class Experiment(object):
             self._exp_id = custom_settings["exp_id"]
             self._path = custom_settings["path"]
             self._session_id = custom_settings["session_id"]
+            self._type = custom_settings["type"]
         else:
             self._author = settings.experiment.author
             self._title = settings.experiment.title
@@ -92,6 +93,7 @@ class Experiment(object):
             self._exp_id = settings.experiment.exp_id
             self._path = settings.general.external_files_dir
             self._session_id = uuid4().hex
+            self._type = settings.experiment.type
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
 
