@@ -42,7 +42,7 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type=None, exp_name=None, exp_version=None, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, exp_type=None, exp_name=None, exp_version=None, custom_settings: dict=None, config_string='', basepath=None, custom_layout=None):
         '''
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
@@ -77,14 +77,23 @@ class Experiment(object):
             raise SyntaxError("The definition of experiment title, type, or version in script.py is deprecated. Please define these parameters in config.conf. In your script.py, just use 'exp = Experiment()'.")
 
         # get experiment metadata
-        self._author = settings.experiment.author
-        self._title = settings.experiment.title
-        self._version = settings.experiment.version
-        self._type = settings.experiment.type
-
-        # Uids for experiment (when hosted by mortimer) and session
-        self._mortimer_id = '(Local experiment without Mortimer ID)'
-        self._session_id = uuid4().hex
+        if custom_settings:
+            self._author = custom_settings["author"]
+            self._title = custom_settings["title"]
+            self._version = custom_settings["version"]
+            self._exp_id = custom_settings["exp_id"]
+            self._path = custom_settings["path"]
+            self._session_id = custom_settings["session_id"]
+        else:
+            self._author = settings.experiment.author
+            self._title = settings.experiment.title
+            self._version = settings.experiment.version
+            self._type = settings.experiment.type
+            self._exp_id = settings.experiment.exp_id
+            self._path = settings.general.external_files_dir
+            self._session_id = uuid4().hex
+        if not self._exp_id:
+            raise ValueError("You need to specify an experiment ID.")
 
         # Experiment startup message
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
@@ -127,12 +136,12 @@ class Experiment(object):
         if basepath is not None:
             logger.warning("Usage of basepath is depricated.", self)
 
-    def update(self, title, version, author, uuid, type="web"):
+    def update(self, title, version, author, exp_id, type="web"):
         self._title = title
         self._version = version
         self._author = author
         self._type = type
-        self._mortimer_id = uuid
+        self._exp_id = exp_id
 
     def start(self):
         '''
@@ -215,9 +224,13 @@ class Experiment(object):
         return self._experimenter_message_manager
 
     @property
-    def mortimer_id(self):
-        return self._mortimer_id
+    def exp_id(self):
+        return self._exp_id
 
+    @property
+    def path(self):
+        return self._path
+    
     @property
     def session_id(self):
         return self._session_id
