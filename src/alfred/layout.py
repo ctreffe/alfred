@@ -7,17 +7,16 @@
 '''
 from __future__ import absolute_import
 
-
+import os.path
 from alfred.settings import ExperimentSpecificSettings
 from builtins import map
 from builtins import range
 from builtins import object
-import os.path
 from abc import ABCMeta, abstractmethod
 from jinja2 import Environment, PackageLoader
 from future.utils import with_metaclass
-
 from ._core import package_path
+
 
 jinja_env = Environment(loader=PackageLoader('alfred', 'templates'))
 settings = ExperimentSpecificSettings()
