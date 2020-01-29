@@ -75,6 +75,7 @@ experiment.version = _config_parser.get('experiment', 'version')
 experiment.type = _config_parser.get('experiment', 'type')
 experiment.exp_id = _config_parser.get('experiment', 'exp_id')
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
+experiment.web_layout = _config_parser.get('experiment', 'web_layout')
 
 # check if metadata is given correctly
 if not experiment.title:
