@@ -28,10 +28,12 @@ from .saving_agent import SavingAgentController
 from .data_manager import DataManager
 from .page_controller import PageController
 from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
+from ._helper import _DictObj
 from . import layout
 from . import settings
 from . import messages
 from . import alfredlog
+
 logger = alfredlog.getLogger(__name__)
 
 
@@ -78,13 +80,13 @@ class Experiment(object):
 
         # get experiment metadata
         if custom_settings:
-            self._author = custom_settings["author"]
-            self._title = custom_settings["title"]
-            self._version = custom_settings["version"]
-            self._exp_id = custom_settings["exp_id"]
-            self._path = custom_settings["path"]
-            self._session_id = custom_settings["session_id"]
-            self._type = custom_settings["type"]
+            self._author = custom_settings['experiment']["author"]
+            self._title = custom_settings['experiment']["title"]
+            self._version = custom_settings['experiment']["version"]
+            self._exp_id = custom_settings['experiment']["exp_id"]
+            self._path = custom_settings['mortimer_specific']["path"]
+            self._session_id = custom_settings['mortimer_specific']["session_id"]
+            self._type = custom_settings['experiment']["type"]
         else:
             self._author = settings.experiment.author
             self._title = settings.experiment.title
@@ -103,8 +105,15 @@ class Experiment(object):
         self._settings = settings.ExperimentSpecificSettings(config_string)
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
-
         self._page_controller = PageController(self)
+
+        # update settings with custom settings from mortimer
+        if custom_settings["navigation"]:
+            self._settings["navigation"] = _DictObj(custom_settings["navigation"])
+        if custom_settings["hints"]:
+            self._settings["hints"] = _DictObj(custom_settings["hints"])
+        if custom_settings["messages"]:
+            self._settings["messages"] = _DictObj(custom_settings["messages"])
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
