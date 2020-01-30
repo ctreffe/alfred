@@ -28,7 +28,7 @@ class Layout(with_metaclass(ABCMeta, object)):
         self._ui_controller = None
         self._backward_text = settings.navigation.backward
         self._forward_text = settings.navigation.forward
-        self._finish_text = settings.navigation.end
+        self._finish_text = settings.navigation.finish
         self._backward_enabled = True
         self._forward_enabled = True
         self._finished_diasbled = False

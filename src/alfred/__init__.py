@@ -79,7 +79,7 @@ class Experiment(object):
             raise SyntaxError("The definition of experiment title, type, or version in script.py is deprecated. Please define these parameters in config.conf. In your script.py, just use 'exp = Experiment()'.")
 
         # get experiment metadata
-        if custom_settings:
+        if 'experiment' in custom_settings.keys():
             self._author = custom_settings['experiment']["author"]
             self._title = custom_settings['experiment']["title"]
             self._version = custom_settings['experiment']["version"]
@@ -103,17 +103,20 @@ class Experiment(object):
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
+        
+        # update settings with custom settings from mortimer
+        if 'navigation' in custom_settings.keys():
+            self._settings.navigation = _DictObj(custom_settings["navigation"])
+        if 'hints' in custom_settings.keys():
+            self._settings.hints = _DictObj(custom_settings["hints"])
+        if 'messages' in custom_settings.keys():
+            self._settings.messages = _DictObj(custom_settings["messages"])
+
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
         self._page_controller = PageController(self)
 
-        # update settings with custom settings from mortimer
-        if custom_settings["navigation"]:
-            self._settings.navigation = _DictObj(custom_settings["navigation"])
-        if custom_settings["hints"]:
-            self._settings.hints = _DictObj(custom_settings["hints"])
-        if custom_settings["messages"]:
-            self._settings.messages = _DictObj(custom_settings["messages"])
+        
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
