@@ -109,11 +109,11 @@ class Experiment(object):
 
         # update settings with custom settings from mortimer
         if custom_settings["navigation"]:
-            self._settings["navigation"] = _DictObj(custom_settings["navigation"])
+            self._settings.navigation = _DictObj(custom_settings["navigation"])
         if custom_settings["hints"]:
-            self._settings["hints"] = _DictObj(custom_settings["hints"])
+            self._settings.hints = _DictObj(custom_settings["hints"])
         if custom_settings["messages"]:
-            self._settings["messages"] = _DictObj(custom_settings["messages"])
+            self._settings.messages = _DictObj(custom_settings["messages"])
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
