@@ -44,7 +44,7 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type=None, exp_name=None, exp_version=None, custom_settings: dict=None, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, exp_type=None, exp_name=None, exp_version=None, config=None, config_string='', basepath=None, custom_layout=None):
         '''
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
@@ -79,14 +79,14 @@ class Experiment(object):
             raise SyntaxError("The definition of experiment title, type, or version in script.py is deprecated. Please define these parameters in config.conf. In your script.py, just use 'exp = Experiment()'.")
 
         # get experiment metadata
-        if 'experiment' in custom_settings.keys():
-            self._author = custom_settings['experiment']["author"]
-            self._title = custom_settings['experiment']["title"]
-            self._version = custom_settings['experiment']["version"]
-            self._exp_id = custom_settings['experiment']["exp_id"]
-            self._path = custom_settings['mortimer_specific']["path"]
-            self._session_id = custom_settings['mortimer_specific']["session_id"]
-            self._type = custom_settings['experiment']["type"]
+        if config is not None and 'experiment' in config.keys():
+            self._author = config['experiment']["author"]
+            self._title = config['experiment']["title"]
+            self._version = config['experiment']["version"]
+            self._exp_id = config['experiment']["exp_id"]
+            self._path = config['mortimer_specific']["path"]
+            self._session_id = config['mortimer_specific']["session_id"]
+            self._type = config['experiment']["type"]
         else:
             self._author = settings.experiment.author
             self._title = settings.experiment.title
@@ -103,14 +103,13 @@ class Experiment(object):
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
-        
         # update settings with custom settings from mortimer
-        if 'navigation' in custom_settings.keys():
-            self._settings.navigation = _DictObj(custom_settings["navigation"])
-        if 'hints' in custom_settings.keys():
-            self._settings.hints = _DictObj(custom_settings["hints"])
-        if 'messages' in custom_settings.keys():
-            self._settings.messages = _DictObj(custom_settings["messages"])
+        if config is not None and 'navigation' in config.keys():
+            self._settings.navigation = _DictObj(config["navigation"])
+        if config is not None and 'hints' in config.keys():
+            self._settings.hints = _DictObj(config["hints"])
+        if config is not None and 'messages' in config.keys():
+            self._settings.messages = _DictObj(config["messages"])
 
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()

@@ -11,7 +11,7 @@ if settings.experiment.type == "qt-wk":
     from alfred.helpmates.localserver import Generator 
     generator = Generator()
     generator.set_generator(script.generate_experiment)
-    exp = generator.generate_experiment()
+    exp = generator.generate_experiment(config=None)
     exp.start()
     
 elif settings.experiment.type == "web":

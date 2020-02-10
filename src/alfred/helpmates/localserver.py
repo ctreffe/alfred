@@ -41,7 +41,7 @@ script = Generator()
 
 @app.route('/start', methods=['GET', 'POST'])
 def start():
-    exp = script.generate_experiment()
+    exp = script.generate_experiment(config=None)
     script.set_experiment(exp)
     script.experiment.start()
     
