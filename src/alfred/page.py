@@ -34,6 +34,7 @@ class PageCore(ContentCore):
         self._is_closed = False
         self._show_corrective_hints = False
         self.basket = _DictObj(basket)
+        self._log = [] # insert tuple with ('type', msg) for logger
 
         super(PageCore, self).__init__(**kwargs)
 
@@ -45,6 +46,23 @@ class PageCore(ContentCore):
             raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebPageInterface.__name__))
 
         super(PageCore, self).added_to_experiment(experiment)
+
+    def print_log(self):
+        for category, msg in self._log:
+            if category == 'debug':
+                logger.debug(msg, self._experiment)
+            if category == 'info':
+                logger.info(msg, self._experiment)
+            if category == 'warning':
+                logger.warning(msg, self._experiment)
+            if category == 'error':
+                logger.error(msg, self._experiment)
+            if category == 'critical':
+                logger.critical(msg, self._experiment)
+            if category == 'log':
+                logger.log(msg, self._experiment)
+            if category == 'exception':
+                logger.exception(msg, self._experiment)
 
     @property
     def show_thumbnail(self):
@@ -196,11 +214,11 @@ class CoreCompositePage(PageCore):
                 self.append(elmnt)
 
     def add_element(self, element):
-        logger.warning("add_element() is deprecated. Use append() instead.")
+        self._log.append('warning', "page.add_element() is deprecated. Use page.append() instead.")
         self.append(element)
 
     def add_elements(self, *elements):
-        logger.warning("add_elements() is deprecated. Use append() instead.")
+        self._log.append('warning', "page.add_elements() is deprecated. Use page.append() instead.")
         for elmnt in elements:
             self.append(elmnt)
 

@@ -25,6 +25,7 @@ class Section(ContentCore):
         self._page_list = []
         self._currentPageIndex = 0
         self._should_be_shown = True
+        self._log = [] # insert tuple with ('type', msg) for logger
 
     def __str__(self):
         s = "Section (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
@@ -127,18 +128,37 @@ class Section(ContentCore):
                 if isinstance(item, Section):
                     item.randomize(True)
 
+    def print_log(self):
+        for category, msg in self._log:
+            if category == 'debug':
+                logger.debug(msg, self._experiment)
+            if category == 'info':
+                logger.info(msg, self._experiment)
+            if category == 'warning':
+                logger.warning(msg, self._experiment)
+            if category == 'error':
+                logger.error(msg, self._experiment)
+            if category == 'critical':
+                logger.critical(msg, self._experiment)
+            if category == 'log':
+                logger.log(msg, self._experiment)
+            if category == 'exception':
+                logger.exception(msg, self._experiment)
+
     def added_to_experiment(self, exp):
         self._experiment = exp
+        self.print_log()
 
         for page in self._page_list:
             page.added_to_experiment(self._experiment)
+            page.print_log()
 
     def append_item(self, item):
-        logger.warning("append_item() is deprecated. Use append() instead.")
+        self._log.append(('warning', "section.append_item() is deprecated. Use section.append() instead."))
         self.append(item)
 
     def append_items(self, *items):
-        logger.warning("append_items() is deprecated. Use append() instead.")
+        self._log.append(('warning', "section.append_items() is deprecated. Use section.append() instead."))
 
         for item in items:
             self.append(item)
