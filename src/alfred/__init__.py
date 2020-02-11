@@ -21,7 +21,7 @@ from .alfredlog import init_logging
 init_logging(__name__)
 
 
-import time
+import time, sys, os
 from uuid import uuid4
 
 from .saving_agent import SavingAgentController
@@ -84,9 +84,9 @@ class Experiment(object):
             self._title = config['experiment']["title"]
             self._version = config['experiment']["version"]
             self._exp_id = config['experiment']["exp_id"]
-            self._path = config['mortimer_specific']["path"]
             self._session_id = config['mortimer_specific']["session_id"]
             self._type = config['experiment']["type"]
+            self._path = config['mortimer_specific']["path"]
         else:
             self._author = settings.experiment.author
             self._title = settings.experiment.title
@@ -96,6 +96,7 @@ class Experiment(object):
             self._path = settings.general.external_files_dir
             self._session_id = uuid4().hex
             self._type = settings.experiment.type
+            self._path = os.path.abspath(os.path.dirname(sys.argv[0]))
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
 
@@ -114,8 +115,6 @@ class Experiment(object):
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
         self._page_controller = PageController(self)
-
-        
 
         # Determine web layout if necessary
         if self._type == 'web' or self._type == 'qt-wk':
@@ -147,7 +146,7 @@ class Experiment(object):
         self._start_time = None
 
         if basepath is not None:
-            logger.warning("Usage of basepath is depricated.", self)
+            logger.warning("Usage of basepath is deprecated.", self)
 
     def update(self, title, version, author, exp_id, type="web"):
         self._title = title
