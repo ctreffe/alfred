@@ -21,7 +21,8 @@ def init_logging(name='alfred'):
         logger.addHandler(handler)
 
     if settings.log.path:
-        path = os.path.abspath(settings.log.path)
+        run_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+        path = os.path.join(run_path, 'log')
         if not os.path.exists(path):
             os.makedirs(path)
         if not os.path.isdir(path):
@@ -68,7 +69,6 @@ def alfred_init(exp_type):
         logger.info("Alfred framework web startup! Logging system initialized.")
     elif exp_type == 'qt':
         logger.info("##################################### Starting new alfred qt experiment session #####################################")
-
 
 class NewLogger(object):
     def __init__(self, module_name=None):
@@ -129,3 +129,4 @@ class NewLogger(object):
             except Exception:
                 pass
         return self.logger.exception(msg, *args)
+
