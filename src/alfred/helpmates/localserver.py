@@ -3,9 +3,7 @@ from builtins import callable as builtins_callable
 from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session
 from uuid import uuid4
 from ..settings import general, experiment
-
 import re
-
 
 app = Flask(__name__)
 app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
