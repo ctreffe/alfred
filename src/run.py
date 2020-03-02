@@ -6,6 +6,8 @@ from alfred.helpmates import socket_checker
 import alfred.settings as settings
 import script
 import webbrowser
+from alfred.alfredlog import init_logging
+init_logging('alfred')
 
 if settings.experiment.type == "qt-wk":
     from alfred.helpmates.localserver import Generator 

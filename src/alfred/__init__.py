@@ -17,9 +17,6 @@ __version__ = '0.3b1'
 # to ensure that the logger is configured properly this must be at the top of the
 # __init__.py module
 
-from .alfredlog import init_logging
-init_logging(__name__)
-
 
 import time, sys, os
 from uuid import uuid4
@@ -34,7 +31,7 @@ from . import settings
 from . import messages
 from . import alfredlog
 
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.getLogger('alfred')
 
 
 class Experiment(object):
