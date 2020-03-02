@@ -112,7 +112,10 @@ class NewLogger(object):
         elif exp_id:
             try:
                 msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=exp_id, session=session_id[:6]) + ' - ' + msg
-            except Exception:
+            except Exception as e:
+                print("\n\n\n")
+                print(e)
+                print("\n\n\n")
                 pass
         return self.logger.error(msg, *args, **kwargs)
 
