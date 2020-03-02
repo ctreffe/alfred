@@ -90,26 +90,41 @@ class NewLogger(object):
                 pass
         return self.logger.info(msg, *args, **kwargs)
 
-    def warning(self, msg, experiment=None, *args, **kwargs):
+    def warning(self, msg, experiment=None, exp_id=None, session_id=None, *args, **kwargs):
         if experiment:
             try:
                 msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=experiment.exp_id, session=experiment.session_id[:6]) + ' - ' + msg
+            except Exception:
+                pass
+        elif exp_id:
+            try:
+                msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=exp_id, session=session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.warning(msg, *args, **kwargs)
 
-    def error(self, msg, experiment=None, *args, **kwargs):
+    def error(self, msg, experiment=None, exp_id=None, session_id=None, *args, **kwargs):
         if experiment:
             try:
                 msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=experiment.exp_id, session=experiment.session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
+        elif exp_id:
+            try:
+                msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=exp_id, session=session_id[:6]) + ' - ' + msg
+            except Exception:
+                pass
         return self.logger.error(msg, *args, **kwargs)
 
-    def critical(self, msg, experiment=None, *args, **kwargs):
+    def critical(self, msg, experiment=None, exp_id=None, session_id=None, *args, **kwargs):
         if experiment:
             try:
                 msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=experiment.exp_id, session=experiment.session_id[:6]) + ' - ' + msg
+            except Exception:
+                pass
+        elif exp_id:
+            try:
+                msg = 'experiment id={exp_id}, session id={session}'.format(exp_id=exp_id, session=session_id[:6]) + ' - ' + msg
             except Exception:
                 pass
         return self.logger.critical(msg, *args, **kwargs)
