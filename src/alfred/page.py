@@ -541,7 +541,7 @@ class WebTimeoutMixin(object):
                     }
                     $(".timeout-label").html(time_left);
                     if (time_left > 0) {
-                        set_timeout(update_counter, 200);
+                        setTimeout(update_counter, 200);
                     }
                 };
                 update_counter();
@@ -550,7 +550,7 @@ class WebTimeoutMixin(object):
                     $("#form").attr("action", action_url);
                     $("#form").submit();
                 };
-                set_timeout(timeout_function, timeout*1000);
+                setTimeout(timeout_function, timeout*1000);
             });
         ''' % (self._timeout, self._end_link))
         js_code = super(WebTimeoutMixin, self).js_code
