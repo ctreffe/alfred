@@ -22,7 +22,7 @@ from alfred import Experiment
 class Welcome(Page):
 
     def on_showing(self):
-        el = TextElement(self.basket.lol)
+        el = TextElement(self.values.test)
         self.append(el)
 
 ########################################
@@ -34,7 +34,7 @@ def generate_experiment(self, custom_settings=None):
     exp = Experiment(custom_settings=custom_settings)
 
     # --- Page 1 --- #
-    page01 = Welcome(title="Hello, world!", basket={"lol": "test"})
+    page01 = Welcome(title="Hello, world!", values={"test": "test"})
 
     # Sections
     main = SegmentedSection()
