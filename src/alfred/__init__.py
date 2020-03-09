@@ -183,6 +183,9 @@ class Experiment(object):
         for item in items:
             self.page_controller.append(item)
 
+    def change_final_page(self, page):
+        self.page_controller.append_item_to_finish_section(page)
+
     @property
     def author(self):
         '''
