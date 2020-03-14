@@ -72,9 +72,6 @@ class Experiment(object):
         |
         '''
 
-        if exp_type or exp_name or exp_version:
-            raise SyntaxError("The definition of experiment title, type, or version in script.py is deprecated. Please define these parameters in config.conf. In your script.py, just use 'exp = Experiment()'.")
-
         # get experiment metadata
         if config is not None and 'experiment' in config.keys():
             self._author = config['experiment']["author"]
