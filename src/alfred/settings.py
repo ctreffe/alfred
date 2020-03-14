@@ -73,6 +73,15 @@ metadata.title = _config_parser.get('metadata', 'title')
 metadata.author = _config_parser.get('metadata', 'author')
 metadata.version = _config_parser.get('metadata', 'version')
 metadata.exp_id = _config_parser.get('metadata', 'exp_id')
+# check if metadata is given correctly
+if not metadata.title:
+    raise ValueError("You need to define an experiment title in config.conf. Make sure to remove title definition from script.py")
+if not metadata.author:
+    raise ValueError("You need to define an author in config.conf. Make sure to remove author definition from script.py")
+if not metadata.version:
+    raise ValueError("You need to define an experiment version in config.conf. Make sure to remove version definition from script.py")
+if not metadata.exp_id:
+    raise ValueError("You need to define an experiment id in config.conf. IMPORTANT: For local experiments that write data to an online data base, this experiment id needs to be unique. OTHERWISE, DATA MAY BE LOST.")
 
 # experiment
 experiment = _DictObj()
@@ -80,13 +89,6 @@ experiment.type = _config_parser.get('experiment', 'type')
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
 experiment.web_layout = _config_parser.get('experiment', 'web_layout')
 
-# check if metadata is given correctly
-if not experiment.title:
-    raise ValueError("You need to define an experiment title in config.conf. Make sure to remove title definition from script.py")
-if not experiment.author:
-    raise ValueError("You need to define an author in config.conf. Make sure to remove author definition from script.py")
-if not experiment.version:
-    raise ValueError("You need to define an experiment version in config.conf. Make sure to remove version definition from script.py")
 if not experiment.type:
     raise ValueError("You need to define an experiment type in config.conf. Make sure to remove type definition from script.py")
 if not (experiment.type == 'qt' or experiment.type == 'web' or experiment.type == 'qt-wk'):
