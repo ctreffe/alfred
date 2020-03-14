@@ -67,13 +67,16 @@ general.external_files_dir = _config_parser.get('general', 'external_files_dir')
 if not os.path.isabs(general.external_files_dir):
     general.external_files_dir = os.path.join(os.getcwd(), general.external_files_dir)
 
+# metadata
+metadata = _DictObj()
+metadata.title = _config_parser.get('metadata', 'title')
+metadata.author = _config_parser.get('metadata', 'author')
+metadata.version = _config_parser.get('metadata', 'version')
+metadata.exp_id = _config_parser.get('metadata', 'exp_id')
+
 # experiment
 experiment = _DictObj()
-experiment.title = _config_parser.get('experiment', 'title')
-experiment.author = _config_parser.get('experiment', 'author')
-experiment.version = _config_parser.get('experiment', 'version')
 experiment.type = _config_parser.get('experiment', 'type')
-experiment.exp_id = _config_parser.get('experiment', 'exp_id')
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
 experiment.web_layout = _config_parser.get('experiment', 'web_layout')
 

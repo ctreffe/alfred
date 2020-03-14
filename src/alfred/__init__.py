@@ -41,7 +41,7 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type=None, exp_name=None, exp_version=None, config=None, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, config=None, config_string='', basepath=None, custom_layout=None):
         '''
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
@@ -85,11 +85,11 @@ class Experiment(object):
             self._type = config['experiment']["type"]
             self._path = config['mortimer_specific']["path"]
         else:
-            self._author = settings.experiment.author
-            self._title = settings.experiment.title
-            self._version = settings.experiment.version
+            self._author = settings.metadata.author
+            self._title = settings.metadata.title
+            self._version = settings.metadata.version
+            self._exp_id = settings.metadata.exp_id
             self._type = settings.experiment.type
-            self._exp_id = settings.experiment.exp_id
             self._path = settings.general.external_files_dir
             self._session_id = uuid4().hex
             self._type = settings.experiment.type
