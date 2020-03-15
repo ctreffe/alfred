@@ -102,6 +102,12 @@ log.stderrlog = _config_parser.getboolean('log', 'stderrlog')
 log.path = _config_parser.get('log', 'path')
 log.level = _config_parser.get('log', 'level')
 
+# navigation
+navigation = _DictObj()
+navigation.forward = _config_parser.get('navigation', 'forward')
+navigation.backward = _config_parser.get('navigation', 'backward')
+navigation.finish = _config_parser.get('navigation', 'finish')
+
 # failure saving agent
 failure_local_saving_agent = _DictObj()
 failure_local_saving_agent.level = _config_parser.getint('failure_local_saving_agent', 'level')
