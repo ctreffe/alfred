@@ -9,7 +9,7 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 from __future__ import absolute_import
 
 from builtins import object
-__version__ = '0.3b1'
+__version__ = '1.0'
 
 
 # configure alfred logger
@@ -17,23 +17,21 @@ __version__ = '0.3b1'
 # to ensure that the logger is configured properly this must be at the top of the
 # __init__.py module
 
-from .alfredlog import init_logging
-init_logging(__name__)
 
-
-import time
+import time, sys, os
 from uuid import uuid4
 
 from .saving_agent import SavingAgentController
 from .data_manager import DataManager
 from .page_controller import PageController
 from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
+from ._helper import _DictObj
 from . import layout
 from . import settings
 from . import messages
-
 from . import alfredlog
-logger = alfredlog.getLogger(__name__)
+
+logger = alfredlog.getLogger('alfred')
 
 
 class Experiment(object):
@@ -43,15 +41,9 @@ class Experiment(object):
     |
     '''
 
-    def __init__(self, exp_type, exp_name, exp_version, exp_author_mail, config_string='', basepath=None, custom_layout=None):
+    def __init__(self, config=None, config_string='', basepath=None, custom_layout=None):
         '''
-        :param str exp_type: Typ des Experiments.
-        :param str exp_name: Name des Experiments.
-        :param str exp_version: Version des Experiments.
-        :param str exp_author_mail: E-Mail Adresse des/der Autor*in des Experiments. Für den Zugriff auf die Daten aus Mortimer sollte hier die gleiche Mail-Adresse verwendet werden, wie bei der Registrierung in Mortimer.
-        :param layout custom_layout: Optionaler Parameter, um das Experiment mit eigenem Custom layout zu starten
-
-        .. note:: mindestens exp_type und exp_name müssen beim Aufruf übergeben werden!
+        :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
         |
 
@@ -80,31 +72,42 @@ class Experiment(object):
         |
         '''
 
-        if type(exp_name) != str or exp_name == '' or type(exp_version) != str or exp_version == '' or not(exp_type == 'qt' or
-                                                                                                           exp_type == 'web' or exp_type == 'qt-wk'):
-            raise ValueError("exp_name and exp_version must be a non empty strings and exp_type must be 'qt' or 'web'")
+        # get experiment metadata
+        if config is not None and 'experiment' in config.keys():
+            self._author = config['experiment']["author"]
+            self._title = config['experiment']["title"]
+            self._version = config['experiment']["version"]
+            self._exp_id = config['experiment']["exp_id"]
+            self._session_id = config['mortimer_specific']["session_id"]
+            self._type = config['experiment']["type"]
+            self._path = config['mortimer_specific']["path"]
+        else:
+            self._author = settings.metadata.author
+            self._title = settings.metadata.title
+            self._version = settings.metadata.version
+            self._exp_id = settings.metadata.exp_id
+            self._type = settings.experiment.type
+            self._path = settings.general.external_files_dir
+            self._session_id = uuid4().hex
+            self._type = settings.experiment.type
+            self._path = os.path.abspath(os.path.dirname(sys.argv[0]))
+        if not self._exp_id:
+            raise ValueError("You need to specify an experiment ID.")
 
-        self._author_mail = exp_author_mail
-
-        #: Name des Experiments
-        self._name = exp_name
-
-        #: Version des Experiments
-        self._version = exp_version
-
-        #: Typ des Experiments
-        self._type = exp_type
-        if self._type != settings.experiment.type:
-            raise RuntimeError("experiment types must be equal in script and config file")
-
-        #: Uid des Experiments
-        self._uuid = uuid4().hex
-        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._name, self._version), self)
+        # Experiment startup message
+        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
+        # update settings with custom settings from mortimer
+        if config is not None and 'navigation' in config.keys():
+            self._settings.navigation = _DictObj(config["navigation"])
+        if config is not None and 'hints' in config.keys():
+            self._settings.hints = _DictObj(config["hints"])
+        if config is not None and 'messages' in config.keys():
+            self._settings.messages = _DictObj(config["messages"])
+
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
-
         self._page_controller = PageController(self)
 
         # Determine web layout if necessary
@@ -137,7 +140,14 @@ class Experiment(object):
         self._start_time = None
 
         if basepath is not None:
-            logger.warning("Usage of basepath is depricated.", self)
+            logger.warning("Usage of basepath is deprecated.", self)
+
+    def update(self, title, version, author, exp_id, type="web"):
+        self._title = title
+        self._version = version
+        self._author = author
+        self._type = type
+        self._exp_id = exp_id
 
     def start(self):
         '''
@@ -166,21 +176,31 @@ class Experiment(object):
         # run saving_agent_controller
         self._saving_agent_controller.run_saving_agents(99)
 
+    def append(self, *items):
+        for item in items:
+            self.page_controller.append(item)
+
+    def change_final_page(self, page):
+        self.page_controller.append_item_to_finish_section(page)
+
+    def subpath(self, path):
+        return os.path.join(self.path, path)
+
     @property
-    def author_mail(self):
+    def author(self):
         '''
         Achtung: *read-only*
 
-        :return: E-Mail des/der Autor*in **author_mail** (*str*)
+        :return: Experiment author **author** (*str*)
         '''
-        return self._author_mail
+        return self._author
 
     @property
     def type(self):
         '''
         Achtung: *read-only*
 
-        :return: Experimenttyp **exp_type** (*str*)
+        :return: Type of experiment **type** (*str*)
         '''
 
         return self._type
@@ -190,18 +210,18 @@ class Experiment(object):
         '''
         Achtung: *read-only*
 
-        :return: Experimentversion **exp_version** (*str*)
+        :return: Experiment version **version** (*str*)
         '''
         return self._version
 
     @property
-    def name(self):
+    def title(self):
         '''
         Achtung: *read-only*
 
-        :return: Experimentname **exp_name** (*str*)
+        :return: Experiment title **title** (*str*)
         '''
-        return self._name
+        return self._title
 
     @property
     def start_timestamp(self):
@@ -216,8 +236,16 @@ class Experiment(object):
         return self._experimenter_message_manager
 
     @property
-    def uuid(self):
-        return self._uuid
+    def exp_id(self):
+        return self._exp_id
+
+    @property
+    def path(self):
+        return self._path
+    
+    @property
+    def session_id(self):
+        return self._session_id
 
     @property
     def user_interface_controller(self):

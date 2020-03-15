@@ -113,7 +113,7 @@ class Element(object):
 
     def added_to_page(self, q):
         from . import page
-        if not isinstance(q, page.Page):
+        if not isinstance(q, page.PageCore):
             raise TypeError()
 
         self._page = q

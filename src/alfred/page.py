@@ -10,8 +10,9 @@ from builtins import object
 from abc import ABCMeta, abstractproperty
 import time
 
-from ._core import PageCore
+from ._core import ContentCore
 from .exceptions import AlfredError
+from ._helper import _DictObj
 from . import element, alfredlog
 from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
 import alfred.settings as settings
@@ -22,8 +23,8 @@ from functools import reduce
 logger = alfredlog.getLogger(__name__)
 
 
-class Page(PageCore):
-    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs):
+class PageCore(ContentCore):
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict={}, **kwargs):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
@@ -32,14 +33,36 @@ class Page(PageCore):
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
+        self.values = _DictObj(values)
+        self._log = [] # insert tuple with ('type', msg) for logger
 
-        super(Page, self).__init__(**kwargs)
+        super(PageCore, self).__init__(**kwargs)
+
+        if not isinstance(values, dict):
+            raise TypeError("The parameter 'values' requires a dictionary as input.")
 
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
             raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebPageInterface.__name__))
 
-        super(Page, self).added_to_experiment(experiment)
+        super(PageCore, self).added_to_experiment(experiment)
+
+    def print_log(self):
+        for category, msg in self._log:
+            if category == 'debug':
+                logger.debug(msg, self._experiment)
+            if category == 'info':
+                logger.info(msg, self._experiment)
+            if category == 'warning':
+                logger.warning(msg, self._experiment)
+            if category == 'error':
+                logger.error(msg, self._experiment)
+            if category == 'critical':
+                logger.critical(msg, self._experiment)
+            if category == 'log':
+                logger.log(msg, self._experiment)
+            if category == 'exception':
+                logger.exception(msg, self._experiment)
 
     @property
     def show_thumbnail(self):
@@ -59,7 +82,7 @@ class Page(PageCore):
 
     @property
     def data(self):
-        data = super(Page, self).data
+        data = super(PageCore, self).data
         data.update(self._data)
         return data
 
@@ -72,10 +95,14 @@ class Page(PageCore):
             self._data['first_show_time'] = time.time()
 
         self.on_showing_widget()
+        self.on_showing()
 
         self._has_been_shown = True
 
     def on_showing_widget(self):
+        pass
+
+    def on_showing(self):
         pass
 
     def _on_hiding_widget(self):
@@ -83,12 +110,16 @@ class Page(PageCore):
         Method for internal processes on hiding Widget
         '''
         self.on_hiding_widget()
+        self.on_hiding()
 
         self._has_been_hidden = True
 
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
     def on_hiding_widget(self):
+        pass
+
+    def on_hiding(self):
         pass
 
     def close_page(self):
@@ -169,7 +200,7 @@ class WebPageInterface(with_metaclass(ABCMeta, object)):
         pass
 
 
-class CoreCompositePage(Page):
+class CoreCompositePage(PageCore):
     def __init__(self, elements=None, **kwargs):
         super(CoreCompositePage, self).__init__(**kwargs)
 
@@ -183,11 +214,11 @@ class CoreCompositePage(Page):
                 self.append(elmnt)
 
     def add_element(self, element):
-        logger.warning("add_element() is deprecated. Use append() instead.")
+        self._log.append('warning', "page.add_element() is deprecated. Use page.append() instead.")
         self.append(element)
 
     def add_elements(self, *elements):
-        logger.warning("add_elements() is deprecated. Use append() instead.")
+        self._log.append('warning', "page.add_elements() is deprecated. Use page.append() instead.")
         for elmnt in elements:
             self.append(elmnt)
 
@@ -319,8 +350,11 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 class CompositePage(WebCompositePage):
     pass
 
+class Page(WebCompositePage):
+    pass
 
-class PagePlaceholder(Page, WebPageInterface):
+
+class PagePlaceholder(PageCore, WebPageInterface):
     def __init__(self, ext_data={}, **kwargs):
         super(PagePlaceholder, self).__init__(**kwargs)
 
@@ -332,7 +366,7 @@ class PagePlaceholder(Page, WebPageInterface):
 
     @property
     def data(self):
-        data = super(Page, self).data
+        data = super(PageCore, self).data
         data.update(self._ext_data)
         return data
 
@@ -398,8 +432,9 @@ class ExperimentFinishPage(CompositePage):
             exp_infos = '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>' + self._experiment.name + '</td></tr>'
             exp_infos = exp_infos + '<tr><td>Experimenttyp:</td><td>' + self._experiment.type + '</td></tr>'
             exp_infos = exp_infos + '<tr><td>Experimentversion:</td><td>' + self._experiment.version + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>' + self._experiment.uuid + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Log-ID:</td><td>' + self._experiment.uuid[:6] + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Experiment-ID:</td><td>' + self._experiment.exp_id + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>' + self._experiment.session_id + '</td></tr>'
+            exp_infos = exp_infos + '<tr><td>Log-ID:</td><td>' + self._experiment.session_id[:6] + '</td></tr>'
             exp_infos = exp_infos + '</table>'
 
             exp_info_element = TextElement(exp_infos)
@@ -506,7 +541,7 @@ class WebTimeoutMixin(object):
                     }
                     $(".timeout-label").html(time_left);
                     if (time_left > 0) {
-                        set_timeout(update_counter, 200);
+                        setTimeout(update_counter, 200);
                     }
                 };
                 update_counter();
@@ -515,7 +550,7 @@ class WebTimeoutMixin(object):
                     $("#form").attr("action", action_url);
                     $("#form").submit();
                 };
-                set_timeout(timeout_function, timeout*1000);
+                setTimeout(timeout_function, timeout*1000);
             });
         ''' % (self._timeout, self._end_link))
         js_code = super(WebTimeoutMixin, self).js_code

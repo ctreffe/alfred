@@ -7,27 +7,28 @@
 '''
 from __future__ import absolute_import
 
-
+import os.path
+from alfred.settings import ExperimentSpecificSettings
 from builtins import map
 from builtins import range
 from builtins import object
-import os.path
 from abc import ABCMeta, abstractmethod
 from jinja2 import Environment, PackageLoader
 from future.utils import with_metaclass
-
 from ._core import package_path
 
+
 jinja_env = Environment(loader=PackageLoader('alfred', 'templates'))
+settings = ExperimentSpecificSettings()
 
 
 class Layout(with_metaclass(ABCMeta, object)):
     def __init__(self):
         self._experiment = None
         self._ui_controller = None
-        self._backward_text = u"Zurück"
-        self._forward_text = u"Weiter"
-        self._finish_text = u"Beenden"
+        self._backward_text = settings.navigation.backward
+        self._forward_text = settings.navigation.forward
+        self._finish_text = settings.navigation.finish
         self._backward_enabled = True
         self._forward_enabled = True
         self._finished_diasbled = False

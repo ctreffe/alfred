@@ -55,6 +55,10 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         else:
             self.change_layout(layout)
 
+        self._layout.forward_text = self._experiment._settings.navigation.forward
+        self._layout.backward_text = self._experiment._settings.navigation.backward
+        self._layout.finish_text = self._experiment._settings.navigation.finish
+        
     @abstractmethod
     def render(self):
         pass
@@ -245,7 +249,7 @@ class QtWebKitUserInterfaceController(WebUserInterfaceController):
 
         self._helper = ThreadHelper(self)
 
-        localserver.set_experiment(experiment)
+        localserver.script.set_experiment(experiment)
 
         # initialize qt
         self._app = QApplication([])

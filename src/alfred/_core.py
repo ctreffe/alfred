@@ -10,7 +10,7 @@ import os.path
 from uuid import uuid4
 
 
-class PageCore(object):
+class ContentCore(object):
     def __init__(self, tag=None, uid=None, tag_and_uid=None, is_jumpable=True, jumptext=None,
                  title=None, subtitle=None, statustext=None,
                  should_be_shown_filter_function=None, **kwargs):
@@ -56,7 +56,7 @@ class PageCore(object):
         if statustext is not None:
             self.statustext = statustext
 
-    def get_data(self, page_uid=None):
+    def get_page_data(self, page_uid=None):
         data = self._experiment.data_manager.find_experiment_data_by_uid(page_uid)
         return data
 

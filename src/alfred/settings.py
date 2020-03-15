@@ -17,6 +17,7 @@ import configparser
 import codecs
 import io
 from cryptography.fernet import Fernet
+from ._helper import _DictObj, Decrypter
 
 
 def _package_path():
@@ -28,54 +29,6 @@ def _package_path():
 
 #: package_path is the absolute filepath where alfred package is installed
 package_path = _package_path()
-
-class Decrypter(object):
-
-    _decrypter = None
-
-    def decrypt_login(self, username=None, password=None, from_env=False):
-
-        if not self._decrypter:
-            # Fernet instance for decryption of login data
-            if os.path.isfile("alfred_secrect.key"):
-                with open("alfred_secrect.key", "rb") as keyfile:
-                    key = keyfile.read()
-            else:
-                key = os.environ.get("ALFRED_SECRET_KEY")
-            try:
-                self._decrypter = Fernet(key)
-            except Exception:
-                RuntimeError('Unable to initialize Fernet decrypter: Secret key not found!')
-
-        if from_env:
-            try:
-                decrypted_username = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
-                decrypted_password = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
-
-                return (decrypted_username, decrypted_password)
-
-            except (AttributeError, NameError):
-                print("Incomplete DB login data in environment variables. Now trying to decrypt login data from config.conf...")
-
-        decrypted_username = self._decrypter.decrypt(username.encode()).decode()
-        decrypted_password = self._decrypter.decrypt(password.encode()).decode()
-
-        return (decrypted_username, decrypted_password)
-
-    
-class _DictObj(dict):
-    """
-    This class allows dot notation to access dict elements
-
-    Example:
-    d = _DictObj()
-    d.hello = "Hello World"
-    print d.hello # Hello World
-    """
-
-    __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
 
 ##########################################################################
 # Global Settings
@@ -114,12 +67,33 @@ general.external_files_dir = _config_parser.get('general', 'external_files_dir')
 if not os.path.isabs(general.external_files_dir):
     general.external_files_dir = os.path.join(os.getcwd(), general.external_files_dir)
 
+# metadata
+metadata = _DictObj()
+metadata.title = _config_parser.get('metadata', 'title')
+metadata.author = _config_parser.get('metadata', 'author')
+metadata.version = _config_parser.get('metadata', 'version')
+metadata.exp_id = _config_parser.get('metadata', 'exp_id')
+# check if metadata is given correctly
+if not metadata.title:
+    raise ValueError("You need to define an experiment title in config.conf. Make sure to remove title definition from script.py")
+if not metadata.author:
+    raise ValueError("You need to define an author in config.conf. Make sure to remove author definition from script.py")
+if not metadata.version:
+    raise ValueError("You need to define an experiment version in config.conf. Make sure to remove version definition from script.py")
+if not metadata.exp_id:
+    raise ValueError("You need to define an experiment id in config.conf. IMPORTANT: For local experiments that write data to an online data base, this experiment id needs to be unique. OTHERWISE, DATA MAY BE LOST.")
+
 # experiment
 experiment = _DictObj()
 experiment.type = _config_parser.get('experiment', 'type')
+experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
+experiment.web_layout = _config_parser.get('experiment', 'web_layout')
+
+if not experiment.type:
+    raise ValueError("You need to define an experiment type in config.conf. Make sure to remove type definition from script.py")
 if not (experiment.type == 'qt' or experiment.type == 'web' or experiment.type == 'qt-wk'):
     raise ValueError("experiment.type must be qt, qt-wk or web")
-experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
+
 
 # logging
 log = _DictObj()
@@ -127,6 +101,12 @@ log.syslog = _config_parser.getboolean('log', 'syslog')
 log.stderrlog = _config_parser.getboolean('log', 'stderrlog')
 log.path = _config_parser.get('log', 'path')
 log.level = _config_parser.get('log', 'level')
+
+# navigation
+navigation = _DictObj()
+navigation.forward = _config_parser.get('navigation', 'forward')
+navigation.backward = _config_parser.get('navigation', 'backward')
+navigation.finish = _config_parser.get('navigation', 'finish')
 
 # failure saving agent
 failure_local_saving_agent = _DictObj()

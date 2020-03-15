@@ -11,13 +11,13 @@ from . import alfredlog
 from functools import reduce
 logger = alfredlog.getLogger(__name__)
 
-from ._core import PageCore, Direction
-from .page import Page, HeadOpenSectionCantClose
+from ._core import ContentCore, Direction
+from .page import PageCore, HeadOpenSectionCantClose
 from .exceptions import MoveError
 from random import shuffle
 
 
-class Section(PageCore):
+class Section(ContentCore):
 
     def __init__(self, **kwargs):
         super(Section, self).__init__(**kwargs)
@@ -25,6 +25,7 @@ class Section(PageCore):
         self._page_list = []
         self._currentPageIndex = 0
         self._should_be_shown = True
+        self._log = [] # insert tuple with ('type', msg) for logger
 
     def __str__(self):
         s = "Section (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
@@ -52,7 +53,7 @@ class Section(PageCore):
         if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].current_title is not None:
             return self._page_list[self._currentPageIndex].current_title
 
-        if isinstance(self._page_list[self._currentPageIndex], Page) and self._page_list[self._currentPageIndex].title is not None:
+        if isinstance(self._page_list[self._currentPageIndex], PageCore) and self._page_list[self._currentPageIndex].title is not None:
             return self._page_list[self._currentPageIndex].title
 
         return self.title
@@ -62,7 +63,7 @@ class Section(PageCore):
         if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].current_subtitle is not None:
             return self._page_list[self._currentPageIndex].current_subtitle
 
-        if isinstance(self._page_list[self._currentPageIndex], Page) and self._page_list[self._currentPageIndex].subtitle is not None:
+        if isinstance(self._page_list[self._currentPageIndex], PageCore) and self._page_list[self._currentPageIndex].subtitle is not None:
             return self._page_list[self._currentPageIndex].subtitle
 
         return self.subtitle
@@ -72,12 +73,12 @@ class Section(PageCore):
         if isinstance(self._page_list[self._currentPageIndex], Section) and self._page_list[self._currentPageIndex].current_status_text is not None:
             return self._page_list[self._currentPageIndex].current_status_text
 
-        if isinstance(self._page_list[self._currentPageIndex], Page) and self._page_list[self._currentPageIndex].statustext is not None:
+        if isinstance(self._page_list[self._currentPageIndex], PageCore) and self._page_list[self._currentPageIndex].statustext is not None:
             return self._page_list[self._currentPageIndex].statustext
 
         return self.statustext
 
-    @PageCore.should_be_shown.getter
+    @ContentCore.should_be_shown.getter
     def should_be_shown(self):
         '''return true wenn should_be_shown nicht auf False gesetzt wurde und mindestens eine Frage angezeigt werden will'''
         return super(Section, self).should_be_shown and reduce(lambda b, q_core: b or q_core.should_be_shown, self._page_list, False)
@@ -113,7 +114,7 @@ class Section(PageCore):
                     jump_item[0].append(i)
                     jump_item[0].reverse()
                     jumplist.append(jump_item)
-            elif isinstance(self._page_list[i], Page) and self._page_list[i].is_jumpable:
+            elif isinstance(self._page_list[i], PageCore) and self._page_list[i].is_jumpable:
                 jumplist.append(([i], self._page_list[i].jumptext, self._page_list[i]))
 
         return jumplist
@@ -127,18 +128,37 @@ class Section(PageCore):
                 if isinstance(item, Section):
                     item.randomize(True)
 
+    def print_log(self):
+        for category, msg in self._log:
+            if category == 'debug':
+                logger.debug(msg, self._experiment)
+            if category == 'info':
+                logger.info(msg, self._experiment)
+            if category == 'warning':
+                logger.warning(msg, self._experiment)
+            if category == 'error':
+                logger.error(msg, self._experiment)
+            if category == 'critical':
+                logger.critical(msg, self._experiment)
+            if category == 'log':
+                logger.log(msg, self._experiment)
+            if category == 'exception':
+                logger.exception(msg, self._experiment)
+
     def added_to_experiment(self, exp):
         self._experiment = exp
+        self.print_log()
 
         for page in self._page_list:
             page.added_to_experiment(self._experiment)
+            page.print_log()
 
     def append_item(self, item):
-        logger.warning("append_item() is deprecated. Use append() instead.")
+        self._log.append(('warning', "section.append_item() is deprecated. Use section.append() instead."))
         self.append(item)
 
     def append_items(self, *items):
-        logger.warning("append_items() is deprecated. Use append() instead.")
+        self._log.append(('warning', "section.append_items() is deprecated. Use section.append() instead."))
 
         for item in items:
             self.append(item)
@@ -257,7 +277,7 @@ class Section(PageCore):
         if not self._page_list[pos_list[0]].should_be_shown:
             raise MoveError("Die Angegebene Position kann nicht angezeigt werden")
 
-        if isinstance(self._page_list[pos_list[0]], Page) and 1 < len(pos_list):
+        if isinstance(self._page_list[pos_list[0]], PageCore) and 1 < len(pos_list):
             raise MoveError("pos_list spezifiziert genauer als moeglich.")
 
         if isinstance(self._core_page_at_index, Section):
@@ -291,7 +311,7 @@ class HeadOpenSection(Section):
 
         # direction is Direction.FORWARD
 
-        if isinstance(self._core_page_at_index, Page):
+        if isinstance(self._core_page_at_index, PageCore):
             HeadOpenSection._set_show_corrective_hints(self._core_page_at_index, True)
             return self._core_page_at_index.allow_closing and super(HeadOpenSection, self).allow_leaving(direction)
         else:  # currentCorePage is Group
@@ -310,7 +330,7 @@ class HeadOpenSection(Section):
                 not self._core_page_at_index.can_move_forward and \
                 not HeadOpenSection._allow_closing_all_child_pages(self._core_page_at_index):
             return True
-        elif isinstance(self._core_page_at_index, Page) and \
+        elif isinstance(self._core_page_at_index, PageCore) and \
                 not self._core_page_at_index.allow_closing:
             return True
         else:
@@ -335,7 +355,7 @@ class HeadOpenSection(Section):
         '''
         '''
         if self._maxPageIndex == self._currentPageIndex:
-            if isinstance(self._core_page_at_index, Page):
+            if isinstance(self._core_page_at_index, PageCore):
                 self._core_page_at_index.close_page()
 
             elif not self._core_page_at_index.can_move_forward:  # self._core_page_at_index is instance of Section and at the last item
@@ -362,7 +382,7 @@ class HeadOpenSection(Section):
     def leave(self, direction):
         if direction == Direction.FORWARD:
             logger.debug("Leaving HeadOpenSection direction forward. closing last page.", self._experiment)
-            if isinstance(self._core_page_at_index, Page):
+            if isinstance(self._core_page_at_index, PageCore):
                 self._core_page_at_index.close_page()
             else:
                 HeadOpenSection._close_child_pages(self._core_page_at_index)
@@ -384,14 +404,14 @@ class HeadOpenSection(Section):
     @staticmethod
     def _close_child_pages(section):
         for item in section._page_list:
-            if isinstance(item, Page):
+            if isinstance(item, PageCore):
                 item.close_page()
             else:
                 HeadOpenSection._close_child_pages(item)
 
     @staticmethod
     def _set_show_corrective_hints(corePage, b):
-        if isinstance(corePage, Page):
+        if isinstance(corePage, PageCore):
             corePage.show_corrective_hints = b
         else:
             section = corePage

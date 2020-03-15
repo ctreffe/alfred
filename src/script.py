@@ -1,69 +1,45 @@
 # -*- coding:utf-8 -*-
-'''
-Experiment script using Alfred - A library for rapid experiment development.
-
-Experiment author: Johannes Brachem <jobrachem@posteo.de>
-
-Description: This is a basic template for an alfred experiment.
-'''
-
 
 #################################
 # - Section 1: Module imports - #
 #################################
 
-from alfred.page import *
-from alfred.section import *
-from alfred.element import *
-from alfred.layout import *
-from alfred.helpmates import *
-
+import alfred.section as sec
+import alfred.element as elm
 from alfred import Experiment
+from alfred.page import Page
+from alfred.helpmates import parse_xml_to_dict
+
 
 #################################################
 # - Section 2: Global variables and functions - #
 #################################################
-EXP_TYPE = "web"
-EXP_NAME = "template"
-EXP_VERSION = "0.1"
-EXP_AUTHOR_MAIL = "your@email.com"
 
 #################################
-# - Section 3: Custom classes - #
+# - Section 3: Page definitions - #
 #################################
+
+class Welcome(Page):
+
+    def on_showing(self):
+        el = elm.TextElement(self.values.welcome_text)
+        self.append(el)
 
 ########################################
 # - Section 4: Experiment generation - #
 ########################################
 
+def generate_experiment(self, config=None):
+    exp = Experiment(config=config)
 
-class Script(object):
+    # --- Page 1 --- #
+    page01 = Welcome(title="Hello, world!", values={"welcome_text": "test"})
 
-    def generate_experiment(self):
-        exp = Experiment(EXP_TYPE, EXP_NAME, EXP_VERSION, EXP_AUTHOR_MAIL)
+    # Sections
+    main = sec.SegmentedSection()
+    main.append_items(page01)
 
-        # --- Page 1 --- #
-        # -------------------------------------- #
+    # Initialize and fill experiment
+    exp.append(main)
 
-        page01 = WebCompositePage(title="Hello, world!")
-
-        # ----------------------------------------------- #
-        # Initialize Sections
-        main = SegmentedSection()
-
-        # ----------------------------------------------- #
-        # Fill Sections
-
-        # ----------------------------------------------- #
-        # Append to main section #
-        # ----------------------------------------------- #
-
-        main.append_items(page01)
-
-        # Append Main Group to Experiment
-        exp.page_controller.append_item(main)
-
-        return exp
-
-
-generate_experiment = Script().generate_experiment
+    return exp
