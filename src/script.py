@@ -29,8 +29,8 @@ class Welcome(Page):
 # - Section 4: Experiment generation - #
 ########################################
 
-def generate_experiment(self, custom_settings=None):
-    exp = Experiment(custom_settings=custom_settings)
+def generate_experiment(self, config=None):
+    exp = Experiment(config=config)
 
     # --- Page 1 --- #
     page01 = Welcome(title="Hello, world!", values={"welcome_text": "test"})
