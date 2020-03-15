@@ -183,6 +183,9 @@ class Experiment(object):
     def change_final_page(self, page):
         self.page_controller.append_item_to_finish_section(page)
 
+    def subpath(self, path):
+        return os.path.join(self.path, path)
+
     @property
     def author(self):
         '''
