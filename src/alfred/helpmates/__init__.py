@@ -74,9 +74,6 @@ def parse_xml_to_dict(path, interface='web', code=False):
     with open(path, 'r', encoding='utf-8') as f:
         data_in = f.read().replace('\r\n', '\n')
 
-    # data_in = open(path, 'r', encoding='utf-8').read()
-    # data_in.replace('\r\n', '\n')
-    
     data_out = xmltodict.parse(data_in)
 
     if interface == 'web' and not code:
