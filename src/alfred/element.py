@@ -1652,6 +1652,7 @@ class ImageElement(Element, WebElementInterface):
             raise ValueError('path or url must be set in image element')
 
         if path and not os.path.isabs(path):
+            self._path_old
             path = os.path.join(settings.general.external_files_dir, path)
 
         self._path = path
@@ -1666,6 +1667,9 @@ class ImageElement(Element, WebElementInterface):
         self._max_times = []
 
     def prepare_web_widget(self):
+        logger = getLogger(('alfred'))
+        logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
+        logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
         if self._image_url is None:
             if self._path:
                 self._image_url = self._page._experiment.user_interface_controller.add_static_file(self._path)
