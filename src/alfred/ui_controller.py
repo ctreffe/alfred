@@ -196,7 +196,7 @@ class WebUserInterfaceController(UserInterfaceController):
             # full_relative_path = os.path.join(alfred.settings.general.external_files_dir, path) 
             logger = getLogger(('alfred'))
             path = self._experiment.subpath(path)
-            logger.info('The path is {}'.format(path))
+            logger.info(msg='The path is {}'.format(path), experiment=self._experiment)
             # path = os.path.join(alfred.settings.general.external_files_dir, path)
         identifier = uuid4().hex
         if alfred.settings.debugmode:
