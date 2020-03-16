@@ -1670,7 +1670,7 @@ class ImageElement(Element, WebElementInterface):
         from .alfredlog import getLogger
         logger = getLogger(('alfred'))
         logger.info(msg='ELEMENT INIT BEFORE. The path is {}'.format(self._path_old), experiment=self._page._experiment)
-        logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
+        logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(self._path), experiment=self._page._experiment)
         if self._image_url is None:
             if self._path:
                 self._image_url = self._page._experiment.user_interface_controller.add_static_file(self._path)
