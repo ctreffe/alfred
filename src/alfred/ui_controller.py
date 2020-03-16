@@ -198,6 +198,7 @@ class WebUserInterfaceController(UserInterfaceController):
             path = self._experiment.subpath(path)
             
             # path = os.path.join(alfred.settings.general.external_files_dir, path)
+        from .alfredlog import getLogger
         logger = getLogger(('alfred'))
         logger.info(msg='UI CONTROLLER. The path is {}'.format(path), experiment=self._experiment)
         identifier = uuid4().hex

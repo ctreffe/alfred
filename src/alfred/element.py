@@ -1667,6 +1667,7 @@ class ImageElement(Element, WebElementInterface):
         self._max_times = []
 
     def prepare_web_widget(self):
+        from .alfredlog import getLogger
         logger = getLogger(('alfred'))
         logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
         logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
