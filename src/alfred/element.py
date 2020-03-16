@@ -1652,7 +1652,7 @@ class ImageElement(Element, WebElementInterface):
             raise ValueError('path or url must be set in image element')
 
         if path and not os.path.isabs(path):
-            self._path_old
+            self._path_old = path
             path = os.path.join(settings.general.external_files_dir, path)
 
         self._path = path
@@ -1669,7 +1669,7 @@ class ImageElement(Element, WebElementInterface):
     def prepare_web_widget(self):
         from .alfredlog import getLogger
         logger = getLogger(('alfred'))
-        logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
+        logger.info(msg='ELEMENT INIT BEFORE. The path is {}'.format(self._path_old), experiment=self._page._experiment)
         logger.info(msg='ELEMENT INIT AFTER. The path is {}'.format(path), experiment=self._page._experiment)
         if self._image_url is None:
             if self._path:
