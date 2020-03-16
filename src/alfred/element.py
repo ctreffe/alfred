@@ -1653,7 +1653,8 @@ class ImageElement(Element, WebElementInterface):
 
         if path and not os.path.isabs(path):
             self._path_old = path
-            path = os.path.join(settings.general.external_files_dir, path)
+            
+            # path = os.path.join(settings.general.external_files_dir, path)
 
         self._path = path
         self._url = url
