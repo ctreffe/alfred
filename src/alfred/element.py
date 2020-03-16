@@ -1651,9 +1651,6 @@ class ImageElement(Element, WebElementInterface):
         if not path and not url:
             raise ValueError('path or url must be set in image element')
 
-        if path and not os.path.isabs(path):
-            path = os.path.join(settings.general.external_files_dir, path)
-
         self._path = path
         self._url = url
 
@@ -2010,12 +2007,12 @@ class WebAudioElement(Element, WebElementInterface):
         TODO: Add docstring
         '''
         super(WebAudioElement, self).__init__(**kwargs)
-        if wav_path is not None and not os.path.isabs(wav_path):
-            wav_path = os.path.join(settings.general.external_files_dir, wav_path)
-        if ogg_path is not None and not os.path.isabs(ogg_path):
-            ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
-        if mp3_path is not None and not os.path.isabs(mp3_path):
-            mp3_path = os.path.join(settings.general.external_files_dir, mp3_path)
+        # if wav_path is not None and not os.path.isabs(wav_path):
+        #     wav_path = os.path.join(settings.general.external_files_dir, wav_path)
+        # if ogg_path is not None and not os.path.isabs(ogg_path):
+        #     ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
+        # if mp3_path is not None and not os.path.isabs(mp3_path):
+        #     mp3_path = os.path.join(settings.general.external_files_dir, mp3_path)
 
         self._wav_path = wav_path
         self._ogg_path = ogg_path
@@ -2056,12 +2053,12 @@ class WebVideoElement(Element, WebElementInterface):
         TODO: Add docstring
         '''
         super(WebVideoElement, self).__init__(**kwargs)
-        if mp4_path is not None and not os.path.isabs(mp4_path):
-            mp4_path = os.path.join(settings.general.external_files_dir, mp4_path)
-        if ogg_path is not None and not os.path.isabs(ogg_path):
-            ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
-        if web_m_path is not None and not os.path.isabs(web_m_path):
-            web_m_path = os.path.join(settings.general.external_files_dir, web_m_path)
+        # if mp4_path is not None and not os.path.isabs(mp4_path):
+        #     mp4_path = os.path.join(settings.general.external_files_dir, mp4_path)
+        # if ogg_path is not None and not os.path.isabs(ogg_path):
+        #     ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
+        # if web_m_path is not None and not os.path.isabs(web_m_path):
+        #     web_m_path = os.path.join(settings.general.external_files_dir, web_m_path)
 
         self._mp4_path = mp4_path
         self._ogg_path = ogg_path
