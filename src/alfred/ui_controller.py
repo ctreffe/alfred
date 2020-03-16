@@ -193,14 +193,7 @@ class WebUserInterfaceController(UserInterfaceController):
 
     def add_static_file(self, path, content_type=None):
         if not os.path.isabs(path):
-            # full_relative_path = os.path.join(alfred.settings.general.external_files_dir, path) 
-            
             path = self._experiment.subpath(path)
-            
-            # path = os.path.join(alfred.settings.general.external_files_dir, path)
-        from .alfredlog import getLogger
-        logger = getLogger(('alfred'))
-        logger.info(msg='UI CONTROLLER. The path is {}'.format(path), experiment=self._experiment)
         identifier = uuid4().hex
         if alfred.settings.debugmode:
             if not hasattr(self, 'sf_counter'):
