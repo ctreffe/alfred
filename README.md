@@ -19,7 +19,7 @@ Detailed step-by-step guides to installing alfred from scratch can be found in t
 If you have Python 3 installed, you can install Alfred via pip from GitHub. We recommend installing Alfred into a [virtual environment](https://docs.python.org/3/library/venv.html).
 
 ```bash
-pip install git+https://github.com/ctreffe/alfred.git@master#egg=alfred
+pip install git+https://github.com/ctreffe/alfred.git@master
 ```
 
 # Alfred Mailing List
