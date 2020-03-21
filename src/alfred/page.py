@@ -34,13 +34,13 @@ class PageCore(ContentCore):
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
-        self.values = _DictObj(values)
         self._log = []  # insert tuple with ('type', msg) for logger
 
         super(PageCore, self).__init__(**kwargs)
 
         if not isinstance(values, dict):
             raise TypeError("The parameter 'values' requires a dictionary as input.")
+        self.values = _DictObj(values)
 
         if self._run_on_showing not in ['once', 'always']:
             raise ValueError("The parameter 'run_on_showing' must be either 'once' or 'always'.")
