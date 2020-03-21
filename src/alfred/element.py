@@ -37,14 +37,10 @@ from builtins import str
 from builtins import range
 from past.utils import old_div
 from builtins import object
-import re
-import string
-import random
-import json
+import re, string, random, json
+from jinja2 import Template, PackageLoader, Environment
 from uuid import uuid4
 from abc import ABCMeta, abstractproperty
-import os
-import jinja2
 
 from .exceptions import AlfredError
 from ._helper import fontsize_converter, alignment_converter
@@ -54,6 +50,7 @@ from . import alfredlog
 from future.utils import with_metaclass
 logger = alfredlog.getLogger(__name__)
 
+jinja_env = Environment(loader=PackageLoader('alfred', 'templates/elements'))
 
 class Element(object):
     '''
@@ -543,7 +540,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         self._instruction = instruction
         self._prefix = prefix
         self._suffix = suffix
-        self._template = jinja2.Template('''
+        self._template = Template('''
         <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
         <tr><td valign="bottom"><table class="{{ alignment }}"><tr><td style="padding-right: 5px;{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td>
         <td valign="bottom">
@@ -737,7 +734,7 @@ class NumberEntryElement(RegEntryElement):
         self._min = min
         self._max = max
 
-        self._template = jinja2.Template('''
+        self._template = Template('''
         <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
         <tr><td valign="bottom"><table class="{{ alignment }}"><tr><td style="padding-right: 5px;{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td>
         <td valign="bottom">
@@ -1517,7 +1514,7 @@ class LikertListElement(InputElement, WebElementInterface):
         else:
             self._input = ['-1' for i in item_labels]
 
-        self._template = jinja2.Template('''
+        self._template = Template('''
             <div class="" style="font-size: {{fontsize}}pt; text-align: {{alignment}}">
                 {% if instruction %}<p>{{instruction}}</p>{% endif %}
                 <table class="{{contalignment}} table {{striped}}" style="width: auto;">
@@ -1909,7 +1906,7 @@ class WebSliderElement(InputElement, WebElementInterface):
         self._top_label = top_label
         self._bottom_label = bottom_label
 
-        self._template = jinja2.Template(
+        self._template = Template(
 
             '''
         <div class="web-slider-element">
@@ -2080,17 +2077,18 @@ class WebVideoElement(Element, WebElementInterface):
     def prepare_web_widget(self):
 
         if self._mp4_video_url is None and self._mp4_path is not None:
-            self._mp4_video_url = self._page._experiment.user_interface_controller.add_static_file(self._mp4_path)
+            self._mp4_video_url = self._page._experiment.user_interface_controller.add_static_file(self._mp4_path, content_type='video/mp4')
 
         if self._ogg_video_url is None and self._ogg_path is not None:
-            self._ogg_video_url = self._page._experiment.user_interface_controller.add_static_file(self._ogg_path)
+            self._ogg_video_url = self._page._experiment.user_interface_controller.add_static_file(self._ogg_path, content_type="video/ogg")
 
         if self._web_m_video_url is None and self._web_m_path is not None:
-            self._web_m_video_url = self._page._experiment.user_interface_controller.add_static_file(self._web_m_path)
+            self._web_m_video_url = self._page._experiment.user_interface_controller.add_static_file(self._web_m_path, content_type="video/webm")
 
     @property
     def web_widget(self):
-        widget = '<div class="video-element"><p class="%s"><video %s %s %s %s %s><source src="%s" type="video/mp4"><source src="%s" type="video/ogg"><source src="%s" type="video/web_m">Your browser does not support the video element</audio></p></div>' % (alignment_converter(self._alignment, 'both'), 'width="' + str(self._width) + '"' if self._width else '', 'height="' + str(self._height) + '"' if self._height else '', 'controls' if self._controls else '', 'autoplay' if self._autoplay else '', 'loop' if self._loop else '', self._mp4_video_url, self._ogg_video_url, self._web_m_video_url)
+        # widget = self._template.render(element_class='video-element', url=self._mp4_video_url)
+        widget = '<div class="video-element"><p class="%s"><video %s %s %s %s %s controlsList="nodownload"><source src="%s" type="video/mp4"><source src="%s" type="video/ogg"><source src="%s" type="video/web_m">Your browser does not support the video element</audio></p></div>' % (alignment_converter(self._alignment, 'both'), 'width="' + str(self._width) + '"' if self._width else '', 'height="' + str(self._height) + '"' if self._height else '', 'controls' if self._controls else '', 'autoplay' if self._autoplay else '', 'loop' if self._loop else '', self._mp4_video_url, self._ogg_video_url, self._web_m_video_url)
 
         return widget
 

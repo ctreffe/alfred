@@ -1,9 +1,9 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
-from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session
+from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session, send_from_directory
 from uuid import uuid4
 from ..settings import general, experiment
-import re
+import re, os
 
 app = Flask(__name__)
 app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
@@ -147,7 +147,8 @@ def experiment():
 @app.route('/staticfile/<identifier>')
 def staticfile(identifier):
     path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
-    resp = make_response(send_file(path, mimetype=content_type))
+    dirname, filename = os.path.split(path)
+    resp = make_response(send_from_directory(dirname, filename, mimetype=content_type))
     return resp
 
 

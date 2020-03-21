@@ -194,16 +194,21 @@ class WebUserInterfaceController(UserInterfaceController):
     def add_static_file(self, path, content_type=None):
         if not os.path.isabs(path):
             path = self._experiment.subpath(path)
+
         identifier = uuid4().hex
+
         if alfred.settings.debugmode:
             if not hasattr(self, 'sf_counter'):
                 self.sf_counter = 0
             self.sf_counter += 1
             identifier = str(self.sf_counter)
+
         while identifier in self._static_files_dict:
             identifier = uuid4().hex
+
         self._static_files_dict[identifier] = (path, content_type)
-        return self._basepath + '/staticfile/' + identifier
+        url = self._basepath + '/staticfile/' + identifier
+        return url
 
     def get_callable(self, identifier):
         return self._callables_dict[identifier]
