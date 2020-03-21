@@ -43,7 +43,7 @@ from uuid import uuid4
 from abc import ABCMeta, abstractproperty
 
 from .exceptions import AlfredError
-from ._helper import fontsize_converter, alignment_converter
+from ._helper import fontsize_converter, alignment_converter, is_url
 import alfred.settings as settings
 
 from . import alfredlog
@@ -2045,51 +2045,113 @@ class WebAudioElement(Element, WebElementInterface):
 
 
 class WebVideoElement(Element, WebElementInterface):
-    def __init__(self, width=None, height=None, mp4_url=None, mp4_path=None, ogg_url=None, ogg_path=None, web_m_url=None, web_m_path=None, controls=True, autoplay=False, loop=False, **kwargs):
+    def __init__(self, source=None, sources_list=[], width=720, height=None, controls=True, autoplay=False, muted=False, loop=False, mp4_url=None, mp4_path=None, ogg_url=None, ogg_path=None, web_m_url=None, web_m_path=None, **kwargs):
         '''
         TODO: Add docstring
         '''
         super(WebVideoElement, self).__init__(**kwargs)
-        # if mp4_path is not None and not os.path.isabs(mp4_path):
-        #     mp4_path = os.path.join(settings.general.external_files_dir, mp4_path)
-        # if ogg_path is not None and not os.path.isabs(ogg_path):
-        #     ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
-        # if web_m_path is not None and not os.path.isabs(web_m_path):
-        #     web_m_path = os.path.join(settings.general.external_files_dir, web_m_path)
+        # load template
+        self._template = jinja_env.get_template('WebVideoElement.html')
 
+        # if single source is given
+        self._source = source
+
+        # if source list is given
+        self._sources_list = sources_list
+        self._ordered_sources = []
+        self._urls = []
+
+        # attributes
+        self._attributes = None
+        self._width = width
+        self._height = height
+        self._controls = controls
+        self._autoplay = autoplay
+        self._muted = muted
+        self._loop = loop
+
+        # -------------------------------------------- #
+        # catch deprecated parameters
+        self._deprecated_parameters = [mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, web_m_path]
         self._mp4_path = mp4_path
         self._ogg_path = ogg_path
         self._web_m_path = web_m_path
-
         self._mp4_video_url = mp4_url
         self._ogg_video_url = ogg_url
         self._web_m_video_url = web_m_url
+        # -------------------------------------------- #
 
-        self._controls = controls
-        self._autoplay = autoplay
-        self._loop = loop
-        self._width = width
-        self._height = height
-
-        if self._mp4_path is None and self._ogg_path is None and self._web_m_path is None and self._mp4_video_url is None and self._ogg_video_url is None and self._web_m_video_url is None:
+        if not any([self._source, self._sources_list, self._deprecated_parameters]):
             raise AlfredError
 
+    def order_sources(self):
+        # ensure that .mp4 files come first
+        for source in self._sources_list:
+            if source.endswith('.mp4'):
+                self._ordered_sources.insert(0, source)
+            else:
+                self._ordered_sources.append(source)
+
+    def prepare_url(self, source):
+        if is_url(source):
+            url = source
+        else:
+            url = self._page._experiment.user_interface_controller.add_static_file(source)
+        return url
+
+    def prepare_attributes(self):
+        attr = []
+        if self._width:
+            attr.append('width="{}"'.format(self._width))
+        if self._height:
+            attr.append('height="{}"'.format(self._height))
+        if self._controls:
+            attr.append('controls')
+        if self._autoplay:
+            attr.append('autoplay')
+        if self._muted:
+            attr.append('muted')
+        if self._loop:
+            attr.append('loop')
+        self._attributes = " ".join(attr)
+
+
     def prepare_web_widget(self):
+        # prepare attributes
+        self.prepare_attributes()
+
+        # prepare urls
+        if self._source:
+            self._sources_list.append(self._source)
+
+        self.order_sources()
+        for src in self._ordered_sources:
+            url = self.prepare_url(src)
+            self._urls.append(url)
+
+        # -------------------------------------------- #
+        # handle deprecated parameters (21.03.2020)
+        for parameter in self._deprecated_parameters:
+            if parameter:
+                logger.warning(msg='The parameters mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, and web_m_path in Element.WebVideoElement are deprecated. Please use source or sources_list instead.',
+                               experiment=self._page._experiment)
 
         if self._mp4_video_url is None and self._mp4_path is not None:
             self._mp4_video_url = self._page._experiment.user_interface_controller.add_static_file(self._mp4_path, content_type='video/mp4')
+            self._urls.insert(0, self._mp4_video_url)
 
         if self._ogg_video_url is None and self._ogg_path is not None:
             self._ogg_video_url = self._page._experiment.user_interface_controller.add_static_file(self._ogg_path, content_type="video/ogg")
+            self._urls.append(self._ogg_video_url)
 
         if self._web_m_video_url is None and self._web_m_path is not None:
             self._web_m_video_url = self._page._experiment.user_interface_controller.add_static_file(self._web_m_path, content_type="video/webm")
+            self._urls.append(self.web_m_video_url)
+        # -------------------------------------------- #
 
     @property
     def web_widget(self):
-        # widget = self._template.render(element_class='video-element', url=self._mp4_video_url)
-        widget = '<div class="video-element"><p class="%s"><video %s %s %s %s %s controlsList="nodownload"><source src="%s" type="video/mp4"><source src="%s" type="video/ogg"><source src="%s" type="video/web_m">Your browser does not support the video element</audio></p></div>' % (alignment_converter(self._alignment, 'both'), 'width="' + str(self._width) + '"' if self._width else '', 'height="' + str(self._height) + '"' if self._height else '', 'controls' if self._controls else '', 'autoplay' if self._autoplay else '', 'loop' if self._loop else '', self._mp4_video_url, self._ogg_video_url, self._web_m_video_url)
-
+        widget = self._template.render(element_class='video-element', urls=self._urls, attributes=self._attributes)
         return widget
 
 
