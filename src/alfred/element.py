@@ -2151,7 +2151,9 @@ class WebVideoElement(Element, WebElementInterface):
 
     @property
     def web_widget(self):
-        widget = self._template.render(element_class='video-element', urls=self._urls, attributes=self._attributes)
+        alignment = alignment_converter(self._alignment, type='div')
+        widget = self._template.render(element_class='video-element', alignment=alignment,
+                                       urls=self._urls, attributes=self._attributes)
         return widget
 
 
