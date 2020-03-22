@@ -2071,7 +2071,7 @@ class WebVideoElement(Element, WebElementInterface):
         self._loop = loop
 
         # -------------------------------------------- #
-        # catch deprecated parameters
+        # catch deprecated parameters (21.03.2020)
         self._deprecated_parameters = [mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, web_m_path]
         self._mp4_path = mp4_path
         self._ogg_path = ogg_path
