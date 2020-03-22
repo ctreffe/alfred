@@ -180,20 +180,19 @@ class WebUserInterfaceController(UserInterfaceController):
         strIO.seek(0)
         return strIO, content_type
 
-    def add_dynamic_file(self, file_obj, content_type=None, exp_number=''):
+    def add_dynamic_file(self, file_obj, content_type=None):
         identifier = uuid4().hex
         while identifier in self._dynamic_files_dict:
             identifier = uuid4().hex
 
         self._dynamic_files_dict[identifier] = (file_obj, content_type)
-        url = '{basepath}/dynamicfile/{exp_number}/{identifier}'.format(basepath=self._basepath,
-                                                                        exp_number=exp_number, identifier=identifier)
+        url = '{basepath}/dynamicfile/{identifier}'.format(basepath=self._basepath, identifier=identifier)
         return url
 
     def get_static_file(self, identifier):
         return self._static_files_dict[identifier]
 
-    def add_static_file(self, path, content_type=None, exp_number=''):
+    def add_static_file(self, path, content_type=None):
         if not os.path.isabs(path):
             path = self._experiment.subpath(path)
 
@@ -209,21 +208,19 @@ class WebUserInterfaceController(UserInterfaceController):
             identifier = uuid4().hex
 
         self._static_files_dict[identifier] = (path, content_type)
-        url = '{basepath}/staticfile/{exp_number}/{identifier}'.format(basepath=self._basepath,
-                                                                       exp_number=exp_number, identifier=identifier)
+        url = '{basepath}/staticfile/{identifier}'.format(basepath=self._basepath, identifier=identifier)
         return url
 
     def get_callable(self, identifier):
         return self._callables_dict[identifier]
 
-    def add_callable(self, f, exp_number=''):
+    def add_callable(self, f):
         identifier = uuid4().hex
         while identifier in self._callables_dict:
             identifier = uuid4().hex
 
         self._callables_dict[identifier] = f
-        url = '{basepath}/callable/{exp_number}/{identifier}'.format(basepath=self._basepath,
-                                                                     exp_number=exp_number, identifier=identifier)
+        url = '{basepath}/callable/{identifier}'.format(basepath=self._basepath, identifier=identifier)
         return url
 
     def update_with_user_input(self, d):
