@@ -180,18 +180,20 @@ class WebUserInterfaceController(UserInterfaceController):
         strIO.seek(0)
         return strIO, content_type
 
-    def add_dynamic_file(self, file_obj, content_type=None):
+    def add_dynamic_file(self, file_obj, content_type=None, exp_number=''):
         identifier = uuid4().hex
         while identifier in self._dynamic_files_dict:
             identifier = uuid4().hex
 
         self._dynamic_files_dict[identifier] = (file_obj, content_type)
-        return self._basepath + '/dynamicfile/' + identifier
+        url = '{basepath}/dynamicfile/{exp_number}/{identifier}'.format(basepath=self._basepath,
+                                                                        exp_number=exp_number, identifier=identifier)
+        return url
 
     def get_static_file(self, identifier):
         return self._static_files_dict[identifier]
 
-    def add_static_file(self, path, content_type=None):
+    def add_static_file(self, path, content_type=None, exp_number=''):
         if not os.path.isabs(path):
             path = self._experiment.subpath(path)
 
@@ -207,19 +209,22 @@ class WebUserInterfaceController(UserInterfaceController):
             identifier = uuid4().hex
 
         self._static_files_dict[identifier] = (path, content_type)
-        url = self._basepath + '/staticfile/' + identifier
+        url = '{basepath}/staticfile/{exp_number}/{identifier}'.format(basepath=self._basepath,
+                                                                       exp_number=exp_number, identifier=identifier)
         return url
 
     def get_callable(self, identifier):
         return self._callables_dict[identifier]
 
-    def add_callable(self, f):
+    def add_callable(self, f, exp_number=''):
         identifier = uuid4().hex
         while identifier in self._callables_dict:
             identifier = uuid4().hex
 
         self._callables_dict[identifier] = f
-        return self._basepath + '/callable/' + identifier
+        url = '{basepath}/callable/{exp_number}/{identifier}'.format(basepath=self._basepath,
+                                                                     exp_number=exp_number, identifier=identifier)
+        return url
 
     def update_with_user_input(self, d):
         self._experiment.page_controller.current_page.set_data(d)
