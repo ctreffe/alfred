@@ -11,7 +11,7 @@ license = 'MIT'
 url = 'http://www.the-experimenter.com/alfred'
 package_dir = {'': 'src'}
 packages = ['alfred', 'alfred.helpmates']
-package_data = {'alfred': ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*']}
+package_data = {'alfred': ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*', 'templates/elements/*']}
 install_requires = ['future', 'cryptography', 'jinja2', 'PySide2', 'pymongo', 'flask', 'xmltodict']
 
 
