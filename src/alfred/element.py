@@ -2156,6 +2156,12 @@ class WebVideoElement(Element, WebElementInterface):
                                        urls=self._urls, attributes=self._attributes)
         return widget
 
+    @property
+    def js_code(self):
+        # disables the right-click context menu
+        code = (11, u'$(document).ready(function() {$("video").bind("contextmenu",function(){return false;});} );')
+        return [code]  # Pages expect a list of the described tuples from each element
+
 
 class ExperimenterMessages(TableElement):
     def prepare_web_widget(self):
