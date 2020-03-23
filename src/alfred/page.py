@@ -24,13 +24,14 @@ logger = alfredlog.getLogger(__name__)
 
 
 class PageCore(ContentCore):
-    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, run_on_showing='once', **kwargs):
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, run_on_showing='always', run_on_hiding='always', **kwargs):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
         self._run_on_showing = run_on_showing
+        self._run_on_hiding = run_on_hiding
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
@@ -102,9 +103,11 @@ class PageCore(ContentCore):
             self.on_showing_widget()
             self.on_showing()
 
-        if self._run_on_showing == 'always':
+        elif self._run_on_showing == 'always':
             self.on_showing_widget()
             self.on_showing()
+            self._log.append('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.')
+
 
         self._has_been_shown = True
 
@@ -118,10 +121,18 @@ class PageCore(ContentCore):
         '''
         Method for internal processes on hiding Widget
         '''
-        self.on_hiding_widget()
-        self.on_hiding()
+
+        if self._run_on_hiding = 'once' and not self._has_been_hidden:
+            self.on_hiding_widget()
+            self.on_hiding()
+        elif self._run_on_showing = 'always':
+            self.on_hiding_widget()
+            self.on_hiding()
+            self._log.append('debug',
+                             'The current page executes the "on_hiding" method every time the page is hidden. If you want to turn this behavior off, please use "run_on_hiding=\'once\'" in the page initialisation.')
 
         self._has_been_hidden = True
+        self.print_log()
 
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
