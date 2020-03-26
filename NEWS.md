@@ -1,3 +1,21 @@
+# alfred v1.0.2
+## Bugfixes
+- Fixed a bug in `localserver.py` that caused trouble for videos implemented via `alfred.element.WebVideoElement` in Safari (wouldn't play at all) and Chrome (forward/backward wouldn't work)
+
+## Other changes
+- `alfred.element.WebVideoElement`:
+    - New parameter `source`: A filepath or url that points to the video (`str`).
+    - New parameter `sources_list`: A list of filepaths and/or urls that point to the video, use this if you want to include fallback options in different formats or from different sources (`list` of `str` elements).
+    - The parameters `mp4_path`, `mp4_url`, `ogg_path`, `ogg_url`, `web_m_path`, and `web_m_url` are replaced by `source`. They still work, but will now log a deprecation warning.
+    - New parameter `muted=False`: If `True`, the video will play with muted sound by default.
+    - The parameter `width` now defaults to `width=720`.
+    - Disabled video download for videos implemented via `alfred.element.WebVideoElement` (was only possible in Chrome).
+- `Page` gets a new parameter `run_on_showing`, which defaults to `run_on_showing='once'`. This means, by default a Page executes the `on_showing` method only when it is shown for the first time. This behavior can be altered by setting the new parameter to `run_on_showing='always'`. The latter can lead to duplicate elements on a page, if a subject goes backward inside an experiment, which will be unwanted behavior in most cases.   
+
+# alfred v1.0.1
+## Bugfixes
+- Fixed a bug that caused a mixup with filepaths for web experiments hosted with mortimer.
+
 # alfred v1.0
 
 ## Breaking changes
