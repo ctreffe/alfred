@@ -15,7 +15,7 @@ If you are publishing research conducted using Alfred, please cite:
 If you have Python 3 installed, you can install Alfred via pip directly from GitHub. We recommend installing Alfred into a virtual environment. 
 
 ```bash
-pip3 install https://github.com/ctreffe/Alfred/archive/v1.0.2.tar.gz
+pip3 install https://github.com/ctreffe/Alfred/archive/v1.0.3.tar.gz
 ```
 
 A detailed **step-by-step video tutorial on setting up Alfred** can be found here (created using MacOS, but applicable to Windows aswell): https://www.youtube.com/watch?v=6YbAN0q3p-E (German)
