@@ -107,7 +107,7 @@ class PageCore(ContentCore):
         elif self._run_on_showing == 'always':
             self.on_showing_widget()
             self.on_showing()
-            self._log.append('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.')
+            self._log.append(('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.'))
 
 
         self._has_been_shown = True
@@ -123,14 +123,14 @@ class PageCore(ContentCore):
         Method for internal processes on hiding Widget
         '''
 
-        if self._run_on_hiding = 'once' and not self._has_been_hidden:
+        if self._run_on_hiding == 'once' and not self._has_been_hidden:
             self.on_hiding_widget()
             self.on_hiding()
-        elif self._run_on_showing = 'always':
+        elif self._run_on_showing == 'always':
             self.on_hiding_widget()
             self.on_hiding()
-            self._log.append('debug',
-                             'The current page executes the "on_hiding" method every time the page is hidden. If you want to turn this behavior off, please use "run_on_hiding=\'once\'" in the page initialisation.')
+            self._log.append(('debug',
+                             'The current page executes the "on_hiding" method every time the page is hidden. If you want to turn this behavior off, please use "run_on_hiding=\'once\'" in the page initialisation.'))
 
         self._has_been_hidden = True
         self.print_log()
@@ -235,11 +235,11 @@ class CoreCompositePage(PageCore):
                 self.append(elmnt)
 
     def add_element(self, element):
-        self._log.append('warning', "page.add_element() is deprecated. Use page.append() instead.")
+        self._log.append(('warning', "page.add_element() is deprecated. Use page.append() instead."))
         self.append(element)
 
     def add_elements(self, *elements):
-        self._log.append('warning', "page.add_elements() is deprecated. Use page.append() instead.")
+        self._log.append(('warning', "page.add_elements() is deprecated. Use page.append() instead."))
         for elmnt in elements:
             self.append(elmnt)
 
