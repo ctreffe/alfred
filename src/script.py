@@ -20,7 +20,6 @@ from alfred.helpmates import parse_xml_to_dict
 #################################
 
 class Welcome(Page):
-
     def on_showing(self):
         el = elm.TextElement(self.values.welcome_text)
         self.append(el)
@@ -37,7 +36,7 @@ def generate_experiment(self, config=None):
 
     # Sections
     main = sec.SegmentedSection()
-    main.append_items(page01)
+    main.append(page01)
 
     # Initialize and fill experiment
     exp.append(main)

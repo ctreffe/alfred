@@ -3,7 +3,7 @@ from setuptools import setup
 from setuptools.command.install import install as dist_install
 
 name = 'alfred'
-version = '1.0'  # major.minor[.patch[sub] e.g. 0.1.0 first experimental version, 1.0.1b2 second beta release of the first patch of 1.0
+version = '1.0.2'  # major.minor[.patch[sub] e.g. 0.1.0 first experimental version, 1.0.1b2 second beta release of the first patch of 1.0
 desc = 'alfred : a library for rapid experiment development'
 author = 'Christian Treffenstaedt, Paul Wiemann, Johannes Brachem'
 author_email = 'treffenstaedt@psych.uni-goettingen.de'
@@ -11,7 +11,7 @@ license = 'MIT'
 url = 'http://www.the-experimenter.com/alfred'
 package_dir = {'': 'src'}
 packages = ['alfred', 'alfred.helpmates']
-package_data = {'alfred': ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*']}
+package_data = {'alfred': ['files/*', 'static/css/*', 'static/img/*', 'static/js/*', 'templates/*', 'templates/elements/*']}
 install_requires = ['future', 'cryptography', 'jinja2', 'PySide2', 'pymongo', 'flask', 'xmltodict']
 
 

@@ -186,7 +186,8 @@ class WebUserInterfaceController(UserInterfaceController):
             identifier = uuid4().hex
 
         self._dynamic_files_dict[identifier] = (file_obj, content_type)
-        return self._basepath + '/dynamicfile/' + identifier
+        url = '{basepath}/dynamicfile/{identifier}'.format(basepath=self._basepath, identifier=identifier)
+        return url
 
     def get_static_file(self, identifier):
         return self._static_files_dict[identifier]
@@ -194,16 +195,21 @@ class WebUserInterfaceController(UserInterfaceController):
     def add_static_file(self, path, content_type=None):
         if not os.path.isabs(path):
             path = self._experiment.subpath(path)
+
         identifier = uuid4().hex
+
         if alfred.settings.debugmode:
             if not hasattr(self, 'sf_counter'):
                 self.sf_counter = 0
             self.sf_counter += 1
             identifier = str(self.sf_counter)
+
         while identifier in self._static_files_dict:
             identifier = uuid4().hex
+
         self._static_files_dict[identifier] = (path, content_type)
-        return self._basepath + '/staticfile/' + identifier
+        url = '{basepath}/staticfile/{identifier}'.format(basepath=self._basepath, identifier=identifier)
+        return url
 
     def get_callable(self, identifier):
         return self._callables_dict[identifier]
@@ -214,7 +220,8 @@ class WebUserInterfaceController(UserInterfaceController):
             identifier = uuid4().hex
 
         self._callables_dict[identifier] = f
-        return self._basepath + '/callable/' + identifier
+        url = '{basepath}/callable/{identifier}'.format(basepath=self._basepath, identifier=identifier)
+        return url
 
     def update_with_user_input(self, d):
         self._experiment.page_controller.current_page.set_data(d)

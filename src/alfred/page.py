@@ -24,22 +24,27 @@ logger = alfredlog.getLogger(__name__)
 
 
 class PageCore(ContentCore):
-    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict={}, **kwargs):
+    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, run_on_showing='always', run_on_hiding='always', **kwargs):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
+        self._run_on_showing = run_on_showing
+        self._run_on_hiding = run_on_hiding
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
-        self.values = _DictObj(values)
-        self._log = [] # insert tuple with ('type', msg) for logger
+        self._log = []  # insert tuple with ('type', msg) for logger
 
         super(PageCore, self).__init__(**kwargs)
 
         if not isinstance(values, dict):
             raise TypeError("The parameter 'values' requires a dictionary as input.")
+        self.values = _DictObj(values)
+
+        if self._run_on_showing not in ['once', 'always']:
+            raise ValueError("The parameter 'run_on_showing' must be either 'once' or 'always'.")
 
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
@@ -48,7 +53,8 @@ class PageCore(ContentCore):
         super(PageCore, self).added_to_experiment(experiment)
 
     def print_log(self):
-        for category, msg in self._log:
+        for i in range(len(self._log)):
+            category, msg = self._log.pop(i)
             if category == 'debug':
                 logger.debug(msg, self._experiment)
             if category == 'info':
@@ -94,8 +100,15 @@ class PageCore(ContentCore):
         if not self._has_been_shown:
             self._data['first_show_time'] = time.time()
 
-        self.on_showing_widget()
-        self.on_showing()
+        if self._run_on_showing == 'once' and not self._has_been_shown:
+            self.on_showing_widget()
+            self.on_showing()
+
+        elif self._run_on_showing == 'always':
+            self.on_showing_widget()
+            self.on_showing()
+            self._log.append('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.')
+
 
         self._has_been_shown = True
 
@@ -109,10 +122,18 @@ class PageCore(ContentCore):
         '''
         Method for internal processes on hiding Widget
         '''
-        self.on_hiding_widget()
-        self.on_hiding()
+
+        if self._run_on_hiding = 'once' and not self._has_been_hidden:
+            self.on_hiding_widget()
+            self.on_hiding()
+        elif self._run_on_showing = 'always':
+            self.on_hiding_widget()
+            self.on_hiding()
+            self._log.append('debug',
+                             'The current page executes the "on_hiding" method every time the page is hidden. If you want to turn this behavior off, please use "run_on_hiding=\'once\'" in the page initialisation.')
 
         self._has_been_hidden = True
+        self.print_log()
 
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
@@ -151,7 +172,7 @@ class PageCore(ContentCore):
 
     def allow_leaving(self, direction):
         if 'first_show_time' in self._data and \
-            time.time() - self._data['first_show_time'] \
+                time.time() - self._data['first_show_time'] \
                 < self._minimum_display_time:
             try:
                 msg = self._minimum_display_time_msg if self._minimum_display_time_msg else self._experiment.settings.messages.minimum_display_time
@@ -307,7 +328,8 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
         for elmnt in self._element_list:
             if elmnt.web_widget != '' and elmnt.should_be_shown:
-                html = html + ('<div class="row with-margin"><div id="elid-%s" class="element">' % elmnt.name) + elmnt.web_widget + '</div></div>'
+                html = html + (
+                            '<div class="row with-margin"><div id="elid-%s" class="element">' % elmnt.name) + elmnt.web_widget + '</div></div>'
 
         return html
 
@@ -349,6 +371,7 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
 class CompositePage(WebCompositePage):
     pass
+
 
 class Page(WebCompositePage):
     pass
@@ -448,7 +471,8 @@ class HeadOpenSectionCantClose(CompositePage):
     def __init__(self, **kwargs):
         super(HeadOpenSectionCantClose, self).__init__(**kwargs)
 
-        self.append(element.TextElement("Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
+        self.append(element.TextElement(
+            "Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
 
 
 class MongoSaveCompositePage(CompositePage):

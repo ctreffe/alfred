@@ -7,6 +7,7 @@ _helper contains internal functions which are not to be called by framework user
 
 """
 
+from urllib.parse import urlparse
 
 def fontsize_converter(font_argument):
     '''
@@ -127,3 +128,11 @@ class _DictObj(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
+
+def is_url(url=None):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc, result.path])
+    except:
+        return False

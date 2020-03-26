@@ -1,0 +1,9 @@
+{% extends '_element_base.html' %}
+{% block element %}
+    <video {{ attributes }} playsinline controlsList="nodownload">
+        {% for url in urls %}
+        <source src="{{ url }}">
+        {% endfor %}
+        Your browser does not support the video tag.
+    </video>
+{% endblock %}
