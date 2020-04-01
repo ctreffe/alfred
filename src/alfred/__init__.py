@@ -226,6 +226,10 @@ class Experiment(object):
     @property
     def start_timestamp(self):
         return self._start_timestamp
+    
+    @property
+    def start_time(self):
+        return self._start_time
 
     @property
     def message_manager(self):
