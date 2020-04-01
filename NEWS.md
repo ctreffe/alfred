@@ -1,3 +1,7 @@
+# alfred v1.0.3
+## Bugfixes
+- This includes a hotfix for an issue with Alfred v1.0.2
+
 # alfred v1.0.2
 ## Bugfixes
 - Fixed a bug in `localserver.py` that caused trouble for videos implemented via `alfred.element.WebVideoElement` in Safari (wouldn't play at all) and Chrome (forward/backward wouldn't work)
