@@ -1,3 +1,15 @@
+# alfred v1.0.4
+## Bugfixes
+- This includes a hotfix for an issue with ALfred v1.0.3.
+
+## Minor changes
+- Local saving agent now checks, whether the path given in config.conf is absolute. If not, the agent treats it as a relative path, relative to the experiment directory.
+- Alfred now saves its the version number alongside each saved dataset, so that the used version can be identified.
+
+# alfred v1.0.3
+## Bugfixes
+- This includes a hotfix for an issue with Alfred v1.0.2.
+
 # alfred v1.0.2
 ## Bugfixes
 - Fixed a bug in `localserver.py` that caused trouble for videos implemented via `alfred.element.WebVideoElement` in Safari (wouldn't play at all) and Chrome (forward/backward wouldn't work)
