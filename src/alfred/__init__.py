@@ -9,7 +9,7 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 from __future__ import absolute_import
 
 from builtins import object
-__version__ = '1.0.4-beta' # will be saved in the data set
+__version__ = '1.0.4' # will be saved in the data set
 
 
 # configure alfred logger
