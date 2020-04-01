@@ -1,6 +1,10 @@
+# alfred v1.0.4
+## Bugfixes
+- This includes a hotfix for an issue with ALfred v1.0.3.
+
 # alfred v1.0.3
 ## Bugfixes
-- This includes a hotfix for an issue with Alfred v1.0.2
+- This includes a hotfix for an issue with Alfred v1.0.2.
 
 # alfred v1.0.2
 ## Bugfixes
