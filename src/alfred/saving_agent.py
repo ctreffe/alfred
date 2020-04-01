@@ -342,7 +342,8 @@ class LocalSavingAgent(SavingAgent):
     def __init__(self, filename, filepath, activation_level=1, experiment=None):
         super(LocalSavingAgent, self).__init__(activation_level, experiment)
 
-        filepath = os.path.abspath(filepath)
+        if not os.path.isabs(filepath):
+            filepath = os.path.join(experiment.path, filepath)
         if not os.path.exists(filepath):
             os.makedirs(filepath)
         if not os.path.isdir(filepath):
