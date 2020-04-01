@@ -7,7 +7,7 @@ Alfred is a package for Python 3 offering experimenters a fast and easy way to c
 
 If you are publishing research conducted using Alfred, please cite:
 
-> Treffenstaedt, C., Wiemann, P. & Brachem, J. (2019). Alfred - A library for rapid experiment development (Version 0.3b1). [![DOI](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371)
+> Treffenstaedt, C., Wiemann, P. & Brachem, J. (2019). Alfred - A library for rapid experiment development (Version 1.0.4). [![DOI](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371)
 
 
 # Installation
@@ -15,7 +15,7 @@ If you are publishing research conducted using Alfred, please cite:
 If you have Python 3 installed, you can install Alfred via pip directly from GitHub. We recommend installing Alfred into a virtual environment. 
 
 ```bash
-pip3 install https://github.com/ctreffe/Alfred/archive/v1.0.3.tar.gz
+pip3 install https://github.com/ctreffe/alfred/archive/v1.0.5.tar.gz
 ```
 
 A detailed **step-by-step video tutorial on setting up Alfred** can be found here (created using MacOS, but applicable to Windows aswell): https://www.youtube.com/watch?v=6YbAN0q3p-E (German)
