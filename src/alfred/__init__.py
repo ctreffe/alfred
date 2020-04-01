@@ -9,7 +9,7 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 from __future__ import absolute_import
 
 from builtins import object
-__version__ = '1.0.2'
+__version__ = '1.0.2' # will be saved in the data set
 
 
 # configure alfred logger
@@ -71,7 +71,7 @@ class Experiment(object):
         |
         |
         '''
-
+        self._alfred_version = __version__
         # get experiment metadata
         if config is not None and 'experiment' in config.keys():
             self._author = config['experiment']["author"]
@@ -185,6 +185,10 @@ class Experiment(object):
 
     def subpath(self, path):
         return os.path.join(self.path, path)
+    
+    @property
+    def alfred_version(self):
+        return self._alfred_version
 
     @property
     def author(self):
@@ -226,6 +230,10 @@ class Experiment(object):
     @property
     def start_timestamp(self):
         return self._start_timestamp
+    
+    @property
+    def start_time(self):
+        return self._start_time
 
     @property
     def message_manager(self):
