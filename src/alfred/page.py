@@ -53,7 +53,7 @@ class PageCore(ContentCore):
         super(PageCore, self).added_to_experiment(experiment)
 
     def print_log(self):
-        for i in range(len(self._log)):
+        for i, _entry in enumerate(self._log):
             category, msg = self._log.pop(i)
             if category == 'debug':
                 logger.debug(msg, self._experiment)
