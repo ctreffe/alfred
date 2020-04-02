@@ -9,7 +9,8 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 from __future__ import absolute_import
 
 from builtins import object
-__version__ = '1.0.4' # will be saved in the data set
+
+__version__ = '1.0.5' # will be saved in the data set
 
 
 # configure alfred logger
@@ -163,7 +164,7 @@ class Experiment(object):
 
     def finish(self):
         '''
-        Beendet das Experiment. Ruft  :meth:`page_controller.PageController.change_to_finished_group` auf und setzt **self._finished** auf *True*.
+        Beendet das Experiment. Ruft  :meth:`page_controller.PageController.change_to_finished_section` auf und setzt **self._finished** auf *True*.
 
         '''
         if self._finished:
@@ -171,7 +172,7 @@ class Experiment(object):
             return
         logger.info("Experiment.finish() called. Session is finishing.", self)
         self._finished = True
-        self._page_controller.change_to_finished_group()
+        self._page_controller.change_to_finished_section()
 
         # run saving_agent_controller
         self._saving_agent_controller.run_saving_agents(99)

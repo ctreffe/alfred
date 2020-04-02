@@ -50,7 +50,7 @@ import alfred.settings as settings
 from . import alfredlog
 from future.utils import with_metaclass
 
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.getLogger("alfred")
 
 jinja_env = Environment(loader=PackageLoader("alfred", "templates/elements"))
 

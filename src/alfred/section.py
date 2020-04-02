@@ -9,7 +9,7 @@ from builtins import str
 from builtins import range
 from . import alfredlog
 from functools import reduce
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.getLogger("alfred")
 
 from ._core import ContentCore, Direction
 from .page import PageCore, HeadOpenSectionCantClose
