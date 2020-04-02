@@ -1,13 +1,14 @@
 # -*- coding:utf-8 -*-
 
-'''
+"""
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
 A package for convenience functions
-'''
+"""
 from __future__ import print_function
 
 from future import standard_library
+
 standard_library.install_aliases()
 
 import xmltodict
@@ -24,8 +25,8 @@ from alfred import alfredlog
 logger = alfredlog.getLogger(__name__)
 
 
-def parse_xml_to_dict(path, interface='web', code=False):
-    '''
+def parse_xml_to_dict(path, interface="web", code=False):
+    """
     parse_xml_to_dict ermöglicht das Einlesen von XML in Dictionaries.
 
     die Variable Interface legt fest, wie Dictionary-Einträge
@@ -41,7 +42,7 @@ def parse_xml_to_dict(path, interface='web', code=False):
     <![CDATA[
     some input with html code
     ]]>
-    '''
+    """
 
     # if there is no file to be found under the given path, the function
     # tries to look for the file in the "external files directory".
@@ -51,44 +52,52 @@ def parse_xml_to_dict(path, interface='web', code=False):
     # If issues are suspectetd, a warning is logged.
     path2 = join(settings.general.external_files_dir, path)
     if isfile(path) and isfile(path2) and not path == path2:
-        logger.warning("parse_xml_to_dict: There is a file {p1}, but there is also a file {p2} in the external files directory. Previous versions of Alfred would have used {p2} by default, now {p1} is used. Please make sure that you are importing the correct file.".format(p1=path, p2=path2))
+        logger.warning(
+            "parse_xml_to_dict: There is a file {p1}, but there is also a file {p2} in the external files directory. Previous versions of Alfred would have used {p2} by default, now {p1} is used. Please make sure that you are importing the correct file.".format(
+                p1=path, p2=path2
+            )
+        )
 
     if not isfile(path):
         path = path2
-        logger.warning("parse_xml_to_dict: Found no file under {p1}. Searching under {p2} now.".format(p1=path, p2=path2))
+        logger.warning(
+            "parse_xml_to_dict: Found no file under {p1}. Searching under {p2} now.".format(
+                p1=path, p2=path2
+            )
+        )
 
-    def rec(input, replacement='<br>'):
+    def rec(input, replacement="<br>"):
         if isinstance(input, str):
-            if input[0] == '\n':
+            if input[0] == "\n":
                 input = input[1:]
-            if input[-1] == '\n':
+            if input[-1] == "\n":
                 input = input[:-1]
-            input = input.replace('\n', replacement)
+            input = input.replace("\n", replacement)
         elif isinstance(input, dict):
             for k in input:
                 input[k] = rec(input[k], replacement)
         else:
-            raise RuntimeError('input must be unicode or dict')
+            raise RuntimeError("input must be unicode or dict")
         return input
 
-    with open(path, 'r', encoding='utf-8') as f:
-        data_in = f.read().replace('\r\n', '\n')
+    with open(path, "r", encoding="utf-8") as f:
+        data_in = f.read().replace("\r\n", "\n")
 
     data_out = xmltodict.parse(data_in)
 
-    if interface == 'web' and not code:
-        rec(data_out, '<br>')
-    elif interface == 'qt' and not code:
-        rec(data_out, '\n')
-    elif (interface == 'web' or interface == 'qt') and code:
+    if interface == "web" and not code:
+        rec(data_out, "<br>")
+    elif interface == "qt" and not code:
+        rec(data_out, "\n")
+    elif (interface == "web" or interface == "qt") and code:
         pass
     else:
         raise ValueError('interface must be either "qt" or "web".')
 
-    for k in list(data_out['instr'].keys()):
-        if k == 'instr':
+    for k in list(data_out["instr"].keys()):
+        if k == "instr":
             raise RuntimeError("Do not use 'instr' as tag")
-        data_out[k] = data_out['instr'][k]
+        data_out[k] = data_out["instr"][k]
 
     return data_out
 
@@ -134,19 +143,20 @@ def read_csv_data(path):
 
 def find_external_experiment_data_by_uid(data, uid):
     def worker(data, uid):
-        if data['uid'] == uid:
+        if data["uid"] == uid:
             return data
-        elif 'subtree_data' in data:
-            for item in data['subtree_data']:
+        elif "subtree_data" in data:
+            for item in data["subtree_data"]:
                 try:
                     d = worker(item, uid)
                     return d
                 except Exception:
-                    if item == data['subtree_data'][-1]:
+                    if item == data["subtree_data"][-1]:
                         raise AlfredError("did not find uuid in tree")
             raise AlfredError("Custom Error")
         else:
             raise AlfredError("did not find uuid in tree")
+
     return worker(data, uid)
 
 
@@ -159,13 +169,13 @@ def abs_external_file_path(filename):
 def socket_checker(port):
     try:
         s = socket.socket()
-        s.bind(('127.0.0.1', port))
+        s.bind(("127.0.0.1", port))
         s.listen(1)
         s.close()
-        return(True)
+        return True
     except Exception:
         s.close()
-        return(False)
+        return False
 
 
 # These functions import external .html, .css and .js files
@@ -181,11 +191,12 @@ def socket_checker(port):
 def read_html(file):
 
     with open(file, "r") as f:
-        data = f.read().decode('utf-8')
+        data = f.read().decode("utf-8")
         no_comments = re.sub(r"<--(.|\n)*-->", "", data)  # remove comments
         out = no_comments.replace("\n", "")  # collapse to one line
 
     return out
+
 
 # ------------------------------------------------------------------- #
 # --- FUNCTION FOR READING IN CSS FILES --- #
@@ -195,11 +206,12 @@ def read_html(file):
 def read_css(file):
 
     with open(file, "r") as f:
-        data = f.read().decode('utf-8')
+        data = f.read().decode("utf-8")
         no_comments = re.sub(r"/\*(.|\n)*\*/", "", data)  # remove comments
         out = no_comments.replace("\n", "")  # collapse to one line
 
     return out
+
 
 # ------------------------------------------------------------------- #
 # --- FUNCTION FOR READING IN JAVASCRIPT FILES --- #
@@ -209,7 +221,7 @@ def read_css(file):
 def read_js(file):
 
     with open(file, "r") as f:
-        data = f.read().decode('utf-8')
+        data = f.read().decode("utf-8")
         no_comments = re.sub(r"(//.*)|(/\*(.|\n)*\*/)", "", data)  # remove comments
         out = no_comments.replace("\n", "")  # collapse to one line
 
