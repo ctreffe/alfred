@@ -102,14 +102,16 @@ def parse_xml_to_dict(path, interface="web", code=False):
     return data_out
 
 
-def read_csv_data(path):
+def read_csv_data(path: str, delimiter: str = ";", **kwargs) -> list:
     """
     Diese Funktion ermöglicht das Einlesen von Datensätzen,
     die innerhalb des Experimentes gebraucht werden, z.B.
     verschiedene Schätzaufgaben eines Typs, die dann der VP
     randomisiert dargeboten werden. Die Daten müssen dabei
-    als .csv Datei gespeichert sein. Dabei muss als Trenn-
-    zeichen ein Semikolon ';' benutzt werden!
+    als .csv Datei gespeichert sein. Das Trennzeichen ist Standardmäßig ";" 
+    und kann im Funktionsaufruf spezifiziert werden.
+
+    Leere Zeilen werden ignoriert.
 
     Die Funktion muss mit dem Dateinamen der entsprechenden
     Datei aufgerufen werden und gibt ein Array of
@@ -121,24 +123,15 @@ def read_csv_data(path):
     if not isabs(path):
         path = join(settings.general.external_files_dir, path)
 
-    dataset = []
-    file_input = open(path, 'r')
+    out = []
+    with open(path, "r", encoding="utf-8") as f:
+        file_reader = csv.reader(f, delimiter=delimiter, **kwargs)
 
-    file_reader = csv.reader(file_input, delimiter=';')
+        for row in file_reader:
+            if row:
+                out.append(row)
 
-    for row in file_reader:
-
-        temprow = []
-        while row != []:
-            tempstr = row.pop(0)
-            tempstr = tempstr.decode('latin-1')
-            temprow.append(tempstr)
-        row = temprow
-        dataset.append(row)
-
-    dataset.pop(0)
-
-    return dataset
+    return out
 
 
 def find_external_experiment_data_by_uid(data, uid):
