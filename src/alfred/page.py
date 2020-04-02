@@ -20,7 +20,7 @@ import alfred.settings as settings
 from future.utils import with_metaclass
 from functools import reduce
 
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.getLogger("alfred")
 
 
 class PageCore(ContentCore):

@@ -22,7 +22,7 @@ from alfred.exceptions import AlfredError
 from alfred import alfredlog
 
 
-logger = alfredlog.getLogger(__name__)
+logger = alfredlog.getLogger("alfred")
 
 
 def parse_xml_to_dict(path, interface="web", code=False):
