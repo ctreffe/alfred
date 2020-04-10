@@ -1,3 +1,22 @@
+# alfred v1.0.5
+
+## Bugfixes
+
+- fixed #37 
+
+## Minor changes
+
+- rename `PageController.change_to_finished_section`: This was a missed function call from the old naming scheme. Generally, it will not affect the user in most cases, but it still exists as a deprecated function, logging a warning now.
+
+## Bugfixes
+# alfred v1.0.4
+## Bugfixes
+- This includes a hotfix for an issue with ALfred v1.0.3.
+
+## Minor changes
+- Local saving agent now checks, whether the path given in config.conf is absolute. If not, the agent treats it as a relative path, relative to the experiment directory.
+- Alfred now saves its the version number alongside each saved dataset, so that the used version can be identified.
+
 # alfred v1.0.3
 
 ## Bugfixes
