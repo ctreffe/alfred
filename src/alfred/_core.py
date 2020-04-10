@@ -161,6 +161,10 @@ class ContentCore(object):
 
     def added_to_experiment(self, exp):
         self._experiment = exp
+    
+    @property
+    def experiment(self):
+        return self._experiment
 
     def added_to_section(self, group):
         self._parent_group = group
