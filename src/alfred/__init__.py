@@ -30,6 +30,7 @@ from . import layout
 from . import settings
 from . import messages
 from . import alfredlog
+from cryptography.fernet import Fernet
 
 logger = alfredlog.getLogger('alfred')
 
@@ -72,7 +73,8 @@ class Experiment(object):
         |
         '''
         self._alfred_version = __version__
-        # get experiment metadata
+        
+        # Set experiment metadata
         if config is not None and 'experiment' in config.keys():
             self._author = config['experiment']["author"]
             self._title = config['experiment']["title"]
@@ -93,6 +95,14 @@ class Experiment(object):
             self._path = os.path.abspath(os.path.dirname(sys.argv[0]))
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
+
+        # Set encryption key
+        if config and config["encryption_key"]:
+            self._encryptor = Fernet(config["encryption_key"])
+            logger.info("Using mortimer-generated encryption key.", self)
+        else:
+            self._encryptor = Fernet(settings.general.encryption_key)
+            logger.warning("Using encryption key from config.conf.", self)
 
         # Experiment startup message
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
@@ -254,6 +264,10 @@ class Experiment(object):
     @property
     def session_id(self):
         return self._session_id
+    
+    @property
+    def encryptor(self):
+        return self._encryptor
 
     @property
     def user_interface_controller(self):
