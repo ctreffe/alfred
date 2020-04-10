@@ -101,8 +101,8 @@ class Experiment(object):
             self._encryptor = Fernet(config["encryption_key"])
             logger.info("Using mortimer-generated encryption key.", self)
         else:
-            self._encryptor = Fernet(settings.general.encryption_key)
-            logger.warning("Using encryption key from config.conf.", self)
+            self._encryptor = Fernet(b"OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=")
+            logger.warning("Using PUBLIC encryption key. USE ONLY FOR TESTING.", self)
 
         # Experiment startup message
         logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)

@@ -65,7 +65,6 @@ debugmode = general.debug
 general.external_files_dir = _config_parser.get('general', 'external_files_dir')
 if not os.path.isabs(general.external_files_dir):
     general.external_files_dir = os.path.join(os.getcwd(), general.external_files_dir)
-general.encryption_key = _config_parser.get("general", "encryption_key")
 
 # metadata
 metadata = _DictObj()
