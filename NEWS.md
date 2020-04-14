@@ -9,9 +9,10 @@
 * **NOTE** that the saving agent will automatically save all data collected by elements (after the `on_hiding()` method is executed). You will need to encrypt data **before** they are saved in order to secure your data in the database.
 * For offline testing, the Fernet instance will be initialized with the key `OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=`. **IMPORTANT**: This key is public. Encrypted data in local (e.g., offline) experiments is not safe. This functionality is provided exclusively for testing your experiment before uploading to mortimer and running.
 
-## Smaller changes
+## Smaller changes and Bugfixes
 
 * Pages now have a getter method for their experiment, i.e. you can access the experiment via `Page.experiment`, if the page has been added to an experiment instance at the time the method is called.
+* Fixed the display of experimenter messages (e.g. a message that informs the participant about a minimum display time, if he or she tries to move to the next page too early)
 
 # alfred v1.0.5
 
