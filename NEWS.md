@@ -7,7 +7,7 @@
     + **Encryption**: Encrypt data of types `str`, `int`, and `float` via `alfred.Experiment.encrypt()`. The method will return an encrypted version of your data, converted to string.
     + **Decryption**: Decrypt data of types `str` or `bytes` via `alfred.Experiment.decrypt()`. The method will return a decrypted version of your data, converted to string.
 * **NOTE** that the saving agent will automatically save all data collected by elements (after the `on_hiding()` method is executed). You will need to encrypt data **before** they are saved in order to secure your data in the database.
-* For offline testing, `alfred.Experiment.encryptor` will be initialized with the key `OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=`. **IMPORTANT**: This key is public. Encrypted data in local (e.g., offline) experiments is not safe. This functionality is provided exclusively for testing your experiment before uploading to mortimer and running.
+* For offline testing, the Fernet instance will be initialized with the key `OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=`. **IMPORTANT**: This key is public. Encrypted data in local (e.g., offline) experiments is not safe. This functionality is provided exclusively for testing your experiment before uploading to mortimer and running.
 
 ## Smaller changes
 
