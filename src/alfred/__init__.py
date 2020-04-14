@@ -9,7 +9,8 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 from __future__ import absolute_import
 
 from builtins import object
-__version__ = '1.0.5' # will be saved in the data set
+
+__version__ = "1.0.5"  # will be saved in the data set
 
 
 # configure alfred logger
@@ -30,19 +31,22 @@ from . import layout
 from . import settings
 from . import messages
 from . import alfredlog
+from cryptography.fernet import Fernet
 
-logger = alfredlog.getLogger('alfred')
+logger = alfredlog.getLogger("alfred")
 
 
 class Experiment(object):
-    '''
+    """
     **Experiment** ist die Basisklasse und somit der allgemeine Objekttyp für alle mit alfred erstellten Experimente.
 
     |
-    '''
+    """
 
-    def __init__(self, config=None, config_string='', basepath=None, custom_layout=None):
-        '''
+    def __init__(
+        self, config=None, config_string="", basepath=None, custom_layout=None
+    ):
+        """
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
         |
@@ -70,17 +74,18 @@ class Experiment(object):
 
         |
         |
-        '''
+        """
         self._alfred_version = __version__
-        # get experiment metadata
-        if config is not None and 'experiment' in config.keys():
-            self._author = config['experiment']["author"]
-            self._title = config['experiment']["title"]
-            self._version = config['experiment']["version"]
-            self._exp_id = config['experiment']["exp_id"]
-            self._session_id = config['mortimer_specific']["session_id"]
-            self._type = config['experiment']["type"]
-            self._path = config['mortimer_specific']["path"]
+
+        # Set experiment metadata
+        if config is not None and "experiment" in config.keys():
+            self._author = config["experiment"]["author"]
+            self._title = config["experiment"]["title"]
+            self._version = config["experiment"]["version"]
+            self._exp_id = config["experiment"]["exp_id"]
+            self._session_id = config["mortimer_specific"]["session_id"]
+            self._type = config["experiment"]["type"]
+            self._path = config["mortimer_specific"]["path"]
         else:
             self._author = settings.metadata.author
             self._title = settings.metadata.title
@@ -94,16 +99,28 @@ class Experiment(object):
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
 
+        # Set encryption key
+        if config and config["encryption_key"]:
+            self._encryptor = Fernet(config["encryption_key"])
+            logger.info("Using mortimer-generated encryption key.", self)
+        else:
+            self._encryptor = Fernet(b"OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=")
+            logger.warning("Using PUBLIC encryption key. USE ONLY FOR TESTING.", self)
+
         # Experiment startup message
-        logger.info("Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s" % (self._type, __version__, self._title, self._version), self)
+        logger.info(
+            "Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s"
+            % (self._type, __version__, self._title, self._version),
+            self,
+        )
 
         self._settings = settings.ExperimentSpecificSettings(config_string)
         # update settings with custom settings from mortimer
-        if config is not None and 'navigation' in config.keys():
+        if config is not None and "navigation" in config.keys():
             self._settings.navigation = _DictObj(config["navigation"])
-        if config is not None and 'hints' in config.keys():
+        if config is not None and "hints" in config.keys():
             self._settings.hints = _DictObj(config["hints"])
-        if config is not None and 'messages' in config.keys():
+        if config is not None and "messages" in config.keys():
             self._settings.messages = _DictObj(config["messages"])
 
         self._message_manager = messages.MessageManager()
@@ -111,21 +128,34 @@ class Experiment(object):
         self._page_controller = PageController(self)
 
         # Determine web layout if necessary
-        if self._type == 'web' or self._type == 'qt-wk':
+        if self._type == "web" or self._type == "qt-wk":
             if custom_layout:
                 web_layout = custom_layout
-            elif 'web_layout' in self._settings.experiment and hasattr(layout, self._settings.experiment.web_layout):
+            elif "web_layout" in self._settings.experiment and hasattr(
+                layout, self._settings.experiment.web_layout
+            ):
                 web_layout = getattr(layout, self._settings.experiment.web_layout)()
-            elif 'web_layout' in self._settings.experiment and not hasattr(layout, self._settings.experiment.web_layout):
-                logger.warning("Layout specified in config.conf does not exist! Switching to BaseWebLayout", self)
+            elif "web_layout" in self._settings.experiment and not hasattr(
+                layout, self._settings.experiment.web_layout
+            ):
+                logger.warning(
+                    "Layout specified in config.conf does not exist! Switching to BaseWebLayout",
+                    self,
+                )
                 web_layout = None
 
-        if self._type == 'web':
-            self._user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
+        if self._type == "web":
+            self._user_interface_controller = WebUserInterfaceController(
+                self, layout=web_layout
+            )
 
-        elif self._type == 'qt-wk':
+        elif self._type == "qt-wk":
             logger.warning("Experiment type qt-wk is experimental!!!", self)
-            self._user_interface_controller = QtWebKitUserInterfaceController(self, full_scren=settings.experiment.qt_full_screen, weblayout=web_layout)
+            self._user_interface_controller = QtWebKitUserInterfaceController(
+                self,
+                full_scren=settings.experiment.qt_full_screen,
+                weblayout=web_layout,
+            )
 
         else:
             ValueError("unknown type: '%s'" % self._type)
@@ -133,8 +163,8 @@ class Experiment(object):
         self._data_manager = DataManager(self)
         self._saving_agent_controller = SavingAgentController(self)
 
-        self._condition = ''
-        self._session = ''
+        self._condition = ""
+        self._session = ""
         self._finished = False
         self._start_timestamp = None
         self._start_time = None
@@ -150,24 +180,26 @@ class Experiment(object):
         self._exp_id = exp_id
 
     def start(self):
-        '''
+        """
         Startet das Experiment, wenn die Bereitstellung lokal erfolgt.
 
         Für Qt-Experimente wird :meth:`ui_controller.QtUserInterfaceController.start` aufgerufen.
-        '''
+        """
         self.page_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
-        self._start_timestamp = time.strftime('%Y-%m-%d_t%H%M%S')
+        self._start_timestamp = time.strftime("%Y-%m-%d_t%H%M%S")
         logger.info("Experiment.start() called. Session is starting.", self)
         self._user_interface_controller.start()
 
     def finish(self):
-        '''
+        """
         Beendet das Experiment. Ruft  :meth:`page_controller.PageController.change_to_finished_section` auf und setzt **self._finished** auf *True*.
 
-        '''
+        """
         if self._finished:
-            logger.warning("Experiment.finish() called. Experiment was already finished. Leave Method")
+            logger.warning(
+                "Experiment.finish() called. Experiment was already finished. Leave Method"
+            )
             return
         logger.info("Experiment.finish() called. Session is finishing.", self)
         self._finished = True
@@ -185,52 +217,52 @@ class Experiment(object):
 
     def subpath(self, path):
         return os.path.join(self.path, path)
-    
+
     @property
     def alfred_version(self):
         return self._alfred_version
 
     @property
     def author(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: Experiment author **author** (*str*)
-        '''
+        """
         return self._author
 
     @property
     def type(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: Type of experiment **type** (*str*)
-        '''
+        """
 
         return self._type
 
     @property
     def version(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: Experiment version **version** (*str*)
-        '''
+        """
         return self._version
 
     @property
     def title(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: Experiment title **title** (*str*)
-        '''
+        """
         return self._title
 
     @property
     def start_timestamp(self):
         return self._start_timestamp
-    
+
     @property
     def start_time(self):
         return self._start_time
@@ -250,45 +282,78 @@ class Experiment(object):
     @property
     def path(self):
         return self._path
-    
+
     @property
     def session_id(self):
         return self._session_id
 
+    def encrypt(self, data) -> str:
+        """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
+
+        In web experiments deployed via mortimer, a safe, user-specific secret key will be used for encryption. The method will also work in offline experiments, but does NOT provide safe encryption in this case, as a PUBLIC key is used for encryption. This is only ok for testing purposes.
+
+        :param data: Input object that you want to encrypt.
+        """
+        if type(data) not in [str, int, float]:
+            raise TypeError("Input must be of type str, int, or float.")
+
+        d_str = str(data)
+
+        d_bytes = d_str.encode()
+        encrypted = self._encryptor.encrypt(d_bytes)
+        return encrypted.decode()
+
+    def decrypt(self, data):
+        """Decrypts input and returns the decrypted object as `str`.
+
+        The method uses the built-in Fernet instance to decrypt the input.
+
+        :param data: Encrypted bytes object. Must be of type `str` or `bytes`.
+        """
+        if type(data) is str:
+            d_bytes = data.encode()
+        elif type(data) is bytes:
+            d_bytes = data
+        else:
+            raise TypeError("Input must be of type str or bytes.")
+
+        d = self._encryptor.decrypt(d_bytes)
+        return d.decode()
+
     @property
     def user_interface_controller(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: :py:class:`ui_controller.QtUserInterfaceController` oder :py:class:`ui_controller.WebUserInterfaceController`
-        '''
+        """
         return self._user_interface_controller
 
     @property
     def page_controller(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: :py:class:`page_controller.PageController`
-        '''
+        """
         return self._page_controller
 
     @property
     def data_manager(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: :py:class:`data_manager.DataManager`
-        '''
+        """
         return self._data_manager
 
     @property
     def saving_agent_controller(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: :py:class:`saving_agent.SavingAgentController`
-        '''
+        """
         return self._saving_agent_controller
 
     @property
@@ -297,33 +362,33 @@ class Experiment(object):
 
     @property
     def finished(self):
-        '''
+        """
         Achtung: *read-only*
 
         :return: Experiment beendet? **self._finished** (*bool*)
-        '''
+        """
         return self._finished
 
     @property
     def condition(self):
-        '''
+        """
         *read-only*
 
         :return: Current TestCondition (*str or unicode*)
-        '''
+        """
         return self._condition
 
     def add_condition(self, s):
-        self._condition = self._condition + '.' + s if self._condition else s
+        self._condition = self._condition + "." + s if self._condition else s
 
     @property
     def session(self):
-        '''
+        """
         *read-only*
 
         :return: Current TestCondition (*str or unicode*)
-        '''
+        """
         return self._session
 
     def add_session(self, s):
-        self._session = self._session + '.' + s if self._session else s
+        self._session = self._session + "." + s if self._session else s

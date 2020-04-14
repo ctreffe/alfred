@@ -16,7 +16,6 @@ import os
 import configparser
 import codecs
 import io
-from cryptography.fernet import Fernet
 from ._helper import _DictObj, Decrypter
 
 
