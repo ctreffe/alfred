@@ -8,6 +8,8 @@ _helper contains internal functions which are not to be called by framework user
 """
 
 from urllib.parse import urlparse
+from cryptography.fernet import Fernet
+import os
 
 def fontsize_converter(font_argument):
     '''
