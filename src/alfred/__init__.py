@@ -12,7 +12,6 @@ from builtins import object
 
 __version__ = "1.0.6"  # will be saved in the data set
 
-
 # configure alfred logger
 #
 # to ensure that the logger is configured properly this must be at the top of the
@@ -217,6 +216,10 @@ class Experiment(object):
 
     def subpath(self, path):
         return os.path.join(self.path, path)
+    
+    @property
+    def alfred_version(self):
+        return self._alfred_version
 
     @property
     def alfred_version(self):
@@ -262,6 +265,10 @@ class Experiment(object):
     @property
     def start_timestamp(self):
         return self._start_timestamp
+    
+    @property
+    def start_time(self):
+        return self._start_time
 
     @property
     def start_time(self):
