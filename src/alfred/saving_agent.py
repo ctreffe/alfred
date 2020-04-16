@@ -111,7 +111,7 @@ class SavingAgentController(object):
 
         if self._experiment.settings.general.runs_on_mortimer:
             try:
-                host = self._db_cred["host"] + ":" + self._db_cred["port"]
+                host = self._db_cred["host"] + ":" + str(self._db_cred["port"])
                 agent = MongoSavingAgent(
                     host,
                     self._db_cred["db"],
