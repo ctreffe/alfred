@@ -1,3 +1,14 @@
+# alfred v1.0.7
+
+## Security improvements
+
+* We further increased data protection and data security through an improved handling of access to the alfred database from inside web experiments deployed via  mortimer.
+* Updated handling of local experiments: You can now specify an optional `auth_source` parameter in the `mongo_saving_agent` section in `config.conf`. The parameter will be passed to the `authSource` parameter of `pymongo.MongoClient` in the initialisation of the saving agent. This allows you to use database accounts that user other databases than "admin" for authentication, which offers greater security.
+
+## Smaller changes
+
+* Disabled the logging of debug messages for the `Page.on_showing()` method. This led to overcrowded logs.
+
 # alfred v1.0.6
 
 ## Encryption
