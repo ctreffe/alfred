@@ -100,6 +100,8 @@ class Experiment(object):
 
         if config is not None:
             self.__db_cred = config.get("db_cred", None)
+        else:
+            self.__db_cred = None
 
         # Set encryption key
         if config and config["encryption_key"]:
