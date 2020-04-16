@@ -120,7 +120,8 @@ class SavingAgentController(object):
                     self._db_cred["use_ssl"],
                     self._db_cred["ca_file_path"],
                     self._db_cred["activation_level"],
-                    self._experiment
+                    self._experiment,
+                    self._db_cred["db"]
                 )
                 self.add_saving_agent(agent)
             except Exception as e:
@@ -423,17 +424,17 @@ class CouchDBSavingAgent(SavingAgent):
 
 
 class MongoSavingAgent(SavingAgent):
-    def __init__(self, host, database, collection, user, password, use_ssl, ca_file_path, activation_level=10, experiment=None):
+    def __init__(self, host, database, collection, user, password, use_ssl, ca_file_path, activation_level=10, experiment=None, auth_source="admin"):
         super(MongoSavingAgent, self).__init__(activation_level, experiment)
 
         if use_ssl and os.path.isfile(ca_file_path):  # if self-signed ssl cert is used
             self._mc = pymongo.MongoClient(host=host, username=user, password=password,
-                                           ssl=use_ssl, ssl_ca_certs=ca_file_path)
+                                           ssl=use_ssl, ssl_ca_certs=ca_file_path, authSource=auth_source)
         elif use_ssl:  # if commercial ssl certificate is used
             self._mc = pymongo.MongoClient(host=host, username=user, password=password,
-                                           ssl=use_ssl)
+                                           ssl=use_ssl, authSource=auth_source)
         else:  # if no ssl encryption is used
-            self._mc = pymongo.MongoClient(host=host, username=user, password=password)
+            self._mc = pymongo.MongoClient(host=host, username=user, password=password, authSource=auth_source)
 
         self._db = self._mc[database]
         # if not self._db.authenticate(user, password):
