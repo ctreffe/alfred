@@ -107,7 +107,7 @@ class PageCore(ContentCore):
         elif self._run_on_showing == 'always':
             self.on_showing_widget()
             self.on_showing()
-            self._log.append(('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.'))
+            # self._log.append(('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.'))
 
 
         self._has_been_shown = True
