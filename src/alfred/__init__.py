@@ -132,6 +132,7 @@ class Experiment(object):
         self._page_controller = PageController(self)
 
         # Determine web layout if necessary
+        # pylint: disable=no-member
         if self._type == "web" or self._type == "qt-wk":
             if custom_layout:
                 web_layout = custom_layout
