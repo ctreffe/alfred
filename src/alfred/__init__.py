@@ -98,7 +98,8 @@ class Experiment(object):
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
 
-        self.__db_cred = config.get("db_cred", None)
+        if config is not None:
+            self.__db_cred = config.get("db_cred", None)
 
         # Set encryption key
         if config and config["encryption_key"]:
