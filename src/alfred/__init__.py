@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from builtins import object
 
-__version__ = "1.0.6"  # will be saved in the data set
+__version__ = "1.0.7"  # will be saved in the data set
 
 # configure alfred logger
 #
