@@ -37,10 +37,10 @@ def _save_worker():
             sac._do_saving(data, data_time, level)
             event.set()
             _queue.task_done()
-    except Exception:
+    except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!!")
+        logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!! {}".format(e))
 
 
 def _save_looper(sleeptime=1):
@@ -73,10 +73,11 @@ _thread.start()
 
 
 class SavingAgentController(object):
-    def __init__(self, experiment):
+    def __init__(self, experiment, db_cred=None):
         self._latest_data_time = None
         self._lock = threading.Lock()
         self._experiment = experiment
+        self._db_cred = db_cred
 
         self._agents = []
         '''run agents that run in normaly'''
@@ -107,6 +108,29 @@ class SavingAgentController(object):
             raise SavingAgentException("Critical initialization abort! Error while adding failure SavingAgent: %s" % e)
 
         # add saving agents from settings
+
+        if self._experiment.settings.general.runs_on_mortimer:
+            try:
+                agent = MongoSavingAgent(
+                    self._db_cred["host"],
+                    self._db_cred["db"],
+                    self._db_cred["collection"],
+                    self._db_cred["user"],
+                    self._db_cred["pw"],
+                    self._db_cred["use_ssl"],
+                    self._db_cred["ca_file_path"],
+                    self._db_cred["activation_level"],
+                    self._experiment
+                )
+                self.add_saving_agent(agent)
+            except Exception as e:
+                if self._experiment.settings.mongo_saving_agent.assure_initialization:
+                    _logger.critical("Assured initialization abort! Initializing MongoSavingAgent failed with error '%s'" % e, self._experiment)
+                    raise SavingAgentException("Assured initialization abort! Error while initializing MongoSavingAgent: %s" % e)
+                else:
+                    failed_to_add = True
+                    _logger.warning("Initializing MongoSavingAgent failed with error '%s'" % e, self._experiment)
+                    self._experiment.experimenter_message_manager.post_message("Initializing MongoSavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.message_manager.WARNING)
 
         if self._experiment.settings.couchdb_saving_agent.use:
             try:

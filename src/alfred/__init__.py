@@ -98,6 +98,8 @@ class Experiment(object):
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
 
+        self.__db_cred = config.get("db_cred", None)
+
         # Set encryption key
         if config and config["encryption_key"]:
             self._encryptor = Fernet(config["encryption_key"])
@@ -160,7 +162,7 @@ class Experiment(object):
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(self)
+        self._saving_agent_controller = SavingAgentController(self, db_cred=self.__db_cred)
 
         self._condition = ""
         self._session = ""
