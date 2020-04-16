@@ -222,10 +222,6 @@ class Experiment(object):
         return self._alfred_version
 
     @property
-    def alfred_version(self):
-        return self._alfred_version
-
-    @property
     def author(self):
         """
         Achtung: *read-only*
@@ -266,10 +262,6 @@ class Experiment(object):
     def start_timestamp(self):
         return self._start_timestamp
     
-    @property
-    def start_time(self):
-        return self._start_time
-
     @property
     def start_time(self):
         return self._start_time
