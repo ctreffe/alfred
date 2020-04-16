@@ -31,16 +31,16 @@ def _save_worker():
     try:
         while True:
             try:
-                (i, data_time, level, snapshot_id, event, data, sac) = _queue.get_nowait()
+                (_, data_time, level, _, event, data, sac) = _queue.get_nowait()
             except queue.Empty:
                 break
             sac._do_saving(data, data_time, level)
             event.set()
             _queue.task_done()
-    except Exception:
+    except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!!")
+        logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!! {}".format(e))
 
 
 def _save_looper(sleeptime=1):
@@ -73,10 +73,11 @@ _thread.start()
 
 
 class SavingAgentController(object):
-    def __init__(self, experiment):
+    def __init__(self, experiment, db_cred=None):
         self._latest_data_time = None
         self._lock = threading.Lock()
         self._experiment = experiment
+        self._db_cred = db_cred
 
         self._agents = []
         '''run agents that run in normaly'''
@@ -107,6 +108,31 @@ class SavingAgentController(object):
             raise SavingAgentException("Critical initialization abort! Error while adding failure SavingAgent: %s" % e)
 
         # add saving agents from settings
+        morti = dict(self._experiment.settings.general).get("runs_on_mortimer", None)
+        if morti and morti != "false" :
+            try:
+                host = self._db_cred["host"] + ":" + str(self._db_cred["port"])
+                agent = MongoSavingAgent(
+                    host,
+                    self._db_cred["db"],
+                    self._db_cred["collection"],
+                    self._db_cred["user"],
+                    self._db_cred["pw"],
+                    self._db_cred["use_ssl"],
+                    self._db_cred["ca_file_path"],
+                    self._db_cred["activation_level"],
+                    self._experiment,
+                    self._db_cred["db"]
+                )
+                self.add_saving_agent(agent)
+            except Exception as e:
+                if self._experiment.settings.mongo_saving_agent.assure_initialization:
+                    _logger.critical("Assured initialization abort! Initializing MongoSavingAgent failed with error '%s'" % e, self._experiment)
+                    raise SavingAgentException("Assured initialization abort! Error while initializing MongoSavingAgent: %s" % e)
+                else:
+                    failed_to_add = True
+                    _logger.warning("Initializing MongoSavingAgent failed with error '%s'" % e, self._experiment)
+                    self._experiment.experimenter_message_manager.post_message("Initializing MongoSavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.message_manager.WARNING)
 
         if self._experiment.settings.couchdb_saving_agent.use:
             try:
@@ -137,7 +163,8 @@ class SavingAgentController(object):
                     self._experiment.settings.mongo_saving_agent.use_ssl,
                     self._experiment.settings.mongo_saving_agent.ca_file_path,
                     self._experiment.settings.mongo_saving_agent.level,
-                    self._experiment
+                    self._experiment,
+                    self._experiment.settings.mongo_saving_agent.auth_source
                 )
                 self.add_saving_agent(agent)
             except Exception as e:
@@ -371,7 +398,7 @@ class LocalSavingAgent(SavingAgent):
 
 class CouchDBSavingAgent(SavingAgent):
     def __init__(self, url, database, activation_level=10, experiment=None):
-        import couchdb
+        import couchdb # pylint: disable=import-error
 
         super(CouchDBSavingAgent, self).__init__(activation_level, experiment)
 
@@ -399,17 +426,17 @@ class CouchDBSavingAgent(SavingAgent):
 
 
 class MongoSavingAgent(SavingAgent):
-    def __init__(self, host, database, collection, user, password, use_ssl, ca_file_path, activation_level=10, experiment=None):
+    def __init__(self, host, database, collection, user, password, use_ssl, ca_file_path, activation_level=10, experiment=None, auth_source="admin"):
         super(MongoSavingAgent, self).__init__(activation_level, experiment)
 
         if use_ssl and os.path.isfile(ca_file_path):  # if self-signed ssl cert is used
             self._mc = pymongo.MongoClient(host=host, username=user, password=password,
-                                           ssl=use_ssl, ssl_ca_certs=ca_file_path)
+                                           ssl=use_ssl, ssl_ca_certs=ca_file_path, authSource=auth_source)
         elif use_ssl:  # if commercial ssl certificate is used
             self._mc = pymongo.MongoClient(host=host, username=user, password=password,
-                                           ssl=use_ssl)
+                                           ssl=use_ssl, authSource=auth_source)
         else:  # if no ssl encryption is used
-            self._mc = pymongo.MongoClient(host=host, username=user, password=password)
+            self._mc = pymongo.MongoClient(host=host, username=user, password=password, authSource=auth_source)
 
         self._db = self._mc[database]
         # if not self._db.authenticate(user, password):

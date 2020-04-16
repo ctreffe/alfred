@@ -7,16 +7,14 @@ experimentspezifische Einstellungen vorzunehmen, die dann unter
 Experiment.settings abgefragt werden können.
 """
 
+import codecs, configparser, io, os, sys
+from builtins import object, str
+
 from future import standard_library
+
+from ._helper import Decrypter, _DictObj
+
 standard_library.install_aliases()
-from builtins import str
-from builtins import object
-import sys
-import os
-import configparser
-import codecs
-import io
-from ._helper import _DictObj, Decrypter
 
 
 def _package_path():
@@ -61,10 +59,13 @@ for config_file in config_files:
 # general
 general = _DictObj()
 general.debug = _config_parser.getboolean('general', 'debug')
-debugmode = general.debug
+general.runs_on_mortimer = _config_parser.getboolean('general', 'runs_on_mortimer', fallback=False)
 general.external_files_dir = _config_parser.get('general', 'external_files_dir')
+
 if not os.path.isabs(general.external_files_dir):
     general.external_files_dir = os.path.join(os.getcwd(), general.external_files_dir)
+
+debugmode = general.debug
 
 # metadata
 metadata = _DictObj()
@@ -194,6 +195,7 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.login_from_env = config_parser.getboolean('mongo_saving_agent', 'login_from_env')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
         self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
+        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback="alfred")
 
         if self.mongo_saving_agent.use and self.mongo_saving_agent.login_from_env:
             self.mongo_saving_agent.user, self.mongo_saving_agent.password = decrypter.decrypt_login(from_env=True)

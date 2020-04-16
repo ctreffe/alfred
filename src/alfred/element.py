@@ -27,28 +27,30 @@ TripleBarChartElement Display a chart with three different bars (temporary)
 ===================== ===============================================================
 
 """
-from __future__ import division
-from __future__ import absolute_import
+from __future__ import absolute_import, division
+
+import json
+import random
+import re
+import string
+from abc import ABCMeta, abstractproperty
+from builtins import object, range, str
+from functools import reduce
+from uuid import uuid4
 
 from future import standard_library
-from functools import reduce
-
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
+from future.utils import with_metaclass
+from jinja2 import Environment, PackageLoader, Template
 from past.utils import old_div
-from builtins import object
-import re, string, random, json
-from jinja2 import Template, PackageLoader, Environment
-from uuid import uuid4
-from abc import ABCMeta, abstractproperty
 
-from .exceptions import AlfredError
-from ._helper import fontsize_converter, alignment_converter, is_url
 import alfred.settings as settings
 
 from . import alfredlog
-from future.utils import with_metaclass
+from ._helper import alignment_converter, fontsize_converter, is_url
+from .exceptions import AlfredError
+
+standard_library.install_aliases()
+
 
 logger = alfredlog.getLogger("alfred")
 
@@ -456,9 +458,6 @@ class CodeElement(Element, WebElementInterface):
     @text.setter
     def text(self, text):
         self._text = text
-        if self._text_label:
-            self._text_label.set_text(self._text)
-            self._text_label.repaint()
 
     @property
     def web_widget(self):
@@ -2792,8 +2791,8 @@ class WebVideoElement(Element, WebElementInterface):
         TODO: Add docstring
         """
         super(WebVideoElement, self).__init__(**kwargs)
-        # load template
-        self._template = jinja_env.get_template("WebVideoElement.html")
+
+        self._template = None
 
         # if single source is given
         self._source = source
@@ -2867,6 +2866,9 @@ class WebVideoElement(Element, WebElementInterface):
         self._attributes = " ".join(attr)
 
     def prepare_web_widget(self):
+        # load template
+        self._template = jinja_env.get_template("WebVideoElement.html")
+
         # prepare attributes
         self.prepare_attributes()
 
@@ -2904,7 +2906,7 @@ class WebVideoElement(Element, WebElementInterface):
             self._web_m_video_url = self._page._experiment.user_interface_controller.add_static_file(
                 self._web_m_path, content_type="video/webm"
             )
-            self._urls.append(self.web_m_video_url)
+            self._urls.append(self._web_m_video_url)
         # -------------------------------------------- #
 
     @property

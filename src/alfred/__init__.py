@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from builtins import object
 
-__version__ = "1.0.6"  # will be saved in the data set
+__version__ = "1.0.7"  # will be saved in the data set
 
 # configure alfred logger
 #
@@ -98,6 +98,11 @@ class Experiment(object):
         if not self._exp_id:
             raise ValueError("You need to specify an experiment ID.")
 
+        if config is not None:
+            self.__db_cred = config.get("db_cred", None)
+        else:
+            self.__db_cred = None
+
         # Set encryption key
         if config and config["encryption_key"]:
             self._encryptor = Fernet(config["encryption_key"])
@@ -127,6 +132,7 @@ class Experiment(object):
         self._page_controller = PageController(self)
 
         # Determine web layout if necessary
+        # pylint: disable=no-member
         if self._type == "web" or self._type == "qt-wk":
             if custom_layout:
                 web_layout = custom_layout
@@ -160,7 +166,7 @@ class Experiment(object):
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(self)
+        self._saving_agent_controller = SavingAgentController(self, db_cred=self.__db_cred)
 
         self._condition = ""
         self._session = ""
@@ -222,10 +228,6 @@ class Experiment(object):
         return self._alfred_version
 
     @property
-    def alfred_version(self):
-        return self._alfred_version
-
-    @property
     def author(self):
         """
         Achtung: *read-only*
@@ -266,10 +268,6 @@ class Experiment(object):
     def start_timestamp(self):
         return self._start_timestamp
     
-    @property
-    def start_time(self):
-        return self._start_time
-
     @property
     def start_time(self):
         return self._start_time
