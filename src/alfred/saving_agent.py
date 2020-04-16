@@ -31,7 +31,7 @@ def _save_worker():
     try:
         while True:
             try:
-                (i, data_time, level, snapshot_id, event, data, sac) = _queue.get_nowait()
+                (_, data_time, level, _, event, data, sac) = _queue.get_nowait()
             except queue.Empty:
                 break
             sac._do_saving(data, data_time, level)
@@ -397,7 +397,7 @@ class LocalSavingAgent(SavingAgent):
 
 class CouchDBSavingAgent(SavingAgent):
     def __init__(self, url, database, activation_level=10, experiment=None):
-        import couchdb
+        import couchdb # pylint: disable=import-error
 
         super(CouchDBSavingAgent, self).__init__(activation_level, experiment)
 
