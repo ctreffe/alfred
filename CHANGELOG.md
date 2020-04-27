@@ -2,12 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Announcement: Released to PyPi under the new name **alfred3**
+
+* We are proud to announce that alfred is now available on PyPi. Because there already exists a package named "alfred", we decided to change the name to "alfred3" in celebration of the recent port to Python 3.
+
+* Alfred3 can now be installed via pip:
+
+```
+pip install alfred3
+```
+
+* When alfred is installed via pip, you must change all imports in your `script.py` and `run.py` to the new name.
+
 ### Changed
+
+* Changed name to alfred3 (see above).
 
 * From now on, we will be using the changelog format recommended by [Keep a Changelog](https://keepachangelog.com/en/)
     + In the course of this change, we changed the name of the former `NEWS.md` to `CHANGELOG.md`.
