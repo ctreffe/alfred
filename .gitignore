@@ -137,3 +137,7 @@ src/files/
 src/test.py
 src/_script.py
 src/tests/manualtesting.py
+
+.vscode/
+
+tests/manual/*

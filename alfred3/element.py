@@ -43,18 +43,17 @@ from future.utils import with_metaclass
 from jinja2 import Environment, PackageLoader, Template
 from past.utils import old_div
 
-import alfred.settings as settings
 
-from . import alfredlog
+from . import alfredlog, settings
 from ._helper import alignment_converter, fontsize_converter, is_url
 from .exceptions import AlfredError
 
 standard_library.install_aliases()
 
 
-logger = alfredlog.getLogger("alfred")
+logger = alfredlog.getLogger(__name__)
 
-jinja_env = Environment(loader=PackageLoader("alfred", "templates/elements"))
+jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 
 class Element(object):

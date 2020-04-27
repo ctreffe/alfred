@@ -9,7 +9,7 @@ from builtins import str
 from builtins import range
 from . import alfredlog
 from functools import reduce
-logger = alfredlog.getLogger("alfred")
+logger = alfredlog.getLogger(__name__)
 
 from ._core import ContentCore, Direction
 from .page import PageCore, HeadOpenSectionCantClose
@@ -78,7 +78,7 @@ class Section(ContentCore):
 
         return self.statustext
 
-    @ContentCore.should_be_shown.getter
+    @ContentCore.should_be_shown.getter # pylint: disable=no-member
     def should_be_shown(self):
         '''return true wenn should_be_shown nicht auf False gesetzt wurde und mindestens eine Frage angezeigt werden will'''
         return super(Section, self).should_be_shown and reduce(lambda b, q_core: b or q_core.should_be_shown, self._page_list, False)

@@ -7,14 +7,14 @@ In *page_controller* wird die Basisklasse *PageController* bereit gestellt.
 """
 from __future__ import absolute_import
 from builtins import object
-from alfred._core import Direction
+from ._core import Direction
 
 from .section import Section
 from .page import CompositePage, WebCompositePage
 from .element import TextElement, WebExitEnabler
 from . import alfredlog
 
-logger = alfredlog.getLogger("alfred")
+logger = alfredlog.getLogger(__name__)
 
 
 class PageController(object):

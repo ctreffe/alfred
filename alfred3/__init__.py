@@ -8,31 +8,24 @@ alfred enthält die Basisklasse :py:class:`Experiment`
 """
 from __future__ import absolute_import
 
+import os
+import sys
+import time
 from builtins import object
-
-__version__ = "1.0.7"  # will be saved in the data set
-
-# configure alfred logger
-#
-# to ensure that the logger is configured properly this must be at the top of the
-# __init__.py module
-
-
-import time, sys, os
 from uuid import uuid4
 
-from .saving_agent import SavingAgentController
-from .data_manager import DataManager
-from .page_controller import PageController
-from .ui_controller import WebUserInterfaceController, QtWebKitUserInterfaceController
-from ._helper import _DictObj
-from . import layout
-from . import settings
-from . import messages
-from . import alfredlog
 from cryptography.fernet import Fernet
 
-logger = alfredlog.getLogger("alfred")
+from . import alfredlog, layout, messages, settings
+from ._helper import _DictObj
+from .data_manager import DataManager
+from .page_controller import PageController
+from .saving_agent import SavingAgentController
+from .ui_controller import QtWebKitUserInterfaceController, WebUserInterfaceController
+
+__version__ = "1.1.0"  # will be saved in the data set
+
+logger = alfredlog.getLogger(__name__)
 
 
 class Experiment(object):
@@ -166,7 +159,9 @@ class Experiment(object):
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(self, db_cred=self.__db_cred)
+        self._saving_agent_controller = SavingAgentController(
+            self, db_cred=self.__db_cred
+        )
 
         self._condition = ""
         self._session = ""
@@ -222,7 +217,7 @@ class Experiment(object):
 
     def subpath(self, path):
         return os.path.join(self.path, path)
-    
+
     @property
     def alfred_version(self):
         return self._alfred_version
@@ -267,7 +262,7 @@ class Experiment(object):
     @property
     def start_timestamp(self):
         return self._start_timestamp
-    
+
     @property
     def start_time(self):
         return self._start_time

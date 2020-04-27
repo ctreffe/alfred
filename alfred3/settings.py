@@ -195,7 +195,7 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.login_from_env = config_parser.getboolean('mongo_saving_agent', 'login_from_env')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
         self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
-        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback="alfred")
+        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback=__name__)
 
         if self.mongo_saving_agent.use and self.mongo_saving_agent.login_from_env:
             self.mongo_saving_agent.user, self.mongo_saving_agent.password = decrypter.decrypt_login(from_env=True)

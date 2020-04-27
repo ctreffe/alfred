@@ -7,22 +7,20 @@ A package for convenience functions
 """
 from __future__ import print_function
 
+import csv
+import re
+import socket
+from os.path import abspath, isabs, isfile, join
+
+import xmltodict
 from future import standard_library
+
+from alfred3 import alfredlog, settings
+from alfred3.exceptions import AlfredError
 
 standard_library.install_aliases()
 
-import xmltodict
-import csv
-import re
-import alfred.settings as settings
-import socket
-
-from os.path import abspath, isabs, join, isfile
-from alfred.exceptions import AlfredError
-from alfred import alfredlog
-
-
-logger = alfredlog.getLogger("alfred")
+logger = alfredlog.getLogger(__name__)
 
 
 def parse_xml_to_dict(path, interface="web", code=False):
