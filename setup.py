@@ -3,9 +3,13 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+version = {}
+with open('alfred3/_version.py') as f:
+    exec(f.read(), version)
+
 setuptools.setup(
     name="alfred3",
-    version="1.1.0",
+    version=version["__version__"],
     author="Christian Treffenstädt, Paul Wiemann, Johannes Brachem",
     author_email="treffenstaedt@psych.uni-goettingen.de",
     description="A library for rapid development of dynamic and interactive online experiments in the social sciences.",
@@ -23,14 +27,13 @@ setuptools.setup(
         "jinja2>=2.11",
         "Flask>=1.1",
         "xmltodict>=0.12",
-        "PySide2>=5.2"
+        "PySide2>=5.2",
     ],
-    
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-
-    python_requires='>=3.4',
+    python_requires=">=3.5",
 )
+

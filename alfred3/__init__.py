@@ -6,7 +6,10 @@
 alfred enthält die Basisklasse :py:class:`Experiment`
 
 """
+
 from __future__ import absolute_import
+
+from ._version import __version__
 
 import os
 import sys
@@ -22,8 +25,6 @@ from .data_manager import DataManager
 from .page_controller import PageController
 from .saving_agent import SavingAgentController
 from .ui_controller import QtWebKitUserInterfaceController, WebUserInterfaceController
-
-__version__ = "1.1.0"  # will be saved in the data set
 
 logger = alfredlog.getLogger(__name__)
 
