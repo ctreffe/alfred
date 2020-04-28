@@ -16,10 +16,17 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ctreffe/alfred3-dbtools",
-
     packages=setuptools.find_packages(),
-    package_data={"alfred3": ["files/*", "staic/*", "templates/*"]},
-
+    package_data={
+        "alfred3": [
+            "files/*",
+            "static/css/*",
+            "static/img/*",
+            "static/js/*",
+            "templates/*",
+            "templates/elements/*",
+        ]
+    },
     install_requires=[
         "pymongo>=3.10",
         "future>=0.18",
