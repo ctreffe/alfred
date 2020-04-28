@@ -3,6 +3,8 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+# Parse version from _version.py in package directory
+# See https://packaging.python.org/guides/single-sourcing-package-version/#single-sourcing-the-version
 version = {}
 with open('alfred3/_version.py') as f:
     exec(f.read(), version)
