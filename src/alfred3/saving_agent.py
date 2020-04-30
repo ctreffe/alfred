@@ -111,8 +111,8 @@ class SavingAgentController(object):
             raise SavingAgentException("Critical initialization abort! Error while adding failure SavingAgent: %s" % e)
 
         # add saving agents from settings
-        morti = dict(self._experiment.settings.general).get("runs_on_mortimer", None)
-        if morti and morti != "false" :
+        runs_on_mortimer = dict(self._experiment.settings.general).get("runs_on_mortimer", None)
+        if runs_on_mortimer and runs_on_mortimer != "false" :
             try:
                 host = self._db_cred["host"] + ":" + str(self._db_cred["port"])
                 agent = MongoSavingAgent(
