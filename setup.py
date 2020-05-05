@@ -17,7 +17,7 @@ setuptools.setup(
     description="A library for rapid development of dynamic and interactive online experiments in the social sciences.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ctreffe/alfred3-dbtools",
+    url="https://github.com/ctreffe/alfred",
     packages=setuptools.find_packages(),
     package_data={
         "alfred3": [
@@ -43,6 +43,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.5",
+    python_requires=">=3.7",
 )
 
