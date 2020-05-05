@@ -136,3 +136,8 @@ alfred_log.md
 src/files/
 src/test.py
 src/_script.py
+src/tests/manualtesting.py
+
+# project-specifics
+.vscode/
+tests/manual/*

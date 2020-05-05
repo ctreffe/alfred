@@ -11,6 +11,7 @@ import codecs, configparser, io, os, sys
 from builtins import object, str
 
 from future import standard_library
+from pathlib import Path
 
 from ._helper import Decrypter, _DictObj
 
@@ -43,7 +44,6 @@ else:
                      os.path.join(sys.prefix, 'etc/alfred'),
                      ]
 config_files += [os.path.join(os.getcwd(), 'config.conf')]
-
 config_files = [x for x in config_files if x is not None]
 
 # create config parser
@@ -157,9 +157,9 @@ class ExperimentSpecificSettings(object):
 
         for config_file in config_files:
             if os.path.exists(config_file):
-                config_parser.readfp(codecs.open(config_file, "r", "utf8"))
+                config_parser.read_file(codecs.open(config_file, "r", "utf8"))
         if config_string:
-            config_parser.readfp(io.StringIO(config_string))
+            config_parser.read_file(io.StringIO(config_string))
 
         # handle section by hand
         sections_by_hand = ['mongo_saving_agent', 'couchdb_saving_agent',
@@ -195,7 +195,7 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.login_from_env = config_parser.getboolean('mongo_saving_agent', 'login_from_env')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
         self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
-        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback="alfred")
+        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback=__name__)
 
         if self.mongo_saving_agent.use and self.mongo_saving_agent.login_from_env:
             self.mongo_saving_agent.user, self.mongo_saving_agent.password = decrypter.decrypt_login(from_env=True)

@@ -12,7 +12,7 @@ import traceback
 from . import settings
 
 
-logger = alfredlog.getLogger("alfred")
+logger = alfredlog.getLogger(__name__)
 
 if settings.experiment.type == 'qt':
     def excepthook(type, value, tb):

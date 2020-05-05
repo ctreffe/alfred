@@ -5,23 +5,26 @@
 
 """
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-from abc import ABCMeta, abstractmethod
 
 import json
-import time
 import os
 import queue
 import threading
+import time
 import uuid
-import pymongo
-import alfred.settings
+from abc import ABCMeta, abstractmethod
+from builtins import object
 
-from .exceptions import SavingAgentRunException, SavingAgentException
-from . import alfredlog
+import pymongo
+from future import standard_library
 from future.utils import with_metaclass
+
+import alfred3.settings
+
+from . import alfredlog
+from .exceptions import SavingAgentException, SavingAgentRunException
+
+standard_library.install_aliases()
 
 
 _logger = alfredlog.getLogger(__name__)
@@ -62,9 +65,9 @@ _queue = queue.PriorityQueue()
 _quit_event = threading.Event()
 
 
-if alfred.settings.experiment.type == 'qt-wk':
+if alfred3.settings.experiment.type == 'qt-wk':
     _logger.info("Starting saving thread for qt-wk experiment.")
-elif alfred.settings.experiment.type == 'web':
+elif alfred3.settings.experiment.type == 'web':
     _logger.info("Starting global saving thread for web experiments.")
 
 _thread = threading.Thread(target=_save_looper, name='DataSaver')
@@ -84,7 +87,7 @@ class SavingAgentController(object):
         self._failure_agents = []
         '''agents that run if running a normal agent fails '''
 
-        if alfred.settings.debugmode and alfred.settings.debug.disable_saving:
+        if alfred3.settings.debugmode and alfred3.settings.debug.disable_saving:
             _logger.warning("Saving has been disabled!", self._experiment)
         else:
             self.init_saving_agents()
@@ -97,9 +100,9 @@ class SavingAgentController(object):
         # add failure saving agent first
         try:
             agent = LocalSavingAgent(
-                alfred.settings.failure_local_saving_agent.name,
-                alfred.settings.failure_local_saving_agent.path,
-                alfred.settings.failure_local_saving_agent.level,
+                alfred3.settings.failure_local_saving_agent.name,
+                alfred3.settings.failure_local_saving_agent.path,
+                alfred3.settings.failure_local_saving_agent.level,
                 self._experiment
             )
             self.add_failure_saving_agent(agent)
@@ -280,7 +283,7 @@ class SavingAgentController(object):
                         _logger.warning("Initializing level 2 fallback local SavingAgent failed with error '%s'" % e, self._experiment)
                         self._experiment.experimenter_message_manager.post_message("Initializing level 2 fallback local SavingAgent failed. Do <b>NOT</b> continue if this saving agent is critical to your experiment!", "SavingAgent warning!", self._experiment.message_manager.WARNING)
 
-        if self._agents == [] and not alfred.settings.debug.disable_saving:
+        if self._agents == [] and not alfred3.settings.debug.disable_saving:
             _logger.critical("Session abort! List of SavingAgents is empty, but saving is not disabled.", self._experiment)
             raise SavingAgentException("Session abort! List of SavingAgents is empty, but saving is not disabled.")
 

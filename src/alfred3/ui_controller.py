@@ -25,7 +25,7 @@ from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView
 from ._core import Direction
 from .layout import BaseWebLayout
 
-import alfred.settings
+import alfred3.settings
 from .helpmates import localserver as localserver
 from future.utils import with_metaclass
 
@@ -111,7 +111,7 @@ class WebUserInterfaceController(UserInterfaceController):
         self._callables_dict = {}
         self._dynamic_files_dict = {}
         self._static_files_dict = {}
-        self._basepath = alfred.settings.webserver.basepath
+        self._basepath = alfred3.settings.webserver.basepath
 
         super(WebUserInterfaceController, self).__init__(experiment, layout)
 
@@ -148,16 +148,16 @@ class WebUserInterfaceController(UserInterfaceController):
         # build html code
         html = "<!DOCTYPE html>\n<html><head><title>ALFRED</title>"
 
-        for i, js_url in js_urls:
+        for _, js_url in js_urls:
             html = html + "<script type=\"text/javascript\" src=\"%s\"></script>" % js_url
 
-        for i, js_script in js_scripts:
+        for _, js_script in js_scripts:
             html = html + "<script type=\"text/javascript\">%s</script>" % js_script
 
-        for i, css_url in css_urls:
+        for _, css_url in css_urls:
             html = html + "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />" % css_url
 
-        for i, css_script in css_scripts:
+        for _, css_script in css_scripts:
             html = html + "<style type=\"text/css\">%s</style>" % css_script
 
         html = html + "</head><body><form id=\"form\" method=\"post\" action=\"%s/experiment\" autocomplete=\"off\" accept-charset=\"UTF-8\">" % self._basepath
@@ -198,7 +198,7 @@ class WebUserInterfaceController(UserInterfaceController):
 
         identifier = uuid4().hex
 
-        if alfred.settings.debugmode:
+        if alfred3.settings.debugmode:
             if not hasattr(self, 'sf_counter'):
                 self.sf_counter = 0
             self.sf_counter += 1

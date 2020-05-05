@@ -5,22 +5,21 @@
 '''
 from __future__ import absolute_import
 
-from builtins import str
-from builtins import object
-from abc import ABCMeta, abstractproperty
 import time
-
-from ._core import ContentCore
-from .exceptions import AlfredError
-from ._helper import _DictObj
-from . import element, alfredlog
-from .element import Element, WebElementInterface, TextElement, ExperimenterMessages
-import alfred.settings as settings
-
-from future.utils import with_metaclass
+from abc import ABCMeta, abstractproperty
+from builtins import object, str
 from functools import reduce
 
-logger = alfredlog.getLogger("alfred")
+from future.utils import with_metaclass
+
+from . import alfredlog, element, settings
+from ._core import ContentCore
+from ._helper import _DictObj
+from .element import (Element, ExperimenterMessages, TextElement,
+                      WebElementInterface)
+from .exceptions import AlfredError
+
+logger = alfredlog.getLogger(__name__)
 
 
 class PageCore(ContentCore):

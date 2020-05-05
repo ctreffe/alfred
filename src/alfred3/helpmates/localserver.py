@@ -2,13 +2,13 @@ from builtins import map, object
 from builtins import callable as builtins_callable
 from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session, send_from_directory
 from uuid import uuid4
-from ..settings import general, experiment
+from .. import settings
 import re, os
 
 app = Flask(__name__)
 app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
-if experiment.type == 'web':
-    app.debug = general.debug
+if settings.experiment.type == 'web':
+    app.debug = settings.general.debug
 
 
 class C(object):
@@ -20,7 +20,7 @@ class Generator(object):
     def __init__(self, exp=None):
         self.experiment = exp
 
-    def generate_experiment(self):
+    def generate_experiment(self): # pylint: disable=method-hidden
         pass
 
     def set_experiment(self, exp):

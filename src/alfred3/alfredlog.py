@@ -6,7 +6,7 @@ import sys
 import os
 
 
-def init_logging(name='alfred'):
+def init_logging(name="alfred3"):
     from . import settings
     logger = logging.getLogger(name)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
