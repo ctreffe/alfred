@@ -17,7 +17,7 @@ If you have Python 3 installed, you can install alfred3 via pip with the follwoi
 pip install alfred3
 ```
 
-A detailed **step-by-step video tutorial on setting up Alfred3** can be found here (created using MacOS, but applicable to Windows aswell): https://www.youtube.com/watch?v=6YbAN0q3p-E (German)
+A detailed **step-by-step video tutorial on setting up alfred3** can be found here (created using MacOS, but applicable to Windows aswell): https://www.youtube.com/watch?v=6YbAN0q3p-E (German)
 
 ## Alfred3 Mailing List
 
