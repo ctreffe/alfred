@@ -8,6 +8,9 @@ If you are publishing research conducted using Alfred3, please cite:
 
 > Treffenstaedt, C., Wiemann, P. & Brachem, J. (2020). Alfred3 - A library for rapid experiment development (Version 1.x.x). Göttingen, Germany: [https://doi.org/10.5281/zenodo.1437219](https://doi.org/10.5281/zenodo.1437219)
 
+## A note on the version number
+
+Alfred3 is currently at version 1.x.x, because it is already in use for research at the University of Göttingen. However, it does currently lack comprehensive documentation and automatic unit testing. Also, some of its most powerful extensions are not currently publicly available. If you want to use it, please contact us via alfred@psych.uni-goettingen.de
 
 ## Installation
 
@@ -18,6 +21,10 @@ pip install alfred3
 ```
 
 A detailed **step-by-step video tutorial on setting up alfred3** can be found here (created using MacOS, but applicable to Windows aswell): https://www.youtube.com/watch?v=6YbAN0q3p-E (German)
+
+## Extensions
+
+Currently, the only publicly available extension for alfred3 is [alfred3_dbtools](https://github.com/ctreffe/alfred3-dbtools). It is a small extension, providing an interface to MongoDB databases. It has offers basic [documentation](https://alfred3-dbtools.readthedocs.io/en/latest/) and is tested via automatic unit tests.
 
 ## Alfred3 Mailing List
 
