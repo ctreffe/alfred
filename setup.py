@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 # Parse version from _version.py in package directory
 # See https://packaging.python.org/guides/single-sourcing-package-version/#single-sourcing-the-version
 version = {}
-with open('alfred3/_version.py') as f:
+with open('src/alfred3/_version.py') as f:
     exec(f.read(), version)
 
 setuptools.setup(
@@ -29,6 +29,7 @@ setuptools.setup(
             "templates/elements/*",
         ]
     },
+    package_dir={"": "src"},
     install_requires=[
         "pymongo>=3.10",
         "future>=0.18",
