@@ -23,7 +23,7 @@ pip install alfred3
 
 * Changed name to alfred3 (see above).
 
-* From now on, we will be using the changelog format recommended by [Keep a Changelog](https://keepachangelog.com/en/)
+* From now on, we will generally be using the changelog format recommended by [Keep a Changelog](https://keepachangelog.com/en/)
     + In the course of this change, we changed the name of the former `NEWS.md` to `CHANGELOG.md`.
 
 
