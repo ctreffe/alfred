@@ -138,6 +138,6 @@ src/test.py
 src/_script.py
 src/tests/manualtesting.py
 
+# project-specifics
 .vscode/
-
 tests/manual/*
