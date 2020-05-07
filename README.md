@@ -10,11 +10,13 @@ If you are publishing research conducted using Alfred3, please cite:
 
 ## A note on the version number
 
-Alfred3 is currently at version 1.x.x, because it is already in use for research. However, it does currently lack comprehensive documentation and automatic unit testing. Also, some of its most powerful extensions are not currently publicly available. If you want to use it, please contact us via alfred@psych.uni-goettingen.de
+Alfred3 is currently at version 1.x.x, because it is already in use for research. However, it does currently lack comprehensive documentation and automatic unit testing. Also, some of its most powerful extensions are not currently publicly available. Currently, we lack the resources to upgrade our documentation and testing capacities, focusing mainly on maintaining the current state of the library.
+
+If you want to use alfred3, please contact us via alfred@psych.uni-goettingen.de.
 
 ## Installation
 
-If you have Python 3 installed, you can install alfred3 via pip with the follwoing command. It is best practice to install alfred3 in a new virtual environment for every project (see [virtualenv package](https://virtualenv.pypa.io/en/latest/)).
+If you have Python 3 installed, you can install alfred3 via pip with the follwoing command. It is best practice to install Alfred3 in a new virtual environment for every project (see [virtualenv package](https://virtualenv.pypa.io/en/latest/)).
 
 ```bash
 pip install alfred3
