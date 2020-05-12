@@ -44,6 +44,10 @@ else:
                      os.path.join(sys.prefix, 'etc/alfred'),
                      ]
 config_files += [os.path.join(os.getcwd(), 'config.conf')]
+
+running_script_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+config_files += [os.path.join(running_script_path, "config.conf")]
+
 config_files = [x for x in config_files if x is not None]
 
 # create config parser
@@ -153,6 +157,7 @@ class ExperimentSpecificSettings(object):
             os.path.join(package_path, 'files/default.conf'),
             os.environ.get('ALFRED_CONFIG_FILE'),
             os.path.join(os.getcwd(), 'config.conf'),
+            os.path.join(running_script_path, "config.conf")
         ] if x is not None]
 
         for config_file in config_files:
@@ -195,7 +200,7 @@ class ExperimentSpecificSettings(object):
         self.mongo_saving_agent.login_from_env = config_parser.getboolean('mongo_saving_agent', 'login_from_env')
         self.mongo_saving_agent.user = config_parser.get('mongo_saving_agent', 'user')
         self.mongo_saving_agent.password = config_parser.get('mongo_saving_agent', 'password')
-        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback=__name__)
+        self.mongo_saving_agent.auth_source = config_parser.get('mongo_saving_agent', 'auth_shource', fallback="admin")
 
         if self.mongo_saving_agent.use and self.mongo_saving_agent.login_from_env:
             self.mongo_saving_agent.user, self.mongo_saving_agent.password = decrypter.decrypt_login(from_env=True)
