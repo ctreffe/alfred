@@ -8,9 +8,12 @@ A package for convenience functions
 from __future__ import print_function
 
 import csv
+import platform
 import re
 import socket
+import subprocess
 from os.path import abspath, isabs, isfile, join
+from pathlib import Path
 
 import xmltodict
 from future import standard_library
@@ -217,3 +220,61 @@ def read_js(file):
         out = no_comments.replace("\n", "")  # collapse to one line
 
     return out
+
+
+class ChromeKiosk:
+    """Open a Chrome window in kiosk mode.
+    """
+
+    @classmethod
+    def open(cls, url: str, path: str=None):
+        """Check operating system and call approriate opening method for opening url in Chrome in kiosk mode.
+
+        This will only work, if Chrome is not currently running.
+
+        Args:
+            url: URL to open. Needs to start with "http://" or "https://"
+            path: Custom path to chrome.exe on Windows. If none is provided, the default paths for Windows 7 and 10 will be tried.
+        """
+        current_os = platform.system()
+
+        if not url.startswith("http"):
+            raise ValueError("Parameter 'url' needs to start with 'http://' or 'https://'.")
+
+        if current_os == "Windows":
+            cls.open_windows(url=url, path=path)
+        elif current_os == "Darwin":
+            cls.open_mac(url=url)
+        elif current_os == "Linux":
+            raise NotImplementedError("This method has not been implemented for Linux distributions.")
+
+    @staticmethod
+    def open_windows(url: str, path: str=None):
+        """Open url in Chrome in kiosk mode on Windows."""
+
+        w10 = Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
+        w7 = Path("C:/Program Files (x86)/Google/Application/chrome.exe")
+
+        if w10.exists() and w7.exists():
+            raise FileNotFoundError("Can't determine correct filepath for chrome.exe.")
+        
+        chrome = None
+
+        if path:
+            chrome = Path(path)
+        else:
+            if w10.exists():
+                chrome = w10
+            elif w7.exists():
+                chrome = w7
+        
+        if not chrome.exists():
+            raise FileNotFoundError("Did not find a chrome.exe.")
+        
+        subprocess.run([chrome, url, "--kiosk"])
+
+    @staticmethod
+    def open_mac(url: str):
+        """Open url in Chrome in kisok mode on MacOS."""
+
+        subprocess.run(["open", "-a", "Google Chrome", url, "--args", "--kiosk"])
