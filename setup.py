@@ -18,7 +18,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ctreffe/alfred",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages("src"),
     package_data={
         "alfred3": [
             "files/*",
@@ -46,4 +46,3 @@ setuptools.setup(
     ],
     python_requires=">=3.7",
 )
-
