@@ -140,4 +140,4 @@ src/tests/manualtesting.py
 
 # project-specifics
 .vscode/
-tests/manual/*
+tests/manual/
