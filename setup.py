@@ -37,7 +37,6 @@ setuptools.setup(
         "jinja2>=2.11",
         "Flask>=1.1",
         "xmltodict>=0.12",
-        "PySide2>=5.2",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
