@@ -11,12 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 #### Fullscreen option for Google Chrome
 
-We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed on one of the following standard paths:
-
-```
-"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"   # Windows 10
-"C:\Program Files (x86)\Google\Application\chrome.exe"          # Windows 7
-```
+We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed to a default directory and is only tested on Windows 10.
 
 You can enable this option in your config.conf:
 
@@ -24,6 +19,8 @@ You can enable this option in your config.conf:
 [experiment]
 fullscreen = true   # default: false
 ```
+
+**In order for this feature to work, you need to use our most recent version of `run.py`. There is an easy way to do this (see below)**
 
 #### `alfred3.run` module with command line interface
 
