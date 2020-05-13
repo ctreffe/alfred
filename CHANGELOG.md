@@ -33,7 +33,7 @@ Added a module `alfred3.run` that contains the functionality for locally running
 python3 -m alfred3.run
 ```
 
-You can also continue to use a `run.py` in your experiment directory to run your experiment. From now on, this file should look like this:
+You can also continue to use a `run.py` in your experiment directory to run your experiment. From now on, this file should look like this (watch [this video](https://www.youtube.com/watch?v=sugvnHA7ElY) for an explanation concerning the `if __name__ == "__main__"` protector.):
 
 ``` Python
 from alfred3.run import run_experiment
