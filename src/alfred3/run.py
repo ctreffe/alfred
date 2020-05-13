@@ -18,6 +18,7 @@ import importlib
 import sys
 import webbrowser
 import os
+import threading
 
 from pathlib import Path
 
@@ -38,6 +39,15 @@ def load(name: str, location: str):
     spec.loader.exec_module(module)
 
     return module
+
+# open correct browser
+def open_browser(url):
+    """
+    """
+    if settings.experiment.fullscreen:
+        ChromeKiosk.open(url=url)
+    else:
+        webbrowser.open(url=url)
 
 def run_experiment(path: str=None):
     """Run an alfred3 experiment.
@@ -81,16 +91,13 @@ def run_experiment(path: str=None):
     # generate url
     expurl = 'http://127.0.0.1:{port}/start'.format(port=port)
 
-    # open correct browser
-    if settings.experiment.fullscreen:
-        ChromeKiosk.open(expurl)
-    else:
-        webbrowser.open(expurl)
+    # start browser in a thread (needed for windows)
+    browser = threading.Thread(target=open_browser, kwargs={"url": expurl})
+    browser.start()
 
     # run app
     sys.stderr.writelines([" * Start local experiment using {}\n".format(expurl)])
     localserver.app.run(port=port, threaded=True, use_reloader=False)
-
 
 if __name__ == "__main__":
     """This part of the module is run only if it is called directly via ``python -m alfred3.run``.
