@@ -18,10 +18,6 @@ from uuid import uuid4
 from io import StringIO
 import threading
 
-from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QMainWindow
-import PySide2.QtCore as QtCore
-from PySide2.QtWebEngineWidgets import QWebEngineView as QWebView
-
 from ._core import Direction
 from .layout import BaseWebLayout
 
@@ -51,7 +47,7 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         self._oldPage = None
 
         if layout is None:
-            self.change_layout(BaseQtLayout() if experiment.type == 'qt' else BaseWebLayout())
+            self.change_layout(BaseWebLayout())
         else:
             self.change_layout(layout)
 
@@ -228,113 +224,3 @@ class WebUserInterfaceController(UserInterfaceController):
 
     def jump_url_from_pos_list(self, pos_list):
         return self._basepath + '/experiment?move=jump&par=' + '.'.join(pos_list)
-
-
-try:
-    class ThreadHelper(QtCore.QObject):
-        render_signal = QtCore.Signal()
-
-        def __init__(self, ui_controller):
-            super(ThreadHelper, self).__init__()
-            self._ui_controller = ui_controller
-            self.render_signal.connect(self.render_slot)
-
-        def render(self):
-            self.render_signal.emit()
-
-        @QtCore.Slot()
-        def render_slot(self):
-            self._ui_controller.render_slot()
-except NameError:
-    from .alfredlog import getLogger
-    logger = getLogger((__name__))
-    logger.warning("Can't create ThreadHelper. (Needed for Qt)")
-
-
-class QtWebKitUserInterfaceController(WebUserInterfaceController):
-    def __init__(self, experiment, weblayout=None, qtlayout=None, full_scren=True, **kwargs):
-
-        self._helper = ThreadHelper(self)
-
-        localserver.script.set_experiment(experiment)
-
-        # initialize qt
-        self._app = QApplication([])
-        self._qt_window = QMainWindow()
-        self._qt_window.setMinimumHeight(720)
-        self._qt_window.setMinimumWidth(1024)
-        widget = QWidget()
-        layout = QVBoxLayout()
-        widget.setLayout(layout)
-        self._web_view = QWebView()
-        # self._qt_main_scroll_area = QScrollArea()
-        # self._qt_main_scroll_area.set_widget_resizeable(True)  # Must be set to True in order for layout to work properly
-        # self._qt_main_scroll_area.set_style_sheet("QScrollArea {background: white; border: none}")
-
-        layout.addWidget(self._web_view)
-
-        self._qt_window.setCentralWidget(widget)
-
-        self._current_main_widget = None
-        # self._qtlayout = None
-
-        self._fullscreen = full_scren
-
-        super(QtWebKitUserInterfaceController, self).__init__(experiment, weblayout)
-        # self.change_qt_layout(qtlayout or BaseQtLayout())
-
-    def _get_layout(self):
-        return self._layout
-
-    def render_html(self, page_token):
-
-        return super(QtWebKitUserInterfaceController, self).render(page_token)
-
-    def render(self):
-        self._helper.render()
-
-    def render_slot(self):
-
-            # self._qt_main_scroll_area.hide()
-        self._web_view.show()
-        # TODO: Check if this fix is ok!
-        # self._web_view.load('http://127.0.0.1:5000/experiment')#http://127.0.0.1:5000/experiment
-
-    def move_forward(self):
-
-        super(QtWebKitUserInterfaceController, self).move_forward()
-
-        self.render()
-
-    def move_backward(self):
-
-        super(QtWebKitUserInterfaceController, self).move_backward()
-
-        self.render()
-
-    def move_to_position(self, pos_list):
-
-        super(QtWebKitUserInterfaceController, self).move_forward()
-        self.render()
-
-    def start(self):
-        super(QtWebKitUserInterfaceController, self).start()
-        # startup flask
-        t = threading.Thread(target=localserver.app.run, name="Flask Thread")
-        t.daemon = True
-        t.start()
-        import time
-        time.sleep(2)  # TODO: What is this?
-        self._web_view.setUrl("http://127.0.0.1:5000/experiment")
-
-        if self._fullscreen:
-            self._qt_window.show_full_screen()
-        else:
-            self._qt_window.show()
-
-        self.render()
-        self._app.exec_()
-
-        # after leaving app this code will be executed
-        from .saving_agent import wait_for_saving_thread
-        wait_for_saving_thread()
