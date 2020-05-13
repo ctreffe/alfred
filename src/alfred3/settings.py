@@ -90,6 +90,7 @@ if not metadata.exp_id:
 # experiment
 experiment = _DictObj()
 experiment.type = _config_parser.get('experiment', 'type')
+experiment.fullscreen = _config_parser.getboolean('experiment', 'fullscreen', fallback=False)
 experiment.qt_full_screen = _config_parser.getboolean('experiment', 'qt_fullscreen')
 experiment.web_layout = _config_parser.get('experiment', 'web_layout')
 
