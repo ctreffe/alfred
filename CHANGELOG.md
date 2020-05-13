@@ -7,13 +7,62 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
-## alfred v1.1.5 (Released 2020-05-13)
+### Added
+
+#### Fullscreen option for Google Chrome
+
+We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed on one of the following standard paths:
+
+```
+"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"   # Windows 10
+"C:\Program Files (x86)\Google\Application\chrome.exe"          # Windows 7
+```
+
+You can enable this option in your config.conf:
+
+```ini
+[experiment]
+fullscreen = true   # default: false
+```
+
+#### `alfred3.run` module with command line interface
+
+Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this (note that you **must** run this code from within your experiment directory):
+
+``` BASH
+python3 -m alfred3.run
+```
+
+You can also continue to use a `run.py` in your experiment directory to run your experiment. From now on, this file should look like this:
+
+``` Python
+from alfred3.run import run_experiment
+
+if __name__ == "__main__":
+    run_experiment()    
+```
+
+Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment running code will be updated together with alfred3.
+
+### Removed
+
+#### Removed qt-webkit support
+We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf is no longer available:
+
+```ini
+[experiment]
+type = qt-wk
+```
+
+Instead, you can turn to the new option for running experiments in Google Chrome's fullscren (aka "kiosk") mode (see above).
+
+## alfred3 v1.1.5 (Released 2020-05-13)
 
 ### Fixed
 
 * Fixed a bug in the parsing of the auth_source parameter in `config.conf`
 
-## alfred v1.1.4 (Released 2020-05-05)
+## alfred3 v1.1.4 (Released 2020-05-05)
 
 ### Announcement: Released to PyPi under the new name **alfred3**
 
