@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.1.5 (Released 2020-05-13)
+
+### Fixed
+
+* Fixed a bug in the parsing of the auth_source parameter in `config.conf`
+
 ## alfred v1.1.4 (Released 2020-05-05)
 
 ### Announcement: Released to PyPi under the new name **alfred3**
