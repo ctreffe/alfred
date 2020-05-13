@@ -24,7 +24,7 @@ from ._helper import _DictObj
 from .data_manager import DataManager
 from .page_controller import PageController
 from .saving_agent import SavingAgentController
-from .ui_controller import QtWebKitUserInterfaceController, WebUserInterfaceController
+from .ui_controller import WebUserInterfaceController
 
 logger = alfredlog.getLogger(__name__)
 
@@ -57,7 +57,6 @@ class Experiment(object):
         =========  =========================================== ===================================================
         Typ        Beschreibung                                ui_controller
         =========  =========================================== ===================================================
-        **'qt'**   Lokales qt-Interface wird genutzt.          :py:class:`ui_controller.QtUserInterfaceController`
         **'web'**  Bereitstellung als HTML-Seite via Webserver :py:class:`ui_controller.WebUserInterfaceController`
         =========  =========================================== ===================================================
 
@@ -146,14 +145,6 @@ class Experiment(object):
         if self._type == "web":
             self._user_interface_controller = WebUserInterfaceController(
                 self, layout=web_layout
-            )
-
-        elif self._type == "qt-wk":
-            logger.warning("Experiment type qt-wk is experimental!!!", self)
-            self._user_interface_controller = QtWebKitUserInterfaceController(
-                self,
-                full_scren=settings.experiment.qt_full_screen,
-                weblayout=web_layout,
             )
 
         else:
