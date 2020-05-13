@@ -251,25 +251,24 @@ class ChromeKiosk:
     @staticmethod
     def open_windows(url: str, path: str=None):
         """Open url in Chrome in kiosk mode on Windows."""
+    
 
-        w10 = Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
-        w7 = Path("C:/Program Files (x86)/Google/Application/chrome.exe")
+        paths = []
+        paths.append(Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
+        paths.append(Path.home().joinpath("AppData/Local/Google/Chrome/Application/chrome.exe")) 
+        paths.append(Path("C:/Program Files (x86)/Google/Application/chrome.exe")) 
 
-        if w10.exists() and w7.exists():
-            raise FileNotFoundError("Can't determine correct filepath for chrome.exe.")
+        existing_paths = [p for p in paths if p is not None and p.exists()]
         
         chrome = None
 
         if path:
             chrome = Path(path)
         else:
-            if w10.exists():
-                chrome = w10
-            elif w7.exists():
-                chrome = w7
+            chrome = existing_paths[0]
         
         if not chrome.exists():
-            raise FileNotFoundError("Did not find a chrome.exe.")
+            raise FileNotFoundError(f"Did not find a chrome.exe at {str(chrome)}.")
         
         subprocess.run([chrome, url, "--kiosk"])
 
