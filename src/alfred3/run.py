@@ -26,15 +26,15 @@ from alfred3.helpmates import socket_checker, ChromeKiosk, localserver
 from alfred3 import alfredlog
 from alfred3 import settings
 
-def load(name: str, location: str):
-    """Import a Python module from a specific location.
+def import_from_path(path: str):
+    """Import a Python module from a specific filepath.
 
     Arguments:
-        name: Full filename of the module (including file extension)
-        location: Full filepath to the module (including file)
+        path: Relative or absolute path to the module that is meant to be imported.
     """
+    full_path = Path(path).resolve()
 
-    spec = importlib.util.spec_from_file_location(name, location)
+    spec = importlib.util.spec_from_file_location(full_path.name, str(full_path))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
@@ -78,7 +78,7 @@ def run_experiment(path: str=None):
         logger.warning("No config.conf found at {}. Running on default config only.".format(config_path))
     
     # import script from path
-    script = load("script.py", script_path)
+    script = import_from_path(script_path)
 
     # set generate_experiment function
     localserver.script.set_generator(script.generate_experiment)
