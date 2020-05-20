@@ -8,8 +8,10 @@ Example for importing and running the `run_experiment` function:
 .. code-block:: python
 
     from alfred3.run import run_experiment
+    from alfred3.alfredlog import init_logging
 
     if __name__ == "__main__":
+        init_logging("alfred3")
         run_experiment()
 
 """
@@ -58,8 +60,7 @@ def run_experiment(path: str=None):
         path: Path to the experiment directory in which to look for a script.py. If none is provided, the parent directory of the running file will be used by default.
     """
 
-    alfredlog.init_logging('alfred3')
-    logger = alfredlog.getLogger("alfred3")
+    logger = alfredlog.getLogger(__name__)
 
     # check for correct experiment type
     if not settings.experiment.type == "web":
@@ -102,6 +103,8 @@ def run_experiment(path: str=None):
 if __name__ == "__main__":
     """This part of the module is run only if it is called directly via ``python -m alfred3.run``.
     """
+    
+    alfredlog.init_logging("alfred3")
 
     # parse command line path option
     if len(sys.argv) < 2:
