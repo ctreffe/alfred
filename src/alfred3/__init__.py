@@ -11,6 +11,10 @@ from __future__ import absolute_import
 
 from ._version import __version__
 
+# init logger at the top for working inheritance
+from . import alfredlog
+logger = alfredlog.getLogger(__name__)
+
 import os
 import sys
 import time
@@ -19,14 +23,14 @@ from uuid import uuid4
 
 from cryptography.fernet import Fernet
 
-from . import alfredlog, layout, messages, settings
+from . import layout, messages, settings
 from ._helper import _DictObj
 from .data_manager import DataManager
 from .page_controller import PageController
 from .saving_agent import SavingAgentController
 from .ui_controller import WebUserInterfaceController
 
-logger = alfredlog.getLogger(__name__)
+
 
 
 class Experiment(object):
@@ -68,6 +72,7 @@ class Experiment(object):
         |
         """
         self._alfred_version = __version__
+        self.logger = alfredlog.getLogger(__name__, self)
 
         # Set experiment metadata
         if config is not None and "experiment" in config.keys():
