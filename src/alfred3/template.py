@@ -3,6 +3,8 @@
 The template is downloaded from its GitHub repository (master branch),
 which means that for the execution of this module, you need an active
 internet connection.
+
+.. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
 import urllib.request
