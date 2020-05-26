@@ -60,15 +60,16 @@ if __name__ == "__main__":
 
     hello_world = "https://github.com/jobrachem/alfred-hello_world/archive/master.zip"
 
-    # process script
     if len(sys.argv) < 2:
         url = hello_world
         donwload_template(url)
         print("Created an alfred3 experiment template in the current working directory.")
+
     elif len(sys.argv) == 2:
         url = hello_world
         donwload_template(url, sys.argv[1])
         print(f"Created an alfred3 experiment template in the directory '{sys.argv[1]}'.")
+
     elif len(sys.argv) > 2:
         raise NotImplementedError("Currently, there are no arguments available for this module.")
 
