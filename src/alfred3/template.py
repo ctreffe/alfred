@@ -1,41 +1,74 @@
-"""Creates alfred3 experiment templates in the current working
-directory.
+"""Creates an alfred3 experiment template.
+
+The template is downloaded from its GitHub repository (master branch),
+which means that for the execution of this module, you need an active
+internet connection.
 """
 
+import urllib.request
+import shutil
+import zipfile
+import os
+import shutil
 import sys
 from pathlib import Path
 
+
+def donwload_template(url: str, target_dir: str = None):
+    """Downloads an experiment template from a url.
+
+    If no `target_dir` is provided, the template directory will be
+    placed in the current working directory.
+
+    Args:
+        url: URL to the zip-file of an experiment template git repo.
+        target_dir: Target directory for the experiment template.
+            Defaults to `None`.
+    """
+
+    file_name = "tmp.zip"
+
+    # Download the file from `url` and save it locally under `file_name`:
+    with urllib.request.urlopen(url) as response, open(file_name, "wb") as out_file:
+        shutil.copyfileobj(response, out_file)
+
+    if not target_dir:
+        target_dir = os.getcwd()
+        with zipfile.ZipFile(file_name, "r") as zip_ref:
+            zip_ref.extractall(target_dir)
+    else:
+        with zipfile.ZipFile(file_name, "r") as zip_ref:
+            zip_ref.extractall(target_dir)
+
+            namelist = zip_ref.namelist()
+
+        # move files to target dir and remove zip directory
+        directory_name = namelist[0]
+        subdir = os.path.join(target_dir, directory_name)
+
+        for element in os.listdir(subdir):
+            shutil.move(os.path.join(subdir, element), target_dir)
+
+        os.rmdir(subdir)
+
+    os.remove(file_name)
+
+
 if __name__ == "__main__":
 
-    # collect paths
-    module_path = Path(__file__).resolve().parent / "files" / "exp_template"
-    run = module_path / "run.py"
-    config = module_path / "config.conf"
-    gitignore = module_path / "gitignore_template.txt"
-    files = [run, config]
-    wd = Path.cwd()
-
-    # process run.py, config.conf
-    for path in files:
-        content = path.read_text()
-        target = wd / path.name
-        target.write_text(content)
-
-    # process gitignore
-    gitignore_content = gitignore.read_text()
-    gitignore_target = wd / ".gitignore"
-    gitignore_target.write_text(gitignore_content)
+    hello_world = "https://github.com/jobrachem/alfred-hello_world/archive/master.zip"
 
     # process script
     if len(sys.argv) < 2:
-        script = module_path / "hello_world.py"
-        script_content = script.read_text()
-    elif len(sys.argv) >= 2:
+        url = hello_world
+        donwload_template(url)
+        print("Created an alfred3 experiment template in the current working directory.")
+    elif len(sys.argv) == 2:
+        url = hello_world
+        donwload_template(url, sys.argv[1])
+        print(f"Created an alfred3 experiment template in the directory '{sys.argv[1]}'.")
+    elif len(sys.argv) > 2:
         raise NotImplementedError("Currently, there are no arguments available for this module.")
 
-    script_target = wd / "script.py"
-    script_target.write_text(script_content)
-
     # print out success
-    print("Created an alfred3 experiment template in the current working directory.")
     print("You can start the experiment via 'python3 run.py'.")
