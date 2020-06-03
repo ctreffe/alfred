@@ -35,7 +35,7 @@ package_path = _package_path()
 
 # define settings files
 config_files = [  # most importent file last
-    os.path.join(package_path, 'files/default.conf'),
+    os.path.join(package_path, "files/alfred.conf"),
 ]
 if os.environ.get('ALFRED_CONFIG_FILE'):
     config_files += [os.environ.get('ALFRED_CONFIG_FILE')]
