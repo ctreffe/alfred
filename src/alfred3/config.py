@@ -1,3 +1,9 @@
+"""Provides configuration handling for alfred3 experiments.
+
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
+"""
+
+
 import os
 import platform
 import sys
@@ -6,8 +12,20 @@ from pathlib import Path
 from typing import Union
 
 
-class AlfredConfig(ConfigParser):
+class ExperimentConfig(ConfigParser):
     """Provides basic functionality for alfred3 configuration.
+
+    Configuration files are parsed in the following order (later files
+    override settings from earlier ones):
+
+        1. Default configuration
+        2. :attr:`global_config_name` in "/etc/alfred/" (for unix operating 
+            systems)
+        3. :attr:`global_config_name` in the user's home directory
+        4. :attr:`env_location`
+        5. :attr:`exp_config_name` in the experiment directory (usual place 
+            for user's experiment-specific config)
+        6. Objects given in the argument `config_objects`.
 
     This is a child class of :py:class:`configparser.ConfigParser`, 
     which parses alfred configuration files and objects on intialization
@@ -20,67 +38,60 @@ class AlfredConfig(ConfigParser):
 
     Args:
         expdir: Path to the experiment directory.
-        config_object: A list of dictionaries and/or strings with alfred
+        config_objects: A list of dictionaries and/or strings with alfred
             configuration in ini format. Defaults to `None`.
         *args: Variable length argument list, will be passed on to the
             parent class.
         **kwargs: Arbitrary keyword arguments, will be passed on to the
             parent class.
     
+    Attributes:
+        env_location: Environment variable key that corresponds to a 
+            full filepath (including filename) to an alfred configuration
+            file.
+        global_config_name: Name of the general library-wide 
+            configuration files.
+        exp_config_name: Name of the experiment-specific configuration 
+            file.
+    
     .. _documentation: https://docs.python.org/3/library/configparser.html#configparser.ConfigParser
     """
 
     env_location = "ALFRED_CONFIG_FILE"
-    config_name = "config.conf"
+    global_config_name = "alfred.conf"
+    exp_config_name = "config.conf"
 
-
-    def __init__(self, expdir: str = None, config_objects: list = None, *args, **kwargs):
+    def __init__(self, expdir: str, config_objects: list = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._config_objects = config_objects
+        self._config_objects = config_objects if config_objects is not None else []
 
         self._config_files = []
         self._pkg_path = Path(__file__).resolve().parent
-        self._expdir = Path(expdir) if expdir else Path.cwd()
+        self._expdir = Path(expdir)
         self._parse_alfred_config()
 
     def _collect_config_files(self):
-        """Collect config files from config locations.
-
-        The method looks in the following locations in that order:
-
-        1. "/etc/alfred/<config_name>.conf" (for unix operating systems)
-        2. "<config_name>.conf" in user's home directory
-        3. Filepath provided in enviroment variable env_location
-        4. "config.conf" in experiment directory (usual place for
-            user's experiment-specific config)
+        """Collect user-defined config files from config locations.
         """
 
         files = []
 
         if platform.system() in ["Linux", "Darwin"]:
-            files.append(Path("/etc/alfred/alfred.conf"))
+            files.append(Path("/etc/alfred").joinpath(self.global_config_name))
 
-        files.append(Path.home().joinpath("alfred.conf"))
-        files.append(os.getenv("ALFRED_CONFIG_FILE"))
+        files.append(Path.home().joinpath(self.global_config_name))
+        files.append(os.getenv(self.env_location))
 
-        files.append(self._expdir.joinpath("config.conf"))
+        files.append(self._expdir.joinpath(self.exp_config_name))
 
         self._config_files = [str(p) for p in files if p is not None]
 
     def _parse_alfred_config(self):
-        """Parse alfred config files from different locations.
-
-        The files are parsed in the following order (later files take
-        precedence over earlier ones):
-
-        1. Default configuration from "<pkg_path>/files/default.conf"
-        2. User-specified configuration gathered via 
-            `self._collect_config_files()`
-        3. User-specified configuration from self.config_object
-            (mainly intended for use with mortimer)
+        """Parse all config files from different locations.
         """
-        default = self._pkg_path / "files" / "default.conf"
+
+        default = self._pkg_path / "files" / self.global_config_name
         with open(default, encoding="utf-8") as f:
             self.read_file(f)
 
@@ -88,45 +99,28 @@ class AlfredConfig(ConfigParser):
         self.read(self._config_files)
 
         for obj in self._config_objects:
+            if type(obj) not in [str, dict]:
+                raise TypeError(
+                    (
+                        "The argument config_objects must be a list, containing only "
+                        + "strings and/or dictionaries."
+                    )
+                )
+
             try:
                 self.read_dict(obj)
             except AttributeError:
                 self.read_string(obj)
 
 
-class AlfredSecrets(AlfredConfig):
+class ExperimentSecrets(ExperimentConfig):
     """Provides functionality for parsing secrets like DB credentials.
 
-    This is a child class of :py:class:`alfred3.config.AlfredConfig`.
-    It behaves largely the same way, ultimately inheriting from 
-    :py:class:`configparser.ConfigParser`. 
-
-    The only difference is, that it looks for different files 
-    (`secrets.conf`) and in different locations than its parent.
+    This class is used only to set the attributes :attr:`env_location`,
+    :attr:`global_config_name`, and :attr:`exp_config_name`. Otherwise
+    it behaves exactly like :class:`ExperimentConfig`.
     """
 
-    def _collect_config_files(self):
-        """Collect secrets.conf files from config locations.
-
-        The method looks in the following locations in that order:
-
-        1. "/etc/alfred/secrets.conf" (for unix operating systems)
-        2. "secrets.conf" in user's home directory
-        3. Filepath provided in enviroment variable "ALFRED_SECRETS_FILE"
-        4. "secrets.conf" in experiment directory (the usual place for
-            user's experiment-specific config)
-        """
-
-        files = []
-
-        if platform.system() in ["Linux", "Darwin"]:
-            files.append(Path("/etc/alfred/secrets.conf"))
-
-        files.append(Path.home().joinpath("secrets.conf"))
-        files.append(os.getenv("ALFRED_SECRETS_FILE"))
-
-        files.append(self._expdir.joinpath("secrets.conf"))
-
-        self._config_files = [str(p) for p in files if p is not None]
-
-    pass
+    env_location = "ALFRED_SECRETS_FILE"
+    global_config_name = "secrets.conf"
+    exp_config_name = "secrets.conf"

@@ -36,9 +36,7 @@ class Experiment(object):
     |
     """
 
-    def __init__(
-        self, config=None, config_string="", basepath=None, custom_layout=None
-    ):
+    def __init__(self, config: dict=None, config_string="", basepath=None, custom_layout=None):
         """
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
@@ -68,6 +66,8 @@ class Experiment(object):
         |
         """
         self._alfred_version = __version__
+        self.config = config.get("exp_config")
+        self.secrets = config.get("exp_secrets")
 
         # Set experiment metadata
         if config is not None and "experiment" in config.keys():
@@ -143,17 +143,13 @@ class Experiment(object):
                 web_layout = None
 
         if self._type == "web":
-            self._user_interface_controller = WebUserInterfaceController(
-                self, layout=web_layout
-            )
+            self._user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
 
         else:
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(
-            self, db_cred=self.__db_cred
-        )
+        self._saving_agent_controller = SavingAgentController(self, db_cred=self.__db_cred)
 
         self._condition = ""
         self._session = ""
@@ -163,6 +159,14 @@ class Experiment(object):
 
         if basepath is not None:
             logger.warning("Usage of basepath is deprecated.", self)
+
+        if config_string is not None:
+            logger.warning(
+                (
+                    "Usage of config_string is deprecated. Use "
+                    + "alfred3.config.ExperimentConfig with the appropriate arguments instead."
+                )
+            )
 
     def update(self, title, version, author, exp_id, type="web"):
         self._title = title
