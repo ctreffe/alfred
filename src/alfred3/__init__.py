@@ -30,101 +30,40 @@ logger = alfredlog.getLogger(__name__)
 
 
 class Experiment(object):
-    """
-    **Experiment** ist die Basisklasse und somit der allgemeine Objekttyp für alle mit alfred erstellten Experimente.
+    def __init__(self, config: dict = None, config_string="", basepath=None, custom_layout=None):
 
-    |
-    """
-
-    def __init__(self, config: dict=None, config_string="", basepath=None, custom_layout=None):
-        """
-        :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
-
-        |
-
-        Beschreibung:
-            | Bei Aufruf von *Experiment* werden :py:class:`page_controller.PageController`, :py:class:`data_manager.DataManager`
-            | und :py:class:`saving_agent.SavingAgentController` initialisiert. Zusätzlich wird ein UserInterfaceController aus
-            | :py:mod:`.ui_controller` aufgerufen. Welcher Controller aufgerufen wird, hängt vom deklarierten Expermiment-Typ ab.
-
-        |
-
-
-        **Momentan implementierte Typen für Experimente:**
-
-        =========  =========================================== ===================================================
-        Typ        Beschreibung                                ui_controller
-        =========  =========================================== ===================================================
-        **'web'**  Bereitstellung als HTML-Seite via Webserver :py:class:`ui_controller.WebUserInterfaceController`
-        =========  =========================================== ===================================================
-
-        |
-
-        :raises ValueError: Falls Parameter falsch oder nicht übergeben werden.
-
-        |
-        |
-        """
         self._alfred_version = __version__
         self.config = config.get("exp_config")
         self.secrets = config.get("exp_secrets")
 
-        # Set experiment metadata
-        if config is not None and "experiment" in config.keys():
-            self._author = config["experiment"]["author"]
-            self._title = config["experiment"]["title"]
-            self._version = config["experiment"]["version"]
-            self._exp_id = config["experiment"]["exp_id"]
-            self._session_id = config["mortimer_specific"]["session_id"]
-            self._type = config["experiment"]["type"]
-            self._path = config["mortimer_specific"]["path"]
+        if self.config.get("mortimer_specific", "session_id"):
+            self._session_id = self.config.get("mortimer_specific", "session_id")
         else:
-            self._author = settings.metadata.author
-            self._title = settings.metadata.title
-            self._version = settings.metadata.version
-            self._exp_id = settings.metadata.exp_id
-            self._type = settings.experiment.type
-            self._path = settings.general.external_files_dir
             self._session_id = uuid4().hex
-            self._type = settings.experiment.type
-            self._path = os.path.abspath(os.path.dirname(sys.argv[0]))
-        if not self._exp_id:
-            raise ValueError("You need to specify an experiment ID.")
-
-        if config is not None:
-            self.__db_cred = config.get("db_cred", None)
-        else:
-            self.__db_cred = None
-
-        # Set encryption key
-        if config and config["encryption_key"]:
-            self._encryptor = Fernet(config["encryption_key"])
-            logger.info("Using mortimer-generated encryption key.", self)
-        else:
-            self._encryptor = Fernet(b"OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=")
-            logger.warning("Using PUBLIC encryption key. USE ONLY FOR TESTING.", self)
 
         # Experiment startup message
         logger.info(
-            "Alfred %s experiment session initialized! Alfred version: %s, experiment name: %s, experiment version: %s"
-            % (self._type, __version__, self._title, self._version),
-            self,
+            "Alfred {exp_type} experiment session initialized! Alfred version: {alfred_version}, experiment title: {title}, experiment version: {exp_version}".format(
+                exp_type=self.config.get("experiment", "type"),
+                alfred_version=self._alfred_version,
+                title=self.config.get("metadata", "title"),
+                exp_version=self.config.get("metadata", "version"),
+            )
         )
 
-        self._settings = settings.ExperimentSpecificSettings(config_string)
         # update settings with custom settings from mortimer
-        if config is not None and "navigation" in config.keys():
-            self._settings.navigation = _DictObj(config["navigation"])
-        if config is not None and "hints" in config.keys():
-            self._settings.hints = _DictObj(config["hints"])
-        if config is not None and "messages" in config.keys():
-            self._settings.messages = _DictObj(config["messages"])
+        # TODO: Remove self._settings altogether
+        self._settings = settings.ExperimentSpecificSettings(config_string)
+        self._settings.navigation = _DictObj(config["navigation"])
+        self._settings.hints = _DictObj(config["hints"])
+        self._settings.messages = _DictObj(config["messages"])
 
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
         self._page_controller = PageController(self)
 
         # Determine web layout if necessary
+        # TODO: refactor layout and UIController initializiation code
         # pylint: disable=no-member
         if self._type == "web" or self._type == "qt-wk":
             if custom_layout:
@@ -168,12 +107,21 @@ class Experiment(object):
                 )
             )
 
-    def update(self, title, version, author, exp_id, type="web"):
-        self._title = title
-        self._version = version
-        self._author = author
-        self._type = type
-        self._exp_id = exp_id
+        # # Set encryption key
+        # if config and config["encryption_key"]:
+        #     self._encryptor = Fernet(config["encryption_key"])
+        #     logger.info("Using mortimer-generated encryption key.", self)
+        # else:
+        #     self._encryptor = Fernet(b"OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=")
+        #     logger.warning("Using PUBLIC encryption key. USE ONLY FOR TESTING.", self)
+
+    # TODO: Delete deprecated method
+    # def update(self, title, version, author, exp_id, type="web"):
+    #     self._title = title
+    #     self._version = version
+    #     self._author = author
+    #     self._type = type
+    #     self._exp_id = exp_id
 
     def start(self):
         """
@@ -225,7 +173,7 @@ class Experiment(object):
 
         :return: Experiment author **author** (*str*)
         """
-        return self._author
+        return self.config.get("metadata", "author")
 
     @property
     def type(self):
@@ -235,7 +183,7 @@ class Experiment(object):
         :return: Type of experiment **type** (*str*)
         """
 
-        return self._type
+        return self.config.get("experiment", "type")
 
     @property
     def version(self):
@@ -244,7 +192,7 @@ class Experiment(object):
 
         :return: Experiment version **version** (*str*)
         """
-        return self._version
+        return self.config.get("metadata", "version")
 
     @property
     def title(self):
@@ -253,7 +201,7 @@ class Experiment(object):
 
         :return: Experiment title **title** (*str*)
         """
-        return self._title
+        return self.config.get("metadata", "title")
 
     @property
     def start_timestamp(self):
@@ -273,48 +221,49 @@ class Experiment(object):
 
     @property
     def exp_id(self):
-        return self._exp_id
+        return self.config.get("metadata", "exp_id")
 
     @property
     def path(self):
-        return self._path
+        return str(self.config._expdir)
 
     @property
     def session_id(self):
-        return self._session_id
+        return self.config.get("mortimer_specific", "session_id")
 
-    def encrypt(self, data) -> str:
-        """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
+    # TODO: Deal with encryptor
+    # def encrypt(self, data) -> str:
+    #     """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
 
-        In web experiments deployed via mortimer, a safe, user-specific secret key will be used for encryption. The method will also work in offline experiments, but does NOT provide safe encryption in this case, as a PUBLIC key is used for encryption. This is only ok for testing purposes.
+    #     In web experiments deployed via mortimer, a safe, user-specific secret key will be used for encryption. The method will also work in offline experiments, but does NOT provide safe encryption in this case, as a PUBLIC key is used for encryption. This is only ok for testing purposes.
 
-        :param data: Input object that you want to encrypt.
-        """
-        if type(data) not in [str, int, float]:
-            raise TypeError("Input must be of type str, int, or float.")
+    #     :param data: Input object that you want to encrypt.
+    #     """
+    #     if type(data) not in [str, int, float]:
+    #         raise TypeError("Input must be of type str, int, or float.")
 
-        d_str = str(data)
+    #     d_str = str(data)
 
-        d_bytes = d_str.encode()
-        encrypted = self._encryptor.encrypt(d_bytes)
-        return encrypted.decode()
+    #     d_bytes = d_str.encode()
+    #     encrypted = self._encryptor.encrypt(d_bytes)
+    #     return encrypted.decode()
 
-    def decrypt(self, data):
-        """Decrypts input and returns the decrypted object as `str`.
+    # def decrypt(self, data):
+    #     """Decrypts input and returns the decrypted object as `str`.
 
-        The method uses the built-in Fernet instance to decrypt the input.
+    #     The method uses the built-in Fernet instance to decrypt the input.
 
-        :param data: Encrypted bytes object. Must be of type `str` or `bytes`.
-        """
-        if type(data) is str:
-            d_bytes = data.encode()
-        elif type(data) is bytes:
-            d_bytes = data
-        else:
-            raise TypeError("Input must be of type str or bytes.")
+    #     :param data: Encrypted bytes object. Must be of type `str` or `bytes`.
+    #     """
+    #     if type(data) is str:
+    #         d_bytes = data.encode()
+    #     elif type(data) is bytes:
+    #         d_bytes = data
+    #     else:
+    #         raise TypeError("Input must be of type str or bytes.")
 
-        d = self._encryptor.decrypt(d_bytes)
-        return d.decode()
+    #     d = self._encryptor.decrypt(d_bytes)
+    #     return d.decode()
 
     @property
     def user_interface_controller(self):
