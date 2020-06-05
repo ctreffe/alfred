@@ -26,6 +26,7 @@ from alfred3.helpmates import socket_checker, ChromeKiosk, localserver
 from alfred3 import alfredlog
 from alfred3 import settings
 
+
 def load(name: str, location: str):
     """Import a Python module from a specific location.
 
@@ -40,6 +41,7 @@ def load(name: str, location: str):
 
     return module
 
+
 # open correct browser
 def open_browser(url):
     """
@@ -49,7 +51,8 @@ def open_browser(url):
     else:
         webbrowser.open(url=url)
 
-def run_experiment(path: str=None):
+
+def run_experiment(path: str = None):
     """Run an alfred3 experiment.
 
     Note that, when using this function with the ``python -m alfred3.run`` command line command, the current working directory **must** be the experiment directory containing the `script.py` you want to run. Otherwise, alfred3 cannot properly parse your custom `config.conf`.
@@ -58,7 +61,7 @@ def run_experiment(path: str=None):
         path: Path to the experiment directory in which to look for a script.py. If none is provided, the parent directory of the running file will be used by default.
     """
 
-    alfredlog.init_logging('alfred3')
+    alfredlog.init_logging("alfred3")
     logger = alfredlog.getLogger("alfred3")
 
     # check for correct experiment type
@@ -69,27 +72,30 @@ def run_experiment(path: str=None):
     executing_dir = Path(sys.argv[0]).parent
     expdir = Path(path) if path else executing_dir
     script_path = expdir.joinpath("script.py")
-    config_path = expdir.joinpath("config.conf")
+    # config_path = expdir.joinpath("config.conf")
 
     if not script_path.is_file():
         raise FileNotFoundError("No script.py found at {}".format(script_path))
 
-    if not config_path.is_file():
-        logger.warning("No config.conf found at {}. Running on default config only.".format(config_path))
-    
+    # if not config_path.is_file():
+    #     logger.warning(
+    #         "No config.conf found at {}. Running on default config only.".format(config_path)
+    #     )
+
     # import script from path
     script = load("script.py", script_path)
 
     # set generate_experiment function
+    localserver.script.expdir = expdir
     localserver.script.set_generator(script.generate_experiment)
 
     # set port
     port = 5000
     while not socket_checker(port):
-            port += 1
-    
+        port += 1
+
     # generate url
-    expurl = 'http://127.0.0.1:{port}/start'.format(port=port)
+    expurl = "http://127.0.0.1:{port}/start".format(port=port)
 
     # start browser in a thread (needed for windows)
     browser = threading.Thread(target=open_browser, kwargs={"url": expurl})
@@ -98,6 +104,7 @@ def run_experiment(path: str=None):
     # run app
     sys.stderr.writelines([" * Start local experiment using {}\n".format(expurl)])
     localserver.app.run(port=port, threaded=True, use_reloader=False)
+
 
 if __name__ == "__main__":
     """This part of the module is run only if it is called directly via ``python -m alfred3.run``.
@@ -112,6 +119,8 @@ if __name__ == "__main__":
         """
 
         expdir = Path(sys.argv[1]).resolve()
-        raise NotImplementedError("Giving parameters to the call to alfred3.run is currently not implemented.")
-    
+        raise NotImplementedError(
+            "Giving parameters to the call to alfred3.run is currently not implemented."
+        )
+
     run_experiment(path=expdir)
