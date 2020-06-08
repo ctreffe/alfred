@@ -110,7 +110,7 @@ class SavingAgentController(object):
         if self._experiment.config.has_section("mongo_saving_agent"):
             _logger.warning(
                 (
-                    "Defining a 'mongo_saving_agent' in 'config.conf' is deprecated."
+                    "Defining a 'mongo_saving_agent' in 'config.conf' is deprecated. "
                     + "Define it in 'secrets.conf' instead."
                 )
             )
