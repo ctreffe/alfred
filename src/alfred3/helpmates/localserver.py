@@ -1,7 +1,7 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
 from flask import (
-    Flask,
+    Blueprint,
     send_file,
     redirect,
     url_for,
@@ -16,48 +16,36 @@ from .. import settings
 from ..config import ExperimentConfig, ExperimentSecrets
 import re, os
 
-app = Flask(__name__)
-app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
-if settings.experiment.type == "web":
-    app.debug = settings.general.debug
 
+class Script:
 
-class C(object):
     experiment = None
+    expdir = None
+    """Path of the experiment directory. This is a placeholder, meant
+    to be replace in ``run.py``
+    """
+
+    def generate_experiment(self, config=None):
+        """This method serves solely as a hook for the 
+        ``generate_experiment`` function extracted from the user's script.py.
+
+        It is meant to be replaced in ``run.py``.
+        """
+
+        return ""
 
 
-class Generator(object):
-    def __init__(self, exp=None):
-        self.experiment = exp
-        self.expdir = None
-
-    def generate_experiment(self):  # pylint: disable=method-hidden
-        pass
-
-    def set_experiment(self, exp):
-        self.experiment = exp
-
-    def set_generator(self, generator):
-        # if the script.py contains generate_experiment directly, not as a class method
-        if builtins_callable(generator):
-            script.generator = Generator()
-            self.generate_experiment = generator.__get__(self, Generator)
-        # if the script.py contains Script.generate_experiment()
-        elif builtins_callable(generator.generate_experiment):
-            self.generate_experiment = generator.generate_experiment(self, Generator)
+exp = Blueprint(__name__, "exp")
+script = Script()
 
 
-script = Generator()
-
-
-@app.route("/start", methods=["GET", "POST"])
+@exp.route("/start", methods=["GET", "POST"])
 def start():
     exp_config = ExperimentConfig(script.expdir)
     exp_secrets = ExperimentSecrets(script.expdir)
     config = {"exp_config": exp_config, "exp_secrets": exp_secrets}
 
-    exp = script.generate_experiment(config=config)
-    script.set_experiment(exp)
+    script.experiment = script.generate_experiment(config=config)
     script.experiment.start()
 
     session["page_tokens"] = []
@@ -67,7 +55,7 @@ def start():
     return resp
 
 
-@app.route("/experiment", methods=["GET", "POST"])
+@exp.route("/experiment", methods=["GET", "POST"])
 def experiment():
 
     if request.method == "POST":
@@ -128,7 +116,7 @@ def experiment():
         return resp
 
 
-@app.route("/staticfile/<identifier>")
+@exp.route("/staticfile/<identifier>")
 def staticfile(identifier):
     path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
     dirname, filename = os.path.split(path)
@@ -136,7 +124,7 @@ def staticfile(identifier):
     return resp
 
 
-@app.route("/dynamicfile/<identifier>")
+@exp.route("/dynamicfile/<identifier>")
 def dynamicfile(identifier):
     strIO, content_type = script.experiment.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
@@ -144,7 +132,7 @@ def dynamicfile(identifier):
     return resp
 
 
-@app.route("/callable/<identifier>", methods=["GET", "POST"])
+@exp.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
     f = script.experiment.user_interface_controller.get_callable(identifier)
     if request.content_type == "application/json":

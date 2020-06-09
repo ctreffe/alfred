@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Run an alfred experiment.
 
-You can either use the command line interface via ``python3 -m alfred3.run`` from within your experiment directory, or import the `run_experiment` function into your own `run.py` and run it from there.
+You can either use the command line interface via 
+``python3 -m alfred3.run`` from within your experiment directory, or 
+import the `run_experiment` function into your own `run.py` and run it 
+from there.
 
 Example for importing and running the `run_experiment` function:
 
@@ -19,8 +22,9 @@ import sys
 import webbrowser
 import os
 import threading
-
 from pathlib import Path
+
+from flask import Flask
 
 from alfred3.helpmates import socket_checker, ChromeKiosk, localserver
 from alfred3 import alfredlog
@@ -55,10 +59,16 @@ def open_browser(url):
 def run_experiment(path: str = None):
     """Run an alfred3 experiment.
 
-    Note that, when using this function with the ``python -m alfred3.run`` command line command, the current working directory **must** be the experiment directory containing the `script.py` you want to run. Otherwise, alfred3 cannot properly parse your custom `config.conf`.
+    Note that, when using this function with the 
+    ``python -m alfred3.run`` command line command, the current working 
+    directory **must** be the experiment directory containing the 
+    `script.py` you want to run. Otherwise, alfred3 cannot properly 
+    parse your custom `config.conf`.
 
     Arguments:
-        path: Path to the experiment directory in which to look for a script.py. If none is provided, the parent directory of the running file will be used by default.
+        path: Path to the experiment directory in which to look for a 
+            script.py. If none is provided, the parent directory of the 
+            running file will be used by default.
     """
 
     alfredlog.init_logging("alfred3")
@@ -86,8 +96,8 @@ def run_experiment(path: str = None):
     script = load("script.py", script_path)
 
     # set generate_experiment function
-    localserver.script.expdir = expdir
-    localserver.script.set_generator(script.generate_experiment)
+    localserver.Script.expdir = expdir
+    localserver.Script.generate_experiment = script.generate_experiment
 
     # set port
     port = 5000
@@ -103,18 +113,22 @@ def run_experiment(path: str = None):
 
     # run app
     sys.stderr.writelines([" * Start local experiment using {}\n".format(expurl)])
-    localserver.app.run(port=port, threaded=True, use_reloader=False)
+
+    app = Flask(__name__)
+    app.register_blueprint(localserver.exp)
+
+    app.run(port=port, threaded=True, use_reloader=False)
 
 
 if __name__ == "__main__":
-    """This part of the module is run only if it is called directly via ``python -m alfred3.run``.
-    """
 
     # parse command line path option
     if len(sys.argv) < 2:
         expdir = Path.cwd()
     elif len(sys.argv) == 2:
-        """This section would allow us to simply give a path as an argument to the command line call. For this to work, settings need to be able to read a specific config.conf.
+        """This section would allow us to simply give a path as an 
+        argument to the command line call. For this to work, settings 
+        need to be able to read a specific config.conf.
         # TODO: Finish implementation of this feature.
         """
 
