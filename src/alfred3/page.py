@@ -622,3 +622,7 @@ class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
 
 class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
+
+
+class NoDataPage(HideButtonsMixin, Page):
+    ...
