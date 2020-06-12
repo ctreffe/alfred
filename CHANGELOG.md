@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ### Added
 
+* We added a new page class NoDataPage which does only return the page's tag and uid
+
 #### Fullscreen option for Google Chrome
 
 We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed to a default directory and is only tested on Windows 10.
