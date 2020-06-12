@@ -624,7 +624,7 @@ class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
 
 
-class NoDataPage(HideButtonsMixin, Page):
+class NoDataPage(Page):
     @property
     def data(self):
         # Pages must always return tag and uid!
