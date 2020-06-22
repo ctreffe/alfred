@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 # Parse version from _version.py in package directory
 # See https://packaging.python.org/guides/single-sourcing-package-version/#single-sourcing-the-version
 version = {}
-with open('src/alfred3/_version.py') as f:
+with open("src/alfred3/_version.py") as f:
     exec(f.read(), version)
 
 setuptools.setup(
@@ -18,7 +18,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ctreffe/alfred",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages("src"),
     package_data={
         "alfred3": [
             "files/*",
