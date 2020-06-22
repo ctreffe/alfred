@@ -36,9 +36,7 @@ class Experiment(object):
     |
     """
 
-    def __init__(
-        self, config=None, config_string="", basepath=None, custom_layout=None
-    ):
+    def __init__(self, config=None, config_string="", basepath=None, custom_layout=None):
         """
         :param layout custom_layout: Optional parameter for starting the experiment with a custom layout.
 
@@ -69,6 +67,7 @@ class Experiment(object):
         |
         """
         self._alfred_version = __version__
+        self._session_status = None
 
         # Set experiment metadata
         if config is not None and "experiment" in config.keys():
@@ -144,25 +143,19 @@ class Experiment(object):
                 web_layout = None
 
         if self._type == "web":
-            self._user_interface_controller = WebUserInterfaceController(
-                self, layout=web_layout
-            )
+            self._user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
 
         elif self._type == "qt-wk":
             logger.warning("Experiment type qt-wk is experimental!!!", self)
             self._user_interface_controller = QtWebKitUserInterfaceController(
-                self,
-                full_scren=settings.experiment.qt_full_screen,
-                weblayout=web_layout,
+                self, full_scren=settings.experiment.qt_full_screen, weblayout=web_layout,
             )
 
         else:
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(
-            self, db_cred=self.__db_cred
-        )
+        self._saving_agent_controller = SavingAgentController(self, db_cred=self.__db_cred)
 
         self._condition = ""
         self._session = ""
@@ -287,6 +280,45 @@ class Experiment(object):
     @property
     def session_id(self):
         return self._session_id
+
+    @property
+    def session_status(self):
+        return self._session_status
+
+    @session_status.setter
+    def session_status(self, status):
+        """Sets the session_status for the current experiment.
+
+        Args:
+            status (str): A string describing the current status of the
+                experiment.
+                
+        Todo:
+            Should updates to an experiment's status result in a saving
+            action? We could call the SavingAgentController from within
+            this method to save the dataset every time a status update
+            is performed.
+            ATTENTION: The status is currently not saved in Alfed but
+            exists only at runtime!
+        """
+        if not isinstance(status, str):
+            raise TypeError
+        self._session_status = status
+
+    def set_additional_data(self, key: str, value):
+        """Shortcut for :meth:`DataManager.add_additional_data`.
+        """
+        self.data_manager.add_additional_data(key, value)
+
+    def get_additional_data(self, key: str):
+        """Shortcut for :meth:`DataManager.get_additional_data_by_key`.
+        """
+        return self.data_manager.get_additional_data_by_key(key)
+
+    def get_page_data(self, uid):
+        """Shortcut for :meth:`DataManager.find_experiment_data_by_uid`.
+        """
+        return self.data_manager.find_experiment_data_by_uid(uid)
 
     def encrypt(self, data) -> str:
         """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.

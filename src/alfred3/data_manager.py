@@ -22,19 +22,20 @@ class DataManager(object):
 
     def get_data(self):
         data = self._experiment.page_controller.data
-        data['exp_author'] = self._experiment.author
-        data['exp_title'] = self._experiment.title
-        data['exp_version'] = self._experiment.version
-        data['exp_type'] = self._experiment.type
-        data['start_time'] = self._experiment.start_time
-        data['start_timestamp'] = self._experiment.start_timestamp
-        data['exp_finished'] = self._experiment.finished
-        data['exp_session'] = self._experiment.session
-        data['exp_condition'] = self._experiment.condition
-        data['exp_id'] = self._experiment.exp_id
-        data['session_id'] = self._experiment.session_id
-        data['additional_data'] = self._additional_data
-        data['alfred_version'] = self._experiment.alfred_version
+        data["exp_author"] = self._experiment.author
+        data["exp_title"] = self._experiment.title
+        data["exp_version"] = self._experiment.version
+        data["exp_type"] = self._experiment.type
+        data["start_time"] = self._experiment.start_time
+        data["start_timestamp"] = self._experiment.start_timestamp
+        data["exp_finished"] = self._experiment.finished
+        data["exp_session"] = self._experiment.session
+        data["exp_condition"] = self._experiment.condition
+        data["exp_id"] = self._experiment.exp_id
+        data["session_id"] = self._experiment.session_id
+        data["session_status"] = self._experiment.session_status
+        data["additional_data"] = self._additional_data
+        data["alfred_version"] = self._experiment.alfred_version
 
         return data
 
@@ -49,18 +50,19 @@ class DataManager(object):
     @staticmethod
     def _find_by_uid(data, uid):
         def worker(data, uid):
-            if data['uid'] == uid:
+            if data["uid"] == uid:
                 return data
-            elif 'subtree_data' in data:
+            elif "subtree_data" in data:
 
-                for item in data['subtree_data']:
+                for item in data["subtree_data"]:
                     try:
                         d = worker(item, uid)
                         return d
                     except Exception:
-                        if item == data['subtree_data'][-1]:
+                        if item == data["subtree_data"][-1]:
                             raise AlfredError("did not find uuid in tree")
                 raise AlfredError("Custom Error")
             else:
                 raise AlfredError("did not find uuid in tree")
+
         return worker(data, uid)
