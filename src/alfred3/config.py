@@ -7,7 +7,7 @@
 import os
 import platform
 import sys
-from configparser import ConfigParser
+from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Union
 
@@ -129,6 +129,25 @@ class ExperimentConfig(ConfigParser):
         """
 
         return {section_name: dict(self[section_name]) for section_name in self.sections()}
+
+    def get_section(self, name: str) -> SectionProxy:
+        """Returns a section of the parser, if it exists.
+
+        Args:
+            name: Name of the section you wish to retrieve.
+
+        Returns:
+            SectionProxy: A :class:`~configparser.SectionProxy` object.
+                If the requested section does not exist, the method
+                returns `None`.
+        """
+
+        try:
+            return self[name]
+
+        except KeyError:
+            return None
+
 
 class ExperimentSecrets(ExperimentConfig):
     """Provides functionality for parsing secrets like DB credentials.
