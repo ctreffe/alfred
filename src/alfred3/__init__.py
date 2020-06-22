@@ -305,6 +305,21 @@ class Experiment(object):
             raise TypeError
         self._session_status = status
 
+    def set_additional_data(self, key: str, value):
+        """Shortcut for :meth:`DataManager.add_additional_data`.
+        """
+        self.data_manager.add_additional_data(key, value)
+
+    def get_additional_data(self, key: str):
+        """Shortcut for :meth:`DataManager.get_additional_data_by_key`.
+        """
+        return self.data_manager.get_additional_data_by_key(key)
+
+    def get_page_data(self, uid):
+        """Shortcut for :meth:`DataManager.find_experiment_data_by_uid`.
+        """
+        return self.data_manager.find_experiment_data_by_uid(uid)
+
     def encrypt(self, data) -> str:
         """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
 
