@@ -112,6 +112,23 @@ class ExperimentConfig(ConfigParser):
             except AttributeError:
                 self.read_string(obj)
 
+    def as_dict(self) -> dict:
+        """Converts the ConfigParser structure into a nested dict.
+
+        Each section name is a first level key in the the dict, and the 
+        key values of the section becomes the dict in the second level::
+
+            {
+                'section_name': {
+                    'key': 'value'
+                }
+            }
+        
+        Returns:
+            dict: A dictionary representation of the parser instance.
+        """
+
+        return {section_name: dict(self[section_name]) for section_name in self.sections()}
 
 class ExperimentSecrets(ExperimentConfig):
     """Provides functionality for parsing secrets like DB credentials.
