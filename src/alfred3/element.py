@@ -33,6 +33,7 @@ import json
 import random
 import re
 import string
+import logging
 from abc import ABCMeta, abstractproperty
 from builtins import object, range, str
 from functools import reduce
@@ -51,7 +52,7 @@ from .exceptions import AlfredError
 standard_library.install_aliases()
 
 
-logger = alfredlog.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
@@ -92,9 +93,7 @@ class Element(object):
         self._maximum_widget_width = None
 
         if kwargs != {}:
-            raise ValueError(
-                "Parameter '%s' is not supported." % list(kwargs.keys())[0]
-            )
+            raise ValueError("Parameter '%s' is not supported." % list(kwargs.keys())[0])
 
     @property
     def name(self):
@@ -315,12 +314,9 @@ class ProgressBar(Element, WebElementInterface):
         if self._bar_range[1] - self._bar_range[0] == 0:
             raise ValueError("bar_range in web progress bar must be greater than 0")
 
-        widget = (
-            '<div class="progress-bar"><table class="%s" style="font-size: %spt;">'
-            % (
-                alignment_converter(self._alignment, "container"),
-                fontsize_converter(self._font_size),
-            )
+        widget = '<div class="progress-bar"><table class="%s" style="font-size: %spt;">' % (
+            alignment_converter(self._alignment, "container"),
+            fontsize_converter(self._font_size),
         )
 
         widget = widget + '<tr><td><table class="%s"><tr><td style="%s %s">%s</td>' % (
@@ -348,13 +344,7 @@ class ProgressBar(Element, WebElementInterface):
 
         widget = widget + '<td style="font-size: %spt; padding-left: 5px;">%s</td>' % (
             fontsize_converter(self._font_size),
-            str(
-                int(
-                    old_div(
-                        self._bar_value, (self._bar_range[1] - self._bar_range[0]) * 100
-                    )
-                )
-            )
+            str(int(old_div(self._bar_value, (self._bar_range[1] - self._bar_range[0]) * 100)))
             + "%",
         )
 
@@ -399,12 +389,8 @@ class TextElement(Element, WebElementInterface):
             % (
                 alignment_converter(self._alignment, "both"),
                 fontsize_converter(self._font_size),
-                "width: %spx;" % self._text_width
-                if self._text_width is not None
-                else "",
-                "height: %spx;" % self._text_height
-                if self._text_height is not None
-                else "",
+                "width: %spx;" % self._text_width if self._text_width is not None else "",
+                "height: %spx;" % self._text_height if self._text_height is not None else "",
                 self._text,
             )
         )
@@ -610,8 +596,8 @@ class InputElement(Element):
             if no_input_name in hints:
                 return hints[no_input_name]
 
-        logger.error("Can't access default no input hint for element %s" % self)
-        return "Can't access default no input hint for element %s" % type(self).__name__
+        logger.error(f"Can't access default no input hint for element {self}")
+        return f"Can't access default no input hint for element {type(self).__name__}"
 
     @property
     def data(self):
@@ -760,12 +746,9 @@ class TextAreaElement(TextEntryElement):
     @property
     def web_widget(self):
 
-        widget = (
-            '<div class="text-area-element"><table class="%s" style="font-size: %spt;">'
-            % (
-                alignment_converter(self._alignment, "container"),
-                fontsize_converter(self._font_size),
-            )
+        widget = '<div class="text-area-element"><table class="%s" style="font-size: %spt;">' % (
+            alignment_converter(self._alignment, "container"),
+            fontsize_converter(self._font_size),
         )
 
         widget = (
@@ -871,8 +854,10 @@ class RegEntryElement(TextEntryElement):
             and "corrective_regentry" in self._page._experiment.settings.hints
         ):
             return self._page._experiment.settings.hints["corrective_regentry"]
-        logger.error("Can't access match_hint for %s " % type(self).__name__)
-        return "Can't access match_hint for %s " % type(self).__name__
+
+        msg = f"Can't access match_hint for  {type(self).__name__}"
+        logger.error(msg)
+        return msg
 
     @property
     def corrective_hints(self):
@@ -1057,8 +1042,8 @@ class NumberEntryElement(RegEntryElement):
             and "corrective_numberentry" in self._page._experiment.settings.hints
         ):
             return self._page._experiment.settings.hints["corrective_numberentry"]
-        logger.error("Can't access match_hint for %s " % type(self).__name__)
-        return "Can't access match_hint for %s " % type(self).__name__
+        logger.error(f"Can't access match_hint for {type(self).__name__}")
+        return f"Can't access match_hint for {type(self).__name__}"
 
     @property
     def corrective_hints(self):
@@ -1144,24 +1129,17 @@ class PasswordElement(TextEntryElement):
     @property
     def web_widget(self):
 
-        widget = (
-            '<div class="text-entry-element"><table class="%s" style="font-size: %spt;">'
-            % (
-                alignment_converter(self._alignment, "container"),
-                fontsize_converter(self._font_size),
-            )
+        widget = '<div class="text-entry-element"><table class="%s" style="font-size: %spt;">' % (
+            alignment_converter(self._alignment, "container"),
+            fontsize_converter(self._font_size),
         )
 
-        widget = (
-            widget
-            + '<tr><td valign="bottom"><table class="%s"><tr><td %s>%s</td>'
-            % (
-                alignment_converter(self._alignment, "container"),
-                'style="width: %spx;"' % self._instruction_width
-                if self._instruction_width is not None
-                else "",
-                self._instruction,
-            )
+        widget = widget + '<tr><td valign="bottom"><table class="%s"><tr><td %s>%s</td>' % (
+            alignment_converter(self._alignment, "container"),
+            'style="width: %spx;"' % self._instruction_width
+            if self._instruction_width is not None
+            else "",
+            self._instruction,
         )
 
         widget = (
@@ -1204,8 +1182,8 @@ class PasswordElement(TextEntryElement):
             and "corrective_password" in self._page._experiment.settings.hints
         ):
             return self._page._experiment.settings.hints["corrective_password"]
-        logger.error("Can't access wrong_password_hint for %s " % type(self).__name__)
-        return "Can't access wrong_password_hint for %s " % type(self).__name__
+        logger.error(f"Can't access wrong_password_hint for {type(self).__name__}")
+        return f"Can't access wrong_password_hint for {type(self).__name__}"
 
     @property
     def corrective_hints(self):
@@ -1294,10 +1272,7 @@ class LikertMatrix(InputElement, WebElementInterface):
             )
         self._top_scale_labels = top_scale_labels
 
-        if (
-            bottom_scale_labels is not None
-            and not len(bottom_scale_labels) == self._levels
-        ):
+        if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
             raise ValueError(
                 u"Es mussen keine oder %s UNTERE (bei Transpose RECHTE) Skalenlabels ubergeben werden."
                 % self._levels
@@ -1306,8 +1281,7 @@ class LikertMatrix(InputElement, WebElementInterface):
 
         if item_labels is not None and not len(item_labels) == (2 * self._items):
             raise ValueError(
-                u"Es mussen keine oder %s Itemlabels ubergeben werden."
-                % (2 * self._items)
+                u"Es mussen keine oder %s Itemlabels ubergeben werden." % (2 * self._items)
             )
         self._item_labels = item_labels
 
@@ -1332,11 +1306,7 @@ class LikertMatrix(InputElement, WebElementInterface):
                 short_labels = self._short_labels()
                 label += "_" + short_labels[i]
             lm_data.update(
-                {
-                    label: None
-                    if int(self._input[i]) + 1 == 0
-                    else int(self._input[i]) + 1
-                }
+                {label: None if int(self._input[i]) + 1 == 0 else int(self._input[i]) + 1}
             )
         lm_data[self.name + "_permutation"] = [i + 1 for i in self._permutation]
         return lm_data
@@ -1560,9 +1530,7 @@ class LikertMatrix(InputElement, WebElementInterface):
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-        if self._force_input and reduce(
-            lambda b, val: b or val == "-1", self._input, False
-        ):
+        if self._force_input and reduce(lambda b, val: b or val == "-1", self._input, False):
             return [self.no_input_hint]
         else:
             return super(InputElement, self).corrective_hints
@@ -1622,11 +1590,7 @@ class LikertElement(LikertMatrix):
     def data(self):
         lm_data = {}
         lm_data.update(
-            {
-                self.name: None
-                if int(self._input[0]) + 1 == 0
-                else int(self._input[0]) + 1
-            }
+            {self.name: None if int(self._input[0]) + 1 == 0 else int(self._input[0]) + 1}
         )
         return lm_data
 
@@ -1732,9 +1696,7 @@ class SingleChoiceElement(LikertElement):
                 % (
                     self.name,
                     self._permutation[i],
-                    ' checked="checked"'
-                    if self._input == str(self._permutation[i])
-                    else "",
+                    ' checked="checked"' if self._input == str(self._permutation[i]) else "",
                     "" if self.enabled else ' disabled="disabled"',
                 )
             )
@@ -1954,9 +1916,7 @@ class MultipleChoiceElement(LikertElement):
                     self._spacing,
                     self.name + "_" + str(self._permutation[i]),
                     1,
-                    ' checked="checked"'
-                    if self._input[self._permutation[i]] == "1"
-                    else "",
+                    ' checked="checked"' if self._input[self._permutation[i]] == "1" else "",
                     "" if self.enabled else ' disabled="disabled"',
                 )
             )
@@ -2022,9 +1982,7 @@ class MultipleChoiceElement(LikertElement):
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-        if self._force_input and not reduce(
-            lambda b, val: b or val == "1", self._input, False
-        ):
+        if self._force_input and not reduce(lambda b, val: b or val == "1", self._input, False):
             return [self.no_input_hint]
 
         if self._min_select or self._max_select:
@@ -2099,17 +2057,12 @@ class LikertListElement(InputElement, WebElementInterface):
 
         if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
             raise ValueError(
-                u"Es müssen keine oder %s OBERE Skalenlabels übergeben werden."
-                % self._levels
+                u"Es müssen keine oder %s OBERE Skalenlabels übergeben werden." % self._levels
             )
 
-        if (
-            bottom_scale_labels is not None
-            and not len(bottom_scale_labels) == self._levels
-        ):
+        if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
             raise ValueError(
-                u"Es müssen keine oder %s UNTERE Skalenlabels übergeben werden."
-                % self._levels
+                u"Es müssen keine oder %s UNTERE Skalenlabels übergeben werden." % self._levels
             )
 
         self._permutation = list(range(len(item_labels)))
@@ -2247,9 +2200,7 @@ class LikertListElement(InputElement, WebElementInterface):
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-        if self._force_input and reduce(
-            lambda b, val: b or val == "-1", self._input, False
-        ):
+        if self._force_input and reduce(lambda b, val: b or val == "-1", self._input, False):
             return [self.no_input_hint]
         else:
             return super(LikertListElement, self).corrective_hints
@@ -2257,14 +2208,7 @@ class LikertListElement(InputElement, WebElementInterface):
 
 class ImageElement(Element, WebElementInterface):
     def __init__(
-        self,
-        path=None,
-        url=None,
-        x_size=None,
-        y_size=None,
-        alt=None,
-        maximizable=False,
-        **kwargs
+        self, path=None, url=None, x_size=None, y_size=None, alt=None, maximizable=False, **kwargs
     ):
         super(ImageElement, self).__init__(**kwargs)
 
@@ -2484,9 +2428,7 @@ class TableElement(Element, WebElementInterface):
     @property
     def can_display_corrective_hints_in_line(self):
         return reduce(
-            lambda b, e: b and e.can_display_corrective_hints_in_line,
-            self.flat_elements,
-            True,
+            lambda b, e: b and e.can_display_corrective_hints_in_line, self.flat_elements, True,
         )
 
     @property
@@ -2516,9 +2458,7 @@ class TableElement(Element, WebElementInterface):
         for l in self._elements:
             html = html + "<tr>"
             for e in l:
-                html = (
-                    html + "<td>" + e.web_widget if e.should_be_shown else "" + "</td>"
-                )
+                html = html + "<td>" + e.web_widget if e.should_be_shown else "" + "</td>"
             html = html + "</tr>"
         html = html + "</table>"
 
@@ -2843,9 +2783,7 @@ class WebVideoElement(Element, WebElementInterface):
         if is_url(source):
             url = source
         else:
-            url = self._page._experiment.user_interface_controller.add_static_file(
-                source
-            )
+            url = self._page._experiment.user_interface_controller.add_static_file(source)
         return url
 
     def prepare_attributes(self):
@@ -2885,8 +2823,7 @@ class WebVideoElement(Element, WebElementInterface):
         for parameter in self._deprecated_parameters:
             if parameter:
                 logger.warning(
-                    msg="The parameters mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, and web_m_path in Element.WebVideoElement are deprecated. Please use source or sources_list instead.",
-                    experiment=self._page._experiment,
+                    "The parameters mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, and web_m_path in Element.WebVideoElement are deprecated. Please use source or sources_list instead."
                 )
 
         if self._mp4_video_url is None and self._mp4_path is not None:
@@ -2942,9 +2879,7 @@ class ExperimenterMessages(TableElement):
 
             output = output + message.msg
 
-            message.level = (
-                "" if message.level == "warning" else "alert-" + message.level
-            )
+            message.level = "" if message.level == "warning" else "alert-" + message.level
 
             message_element = TextElement(
                 '<div class="alert '
@@ -2964,8 +2899,6 @@ class ExperimenterMessages(TableElement):
 class WebExitEnabler(Element, WebElementInterface):
     @property
     def web_widget(self):
-        widget = (
-            "<script>$(document).ready(function(){glob_unbind_leaving();});</script>"
-        )
+        widget = "<script>$(document).ready(function(){glob_unbind_leaving();});</script>"
 
         return widget

@@ -72,9 +72,6 @@ def run_experiment(path: str = None):
             running file will be used by default.
     """
 
-    alfredlog.init_logging("alfred3")
-    logger = alfredlog.getLogger("alfred3")
-
     # check for correct experiment type
     if not settings.experiment.type == "web":
         raise RuntimeError("Experiment type must be 'web'.")

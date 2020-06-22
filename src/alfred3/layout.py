@@ -14,12 +14,9 @@ from builtins import map, object, range
 from future.utils import with_metaclass
 from jinja2 import Environment, PackageLoader
 
-from alfred3.settings import ExperimentSpecificSettings
-
 from ._core import package_path
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
-settings = ExperimentSpecificSettings()
 
 
 class Layout(with_metaclass(ABCMeta, object)):

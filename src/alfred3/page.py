@@ -1,29 +1,37 @@
 # -*- coding:utf-8 -*-
 
-'''
+"""
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
-'''
+"""
 from __future__ import absolute_import
 
 import time
+import logging
 from abc import ABCMeta, abstractproperty
 from builtins import object, str
 from functools import reduce
 
 from future.utils import with_metaclass
 
-from . import alfredlog, element, settings
+from . import element, settings
 from ._core import ContentCore
 from ._helper import _DictObj
-from .element import (Element, ExperimenterMessages, TextElement,
-                      WebElementInterface)
+from .element import Element, ExperimenterMessages, TextElement, WebElementInterface
 from .exceptions import AlfredError
 
-logger = alfredlog.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class PageCore(ContentCore):
-    def __init__(self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, run_on_showing='always', run_on_hiding='always', **kwargs):
+    def __init__(
+        self,
+        minimum_display_time=0,
+        minimum_display_time_msg=None,
+        values: dict = {},
+        run_on_showing="always",
+        run_on_hiding="always",
+        **kwargs
+    ):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
@@ -34,7 +42,6 @@ class PageCore(ContentCore):
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
-        self._log = []  # insert tuple with ('type', msg) for logger
 
         super(PageCore, self).__init__(**kwargs)
 
@@ -42,32 +49,17 @@ class PageCore(ContentCore):
             raise TypeError("The parameter 'values' requires a dictionary as input.")
         self.values = _DictObj(values)
 
-        if self._run_on_showing not in ['once', 'always']:
+        if self._run_on_showing not in ["once", "always"]:
             raise ValueError("The parameter 'run_on_showing' must be either 'once' or 'always'.")
 
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
-            raise TypeError('%s must be an instance of %s' % (self.__class__.__name__, WebPageInterface.__name__))
+            raise TypeError(
+                "%s must be an instance of %s"
+                % (self.__class__.__name__, WebPageInterface.__name__)
+            )
 
         super(PageCore, self).added_to_experiment(experiment)
-
-    def print_log(self):
-        for i, _entry in enumerate(self._log):
-            category, msg = self._log.pop(i)
-            if category == 'debug':
-                logger.debug(msg, self._experiment)
-            if category == 'info':
-                logger.info(msg, self._experiment)
-            if category == 'warning':
-                logger.warning(msg, self._experiment)
-            if category == 'error':
-                logger.error(msg, self._experiment)
-            if category == 'critical':
-                logger.critical(msg, self._experiment)
-            if category == 'log':
-                logger.log(msg, self._experiment)
-            if category == 'exception':
-                logger.exception(msg, self._experiment)
 
     @property
     def show_thumbnail(self):
@@ -92,22 +84,20 @@ class PageCore(ContentCore):
         return data
 
     def _on_showing_widget(self):
-        '''
+        """
         Method for internal processes on showing Widget
-        '''
+        """
 
         if not self._has_been_shown:
-            self._data['first_show_time'] = time.time()
+            self._data["first_show_time"] = time.time()
 
-        if self._run_on_showing == 'once' and not self._has_been_shown:
+        if self._run_on_showing == "once" and not self._has_been_shown:
             self.on_showing_widget()
             self.on_showing()
 
-        elif self._run_on_showing == 'always':
+        elif self._run_on_showing == "always":
             self.on_showing_widget()
             self.on_showing()
-            # self._log.append(('debug', 'The current page executes the "on_showing" method every time the page is shown. If you want to turn this behavior off, please use "run_on_showing=\'once\'" in the page initialisation.'))
-
 
         self._has_been_shown = True
 
@@ -118,21 +108,18 @@ class PageCore(ContentCore):
         pass
 
     def _on_hiding_widget(self):
-        '''
+        """
         Method for internal processes on hiding Widget
-        '''
+        """
 
-        if self._run_on_hiding == 'once' and not self._has_been_hidden:
+        if self._run_on_hiding == "once" and not self._has_been_hidden:
             self.on_hiding_widget()
             self.on_hiding()
-        elif self._run_on_showing == 'always':
+        elif self._run_on_showing == "always":
             self.on_hiding_widget()
             self.on_hiding()
-            # self._log.append(('debug',
-            #                  'The current page executes the "on_hiding" method every time the page is hidden. If you want to turn this behavior off, please use "run_on_hiding=\'once\'" in the page initialisation.'))
 
         self._has_been_hidden = True
-        self.print_log()
 
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
@@ -146,12 +133,14 @@ class PageCore(ContentCore):
         if not self.allow_closing:
             raise AlfredError()
 
-        if 'closing_time' not in self._data:
-            self._data['closing_time'] = time.time()
-        if 'duration' not in self._data \
-                and 'first_show_time' in self._data \
-                and 'closing_time' in self._data:
-            self._data['duration'] = self._data['closing_time'] - self._data['first_show_time']
+        if "closing_time" not in self._data:
+            self._data["closing_time"] = time.time()
+        if (
+            "duration" not in self._data
+            and "first_show_time" in self._data
+            and "closing_time" in self._data
+        ):
+            self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
 
         self._is_closed = True
 
@@ -162,34 +151,41 @@ class PageCore(ContentCore):
         return False
 
     def corrective_hints(self):
-        '''
+        """
         returns a list of corrective hints
 
         :rtype: list of unicode strings
-        '''
+        """
         return []
 
     def allow_leaving(self, direction):
-        if 'first_show_time' in self._data and \
-                time.time() - self._data['first_show_time'] \
-                < self._minimum_display_time:
+        if (
+            "first_show_time" in self._data
+            and time.time() - self._data["first_show_time"] < self._minimum_display_time
+        ):
             try:
-                msg = self._minimum_display_time_msg if self._minimum_display_time_msg else self._experiment.settings.messages.minimum_display_time
+                msg = (
+                    self._minimum_display_time_msg
+                    if self._minimum_display_time_msg
+                    else self._experiment.settings.messages.minimum_display_time
+                )
             except Exception:
                 msg = "Can't access minimum display time message"
-            self._experiment.message_manager.post_message(msg.replace('${mdt}', str(self._minimum_display_time)))
+            self._experiment.message_manager.post_message(
+                msg.replace("${mdt}", str(self._minimum_display_time))
+            )
             return False
         return True
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepare_web_widget(self):
-        '''Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
+        """Wird aufgerufen bevor das die Frage angezeigt wird, wobei jedoch noch
         Nutzereingaben zwischen aufruf dieser funktion und dem anzeigen der
         Frage kmmen koennen. Hier sollte die Frage, von
         noch nicht gemachten user Eingaben unabhaengige und rechenintensive
         verbereitungen fuer das anzeigen des widgets aufrufen. z.B. generieren
-        von grafiken'''
+        von grafiken"""
         pass
 
     @abstractproperty
@@ -234,11 +230,14 @@ class CoreCompositePage(PageCore):
                 self.append(elmnt)
 
     def add_element(self, element):
-        self._log.append(('warning', "page.add_element() is deprecated. Use page.append() instead."))
+
+        logger.warning("page.add_element() is deprecated. Use page.append() instead.")
+
         self.append(element)
 
     def add_elements(self, *elements):
-        self._log.append(('warning', "page.add_elements() is deprecated. Use page.append() instead."))
+        logger.warnning("page.add_elements() is deprecated. Use page.append() instead.")
+
         for elmnt in elements:
             self.append(elmnt)
 
@@ -249,14 +248,18 @@ class CoreCompositePage(PageCore):
 
             exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
-            if exp_type == 'web' and not isinstance(elmnt, WebElementInterface):
-                raise TypeError("%s is not an instance of WebElementInterface" % type(elmnt).__name__)
+            if exp_type == "web" and not isinstance(elmnt, WebElementInterface):
+                raise TypeError(
+                    "%s is not an instance of WebElementInterface" % type(elmnt).__name__
+                )
 
             if isinstance(self, WebPageInterface) and not isinstance(elmnt, WebElementInterface):
-                raise TypeError("%s is not an instance of WebElementInterface" % type(elmnt).__name__)
+                raise TypeError(
+                    "%s is not an instance of WebElementInterface" % type(elmnt).__name__
+                )
 
             if elmnt.name is None:
-                elmnt.name = ("%02d" % self._element_name_counter) + '_' + elmnt.__class__.__name__
+                elmnt.name = ("%02d" % self._element_name_counter) + "_" + elmnt.__class__.__name__
                 self._element_name_counter = self._element_name_counter + 1
 
             self._element_list.append(elmnt)
@@ -282,7 +285,11 @@ class CoreCompositePage(PageCore):
 
     @property
     def can_display_corrective_hints_in_line(self):
-        return reduce(lambda b, element: b and element.can_display_corrective_hints_in_line, self._element_list, True)
+        return reduce(
+            lambda b, element: b and element.can_display_corrective_hints_in_line,
+            self._element_list,
+            True,
+        )
 
     @property
     def show_corrective_hints(self):
@@ -323,23 +330,30 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
     @property
     def web_widget(self):
-        html = ''
+        html = ""
 
         for elmnt in self._element_list:
-            if elmnt.web_widget != '' and elmnt.should_be_shown:
-                html = html + (
-                            '<div class="row with-margin"><div id="elid-%s" class="element">' % elmnt.name) + elmnt.web_widget + '</div></div>'
+            if elmnt.web_widget != "" and elmnt.should_be_shown:
+                html = (
+                    html
+                    + (
+                        '<div class="row with-margin"><div id="elid-%s" class="element">'
+                        % elmnt.name
+                    )
+                    + elmnt.web_widget
+                    + "</div></div>"
+                )
 
         return html
 
     @property
     def web_thumbnail(self):
-        '''
+        """
         gibt das thumbnail von self._thumbnail_element oder falls self._thumbnail_element nicht gesetzt, das erste thumbnail eines elements aus self._element_list zurueck.
 
         .. todo:: was ist im fall, wenn thumbnail element nicht gestzt ist? anders verhalten als jetzt???
 
-        '''
+        """
         if not self.show_thumbnail:
             return None
 
@@ -384,7 +398,7 @@ class PagePlaceholder(PageCore, WebPageInterface):
 
     @property
     def web_widget(self):
-        return ''
+        return ""
 
     @property
     def data(self):
@@ -410,7 +424,9 @@ class PagePlaceholder(PageCore, WebPageInterface):
 
 
 class DemographicPage(CompositePage):
-    def __init__(self, instruction=None, age=True, sex=True, course_of_studies=True, semester=True, **kwargs):
+    def __init__(
+        self, instruction=None, age=True, sex=True, course_of_studies=True, semester=True, **kwargs
+    ):
         super(DemographicPage, self).__init__(**kwargs)
 
         if instruction:
@@ -423,10 +439,16 @@ class DemographicPage(CompositePage):
             self.append(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
 
         if course_of_studies:
-            self.append(element.TextEntryElement(instruction=u"Dein Studiengang: ", name='course_of_studies'))
+            self.append(
+                element.TextEntryElement(
+                    instruction=u"Dein Studiengang: ", name="course_of_studies"
+                )
+            )
 
         if semester:
-            self.append(element.TextEntryElement(instruction=u"Dein Fachsemester ", name='semester'))
+            self.append(
+                element.TextEntryElement(instruction=u"Dein Fachsemester ", name="semester")
+            )
 
 
 class AutoHidePage(CompositePage):
@@ -448,16 +470,45 @@ class AutoHidePage(CompositePage):
 
 class ExperimentFinishPage(CompositePage):
     def on_showing_widget(self):
-        if 'first_show_time' not in self._data:
-            exp_title = TextElement('Informationen zur Session:', font='big')
+        if "first_show_time" not in self._data:
+            exp_title = TextElement("Informationen zur Session:", font="big")
 
-            exp_infos = '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>' + self._experiment.name + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Experimenttyp:</td><td>' + self._experiment.type + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Experimentversion:</td><td>' + self._experiment.version + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Experiment-ID:</td><td>' + self._experiment.exp_id + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Session-ID:</td><td>' + self._experiment.session_id + '</td></tr>'
-            exp_infos = exp_infos + '<tr><td>Log-ID:</td><td>' + self._experiment.session_id[:6] + '</td></tr>'
-            exp_infos = exp_infos + '</table>'
+            exp_infos = (
+                '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>'
+                + self._experiment.name
+                + "</td></tr>"
+            )
+            exp_infos = (
+                exp_infos
+                + "<tr><td>Experimenttyp:</td><td>"
+                + self._experiment.type
+                + "</td></tr>"
+            )
+            exp_infos = (
+                exp_infos
+                + "<tr><td>Experimentversion:</td><td>"
+                + self._experiment.version
+                + "</td></tr>"
+            )
+            exp_infos = (
+                exp_infos
+                + "<tr><td>Experiment-ID:</td><td>"
+                + self._experiment.exp_id
+                + "</td></tr>"
+            )
+            exp_infos = (
+                exp_infos
+                + "<tr><td>Session-ID:</td><td>"
+                + self._experiment.session_id
+                + "</td></tr>"
+            )
+            exp_infos = (
+                exp_infos
+                + "<tr><td>Log-ID:</td><td>"
+                + self._experiment.session_id[:6]
+                + "</td></tr>"
+            )
+            exp_infos = exp_infos + "</table>"
 
             exp_info_element = TextElement(exp_infos)
 
@@ -470,12 +521,26 @@ class HeadOpenSectionCantClose(CompositePage):
     def __init__(self, **kwargs):
         super(HeadOpenSectionCantClose, self).__init__(**kwargs)
 
-        self.append(element.TextElement(
-            "Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"))
+        self.append(
+            element.TextElement(
+                "Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"
+            )
+        )
 
 
 class MongoSaveCompositePage(CompositePage):
-    def __init__(self, host, database, collection, user, password, error='ignore', hide_data=True, *args, **kwargs):
+    def __init__(
+        self,
+        host,
+        database,
+        collection,
+        user,
+        password,
+        error="ignore",
+        hide_data=True,
+        *args,
+        **kwargs
+    ):
         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
         self._host = host
         self._database = database
@@ -490,8 +555,7 @@ class MongoSaveCompositePage(CompositePage):
     def data(self):
         if self._hide_data:
             # this is needed for some other functions to work properly
-            data = {'tag': self.tag,
-                    'uid': self.uid}
+            data = {"tag": self.tag, "uid": self.uid}
             return data
         else:
             return super(MongoSaveCompositePage, self).data
@@ -501,18 +565,19 @@ class MongoSaveCompositePage(CompositePage):
         if self._saved:
             return rv
         from pymongo import MongoClient
+
         try:
             client = MongoClient(self._host)
             db = client[self._database]
             db.authenticate(self._user, self._password)
             col = db[self._collection]
             data = super(MongoSaveCompositePage, self).data
-            data.pop('first_show_time', None)
-            data.pop('closing_time', None)
+            data.pop("first_show_time", None)
+            data.pop("closing_time", None)
             col.insert(data)
             self._saved = True
         except Exception as e:
-            if self._error != 'ignore':
+            if self._error != "ignore":
                 raise e
         return rv
 
@@ -521,12 +586,12 @@ class MongoSaveCompositePage(CompositePage):
 # Page Mixins
 ####################
 
-class WebTimeoutMixin(object):
 
+class WebTimeoutMixin(object):
     def __init__(self, timeout, **kwargs):
         super(WebTimeoutMixin, self).__init__(**kwargs)
 
-        self._end_link = 'unset'
+        self._end_link = "unset"
         self._run_timeout = True
         self._timeout = timeout
         if settings.debugmode and settings.debug.reduce_countdown:
@@ -550,7 +615,9 @@ class WebTimeoutMixin(object):
 
     @property
     def js_code(self):
-        code = (5, '''
+        code = (
+            5,
+            """
             $(document).ready(function(){
                 var start_time = new Date();
                 var timeout = %s;
@@ -575,12 +642,14 @@ class WebTimeoutMixin(object):
                 };
                 setTimeout(timeout_function, timeout*1000);
             });
-        ''' % (self._timeout, self._end_link))
+        """
+            % (self._timeout, self._end_link),
+        )
         js_code = super(WebTimeoutMixin, self).js_code
         if self._run_timeout:
             js_code.append(code)
         else:
-            js_code.append((5, '''$(document).ready(function(){$(".timeout-label").html(0);});'''))
+            js_code.append((5, """$(document).ready(function(){$(".timeout-label").html(0);});"""))
         return js_code
 
 
@@ -615,6 +684,7 @@ class HideButtonsMixin(object):
 ####################
 # Pages with Mixins
 ####################
+
 
 class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
     pass

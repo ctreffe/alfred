@@ -9,12 +9,13 @@ from __future__ import absolute_import
 from builtins import object
 from ._core import Direction
 
+import logging
+
 from .section import Section
 from .page import CompositePage, WebCompositePage
 from .element import TextElement, WebExitEnabler
-from . import alfredlog
 
-logger = alfredlog.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class PageController(object):
@@ -29,9 +30,7 @@ class PageController(object):
         self._rootSection = Section(tag="rootSection")
         self._rootSection.added_to_experiment(experiment)
 
-        self._finishedSection = Section(
-            tag="finishedSection", title="Experiment beendet"
-        )
+        self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
 
         if self._experiment.type == "qt":
             self._finishedSection.append(
@@ -124,7 +123,6 @@ class PageController(object):
 
     def change_to_finished_group(self):
         logger.warning(
-            "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead.",
-            experiment=self._experiment,
+            "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
         self.change_to_finished_section()

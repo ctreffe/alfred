@@ -1,5 +1,6 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
+import logging
 
 from uuid import uuid4
 
@@ -16,6 +17,7 @@ from flask import (
 )
 from uuid import uuid4
 from ..config import ExperimentConfig, ExperimentSecrets
+from .. import alfredlog
 import re, os
 
 
@@ -43,6 +45,9 @@ def start():
     exp_config = Script.config.get("exp_config")
     exp_config.read_dict({"metadata": {"session_id": session_id}})
 
+    alfredlog.init_logging("alfred3", config=exp_config)
+    logger = logging.getLogger("alfred3")
+    logger.info("Alfred logging initialized.")
 
     script.experiment = script.generate_experiment(config=Script.config)
     script.experiment.start()
@@ -51,6 +56,9 @@ def start():
     # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
     resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
+
+    logger.info("Starting experiment session.")
+
     return resp
 
 

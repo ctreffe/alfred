@@ -12,6 +12,8 @@ import queue
 import threading
 import time
 import uuid
+import traceback
+import logging
 from abc import ABCMeta, abstractmethod
 from builtins import object
 from configparser import SectionProxy
@@ -23,13 +25,12 @@ from future.utils import with_metaclass
 
 import alfred3.settings
 
-from . import alfredlog
 from .exceptions import SavingAgentException, SavingAgentRunException
 
 standard_library.install_aliases()
 
 
-_logger = alfredlog.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def _save_worker():
@@ -43,10 +44,7 @@ def _save_worker():
             event.set()
             _queue.task_done()
     except Exception as e:
-        import logging
-
-        logger = logging.getLogger(__name__)
-        logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!! {}".format(e))
+        _logger.critical("MOST OUTER EXCEPTION IN SAVE WORKER!!! {}".format(e))
 
 
 def _save_looper(sleeptime=1):
@@ -93,7 +91,7 @@ class SavingAgentController(object):
         """agents that run if running a normal agent fails """
 
         if self._experiment.config.getboolean("debug", "disable_saving"):
-            _logger.warning("Saving has been disabled!", self._experiment)
+            _logger.warning("Saving has been disabled!")
         else:
             self.initialize_local_agents(config=self._experiment.config)
             self.initialize_db_agents(self._experiment.secrets, AutoMongoSavingAgent)
@@ -344,11 +342,9 @@ class SavingAgentController(object):
 
         self._agents.append(saving_agent)
         if saving_agent.activation_level <= 1:
-            _logger.info(
-                "Continuous SavingAgent %s added to experiment" % saving_agent, self._experiment,
-            )
+            _logger.info(f"Continuous SavingAgent {saving_agent} added to experiment")
         elif saving_agent.activation_level > 1:
-            _logger.info("SavingAgent %s added to experiment" % saving_agent, self._experiment)
+            _logger.info(f"SavingAgent {saving_agent} added to experiment")
 
     def add_failure_saving_agent(self, saving_agent):
         if not isinstance(saving_agent, SavingAgent):
@@ -378,37 +374,25 @@ class SavingAgentController(object):
                         agent.save_data(data, level)
                         self._latest_data_time = data_time
                         if level <= 1:
-                            _logger.debug(
-                                "Running SavingAgent %s succeeded" % agent, self._experiment
-                            )
+                            _logger.debug(f"Running SavingAgent {agent} succeeded")
                         else:
-                            _logger.info(
-                                "Running SavingAgent %s succeeded" % agent, self._experiment
-                            )
+                            _logger.info(f"Running SavingAgent {agent} succeeded")
                     except Exception as e:
                         failed = True
-                        _logger.error(
-                            "Running SavingAgent %s failed with error '%s'" % (agent, e),
-                            self._experiment,
-                        )
+                        _logger.error(f"Running SavingAgent {agent} failed with error: {e}")
             if failed:
                 for agent in self._failure_agents:
                     try:
                         agent.save_data(data, 1000)
                         self._latest_data_time = data_time
-                        _logger.info(
-                            "Running Backup SavingAgent %s succeeded" % agent, self._experiment
-                        )
+                        _logger.info(f"Running Backup SavingAgent {agent} succeeded")
                     except Exception as e:
                         _logger.critical(
-                            "Running Backup SavingAgent %s failed with error '%s'" % (agent, e),
-                            self._experiment,
+                            f"Running Backup SavingAgent {agent} failed with error: {e}"
                         )
         else:
             _logger.info(
-                "Data snapshot taken at %s will not be saved because a newer one (%s) was already saved."
-                % (data_time, self._latest_data_time),
-                self._experiment,
+                f"Data snapshot taken at {data_time} will not be saved because a newer one ({self._latest_data_time}) was already saved."
             )
         self._lock.release()
 

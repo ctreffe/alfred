@@ -12,18 +12,19 @@ import platform
 import re
 import socket
 import subprocess
+import logging
 from os.path import abspath, isabs, isfile, join
 from pathlib import Path
 
 import xmltodict
 from future import standard_library
 
-from alfred3 import alfredlog, settings
+from alfred3 import settings
 from alfred3.exceptions import AlfredError
 
 standard_library.install_aliases()
 
-logger = alfredlog.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def parse_xml_to_dict(path, interface="web", code=False):
@@ -53,7 +54,7 @@ def parse_xml_to_dict(path, interface="web", code=False):
     # If issues are suspectetd, a warning is logged.
     path2 = join(settings.general.external_files_dir, path)
     if isfile(path) and isfile(path2) and not path == path2:
-        logger.warning(
+        logger.debug(
             "parse_xml_to_dict: There is a file {p1}, but there is also a file {p2} in the external files directory. Previous versions of Alfred would have used {p2} by default, now {p1} is used. Please make sure that you are importing the correct file.".format(
                 p1=path, p2=path2
             )
@@ -61,7 +62,7 @@ def parse_xml_to_dict(path, interface="web", code=False):
 
     if not isfile(path):
         path = path2
-        logger.warning(
+        logger.debug(
             "parse_xml_to_dict: Found no file under {p1}. Searching under {p2} now.".format(
                 p1=path, p2=path2
             )
@@ -227,7 +228,7 @@ class ChromeKiosk:
     """
 
     @classmethod
-    def open(cls, url: str, path: str=None):
+    def open(cls, url: str, path: str = None):
         """Check operating system and call approriate opening method for opening url in Chrome in kiosk mode.
 
         This will only work, if Chrome is not currently running.
@@ -246,30 +247,31 @@ class ChromeKiosk:
         elif current_os == "Darwin":
             cls.open_mac(url=url)
         elif current_os == "Linux":
-            raise NotImplementedError("This method has not been implemented for Linux distributions.")
+            raise NotImplementedError(
+                "This method has not been implemented for Linux distributions."
+            )
 
     @staticmethod
-    def open_windows(url: str, path: str=None):
+    def open_windows(url: str, path: str = None):
         """Open url in Chrome in kiosk mode on Windows."""
-    
 
         paths = []
         paths.append(Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
-        paths.append(Path.home().joinpath("AppData/Local/Google/Chrome/Application/chrome.exe")) 
-        paths.append(Path("C:/Program Files (x86)/Google/Application/chrome.exe")) 
+        paths.append(Path.home().joinpath("AppData/Local/Google/Chrome/Application/chrome.exe"))
+        paths.append(Path("C:/Program Files (x86)/Google/Application/chrome.exe"))
 
         existing_paths = [p for p in paths if p is not None and p.exists()]
-        
+
         chrome = None
 
         if path:
             chrome = Path(path)
         else:
             chrome = existing_paths[0]
-        
+
         if not chrome.exists():
             raise FileNotFoundError(f"Did not find a chrome.exe at {str(chrome)}.")
-        
+
         subprocess.run([chrome, url, "--kiosk"])
 
     @staticmethod
