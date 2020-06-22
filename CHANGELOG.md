@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
-## alfred v1.1.5 (Released 2020-06-22)
+## alfred v1.1.7 (Released 2020-06-22)
 
 ### Added
 
