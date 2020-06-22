@@ -30,16 +30,18 @@ logger = alfredlog.getLogger(__name__)
 
 
 class Experiment(object):
-    def __init__(self, config: dict = None, config_string="", basepath=None, custom_layout=None):
+    def __init__(
+        self,
+        config: dict = None,
+        config_string="",
+        basepath=None,
+        custom_layout=None,
+    ):
 
         self._alfred_version = __version__
         self.config = config.get("exp_config")
         self.secrets = config.get("exp_secrets")
 
-        if self.config.get("mortimer_specific", "session_id"):
-            self._session_id = self.config.get("mortimer_specific", "session_id")
-        else:
-            self._session_id = uuid4().hex
 
         # Experiment startup message
         logger.info(
@@ -54,9 +56,9 @@ class Experiment(object):
         # update settings with custom settings from mortimer
         # TODO: Remove self._settings altogether
         self._settings = settings.ExperimentSpecificSettings(config_string)
-        self._settings.navigation = _DictObj(config["navigation"])
-        self._settings.hints = _DictObj(config["hints"])
-        self._settings.messages = _DictObj(config["messages"])
+        self._settings.navigation = _DictObj(self.config["navigation"])
+        self._settings.hints = _DictObj(self.config["hints"])
+        self._settings.messages = _DictObj(self.config["messages"])
 
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
@@ -65,6 +67,7 @@ class Experiment(object):
         # Determine web layout if necessary
         # TODO: refactor layout and UIController initializiation code
         # pylint: disable=no-member
+        self._type = "web"  # provided for backwards compatibility
         if self._type == "web" or self._type == "qt-wk":
             if custom_layout:
                 web_layout = custom_layout
@@ -88,7 +91,7 @@ class Experiment(object):
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(self, db_cred=self.__db_cred)
+        self._saving_agent_controller = SavingAgentController(self)
 
         self._condition = ""
         self._session = ""
@@ -225,11 +228,11 @@ class Experiment(object):
 
     @property
     def path(self):
-        return str(self.config._expdir)
+        return str(self.config.expdir)
 
     @property
     def session_id(self):
-        return self.config.get("mortimer_specific", "session_id")
+        return self.config.get("metadata", "session_id")
 
     # TODO: Deal with encryptor
     # def encrypt(self, data) -> str:
