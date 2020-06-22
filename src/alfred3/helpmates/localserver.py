@@ -1,7 +1,10 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
+
+from uuid import uuid4
+
 from flask import (
-    Blueprint,
+    Flask,
     send_file,
     redirect,
     url_for,
@@ -12,7 +15,6 @@ from flask import (
     send_from_directory,
 )
 from uuid import uuid4
-from .. import settings
 from ..config import ExperimentConfig, ExperimentSecrets
 import re, os
 
@@ -21,31 +23,28 @@ class Script:
 
     experiment = None
     expdir = None
-    """Path of the experiment directory. This is a placeholder, meant
-    to be replace in ``run.py``
-    """
+    config = None
 
     def generate_experiment(self, config=None):
-        """This method serves solely as a hook for the 
-        ``generate_experiment`` function extracted from the user's script.py.
-
-        It is meant to be replaced in ``run.py``.
+        """Hook for the ``generate_experiment`` function extracted from 
+        the user's script.py. It is meant to be replaced in ``run.py``.
         """
 
         return ""
 
 
-exp = Blueprint(__name__, "exp")
+app = Flask(__name__)
 script = Script()
 
 
-@exp.route("/start", methods=["GET", "POST"])
+@app.route("/start", methods=["GET", "POST"])
 def start():
-    exp_config = ExperimentConfig(script.expdir)
-    exp_secrets = ExperimentSecrets(script.expdir)
-    config = {"exp_config": exp_config, "exp_secrets": exp_secrets}
+    session_id = uuid4().hex
+    exp_config = Script.config.get("exp_config")
+    exp_config.read_dict({"metadata": {"session_id": session_id}})
 
-    script.experiment = script.generate_experiment(config=config)
+
+    script.experiment = script.generate_experiment(config=Script.config)
     script.experiment.start()
 
     session["page_tokens"] = []
@@ -55,7 +54,7 @@ def start():
     return resp
 
 
-@exp.route("/experiment", methods=["GET", "POST"])
+@app.route("/experiment", methods=["GET", "POST"])
 def experiment():
 
     if request.method == "POST":
@@ -116,7 +115,7 @@ def experiment():
         return resp
 
 
-@exp.route("/staticfile/<identifier>")
+@app.route("/staticfile/<identifier>")
 def staticfile(identifier):
     path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
     dirname, filename = os.path.split(path)
@@ -124,7 +123,7 @@ def staticfile(identifier):
     return resp
 
 
-@exp.route("/dynamicfile/<identifier>")
+@app.route("/dynamicfile/<identifier>")
 def dynamicfile(identifier):
     strIO, content_type = script.experiment.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
@@ -132,7 +131,7 @@ def dynamicfile(identifier):
     return resp
 
 
-@exp.route("/callable/<identifier>", methods=["GET", "POST"])
+@app.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
     f = script.experiment.user_interface_controller.get_callable(identifier)
     if request.content_type == "application/json":
