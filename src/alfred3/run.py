@@ -29,6 +29,7 @@ from flask import Flask
 from alfred3.helpmates import socket_checker, ChromeKiosk, localserver
 from alfred3 import alfredlog
 from alfred3 import settings
+from alfred3.config import init_configuration
 
 
 def load(name: str, location: str):
@@ -81,7 +82,7 @@ def run_experiment(path: str = None):
     # set paths to script.py and config.conf and check their existence
     executing_dir = Path(sys.argv[0]).parent
     expdir = Path(path) if path else executing_dir
-    script_path = expdir.joinpath("script.py")
+    script_path = expdir / "script.py"
     # config_path = expdir.joinpath("config.conf")
 
     if not script_path.is_file():
@@ -95,8 +96,12 @@ def run_experiment(path: str = None):
     # import script from path
     script = load("script.py", script_path)
 
+    # init config
+    config = init_configuration(expdir)
+
     # set generate_experiment function
     localserver.Script.expdir = expdir
+    localserver.Script.config = config
     localserver.Script.generate_experiment = script.generate_experiment
 
     # set port
@@ -114,10 +119,9 @@ def run_experiment(path: str = None):
     # run app
     sys.stderr.writelines([" * Start local experiment using {}\n".format(expurl)])
 
-    app = Flask(__name__)
-    app.register_blueprint(localserver.exp)
-
-    app.run(port=port, threaded=True, use_reloader=False)
+    app = localserver.app
+    app.secret_key = config["exp_secrets"].get("flask", "secret_key")
+    app.run(port=port, threaded=True, use_reloader=False, debug=True)
 
 
 if __name__ == "__main__":

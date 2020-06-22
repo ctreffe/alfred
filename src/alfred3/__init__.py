@@ -14,6 +14,7 @@ from ._version import __version__
 import os
 import sys
 import time
+import logging
 from builtins import object
 from uuid import uuid4
 
@@ -26,7 +27,7 @@ from .page_controller import PageController
 from .saving_agent import SavingAgentController
 from .ui_controller import WebUserInterfaceController
 
-logger = alfredlog.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Experiment(object):
@@ -45,11 +46,11 @@ class Experiment(object):
 
         # Experiment startup message
         logger.info(
-            "Alfred {exp_type} experiment session initialized! Alfred version: {alfred_version}, experiment title: {title}, experiment version: {exp_version}".format(
-                exp_type=self.config.get("experiment", "type"),
-                alfred_version=self._alfred_version,
-                title=self.config.get("metadata", "title"),
-                exp_version=self.config.get("metadata", "version"),
+            (
+                f"Alfred {self.config.get('experiment', 'type')} experiment session initialized! "
+                f"Alfred version: {self._alfred_version}, "
+                f"experiment title: {self.config.get('metadata', 'title')}, "
+                f"experiment version: {self.config.get('metadata', 'version')}"
             )
         )
 
@@ -79,8 +80,7 @@ class Experiment(object):
                 layout, self._settings.experiment.web_layout
             ):
                 logger.warning(
-                    "Layout specified in config.conf does not exist! Switching to BaseWebLayout",
-                    self,
+                    "Layout specified in config.conf does not exist! Switching to BaseWebLayout"
                 )
                 web_layout = None
 
@@ -100,7 +100,7 @@ class Experiment(object):
         self._start_time = None
 
         if basepath is not None:
-            logger.warning("Usage of basepath is deprecated.", self)
+            logger.warning("Usage of basepath is deprecated.")
 
         if config_string is not None:
             logger.warning(
@@ -135,7 +135,7 @@ class Experiment(object):
         self.page_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
         self._start_timestamp = time.strftime("%Y-%m-%d_t%H%M%S")
-        logger.info("Experiment.start() called. Session is starting.", self)
+        logger.info("Experiment.start() called. Session is starting.")
         self._user_interface_controller.start()
 
     def finish(self):
@@ -148,7 +148,7 @@ class Experiment(object):
                 "Experiment.finish() called. Experiment was already finished. Leave Method"
             )
             return
-        logger.info("Experiment.finish() called. Session is finishing.", self)
+        logger.info("Experiment.finish() called. Session is finishing.")
         self._finished = True
         self._page_controller.change_to_finished_section()
 
