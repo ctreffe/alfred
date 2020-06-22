@@ -124,3 +124,17 @@ class ExperimentSecrets(ExperimentConfig):
     env_location = "ALFRED_SECRETS_FILE"
     global_config_name = "secrets.conf"
     exp_config_name = "secrets.conf"
+
+
+def init_configuration(expdir: str) -> dict:
+    """Returns a dictionary with experiment config and secrets.
+
+    Args:
+        expdir: Experiment directory. Handed over to 
+            :class:`ExperimentConfig` and :class:`ExperimentSecrets`
+    """
+
+    exp_config = ExperimentConfig(expdir=expdir)
+    exp_secrets = ExperimentSecrets(expdir=expdir)
+    config = {"exp_config": exp_config, "exp_secrets": exp_secrets}
+    return config
