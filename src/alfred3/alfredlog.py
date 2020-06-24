@@ -16,12 +16,12 @@ from .config import ExperimentConfig
 def init_logging(name: str, config: ExperimentConfig):
     """Initializes logging for an experiment.
 
-    This is meant to be called only once, usually in *run.py*.It sets a 
-    formatter, a file handler, and a stream handler. The directory in 
-    which the logfile is placed and the log level are determined based
-    on *config*. A logging message will have the following format::
+    This sets a formatter, a file handler, and a stream handler. The 
+    directory in which the logfile is placed and the log level are 
+    determined based on *config*. A logging message will have the 
+    following format::
 
-        2020-06-12 17:51:56,155 - name - INFO - experiment id=1234, session id=1234 - msg
+        2020-06-12 17:51:56,155 - name - INFO - experiment id=<id>, session id=<id> - msg
 
     Args:
         name: Name of the root logger.
