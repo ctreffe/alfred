@@ -211,12 +211,12 @@ class QueuedLoggingInterface:
         stored, this can be done even before a queue logger is defined.
         """
 
-        if level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+        if level.upper() not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             raise ValueError(
                 "Level must be one of 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'."
             )
 
-        self._level = getattr(logging, level)
+        self._level = getattr(logging, level.upper())
 
         if self.queue_logger:
             self.queue_logger.setLevel(self._level)
@@ -232,7 +232,10 @@ class QueuedLoggingInterface:
             self._queue.put((level, msg))
         else:
             logger_lvl = getattr(self.queue_logger, level)
-            logger_lvl(msg, *args, **kwargs)
+            try:
+                logger_lvl(msg, *args, **kwargs)
+            except TypeError:
+                logger_lvl(*args, **kwargs)
 
     def deactivate_base_logger(self):
         self._base_logger_storage = self._base_logger
