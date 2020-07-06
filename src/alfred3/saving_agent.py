@@ -454,10 +454,6 @@ class LocalSavingAgent(SavingAgent):
 
         if not os.path.isabs(filepath):
             filepath = os.path.join(experiment.path, filepath)
-            print(experiment)
-            print("\n\n\n")
-            print(filepath)
-            print("\n\n\n")
         if not os.path.exists(filepath):
             os.makedirs(filepath)
         if not os.path.isdir(filepath):
