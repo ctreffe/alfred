@@ -95,7 +95,7 @@ def start():
 
         # start experiment
         script.experiment.start()
-    except AttributeError:
+    except (AttributeError, TypeError):
         from alfred3.config import init_configuration
 
         session_id = uuid4().hex
