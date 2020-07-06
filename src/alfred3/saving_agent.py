@@ -26,6 +26,7 @@ from future.utils import with_metaclass
 import alfred3.settings
 
 from .exceptions import SavingAgentException, SavingAgentRunException
+from . import alfredlog
 
 standard_library.install_aliases()
 
@@ -84,6 +85,9 @@ class SavingAgentController(object):
         self._latest_data_time = None
         self._lock = threading.Lock()
         self._experiment = experiment
+        loggername = self.prepare_logger_name()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
+        self.log.session_id = self._experiment.config.get("metadata", "session_id")
 
         self._agents = []
         """run agents that run in normaly"""
@@ -91,7 +95,7 @@ class SavingAgentController(object):
         """agents that run if running a normal agent fails """
 
         if self._experiment.config.getboolean("debug", "disable_saving"):
-            _logger.warning("Saving has been disabled!")
+            self.log.warning("Saving has been disabled!")
         else:
             self.initialize_local_agents(config=self._experiment.config)
             self.initialize_db_agents(self._experiment.secrets, AutoMongoSavingAgent)
@@ -117,7 +121,7 @@ class SavingAgentController(object):
         if self._experiment.config.getboolean(
             "mongo_saving_agent", "use"
         ) or self._experiment.config.getboolean("couchdb_saving_agent", "use"):
-            _logger.warning(
+            self.log.warning(
                 (
                     "Defining a 'mongo_saving_agent' in 'config.conf' is deprecated. "
                     + "Define it in 'secrets.conf' instead, to keep your database credentials safe."
@@ -273,7 +277,7 @@ class SavingAgentController(object):
 
         # 5: check if self._agents is empty
         if not self._agents and not self._experiment.config.getboolean("debug", "disable_saving"):
-            _logger.critical(
+            self.log.critical(
                 "Session abort! List of SavingAgents is empty, but saving is not disabled."
             )
             raise SavingAgentException(
@@ -327,12 +331,12 @@ class SavingAgentController(object):
             if agent_config.getboolean("assure_initialization"):
                 msg = f"Critical initialization abort! Initializing {agent_class} based on >{agent_config._name}< failed with the follwing exception: {traceback.format_exc()}"
 
-                _logger.critical(msg)
+                self.log.critical(msg)
                 raise SavingAgentException(msg)
             else:
                 failed_to_add = True
                 msg = f"Initializing {agent_instance} based on >{agent_config._name}< failed with the follwing exception: {e}"
-                _logger.warning(msg)
+                self.log.warning(msg)
 
         return failed_to_add
 
@@ -342,9 +346,9 @@ class SavingAgentController(object):
 
         self._agents.append(saving_agent)
         if saving_agent.activation_level <= 1:
-            _logger.info(f"Continuous SavingAgent {saving_agent} added to experiment")
+            self.log.info(f"Continuous SavingAgent {saving_agent} added to experiment")
         elif saving_agent.activation_level > 1:
-            _logger.info(f"SavingAgent {saving_agent} added to experiment")
+            self.log.info(f"SavingAgent {saving_agent} added to experiment")
 
     def add_failure_saving_agent(self, saving_agent):
         if not isinstance(saving_agent, SavingAgent):
@@ -374,27 +378,46 @@ class SavingAgentController(object):
                         agent.save_data(data, level)
                         self._latest_data_time = data_time
                         if level <= 1:
-                            _logger.debug(f"Running SavingAgent {agent} succeeded")
+                            self.log.debug(f"Running SavingAgent {agent} succeeded")
                         else:
-                            _logger.info(f"Running SavingAgent {agent} succeeded")
+                            self.log.info(f"Running SavingAgent {agent} succeeded")
                     except Exception as e:
                         failed = True
-                        _logger.error(f"Running SavingAgent {agent} failed with error: {e}")
+                        self.log.error(f"Running SavingAgent {agent} failed with error: {e}")
             if failed:
                 for agent in self._failure_agents:
                     try:
                         agent.save_data(data, 1000)
                         self._latest_data_time = data_time
-                        _logger.info(f"Running Backup SavingAgent {agent} succeeded")
+                        self.log.info(f"Running Backup SavingAgent {agent} succeeded")
                     except Exception as e:
-                        _logger.critical(
+                        self.log.critical(
                             f"Running Backup SavingAgent {agent} failed with error: {e}"
                         )
         else:
-            _logger.info(
+            self.log.info(
                 f"Data snapshot taken at {data_time} will not be saved because a newer one ({self._latest_data_time}) was already saved."
             )
         self._lock.release()
+
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self._experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        return ".".join(name)
 
 
 class SavingAgent(with_metaclass(ABCMeta, object)):
@@ -431,6 +454,10 @@ class LocalSavingAgent(SavingAgent):
 
         if not os.path.isabs(filepath):
             filepath = os.path.join(experiment.path, filepath)
+            print(experiment)
+            print("\n\n\n")
+            print(filepath)
+            print("\n\n\n")
         if not os.path.exists(filepath):
             os.makedirs(filepath)
         if not os.path.isdir(filepath):

@@ -3,6 +3,7 @@ from builtins import callable as builtins_callable
 import logging
 
 from uuid import uuid4
+from pathlib import Path
 
 from flask import (
     Flask,
@@ -27,37 +28,89 @@ class Script:
     expdir = None
     config = None
 
-    def generate_experiment(self, config=None):
+    def generate_experiment(self, config=None):  # pylint: disable=method-hidden
         """Hook for the ``generate_experiment`` function extracted from 
         the user's script.py. It is meant to be replaced in ``run.py``.
         """
 
         return ""
 
+    def set_generator(self, generator):
+        """Included for backwards compatibility from v1.2.0 onwards.
+        
+        TODO: Remove in v2.0.0
+        """
+        # if the script.py contains generate_experiment directly, not as a class method
+        if builtins_callable(generator):
+            self.generate_experiment = generator.__get__(self, Script)
+        # if the script.py contains Script.generate_experiment()
+        elif builtins_callable(generator.generate_experiment):
+            self.generate_experiment = generator.generate_experiment(self, Script)
+
+
+class Generator(Script):
+    """Included for backwards compatibility from v1.2.0 onwards.
+
+    TODO: Remove in v2.0.0
+    """
+
+    pass
+
 
 app = Flask(__name__)
 script = Script()
 
+# Included for backwards compatibility with trad. run.py from v1.2.0 onwards
+# TODO: Remove in v2.0.0
+app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
+
 
 @app.route("/start", methods=["GET", "POST"])
 def start():
-    session_id = uuid4().hex
-    exp_config = Script.config.get("exp_config")
-    exp_config.read_dict({"metadata": {"session_id": session_id}})
 
-    alfredlog.init_logging("alfred3", config=exp_config)
-    logger = logging.getLogger("alfred3")
-    logger.info("Alfred logging initialized.")
+    logger = logging.getLogger(f"alfred3")
+    logger.info("Starting experiment initialization.")
 
-    script.experiment = script.generate_experiment(config=Script.config)
-    script.experiment.start()
+    # Try-except block for compatibility with alfred3 previous to v1.2.0
+    # TODO: Remove try-except block in v2.0.0 (keep "try" part)
+    try:
+        # configure logging
+        exp_id = script.config["exp_config"].get("metadata", "exp_id")
+        session_id = script.config["exp_config"].get("metadata", "session_id")
+        log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
+        log.session_id = session_id
+
+        # generate experiment
+        script.experiment = script.generate_experiment(config=script.config)
+
+        # log initialization message
+        log_msg = (
+            f"Alfred {script.config['exp_config'].get('experiment', 'type')} experiment session initialized! "
+            f"Alfred version: {script.experiment.alfred_version}, "
+            f"experiment title: {script.config['exp_config'].get('metadata', 'title')}, "
+            f"experiment version: {script.config['exp_config'].get('metadata', 'version')}"
+        )
+
+        log.info(log_msg)
+
+        # start experiment
+        script.experiment.start()
+    except AttributeError:
+        from alfred3.config import init_configuration
+
+        session_id = uuid4().hex
+        script.config = init_configuration(Path.cwd())
+        script.config["exp_config"].read_dict({"metadata": {"session_id": session_id}})
+        script.experiment = script.generate_experiment(config=script.config)
+        script.experiment.start()
+
+    # Experiment startup message
 
     session["page_tokens"] = []
+
     # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
     resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
-
-    logger.info("Starting experiment session.")
 
     return resp
 

@@ -9,13 +9,10 @@ from __future__ import absolute_import
 from builtins import object
 from ._core import Direction
 
-import logging
-
 from .section import Section
 from .page import CompositePage, WebCompositePage
 from .element import TextElement, WebExitEnabler
-
-logger = logging.getLogger(__name__)
+from . import alfredlog
 
 
 class PageController(object):
@@ -58,6 +55,8 @@ class PageController(object):
 
         self._finished = False
         self._finishedPageAdded = False
+        loggername = self.prepare_logger_name()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
 
     def __getattr__(self, name):
         """
@@ -122,7 +121,26 @@ class PageController(object):
         self._experiment.user_interface_controller.layout.finish_disabled = True
 
     def change_to_finished_group(self):
-        logger.warning(
+        self.log.warning(
             "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
         self.change_to_finished_section()
+
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self._experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        return ".".join(name)

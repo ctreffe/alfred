@@ -18,6 +18,7 @@ from pathlib import Path
 
 import xmltodict
 from future import standard_library
+from importlib import util
 
 from alfred3 import settings
 from alfred3.exceptions import AlfredError

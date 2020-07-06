@@ -68,7 +68,7 @@ class ExperimentConfig(ConfigParser):
 
         self._config_files = []
         self._pkg_path = Path(__file__).resolve().parent
-        self.expdir = Path(expdir)
+        self.expdir = Path(expdir) if expdir else None
         self._parse_alfred_config()
 
     def _collect_config_files(self):
@@ -83,7 +83,8 @@ class ExperimentConfig(ConfigParser):
         files.append(Path.home().joinpath(self.global_config_name))
         files.append(os.getenv(self.env_location))
 
-        files.append(self.expdir.joinpath(self.exp_config_name))
+        if self.expdir:
+            files.append(self.expdir.joinpath(self.exp_config_name))
 
         self._config_files = [str(p) for p in files if p is not None]
 

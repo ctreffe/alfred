@@ -51,9 +51,6 @@ from .exceptions import AlfredError
 
 standard_library.install_aliases()
 
-
-logger = logging.getLogger(__name__)
-
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 
@@ -64,16 +61,25 @@ class Element(object):
     :param str name: Name of Element.
     :param str alignment: Alignment of element in widget container ('left' as standard, 'center', 'right').
     :param str/int font_size: Font size used in element ('normal' as standard, 'big', 'huge', or int value setting font size in pt).
+    :param bool instance_level_logging: If *True*, will spawn a new,
+        individually configurable logger for the given class instance.
+        (Defaults to *False*)
     """
 
-    def __init__(self, name=None, should_be_shown_filter_function=None, **kwargs):
+    def __init__(
+        self,
+        name=None,
+        should_be_shown_filter_function=None,
+        instance_level_logging=False,
+        **kwargs,
+    ):
         if not isinstance(self, WebElementInterface):
             raise AlfredError("Element must implement WebElementInterface.")
 
         if name is not None:
             if not re.match(r"^%s$" % "[-_A-Za-z0-9]*", name):
                 raise ValueError(
-                    u"Element names may only contain following charakters: A-Z a-z 0-9 _ -"
+                    "Element names may only contain following charakters: A-Z a-z 0-9 _ -"
                 )
 
         self._name = name
@@ -91,9 +97,16 @@ class Element(object):
         self._alignment = kwargs.pop("alignment", "left")
         self._font_size = kwargs.pop("font_size", "normal")
         self._maximum_widget_width = None
+        self.experiment = None
 
         if kwargs != {}:
             raise ValueError("Parameter '%s' is not supported." % list(kwargs.keys())[0])
+
+        if instance_level_logging and not self._name:
+            raise ValueError("For instance level logging, the element must have a name.")
+
+        self.instance_level_logging = instance_level_logging
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
     @property
     def name(self):
@@ -126,6 +139,16 @@ class Element(object):
             raise TypeError()
 
         self._page = q
+        if self._page.experiment:
+            self.activate(self._page.experiment)
+
+    def activate(self, experiment):
+        self.experiment = experiment
+
+        queue_logger_name = self.prepare_logger_name()
+        self.log.queue_logger = logging.getLogger(queue_logger_name)
+        self.log.session_id = self.experiment.config.get("metadata", "session_id")
+        self.log.log_queued_messages()
 
     @property
     def data(self):
@@ -207,6 +230,31 @@ class Element(object):
             raise TypeError("should_be_shown must be an instance of bool")
         self._should_be_shown = b
 
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.class_uid
+        
+        with *class_uid* only added, if 
+        :attr:`~Element.instance_level_logging` is set to *True*.
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self.experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        if self.instance_level_logging and self._name:
+            name.append(self._name)
+
+        return ".".join(name)
+
 
 class WebElementInterface(with_metaclass(ABCMeta, object)):
     """
@@ -278,7 +326,7 @@ class ProgressBar(Element, WebElementInterface):
         bar_width=None,
         instruction_width=None,
         instruction_height=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **ProgressBar** allows display of a manually controlled progress bar.
@@ -408,7 +456,7 @@ class CodeElement(Element, WebElementInterface):
         toggle_button=True,
         button_label="Show / Hide Code",
         hide_by_default=True,
-        **kwargs
+        **kwargs,
     ):
         """
         **CodeElement** allows display of highlighted code blocks.
@@ -549,7 +597,7 @@ class InputElement(Element):
         debug_string=None,
         debug_value=None,
         default=None,
-        **kwargs
+        **kwargs,
     ):
         super(InputElement, self).__init__(**kwargs)
         self._input = ""
@@ -596,7 +644,7 @@ class InputElement(Element):
             if no_input_name in hints:
                 return hints[no_input_name]
 
-        logger.error(f"Can't access default no input hint for element {self}")
+        self.log.error(f"Can't access default no input hint for element {self}")
         return f"Can't access default no input hint for element {type(self).__name__}"
 
     @property
@@ -617,7 +665,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         instruction_height=None,
         prefix=None,
         suffix=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **TextEntryElement*** returns a single line text edit with an instruction text on its' left.
@@ -716,7 +764,7 @@ class TextAreaElement(TextEntryElement):
         no_input_corrective_hint=None,
         instruction_width=None,
         instruction_height=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **TextAreaElement** returns a multiline text edit with an instruction on top.
@@ -737,7 +785,7 @@ class TextAreaElement(TextEntryElement):
             no_input_corrective_hint=no_input_corrective_hint,
             instruction_width=instruction_width,
             instruction_height=instruction_height,
-            **kwargs
+            **kwargs,
         )
 
         self._x_size = x_size
@@ -804,7 +852,7 @@ class RegEntryElement(TextEntryElement):
         match_hint=None,
         instruction_width=None,
         instruction_height=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
@@ -824,7 +872,7 @@ class RegEntryElement(TextEntryElement):
             no_input_corrective_hint=no_input_corrective_hint,
             instruction_width=instruction_width,
             instruction_height=instruction_height,
-            **kwargs
+            **kwargs,
         )
 
         self._reg_ex = reg_ex
@@ -856,7 +904,7 @@ class RegEntryElement(TextEntryElement):
             return self._page._experiment.settings.hints["corrective_regentry"]
 
         msg = f"Can't access match_hint for  {type(self).__name__}"
-        logger.error(msg)
+        self.log.error(msg)
         return msg
 
     @property
@@ -884,7 +932,7 @@ class NumberEntryElement(RegEntryElement):
         instruction_width=None,
         instruction_height=None,
         match_hint=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **NumberEntryElement*** displays a line edit, which only accepts numerical input. Instruction is shown
@@ -908,7 +956,7 @@ class NumberEntryElement(RegEntryElement):
             instruction_width=instruction_width,
             instruction_height=instruction_height,
             match_hint=match_hint,
-            **kwargs
+            **kwargs,
         )
 
         self._validator = None
@@ -1042,7 +1090,7 @@ class NumberEntryElement(RegEntryElement):
             and "corrective_numberentry" in self._page._experiment.settings.hints
         ):
             return self._page._experiment.settings.hints["corrective_numberentry"]
-        logger.error(f"Can't access match_hint for {type(self).__name__}")
+        self.log.error(f"Can't access match_hint for {type(self).__name__}")
         return f"Can't access match_hint for {type(self).__name__}"
 
     @property
@@ -1070,9 +1118,9 @@ class NumberEntryElement(RegEntryElement):
                 hint = self.match_hint
 
                 if 0 < self._decimals:
-                    hint = hint + u" (Bis zu %s Nachkommastellen" % (self._decimals)
+                    hint = hint + " (Bis zu %s Nachkommastellen" % (self._decimals)
                 else:
-                    hint = hint + u" (Keine Nachkommastellen"
+                    hint = hint + " (Keine Nachkommastellen"
 
                 if self._min is not None and self._max is not None:
                     hint = hint + ", Min = %s, Max = %s)" % (self._min, self._max)
@@ -1097,7 +1145,7 @@ class PasswordElement(TextEntryElement):
         instruction_width=None,
         instruction_height=None,
         wrong_password_hint=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **PasswordElement*** desplays a single line text edit for entering a password (input is not visible) with an instruction text on its' left.
@@ -1120,7 +1168,7 @@ class PasswordElement(TextEntryElement):
             force_input=force_input,
             instruction_width=instruction_width,
             instruction_height=instruction_height,
-            **kwargs
+            **kwargs,
         )
 
         self._password = password
@@ -1182,7 +1230,7 @@ class PasswordElement(TextEntryElement):
             and "corrective_password" in self._page._experiment.settings.hints
         ):
             return self._page._experiment.settings.hints["corrective_password"]
-        logger.error(f"Can't access wrong_password_hint for {type(self).__name__}")
+        self.log.error(f"Can't access wrong_password_hint for {type(self).__name__}")
         return f"Can't access wrong_password_hint for {type(self).__name__}"
 
     @property
@@ -1220,7 +1268,7 @@ class LikertMatrix(InputElement, WebElementInterface):
         instruction_width=None,
         instruction_height=None,
         use_short_labels=False,
-        **kwargs
+        **kwargs,
     ):
         """
         **LikertMatrix** displays a matrix of multiple likert items with adjustable scale levels per item.
@@ -1267,21 +1315,21 @@ class LikertMatrix(InputElement, WebElementInterface):
 
         if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
             raise ValueError(
-                u"Es mussen keine oder %s OBERE (bei Transpose LINKE) Skalenlabels ubergeben werden."
+                "Es mussen keine oder %s OBERE (bei Transpose LINKE) Skalenlabels ubergeben werden."
                 % self._levels
             )
         self._top_scale_labels = top_scale_labels
 
         if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
             raise ValueError(
-                u"Es mussen keine oder %s UNTERE (bei Transpose RECHTE) Skalenlabels ubergeben werden."
+                "Es mussen keine oder %s UNTERE (bei Transpose RECHTE) Skalenlabels ubergeben werden."
                 % self._levels
             )
         self._bottom_scale_labels = bottom_scale_labels
 
         if item_labels is not None and not len(item_labels) == (2 * self._items):
             raise ValueError(
-                u"Es mussen keine oder %s Itemlabels ubergeben werden." % (2 * self._items)
+                "Es mussen keine oder %s Itemlabels ubergeben werden." % (2 * self._items)
             )
         self._item_labels = item_labels
 
@@ -1550,7 +1598,7 @@ class LikertElement(LikertMatrix):
         instruction_width=None,
         instruction_height=None,
         transpose=False,
-        **kwargs
+        **kwargs,
     ):
         """
         **LikertElement** returns a single likert item with n scale levels and an instruction shown above the element.
@@ -1583,7 +1631,7 @@ class LikertElement(LikertMatrix):
             shuffle=False,
             instruction_width=instruction_width,
             instruction_height=instruction_height,
-            **kwargs
+            **kwargs,
         )
 
     @property
@@ -1607,7 +1655,7 @@ class SingleChoiceElement(LikertElement):
         instruction_height=None,
         shuffle=False,
         table_striped=False,
-        **kwargs
+        **kwargs,
     ):
         """
         **SingleChoiceElement** returns a vertically layouted item with adjustable choice alternatives (comparable to levels of likert scale),
@@ -1632,14 +1680,14 @@ class SingleChoiceElement(LikertElement):
         )  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
 
         if len(item_labels) == 0:
-            raise ValueError(u"Es müssen Itemlabels übergeben werden.")
+            raise ValueError("Es müssen Itemlabels übergeben werden.")
 
         super(SingleChoiceElement, self).__init__(
             instruction=instruction,
             no_input_corrective_hint=no_input_corrective_hint,
             instruction_width=instruction_width,
             instruction_height=instruction_height,
-            **kwargs
+            **kwargs,
         )
 
         self._permutation = list(range(len(item_labels)))
@@ -1778,7 +1826,7 @@ class MultipleChoiceElement(LikertElement):
         instruction_height=None,
         shuffle=False,
         table_striped=False,
-        **kwargs
+        **kwargs,
     ):
         """
         **SingleChoiceElement** returns a vertically layouted item with adjustable choice alternatives (comparable to levels of likert scale)
@@ -1806,14 +1854,14 @@ class MultipleChoiceElement(LikertElement):
         debug_string = kwargs.pop("debug_string", None)
 
         if len(item_labels) == 0:
-            raise ValueError(u"Es müssen Itemlabels übergeben werden.")
+            raise ValueError("Es müssen Itemlabels übergeben werden.")
 
         super(MultipleChoiceElement, self).__init__(
             instruction=instruction,
             no_input_corrective_hint=no_input_corrective_hint,
             instruction_width=instruction_width,
             instruction_height=instruction_height,
-            **kwargs
+            **kwargs,
         )
 
         self._permutation = list(range(len(item_labels)))
@@ -1839,15 +1887,13 @@ class MultipleChoiceElement(LikertElement):
         else:
             if min_select and not max_select:
                 self._select_hint = (
-                    u"Bitte wählen Sie mindestens %i Optionen aus" % self._min_select
+                    "Bitte wählen Sie mindestens %i Optionen aus" % self._min_select
                 )
             elif max_select and not min_select:
-                self._select_hint = (
-                    u"Bitte wählen Sie höchstens %i Optionen aus" % self._max_select
-                )
+                self._select_hint = "Bitte wählen Sie höchstens %i Optionen aus" % self._max_select
             elif max_select and min_select:
                 self._select_hint = (
-                    u"Bitte wählen Sie mindestens %i und höchstens %i Optionen aus"
+                    "Bitte wählen Sie mindestens %i und höchstens %i Optionen aus"
                     % (self._min_select, self._max_select)
                 )
 
@@ -2019,7 +2065,7 @@ class LikertListElement(InputElement, WebElementInterface):
         instruction_width=None,
         instruction_height=None,
         use_short_labels=False,
-        **kwargs
+        **kwargs,
     ):
         """
         **LikertListElement** displays a likert item with images as labels.
@@ -2053,16 +2099,16 @@ class LikertListElement(InputElement, WebElementInterface):
         self._use_short_labels = use_short_labels
 
         if spacing < 30:
-            raise ValueError(u"Spacing must be greater or equal than 30!")
+            raise ValueError("Spacing must be greater or equal than 30!")
 
         if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
             raise ValueError(
-                u"Es müssen keine oder %s OBERE Skalenlabels übergeben werden." % self._levels
+                "Es müssen keine oder %s OBERE Skalenlabels übergeben werden." % self._levels
             )
 
         if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
             raise ValueError(
-                u"Es müssen keine oder %s UNTERE Skalenlabels übergeben werden." % self._levels
+                "Es müssen keine oder %s UNTERE Skalenlabels übergeben werden." % self._levels
             )
 
         self._permutation = list(range(len(item_labels)))
@@ -2499,7 +2545,7 @@ class WebSliderElement(InputElement, WebElementInterface):
         item_labels=None,
         top_label=None,
         bottom_label=None,
-        **kwargs
+        **kwargs,
     ):
         """
         **TextSliderElement*** returns a slider bar.
@@ -2528,7 +2574,7 @@ class WebSliderElement(InputElement, WebElementInterface):
         self._step = step
 
         if item_labels is not None and not len(item_labels) == 2:
-            raise ValueError(u"Es müssen keine oder 2 Itemlabels übergeben werden.")
+            raise ValueError("Es müssen keine oder 2 Itemlabels übergeben werden.")
         self._item_labels = item_labels
         self._top_label = top_label
         self._bottom_label = bottom_label
@@ -2637,7 +2683,7 @@ class WebAudioElement(Element, WebElementInterface):
         controls=True,
         autoplay=False,
         loop=False,
-        **kwargs
+        **kwargs,
     ):
         """
         TODO: Add docstring
@@ -2724,7 +2770,7 @@ class WebVideoElement(Element, WebElementInterface):
         ogg_path=None,
         web_m_url=None,
         web_m_path=None,
-        **kwargs
+        **kwargs,
     ):
         """
         TODO: Add docstring
@@ -2822,7 +2868,7 @@ class WebVideoElement(Element, WebElementInterface):
         # handle deprecated parameters (21.03.2020)
         for parameter in self._deprecated_parameters:
             if parameter:
-                logger.warning(
+                self.log.warning(
                     "The parameters mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, and web_m_path in Element.WebVideoElement are deprecated. Please use source or sources_list instead."
                 )
 
@@ -2861,7 +2907,7 @@ class WebVideoElement(Element, WebElementInterface):
         # disables the right-click context menu
         code = (
             11,
-            u'$(document).ready(function() {$("video").bind("contextmenu",function(){return false;});} );',
+            '$(document).ready(function() {$("video").bind("contextmenu",function(){return false;});} );',
         )
         return [code]  # Pages expect a list of the described tuples from each element
 

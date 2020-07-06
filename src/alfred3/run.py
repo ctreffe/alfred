@@ -10,10 +10,27 @@ Example for importing and running the `run_experiment` function:
 
 .. code-block:: python
 
-    from alfred3.run import run_experiment
+    from alfred3.run import ExperimentRunner
 
     if __name__ == "__main__":
-        run_experiment()
+        runner = ExperimentRunner()
+        runner.auto_run()
+
+If you want more control over how the app is being run, you can call
+the individual methods by hand and call :meth:`ExperimentRunner.app.run`
+with arguments of your choice.
+
+.. code-block:: python
+    from alfred3.run import ExperimentRunner
+
+    if __name__ == "__main__":
+        runner = ExperimentRunner()
+        runner.configure_logging()
+        runner.create_experiment_app()
+        runner.set_port()
+        runner.start_browser_thread()
+        runner.print_startup_message()
+        runner.app.run()
 
 """
 
@@ -22,9 +39,13 @@ import sys
 import webbrowser
 import os
 import threading
+import logging
 from pathlib import Path
+from uuid import uuid4
 
+import click
 from flask import Flask
+from thesmuggler import smuggle
 
 from alfred3.helpmates import socket_checker, ChromeKiosk, localserver
 from alfred3 import alfredlog
@@ -32,110 +53,109 @@ from alfred3 import settings
 from alfred3.config import init_configuration
 
 
-def load(name: str, location: str):
-    """Import a Python module from a specific location.
+class ExperimentRunner:
+    def __init__(self, path: str):
+        self.expdir = Path(path)
+        self.config = init_configuration(self.expdir)
+        self.app = None
+        self.expurl = None
 
-    Arguments:
-        name: Full filename of the module (including file extension)
-        location: Full filepath to the module (including file)
-    """
+    def generate_session_id(self):
+        session_id = uuid4().hex
+        self.config["exp_config"].read_dict({"metadata": {"session_id": session_id}})
 
-    spec = importlib.util.spec_from_file_location(name, location)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    def configure_logging(self):
+        """Sets some sensible logging configuration for local 
+        experiments.
 
-    return module
+        * Base logger gets turned off to avoid doubled logging messages
+            (we don't want to turn the queue_logger off, because that
+            way usage is completely the same between local and web exp.)
+        
+        * Queue logger gets configured using settings from config.conf
+        """
+        config = self.config["exp_config"]
+
+        exp_id = config.get("metadata", "exp_id")
+        loggername = f"exp.{exp_id}"
+        logger = logging.getLogger(loggername)
+
+        formatter = alfredlog.prepare_alfred_formatter(exp_id)
+
+        if config.getboolean("general", "debug"):
+            logfile = "alfred_debug.log"
+        else:
+            logfile = "alfred.log"
+
+        logpath = Path(config.get("log", "path")).resolve() / logfile
+        file_handler = alfredlog.prepare_file_handler(logpath)
+        file_handler.setFormatter(formatter)
+
+        stream_handler = logging.StreamHandler(sys.stderr)
+        stream_handler.setFormatter(formatter)
+
+        logger.addHandler(file_handler)
+        logger.addHandler(stream_handler)
+
+        logger.setLevel(alfredlog.parse_level(config.get("log", "level")))
+
+        base_logger = logging.getLogger("alfred3")
+        base_logger.addHandler(logging.NullHandler())
+
+    def create_experiment_app(self):
+        script = smuggle(str(self.expdir / "script.py"))
+        # set generate_experiment function
+        localserver.Script.expdir = self.expdir
+        localserver.Script.config = self.config
+        localserver.Script.generate_experiment = script.generate_experiment
+        self.app = localserver.app
+        self.app.secret_key = self.config["exp_secrets"].get("flask", "secret_key")
+
+        return self.app
+
+    def set_port(self):
+        port = 5000
+        while not socket_checker(port):
+            port += 1
+        self.port = port
+
+    def print_startup_message(self):
+
+        sys.stderr.writelines(
+            [f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"]
+        )
+
+    def _open_browser(self):
+
+        # generate url
+        expurl = "http://127.0.0.1:{port}/start".format(port=self.port)
+
+        if self.config["exp_config"].getboolean("experiment", "fullscreen"):
+            ChromeKiosk.open(url=expurl)
+        else:
+            webbrowser.open(url=expurl)
+
+    def start_browser_thread(self):
+        # start browser in a thread (needed for windows)
+        browser = threading.Thread(target=self._open_browser)
+        browser.start()
+
+    def auto_run(self):
+        self.generate_session_id()
+        self.configure_logging()
+        self.create_experiment_app()
+        self.set_port()
+        self.start_browser_thread()
+        self.print_startup_message()
+        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=True)
 
 
-# open correct browser
-def open_browser(url):
-    """
-    """
-    if settings.experiment.fullscreen:
-        ChromeKiosk.open(url=url)
-    else:
-        webbrowser.open(url=url)
-
-
-def run_experiment(path: str = None):
-    """Run an alfred3 experiment.
-
-    Note that, when using this function with the 
-    ``python -m alfred3.run`` command line command, the current working 
-    directory **must** be the experiment directory containing the 
-    `script.py` you want to run. Otherwise, alfred3 cannot properly 
-    parse your custom `config.conf`.
-
-    Arguments:
-        path: Path to the experiment directory in which to look for a 
-            script.py. If none is provided, the parent directory of the 
-            running file will be used by default.
-    """
-
-    # check for correct experiment type
-    if not settings.experiment.type == "web":
-        raise RuntimeError("Experiment type must be 'web'.")
-
-    # set paths to script.py and config.conf and check their existence
-    executing_dir = Path(sys.argv[0]).parent
-    expdir = Path(path) if path else executing_dir
-    script_path = expdir / "script.py"
-    # config_path = expdir.joinpath("config.conf")
-
-    if not script_path.is_file():
-        raise FileNotFoundError("No script.py found at {}".format(script_path))
-
-    # if not config_path.is_file():
-    #     logger.warning(
-    #         "No config.conf found at {}. Running on default config only.".format(config_path)
-    #     )
-
-    # import script from path
-    script = load("script.py", script_path)
-
-    # init config
-    config = init_configuration(expdir)
-
-    # set generate_experiment function
-    localserver.Script.expdir = expdir
-    localserver.Script.config = config
-    localserver.Script.generate_experiment = script.generate_experiment
-
-    # set port
-    port = 5000
-    while not socket_checker(port):
-        port += 1
-
-    # generate url
-    expurl = "http://127.0.0.1:{port}/start".format(port=port)
-
-    # start browser in a thread (needed for windows)
-    browser = threading.Thread(target=open_browser, kwargs={"url": expurl})
-    browser.start()
-
-    # run app
-    sys.stderr.writelines([" * Start local experiment using {}\n".format(expurl)])
-
-    app = localserver.app
-    app.secret_key = config["exp_secrets"].get("flask", "secret_key")
-    app.run(port=port, threaded=True, use_reloader=False, debug=True)
+@click.command()
+@click.option("--path", default=Path.cwd())
+def run_cli(path):
+    runner = ExperimentRunner(path)
+    runner.auto_run()
 
 
 if __name__ == "__main__":
-
-    # parse command line path option
-    if len(sys.argv) < 2:
-        expdir = Path.cwd()
-    elif len(sys.argv) == 2:
-        """This section would allow us to simply give a path as an 
-        argument to the command line call. For this to work, settings 
-        need to be able to read a specific config.conf.
-        # TODO: Finish implementation of this feature.
-        """
-
-        expdir = Path(sys.argv[1]).resolve()
-        raise NotImplementedError(
-            "Giving parameters to the call to alfred3.run is currently not implemented."
-        )
-
-    run_experiment(path=expdir)
+    run_cli()  # pylint: disable=no-value-for-parameter

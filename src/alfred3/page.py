@@ -13,13 +13,11 @@ from functools import reduce
 
 from future.utils import with_metaclass
 
-from . import element, settings
+from . import element, settings, alfredlog
 from ._core import ContentCore
 from ._helper import _DictObj
 from .element import Element, ExperimenterMessages, TextElement, WebElementInterface
 from .exceptions import AlfredError
-
-logger = logging.getLogger(__name__)
 
 
 class PageCore(ContentCore):
@@ -43,6 +41,9 @@ class PageCore(ContentCore):
         self._is_closed = False
         self._show_corrective_hints = False
 
+        # e.g.: alfred3.page.Page
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+
         super(PageCore, self).__init__(**kwargs)
 
         if not isinstance(values, dict):
@@ -60,6 +61,11 @@ class PageCore(ContentCore):
             )
 
         super(PageCore, self).added_to_experiment(experiment)
+
+        queue_logger_name = self.prepare_logger_name()
+        self.log.queue_logger = logging.getLogger(queue_logger_name)
+        self.log.session_id = self.experiment.config.get("metadata", "session_id")
+        self.log.log_queued_messages()
 
     @property
     def show_thumbnail(self):
@@ -177,6 +183,31 @@ class PageCore(ContentCore):
             return False
         return True
 
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.class_uid
+        
+        with *class_uid* only added, if 
+        :attr:`~PageCore.instance_level_logging` is set to *True*.
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self.experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        if self.instance_level_logging:
+            name.append(self._uid)
+
+        return ".".join(name)
+
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepare_web_widget(self):
@@ -231,12 +262,12 @@ class CoreCompositePage(PageCore):
 
     def add_element(self, element):
 
-        logger.warning("page.add_element() is deprecated. Use page.append() instead.")
+        self.log.warning("page.add_element() is deprecated. Use page.append() instead.")
 
         self.append(element)
 
     def add_elements(self, *elements):
-        logger.warnning("page.add_elements() is deprecated. Use page.append() instead.")
+        self.log.warning("page.add_elements() is deprecated. Use page.append() instead.")
 
         for elmnt in elements:
             self.append(elmnt)
@@ -264,6 +295,11 @@ class CoreCompositePage(PageCore):
 
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        for element in self._element_list:
+            element.activate(experiment)
 
     @property
     def allow_closing(self):

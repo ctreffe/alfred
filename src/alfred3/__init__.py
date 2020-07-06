@@ -20,35 +20,33 @@ from uuid import uuid4
 
 from cryptography.fernet import Fernet
 
-from . import alfredlog, layout, messages, settings
+from . import layout, messages, settings
+from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
 from .page_controller import PageController
 from .saving_agent import SavingAgentController
 from .ui_controller import WebUserInterfaceController
 
-logger = logging.getLogger(__name__)
-
 
 class Experiment(object):
     def __init__(
-        self,
-        config: dict = None,
-        config_string="",
-        basepath=None,
-        custom_layout=None,
+        self, config: dict = None, config_string=None, basepath=None, custom_layout=None,
     ):
 
         self._alfred_version = __version__
+
         self.config = config.get("exp_config")
         self.secrets = config.get("exp_secrets")
 
+        exp_id = self.config.get("metadata", "exp_id")
+        self.log = QueuedLoggingInterface(base_logger="alfred3", queue_logger="exp." + exp_id)
+        self.log.session_id = self.config.get("metadata", "session_id")
 
-        # Experiment startup message
-        logger.info(
+        self.log.info(
             (
                 f"Alfred {self.config.get('experiment', 'type')} experiment session initialized! "
-                f"Alfred version: {self._alfred_version}, "
+                f"Alfred version: {self.alfred_version}, "
                 f"experiment title: {self.config.get('metadata', 'title')}, "
                 f"experiment version: {self.config.get('metadata', 'version')}"
             )
@@ -79,7 +77,7 @@ class Experiment(object):
             elif "web_layout" in self._settings.experiment and not hasattr(
                 layout, self._settings.experiment.web_layout
             ):
-                logger.warning(
+                self.log.warning(
                     "Layout specified in config.conf does not exist! Switching to BaseWebLayout"
                 )
                 web_layout = None
@@ -100,10 +98,10 @@ class Experiment(object):
         self._start_time = None
 
         if basepath is not None:
-            logger.warning("Usage of basepath is deprecated.")
+            self.log.warning("Usage of basepath is deprecated.")
 
         if config_string is not None:
-            logger.warning(
+            self.log.warning(
                 (
                     "Usage of config_string is deprecated. Use "
                     + "alfred3.config.ExperimentConfig with the appropriate arguments instead."
@@ -135,7 +133,7 @@ class Experiment(object):
         self.page_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
         self._start_timestamp = time.strftime("%Y-%m-%d_t%H%M%S")
-        logger.info("Experiment.start() called. Session is starting.")
+        self.log.info("Experiment.start() called. Session is starting.")
         self._user_interface_controller.start()
 
     def finish(self):
@@ -144,11 +142,11 @@ class Experiment(object):
 
         """
         if self._finished:
-            logger.warning(
+            self.log.warning(
                 "Experiment.finish() called. Experiment was already finished. Leave Method"
             )
             return
-        logger.info("Experiment.finish() called. Session is finishing.")
+        self.log.info("Experiment.finish() called. Session is finishing.")
         self._finished = True
         self._page_controller.change_to_finished_section()
 

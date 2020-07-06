@@ -14,6 +14,7 @@ from functools import reduce
 from ._core import ContentCore, Direction
 from .page import PageCore, HeadOpenSectionCantClose
 from .exceptions import MoveError
+from . import alfredlog
 from random import shuffle
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,8 @@ class Section(ContentCore):
         self._page_list = []
         self._currentPageIndex = 0
         self._should_be_shown = True
+
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
     def __str__(self):
         s = "Section (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
@@ -111,7 +114,7 @@ class Section(ContentCore):
         return self._page_list[self._currentPageIndex].allow_leaving(direction)
 
     def enter(self):
-        logger.debug(f"Entering Section {self.tag}")
+        self.log.debug(f"Entering Section {self.tag}")
         if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.enter()
 
@@ -120,7 +123,7 @@ class Section(ContentCore):
         if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(direction)
 
-        logger.debug(f"Leaving Section {self.tag} in direction {Direction.to_str(direction)}")
+        self.log.debug(f"Leaving Section {self.tag} in direction {Direction.to_str(direction)}")
 
     @property
     def jumplist(self):
@@ -158,15 +161,20 @@ class Section(ContentCore):
         for page in self._page_list:
             page.added_to_experiment(self._experiment)
 
+        queue_logger_name = self.prepare_logger_name()
+        self.log.queue_logger = logging.getLogger(queue_logger_name)
+        self.log.session_id = self.experiment.config.get("metadata", "session_id")
+        self.log.log_queued_messages()
+
     def append_item(self, item):
 
-        logger.warning("section.append_item() is deprecated. Use section.append() instead.")
+        self.log.warning("section.append_item() is deprecated. Use section.append() instead.")
 
         self.append(item)
 
     def append_items(self, *items):
 
-        logger.warning("section.append_items() is deprecated. Use section.append() instead.")
+        self.log.warning("section.append_items() is deprecated. Use section.append() instead.")
 
         for item in items:
             self.append(item)
@@ -263,7 +271,7 @@ class Section(ContentCore):
                     break
 
     def move_to_first(self):
-        logger.debug(f"Section {self.tag}: move to first")
+        self.log.debug(f"Section {self.tag}: move to first")
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
         if isinstance(self._core_page_at_index, Section):
@@ -277,7 +285,7 @@ class Section(ContentCore):
             self.move_forward()
 
     def move_to_last(self):
-        logger.debug(f"Section {self.tag}: move to last")
+        self.log.debug(f"Section {self.tag}: move to last")
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
         if isinstance(self._core_page_at_index, Section):
@@ -324,6 +332,31 @@ class Section(ContentCore):
     @property
     def _core_page_at_index(self):
         return self._page_list[self._currentPageIndex]
+
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.class_uid
+        
+        with *class_uid* only added, if 
+        :attr:`~Section.instance_level_logging` is set to *True*.
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self.experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        if self.instance_level_logging:
+            name.append(self._uid)
+
+        return ".".join(name)
 
 
 class HeadOpenSection(Section):
@@ -421,7 +454,7 @@ class HeadOpenSection(Section):
 
     def leave(self, direction):
         if direction == Direction.FORWARD:
-            logger.debug("Leaving HeadOpenSection direction forward. closing last page.")
+            self.log.debug("Leaving HeadOpenSection direction forward. closing last page.")
             if isinstance(self._core_page_at_index, PageCore):
                 self._core_page_at_index.close_page()
             else:
