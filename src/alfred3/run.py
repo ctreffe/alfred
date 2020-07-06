@@ -55,7 +55,7 @@ from alfred3.config import init_configuration
 
 class ExperimentRunner:
     def __init__(self, path: str):
-        self.expdir = Path(path)
+        self.expdir = Path(path).resolve()
         self.config = init_configuration(self.expdir)
         self.app = None
         self.expurl = None
