@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ### Added
 
+* We added a new page class NoDataPage which does only return the page's tag and uid
+
 #### Fullscreen option for Google Chrome
 
 We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed to a default directory and is only tested on Windows 10.
@@ -22,7 +24,10 @@ fullscreen = true   # default: false
 
 **In order for this feature to work, you need to use our most recent version of `run.py` . There is an easy way to do this (see below)**
 
-#### `alfred3.run` module with command line interface
+
+Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment-running code will be updated together with alfred3.
+
+#### Experimental feature: `alfred3.run` module with command line interface
 
 Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this (note that you must run this code from within your experiment directory, or specifiy a path to the experiment directory with the option `--path=<path>` ):
 
@@ -40,7 +45,7 @@ if __name__ == "__main__":
     runner.auto_run() 
 ```
 
-Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment running code will be updated together with alfred3.
+This feature eliminates the need for a `run.py` file in your experiment directory. The API might still change in the future, so this feature is considered experimental.
 
 If you want to gain more control over your run.py you can execute individual steps (*only recommended for advanced users. Usually, this will not be necessary.*):
 
@@ -144,6 +149,8 @@ def generate_experiment(self, config=None):
 
 We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf is no longer available:
 
+We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf no longer has any effect:
+
 ``` ini
 [experiment]
 type = qt-wk
@@ -155,7 +162,7 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 
 ### Fixed
 
-* Fixed a bug in the parsing of the auth_source parameter in `config.conf`
+* Fixed a bug in the parsing of the auth_source parameter in `config.conf` 
 
 ## alfred3 v1.1.4 (Released 2020-05-05)
 

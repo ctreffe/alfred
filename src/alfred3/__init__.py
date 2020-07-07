@@ -11,6 +11,10 @@ from __future__ import absolute_import
 
 from ._version import __version__
 
+# init logger at the top for working inheritance
+from . import alfredlog
+logger = alfredlog.getLogger(__name__)
+
 import os
 import sys
 import time
@@ -28,13 +32,13 @@ from .page_controller import PageController
 from .saving_agent import SavingAgentController
 from .ui_controller import WebUserInterfaceController
 
-
 class Experiment(object):
     def __init__(
         self, config: dict = None, config_string=None, basepath=None, custom_layout=None,
     ):
 
         self._alfred_version = __version__
+        self.logger = alfredlog.getLogger(__name__, self)
 
         self.config = config.get("exp_config")
         self.secrets = config.get("exp_secrets")

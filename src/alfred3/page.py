@@ -728,3 +728,12 @@ class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
 
 class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
+
+
+class NoDataPage(Page):
+    @property
+    def data(self):
+        # Pages must always return tag and uid!
+        data = {'tag': self.tag, 'uid': self.uid}
+
+        return data

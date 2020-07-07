@@ -433,7 +433,7 @@ class TextElement(Element, WebElementInterface):
     @property
     def web_widget(self):
         widget = (
-            '<div class="text-element"><p class="%s" style="font-size: %spt; %s %s">%s</p></div>'
+            '<div class="text-element"><div class="%s" style="font-size: %spt; %s %s">%s</div></div>'
             % (
                 alignment_converter(self._alignment, "both"),
                 fontsize_converter(self._font_size),
