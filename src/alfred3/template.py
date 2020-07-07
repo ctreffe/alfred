@@ -14,70 +14,79 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from werkzeug.utils import secure_filename
 from uuid import uuid4
 
+import click
+import dload
 
-def donwload_template(url: str, target_dir: str = None):
-    """Downloads an experiment template from a url.
+from werkzeug.utils import secure_filename
 
-    If no `target_dir` is provided, the template directory will be
-    placed in the current working directory.
 
-    Args:
-        url: URL to the zip-file of an experiment template git repo.
-        target_dir: Target directory for the experiment template.
-            Defaults to `None`.
-    """
+def remove_files(path: str, files: list):
+    p = Path(path)
+    for filename in files:
+        f = p / filename
+        f.unlink()
 
-    file_name = "tmp.zip"
 
-    # Download the file from `url` and save it locally under `file_name`:
-    with urllib.request.urlopen(url) as response, open(file_name, "wb") as out_file:
-        shutil.copyfileobj(response, out_file)
+@click.command()
+@click.option("--name", default=None, help="Name of the new experiment directory.")
+@click.option(
+    "--path",
+    default=Path.cwd(),
+    help="Path to the target directory. The template directory will be placed in this directory.",
+)
+@click.option(
+    "-b/-s",
+    "--big/--small",
+    default=False,
+    help="If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which contains more default structure compared to the 'small' hello-world template.",
+    show_default=True,
+)
+@click.option(
+    "-r",
+    "--runpy",
+    default=False,
+    help="If this flag is set, the 'run.py' will be included in the download.",
+    show_default=True,
+    is_flag=True,
+)
+def download_template(name: str, path: str, big: bool, runpy: bool):
+    p = Path(path).resolve()
 
-    if not target_dir:
-        target_dir = os.getcwd()
-        with zipfile.ZipFile(file_name, "r") as zip_ref:
-            zip_ref.extractall(target_dir)
+    filenames = ["LICENSE"]
+
+    if big:
+        dirname = "alfred-template-master"
+        url = "https://github.com/jobrachem/alfred-template/archive/master.zip"
+
     else:
-        dirname = secure_filename(target_dir)
-        if not dirname:
-            dirname = uuid4().hex
-            print("There was a problem with the directory name. A random name was used instead.")
-        with zipfile.ZipFile(file_name, "r") as zip_ref:
-            zip_ref.extractall(dirname)
-            namelist = zip_ref.namelist()
+        dirname = "alfred-hello_world-master"
+        url = "https://github.com/jobrachem/alfred-hello_world/archive/master.zip"
+        filenames.append("alfred-hello_world.png")
 
-        # move files to target dir and remove zip directory
-        directory_name = namelist[0]
-        subdir = os.path.join(dirname, directory_name)
+    if not runpy:
+        filenames.append("run.py")
 
-        for element in os.listdir(subdir):
-            shutil.move(os.path.join(subdir, element), dirname)
+    if p.joinpath(dirname).exists() or p.joinpath(name).exists():
+        raise FileExistsError("Directory already exists")
 
-        os.rmdir(subdir)
+    dload.save_unzip(zip_url=url, extract_path=str(p), delete_after=True)
 
-    os.remove(file_name)
+    repo_dir = p / dirname
+    if name:
+        target_dir = repo_dir.rename(name)
+    else:
+        name = dirname
+
+    target_dir = p / name
+
+    remove_files(path=target_dir, files=filenames)
+    print(f"\nCreated an alfred3 experiment template in the directory '{str(target_dir)}'.")
+    print(
+        f"\nYou can start the experiment from within this directory via running 'python3 -m alfred.run --path={str(path)}' from a terminal."
+    )
 
 
 if __name__ == "__main__":
-
-    hello_world = "https://github.com/jobrachem/alfred-hello_world/archive/master.zip"
-
-    if len(sys.argv) < 2:
-        url = hello_world
-        donwload_template(url)
-        print("Created an alfred3 experiment template in the current working directory.")
-
-    elif len(sys.argv) == 2:
-        url = hello_world
-        dirname = secure_filename(sys.argv[1])
-        donwload_template(url, dirname)
-        print(f"Created an alfred3 experiment template in the directory '{dirname}'.")
-
-    elif len(sys.argv) > 2:
-        raise NotImplementedError("Currently, there are no arguments available for this module.")
-
-    # print out success
-    print("You can start the experiment from within this directory via 'python3 run.py'.")
+    download_template()  # pylint: disable=no-value-for-parameter
