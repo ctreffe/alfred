@@ -7,19 +7,10 @@ internet connection.
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
-import urllib.request
-import shutil
-import zipfile
-import os
-import shutil
-import sys
 from pathlib import Path
-from uuid import uuid4
 
 import click
 import dload
-
-from werkzeug.utils import secure_filename
 
 
 def remove_files(path: str, files: list):
