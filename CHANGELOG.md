@@ -27,7 +27,7 @@ fullscreen = true   # default: false
 
 Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment-running code will be updated together with alfred3.
 
-#### Experimental feature: `alfred3.run` module with command line interface
+#### `alfred3.run` module with command line interface
 
 Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this (note that you must run this code from within your experiment directory, or specifiy a path to the experiment directory with the option `--path=<path>` ):
 
