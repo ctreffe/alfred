@@ -37,6 +37,7 @@ setuptools.setup(
         "jinja2>=2.11",
         "Flask>=1.1",
         "xmltodict>=0.12",
+        "thesmuggler>=1.01"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

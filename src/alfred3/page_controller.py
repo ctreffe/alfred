@@ -14,8 +14,6 @@ from .page import CompositePage, WebCompositePage
 from .element import TextElement, WebExitEnabler
 from . import alfredlog
 
-logger = alfredlog.getLogger(__name__)
-
 
 class PageController(object):
     """
@@ -29,9 +27,7 @@ class PageController(object):
         self._rootSection = Section(tag="rootSection")
         self._rootSection.added_to_experiment(experiment)
 
-        self._finishedSection = Section(
-            tag="finishedSection", title="Experiment beendet"
-        )
+        self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
 
         if self._experiment.type == "qt":
             self._finishedSection.append(
@@ -59,6 +55,8 @@ class PageController(object):
 
         self._finished = False
         self._finishedPageAdded = False
+        loggername = self.prepare_logger_name()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
 
     def __getattr__(self, name):
         """
@@ -123,8 +121,26 @@ class PageController(object):
         self._experiment.user_interface_controller.layout.finish_disabled = True
 
     def change_to_finished_group(self):
-        logger.warning(
-            "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead.",
-            experiment=self._experiment,
+        self.log.warning(
+            "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
         self.change_to_finished_section()
+
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self._experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        return ".".join(name)

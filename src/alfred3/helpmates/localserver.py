@@ -1,95 +1,160 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
-from flask import Flask, send_file, redirect, url_for, abort, request, make_response, session, send_from_directory
+import logging
+
 from uuid import uuid4
-from .. import settings
+from pathlib import Path
+
+from flask import (
+    Flask,
+    send_file,
+    redirect,
+    url_for,
+    abort,
+    request,
+    make_response,
+    session,
+    send_from_directory,
+)
+from uuid import uuid4
+from ..config import ExperimentConfig, ExperimentSecrets
+from .. import alfredlog
 import re, os
 
-app = Flask(__name__)
-app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
-if settings.experiment.type == 'web':
-    app.debug = settings.general.debug
 
+class Script:
 
-class C(object):
     experiment = None
+    expdir = None
+    config = None
 
+    def generate_experiment(self, config=None):  # pylint: disable=method-hidden
+        """Hook for the ``generate_experiment`` function extracted from 
+        the user's script.py. It is meant to be replaced in ``run.py``.
+        """
 
-class Generator(object):
-
-    def __init__(self, exp=None):
-        self.experiment = exp
-
-    def generate_experiment(self): # pylint: disable=method-hidden
-        pass
-
-    def set_experiment(self, exp):
-        self.experiment = exp
+        return ""
 
     def set_generator(self, generator):
+        """Included for backwards compatibility from v1.2.0 onwards.
+        
+        TODO: Remove in v2.0.0
+        """
         # if the script.py contains generate_experiment directly, not as a class method
         if builtins_callable(generator):
-            script.generator = Generator()
-            self.generate_experiment = generator.__get__(self, Generator)
+            self.generate_experiment = generator.__get__(self, Script)
         # if the script.py contains Script.generate_experiment()
         elif builtins_callable(generator.generate_experiment):
-            self.generate_experiment = generator.generate_experiment(self, Generator)
+            self.generate_experiment = generator.generate_experiment(self, Script)
 
-script = Generator()
 
-@app.route('/start', methods=['GET', 'POST'])
+class Generator(Script):
+    """Included for backwards compatibility from v1.2.0 onwards.
+
+    TODO: Remove in v2.0.0
+    """
+
+    pass
+
+
+app = Flask(__name__)
+script = Script()
+
+# Included for backwards compatibility with trad. run.py from v1.2.0 onwards
+# TODO: Remove in v2.0.0
+app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
+
+
+@app.route("/start", methods=["GET", "POST"])
 def start():
-    exp = script.generate_experiment(config=None)
-    script.set_experiment(exp)
-    script.experiment.start()
-    
-    session['page_tokens'] = []
+
+    logger = logging.getLogger(f"alfred3")
+    logger.info("Starting experiment initialization.")
+
+    # Try-except block for compatibility with alfred3 previous to v1.2.0
+    # TODO: Remove try-except block in v2.0.0 (keep "try" part)
+    try:
+        # configure logging
+        exp_id = script.config["exp_config"].get("metadata", "exp_id")
+        session_id = script.config["exp_config"].get("metadata", "session_id")
+        log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
+        log.session_id = session_id
+
+        # generate experiment
+        script.experiment = script.generate_experiment(config=script.config)
+
+        # log initialization message
+        log_msg = (
+            f"Alfred {script.config['exp_config'].get('experiment', 'type')} experiment session initialized! "
+            f"Alfred version: {script.experiment.alfred_version}, "
+            f"experiment title: {script.config['exp_config'].get('metadata', 'title')}, "
+            f"experiment version: {script.config['exp_config'].get('metadata', 'version')}"
+        )
+
+        log.info(log_msg)
+
+        # start experiment
+        script.experiment.start()
+    except (AttributeError, TypeError):
+        from alfred3.config import init_configuration
+
+        session_id = uuid4().hex
+        script.config = init_configuration(Path.cwd())
+        script.config["exp_config"].read_dict({"metadata": {"session_id": session_id}})
+        script.experiment = script.generate_experiment(config=script.config)
+        script.experiment.start()
+
+    # Experiment startup message
+
+    session["page_tokens"] = []
+
     # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
-    resp = make_response(redirect(url_for('experiment')))
+    resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
+
     return resp
 
 
-@app.route('/experiment', methods=['GET', 'POST'])
+@app.route("/experiment", methods=["GET", "POST"])
 def experiment():
 
     if request.method == "POST":
 
-        move = request.values.get('move', None)
-        directjump = request.values.get('directjump', None)
-        par = request.values.get('par', None)
-        page_token = request.values.get('page_token', None)
+        move = request.values.get("move", None)
+        directjump = request.values.get("directjump", None)
+        par = request.values.get("par", None)
+        page_token = request.values.get("page_token", None)
 
         try:
-            token_list = session['page_tokens']
+            token_list = session["page_tokens"]
             token_list.remove(page_token)
-            session['page_tokens'] = token_list
+            session["page_tokens"] = token_list
         except ValueError:
-            return redirect(url_for('experiment'))
+            return redirect(url_for("experiment"))
 
         kwargs = request.values.to_dict()
-        kwargs.pop('move', None)
-        kwargs.pop('directjump', None)
-        kwargs.pop('par', None)
+        kwargs.pop("move", None)
+        kwargs.pop("directjump", None)
+        kwargs.pop("par", None)
 
         script.experiment.user_interface_controller.update_with_user_input(kwargs)
         if move is None and directjump is None and par is None and kwargs == {}:
             pass
         elif directjump and par:
-            posList = list(map(int, par.split('.')))
+            posList = list(map(int, par.split(".")))
             script.experiment.user_interface_controller.move_to_position(posList)
-        elif move == 'started':
+        elif move == "started":
             pass
-        elif move == 'forward':
+        elif move == "forward":
             script.experiment.user_interface_controller.move_forward()
-        elif move == 'backward':
+        elif move == "backward":
             script.experiment.user_interface_controller.move_backward()
-        elif move == 'jump' and par and re.match(r'^\d+(\.\d+)*$', par):
-            posList = list(map(int, par.split('.')))
+        elif move == "jump" and par and re.match(r"^\d+(\.\d+)*$", par):
+            posList = list(map(int, par.split(".")))
             script.experiment.user_interface_controller.move_to_position(posList)
         else:
             abort(400)
-        return redirect(url_for('experiment'))
+        return redirect(url_for("experiment"))
 
     elif request.method == "GET":
         page_token = str(uuid4())
@@ -98,19 +163,20 @@ def experiment():
         # it creates the list "page_tokens" as an empty list, if not. This is needed
         # for qt-wk experiments because they don't call the route /start
         try:
-            token_list = session['page_tokens']
+            token_list = session["page_tokens"]
         except KeyError:
             token_list = []
 
         token_list.append(page_token)
-        session['page_tokens'] = token_list
+        session["page_tokens"] = token_list
 
         html = script.experiment.user_interface_controller.render_html(page_token)
         resp = make_response(html)
         resp.cache_control.no_cache = True
         return resp
 
-@app.route('/staticfile/<identifier>')
+
+@app.route("/staticfile/<identifier>")
 def staticfile(identifier):
     path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
     dirname, filename = os.path.split(path)
@@ -118,7 +184,7 @@ def staticfile(identifier):
     return resp
 
 
-@app.route('/dynamicfile/<identifier>')
+@app.route("/dynamicfile/<identifier>")
 def dynamicfile(identifier):
     strIO, content_type = script.experiment.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
@@ -126,7 +192,7 @@ def dynamicfile(identifier):
     return resp
 
 
-@app.route('/callable/<identifier>', methods=['GET', 'POST'])
+@app.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
     f = script.experiment.user_interface_controller.get_callable(identifier)
     if request.content_type == "application/json":
@@ -137,6 +203,6 @@ def callable(identifier):
     if rv is not None:
         resp = make_response(rv)
     else:
-        resp = make_response(redirect(url_for('experiment')))
+        resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
     return resp
