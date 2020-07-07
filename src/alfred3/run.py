@@ -140,21 +140,29 @@ class ExperimentRunner:
         browser = threading.Thread(target=self._open_browser)
         browser.start()
 
-    def auto_run(self):
+    def auto_run(self, open_browser: bool = True):
         self.generate_session_id()
         self.configure_logging()
         self.create_experiment_app()
         self.set_port()
-        self.start_browser_thread()
+        if open_browser:
+            self.start_browser_thread()
         self.print_startup_message()
         self.app.run(port=self.port, threaded=True, use_reloader=False, debug=True)
 
 
 @click.command()
+@click.option(
+    "-a/-m",
+    "--auto-open/--manual-open",
+    default=True,
+    help="If this flag is set to '-a', a browser window or tab with the experiment will be opened automatically.",
+    show_default=True,
+)
 @click.option("--path", default=Path.cwd())
-def run_cli(path):
+def run_cli(path, auto_open):
     runner = ExperimentRunner(path)
-    runner.auto_run()
+    runner.auto_run(open_browser=auto_open)
 
 
 if __name__ == "__main__":
