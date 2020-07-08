@@ -24,16 +24,17 @@ fullscreen = true   # default: false
 
 **In order for this feature to work, you need to use our most recent version of `run.py` . There is an easy way to do this (see below)**
 
-
 Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment-running code will be updated together with alfred3.
 
 #### `alfred3.run` module with command line interface
 
-Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this (note that you must run this code from within your experiment directory, or specifiy a path to the experiment directory with the option `--path=<path>` ):
+Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this:
 
 ``` BASH
 python3 -m alfred3.run
 ```
+
+ Note that you must run this code from within your experiment directory, or specifiy a path to the experiment directory with the option `--path=<path>` . By setting the flag `-m` ( `--manual-open` ), you can switch off the automatic opening of a browser window upon experiment startup. See `python3 -m alfred3.run --help` for all available options.
 
 You can also continue to use a `run.py` in your experiment directory to run your experiment, if you wish. From now on, this file should look like this (watch [this video](https://www.youtube.com/watch?v=sugvnHA7ElY) for an explanation concerning the `if __name__ == "__main__"` protector.):
 
@@ -66,6 +67,10 @@ This will allow you to customize logging configuration or to extract the flask a
 
 * The former can be achieved by configuring a logger of the name `exp.<exp_id>` , where `<exp_id>` is the experiment ID, accessible via `runner.config["exp_config"].get("metadata", "exp_id")`
 * The latter can be achieved by assigning the returned value of `runner.create_experiment_app()` to an object, or by accessing `runner.app` after `create_experiment_app` was run.
+
+#### `alfred3.template` command line interface for experiment template
+
+See `python3 -m alfred3.template --help` for all available options.
 
 ### Changed
 
@@ -162,7 +167,7 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 
 ### Fixed
 
-* Fixed a bug in the parsing of the auth_source parameter in `config.conf` 
+* Fixed a bug in the parsing of the auth_source parameter in `config.conf`
 
 ## alfred3 v1.1.4 (Released 2020-05-05)
 
