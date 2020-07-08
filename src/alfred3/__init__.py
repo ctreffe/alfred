@@ -57,6 +57,12 @@ class Experiment(object):
             )
         )
 
+        self._encryptor = Fernet(key=self.secrets.get("encryption", "key").encode())
+        if self.secrets.getboolean("encryption", "public_key"):
+            self.log.warning(
+                "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
+            )
+
         # update settings with custom settings from mortimer
         # TODO: Remove self._settings altogether
         self._settings = settings.ExperimentSpecificSettings(config_string)
@@ -112,22 +118,6 @@ class Experiment(object):
                     + "alfred3.config.ExperimentConfig with the appropriate arguments instead."
                 )
             )
-
-        # # Set encryption key
-        # if config and config["encryption_key"]:
-        #     self._encryptor = Fernet(config["encryption_key"])
-        #     logger.info("Using mortimer-generated encryption key.", self)
-        # else:
-        #     self._encryptor = Fernet(b"OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=")
-        #     logger.warning("Using PUBLIC encryption key. USE ONLY FOR TESTING.", self)
-
-    # TODO: Delete deprecated method
-    # def update(self, title, version, author, exp_id, type="web"):
-    #     self._title = title
-    #     self._version = version
-    #     self._author = author
-    #     self._type = type
-    #     self._exp_id = exp_id
 
     def start(self):
         """
@@ -237,39 +227,38 @@ class Experiment(object):
     def session_id(self):
         return self.config.get("metadata", "session_id")
 
-    # TODO: Deal with encryptor
-    # def encrypt(self, data) -> str:
-    #     """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
+    def encrypt(self, data) -> str:
+        """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
 
-    #     In web experiments deployed via mortimer, a safe, user-specific secret key will be used for encryption. The method will also work in offline experiments, but does NOT provide safe encryption in this case, as a PUBLIC key is used for encryption. This is only ok for testing purposes.
+        In web experiments deployed via mortimer, a safe, user-specific secret key will be used for encryption. The method will also work in offline experiments, but does NOT provide safe encryption in this case, as a PUBLIC key is used for encryption. This is only ok for testing purposes.
 
-    #     :param data: Input object that you want to encrypt.
-    #     """
-    #     if type(data) not in [str, int, float]:
-    #         raise TypeError("Input must be of type str, int, or float.")
+        :param data: Input object that you want to encrypt.
+        """
+        if type(data) not in [str, int, float]:
+            raise TypeError("Input must be of type str, int, or float.")
 
-    #     d_str = str(data)
+        d_str = str(data)
 
-    #     d_bytes = d_str.encode()
-    #     encrypted = self._encryptor.encrypt(d_bytes)
-    #     return encrypted.decode()
+        d_bytes = d_str.encode()
+        encrypted = self._encryptor.encrypt(d_bytes)
+        return encrypted.decode()
 
-    # def decrypt(self, data):
-    #     """Decrypts input and returns the decrypted object as `str`.
+    def decrypt(self, data):
+        """Decrypts input and returns the decrypted object as `str`.
 
-    #     The method uses the built-in Fernet instance to decrypt the input.
+        The method uses the built-in Fernet instance to decrypt the input.
 
-    #     :param data: Encrypted bytes object. Must be of type `str` or `bytes`.
-    #     """
-    #     if type(data) is str:
-    #         d_bytes = data.encode()
-    #     elif type(data) is bytes:
-    #         d_bytes = data
-    #     else:
-    #         raise TypeError("Input must be of type str or bytes.")
+        :param data: Encrypted bytes object. Must be of type `str` or `bytes`.
+        """
+        if type(data) is str:
+            d_bytes = data.encode()
+        elif type(data) is bytes:
+            d_bytes = data
+        else:
+            raise TypeError("Input must be of type str or bytes.")
 
-    #     d = self._encryptor.decrypt(d_bytes)
-    #     return d.decode()
+        d = self._encryptor.decrypt(d_bytes)
+        return d.decode()
 
     @property
     def user_interface_controller(self):
