@@ -52,8 +52,8 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
             self.change_layout(layout)
 
         self._layout.forward_text = self._experiment.config.get("navigation", "forward")
-        self._layout.backward_text = self._experiment.config.get("navigation", "forward")
-        self._layout.finish_text = self._experiment.config.get("navigation", "forward")
+        self._layout.backward_text = self._experiment.config.get("navigation", "backward")
+        self._layout.finish_text = self._experiment.config.get("navigation", "finish")
 
     @abstractmethod
     def render(self):
