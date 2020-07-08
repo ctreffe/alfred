@@ -28,10 +28,21 @@ def remove_files(path: str, files: list):
     help="Path to the target directory. The template directory will be placed in this directory.",
 )
 @click.option(
+    "--release",
+    default="master",
+    help=(
+        "You can specify a release tag here, if you"
+        "want to use a specific version of the template."
+    ),
+)
+@click.option(
     "-b/-s",
     "--big/--small",
     default=False,
-    help="If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which contains more default structure compared to the 'small' hello-world template.",
+    help=(
+        "If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which"
+        "contains more default structure compared to the 'small' hello-world template."
+    ),
     show_default=True,
 )
 @click.option(
@@ -42,24 +53,30 @@ def remove_files(path: str, files: list):
     show_default=True,
     is_flag=True,
 )
-def download_template(name: str, path: str, big: bool, runpy: bool):
+def download_template(name: str, path: str, release: str, big: bool, runpy: bool):
     p = Path(path).resolve()
 
     filenames = ["LICENSE"]
 
+    if release.startswith("v"):
+        parsed_release = release[1:]
+
     if big:
-        dirname = "alfred-template-master"
-        url = "https://github.com/jobrachem/alfred-template/archive/master.zip"
+        dirname = f"alfred-template-{parsed_release}"
+        url = f"https://github.com/jobrachem/alfred-template/archive/{release}.zip"
 
     else:
-        dirname = "alfred-hello_world-master"
-        url = "https://github.com/jobrachem/alfred-hello_world/archive/master.zip"
+        dirname = f"alfred-hello_world-{parsed_release}"
+        url = f"https://github.com/jobrachem/alfred-hello_world/archive/{release}.zip"
         filenames.append("alfred-hello_world.png")
 
     if not runpy:
         filenames.append("run.py")
 
-    if p.joinpath(dirname).exists() or p.joinpath(name).exists():
+    if p.joinpath(dirname).exists():
+        raise FileExistsError("Directory already exists")
+
+    if name is not None and p.joinpath(name).exists():
         raise FileExistsError("Directory already exists")
 
     dload.save_unzip(zip_url=url, extract_path=str(p), delete_after=True)
@@ -73,9 +90,11 @@ def download_template(name: str, path: str, big: bool, runpy: bool):
     target_dir = p / name
 
     remove_files(path=target_dir, files=filenames)
-    print(f"\nCreated an alfred3 experiment template in the directory '{str(target_dir)}'.")
     print(
-        f"\nYou can start the experiment from within this directory via running 'python3 -m alfred.run --path={str(path)}' from a terminal."
+        f"\nalfred3: Created an alfred3 experiment template in the directory '{str(target_dir)}'."
+    )
+    print(
+        f"\nalfred3: You can start the experiment from within this directory via running 'python3 -m alfred.run --path={str(path)}' from a terminal."
     )
 
 
