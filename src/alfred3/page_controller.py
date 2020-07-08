@@ -121,6 +121,7 @@ class PageController(object):
         self._experiment.user_interface_controller.layout.finish_disabled = True
 
     def change_to_finished_group(self):
+        # TODO: Remove in next major update
         self.log.warning(
             "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
