@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 # Parse version from _version.py in package directory
 # See https://packaging.python.org/guides/single-sourcing-package-version/#single-sourcing-the-version
 version = {}
-with open('src/alfred3/_version.py') as f:
+with open("src/alfred3/_version.py") as f:
     exec(f.read(), version)
 
 setuptools.setup(
@@ -37,7 +37,9 @@ setuptools.setup(
         "jinja2>=2.11",
         "Flask>=1.1",
         "xmltodict>=0.12",
-        "thesmuggler>=1.01"
+        "thesmuggler==1.0.1",
+        "dload==0.6",
+        "Click>=7.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
