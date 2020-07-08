@@ -7,9 +7,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.2.0 (Released 2020-07-08)
+
 ### Added
 
-* We added a new page class NoDataPage which does only return the page's tag and uid
+#### Minor changes
+
+* We added a new page class `page.NoDataPage` , which does only return the page's tag and uid when queried by the saving agent. This will prevent any data from being saved to the standard saving agents. You can use this page, if you want to save data to an external database, separated from experimental data (e.g., if you need to save personal data).
+
+* We added support for custom imports of `.py` files from subdirectories that are transferable to mortimer by including the package `thesmuggler` . If you want to store content in an external `.py` file (which we highly recommend, as it leads to a clearer directory structure), you can import such a file by using `thesmuggler.smuggle()` . Example:
+
+``` 
+# files/instructions.py
+
+text = "This text resides in files/instructions.py"
+```
+
+``` 
+# script.py
+from thesmuggler import smuggle
+
+inst = smuggle("files/instructions.py")
+
+print(inst.text)
+```
 
 #### Fullscreen option for Google Chrome
 
@@ -70,7 +91,23 @@ This will allow you to customize logging configuration or to extract the flask a
 
 #### `alfred3.template` command line interface for experiment template
 
-See `python3 -m alfred3.template --help` for all available options.
+We have a new convenience feature for accessing the latest experiment template. Just use your terminal to execute the following command:
+
+``` bash
+python3 -m alfred3.template
+```
+
+This will download the latest experiment template from GitHub to your current working directory, including a useful `.gitignore` that will automatically prevent your `secrets.conf` from being included in your git repository.
+
+With the optional argument `--path` , you can hand over a directory path to be used instead of your current working directory.
+
+Of course, you can still download the template manually from GitHub, if you prefer so.
+
+Additional options allow for more flexibility. Take a look at them with the following command:
+
+``` bash
+python3 -m alfred3.template --help
+```
 
 ### Changed
 
@@ -141,9 +178,11 @@ def generate_experiment(self, config=None):
     exp.log.info("This message will be logged after initialization of the experiment.")
 
     welcome = Welcome(title="Welcome page")
-    # welcome.log.setLevel("WARNING") # this command would set the log level for this page to warning.
-    # if executed the message logged in the on_showing method defined above
-    # would not be logged.
+    
+    # Sets the log level to 'WARNING'
+    # The message logged above in the 'on_showing' definition will therefore
+    # not be logged, as it is of level 'info'
+    welcome.log.setLevel("WARNING") 
 
     exp.append(welcome)
 ```
