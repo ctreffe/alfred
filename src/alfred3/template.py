@@ -40,8 +40,8 @@ def remove_files(path: str, files: list):
     "--big/--small",
     default=False,
     help=(
-        "If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which"
-        "contains more default structure compared to the 'small' hello-world template."
+        "If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which "
+        "contains a more sophistaced default structure compared to the 'small' hello-world template."
     ),
     show_default=True,
 )
@@ -60,6 +60,8 @@ def download_template(name: str, path: str, release: str, big: bool, runpy: bool
 
     if release.startswith("v"):
         parsed_release = release[1:]
+    else:
+        parsed_release = release
 
     if big:
         dirname = f"alfred-template-{parsed_release}"
@@ -94,7 +96,7 @@ def download_template(name: str, path: str, release: str, big: bool, runpy: bool
         f"\nalfred3: Created an alfred3 experiment template in the directory '{str(target_dir)}'."
     )
     print(
-        f"\nalfred3: You can start the experiment from within this directory via running 'python3 -m alfred.run --path={str(path)}' from a terminal."
+        f"alfred3: You can start the experiment by changig to the directory and running 'python3 -m alfred.run' from a terminal."
     )
 
 
