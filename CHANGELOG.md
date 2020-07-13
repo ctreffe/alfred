@@ -206,13 +206,24 @@ type = qt-wk
 
 Instead, you can turn to the new option for running experiments in Google Chrome's fullscren (aka "kiosk") mode (see above).
 
+## alfred v1.1.7 (Released 2020-06-22)
+
+### Added
+
+* The `alfred3.Experiment` class gains the following:
+    - An attribute `session_status` . It is intended to store a string, indicating a session status.
+    - A method `get_page_data()` , which is a shortcut for `self.data_manager.find_experiment_data_by_uid()` 
+    - A method `set_additional_data()` , which is a shortcut for `self.data_manager.add_additional_data()` 
+    - A method `get_additional_data()` , which is a shortcut for `self.data_manager.get_additional_data()` 
+
 ## alfred3 v1.1.5 (Released 2020-05-13)
 
 ### Fixed
 
 * Fixed a bug in the parsing of the auth_source parameter in `config.conf`
 
-## alfred3 v1.1.4 (Released 2020-05-05)
+
+## alfred v1.1.4 (Released 2020-05-05)
 
 ### Announcement: Released to PyPi under the new name **alfred3**
 

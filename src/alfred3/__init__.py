@@ -40,7 +40,9 @@ class Experiment(object):
         self, config: dict = None, config_string=None, basepath=None, custom_layout=None,
     ):
 
+
         self._alfred_version = __version__
+        self._session_status = None
 
         self.config = config.get("exp_config")
         self.secrets = config.get("exp_secrets")
@@ -280,6 +282,45 @@ class Experiment(object):
             self.log.warning(
                 "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
             )
+
+    @property
+    def session_status(self):
+        return self._session_status
+
+    @session_status.setter
+    def session_status(self, status):
+        """Sets the session_status for the current experiment.
+
+        Args:
+            status (str): A string describing the current status of the
+                experiment.
+                
+        Todo:
+            Should updates to an experiment's status result in a saving
+            action? We could call the SavingAgentController from within
+            this method to save the dataset every time a status update
+            is performed.
+            ATTENTION: The status is currently not saved in Alfed but
+            exists only at runtime!
+        """
+        if not isinstance(status, str):
+            raise TypeError
+        self._session_status = status
+
+    def set_additional_data(self, key: str, value):
+        """Shortcut for :meth:`DataManager.add_additional_data`.
+        """
+        self.data_manager.add_additional_data(key, value)
+
+    def get_additional_data(self, key: str):
+        """Shortcut for :meth:`DataManager.get_additional_data_by_key`.
+        """
+        return self.data_manager.get_additional_data_by_key(key)
+
+    def get_page_data(self, uid):
+        """Shortcut for :meth:`DataManager.find_experiment_data_by_uid`.
+        """
+        return self.data_manager.find_experiment_data_by_uid(uid)
 
     def encrypt(self, data) -> str:
         """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
