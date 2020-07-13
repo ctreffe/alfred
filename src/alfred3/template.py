@@ -92,6 +92,34 @@ def download_template(name: str, path: str, release: str, big: bool, runpy: bool
     target_dir = p / name
 
     remove_files(path=target_dir, files=filenames)
+
+    if big:
+        pkg_path = Path(__file__).resolve().parent
+        pkg_secrets_file = pkg_path / "files" / "secrets.conf"
+        pkg_secrets = pkg_secrets_file.read_text()
+
+        secrets_file = target_dir / "secrets.conf"
+        secrets_file.write_text("# place secret information here.")
+        secrets_file.write_text("# NEVER share this file.")
+        secrets_file.write_text(
+            """# Place secret information here.
+# NEVER share this file.
+[mongo_saving_agent]
+use = false
+assure_initialization = true
+level = 1
+host = 
+port = 
+database = alfred
+collection = 
+user = 
+password = 
+auth_source = alfred
+use_ssl = false
+ca_file_path = 
+        """
+        )
+
     print(
         f"\nalfred3: Created an alfred3 experiment template in the directory '{str(target_dir)}'."
     )
