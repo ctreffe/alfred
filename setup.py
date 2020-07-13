@@ -37,7 +37,9 @@ setuptools.setup(
         "jinja2>=2.11",
         "Flask>=1.1",
         "xmltodict>=0.12",
-        "PySide2>=5.2",
+        "thesmuggler==1.0.1",
+        "dload==0.6",
+        "Click>=7.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -46,4 +48,3 @@ setuptools.setup(
     ],
     python_requires=">=3.7",
 )
-

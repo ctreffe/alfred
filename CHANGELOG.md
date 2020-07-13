@@ -7,6 +7,205 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.2.0 (Released 2020-07-13)
+
+### Added
+
+#### Minor changes
+
+* We added a new page class `page.NoDataPage` , which does only return the page's tag and uid when queried by the saving agent. This will prevent any data from being saved to the standard saving agents. You can use this page, if you want to save data to an external database, separated from experimental data (e.g., if you need to save personal data).
+
+* We added support for custom imports of `.py` files from subdirectories that are transferable to mortimer by including the package `thesmuggler` . If you want to store content in an external `.py` file (which we highly recommend, as it leads to a clearer directory structure), you can import such a file by using `thesmuggler.smuggle()` . Example:
+
+``` 
+# files/instructions.py
+
+text = "This text resides in files/instructions.py"
+```
+
+``` 
+# script.py
+from thesmuggler import smuggle
+
+inst = smuggle("files/instructions.py")
+
+print(inst.text)
+```
+
+#### Fullscreen option for Google Chrome
+
+We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed to a default directory and is only tested on Windows 10.
+
+You can enable this option in your config.conf:
+
+``` ini
+[experiment]
+fullscreen = true   # default: false
+```
+
+**In order for this feature to work, you need to use our most recent version of `run.py` . There is an easy way to do this (see below)**
+
+Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment-running code will be updated together with alfred3.
+
+#### `alfred3.run` module with command line interface
+
+Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this:
+
+``` BASH
+python3 -m alfred3.run
+```
+
+ Note that you must run this code from within your experiment directory, or specifiy a path to the experiment directory with the option `--path=<path>` . By setting the flag `-m` ( `--manual-open` ), you can switch off the automatic opening of a browser window upon experiment startup. See `python3 -m alfred3.run --help` for all available options.
+
+You can also continue to use a `run.py` in your experiment directory to run your experiment, if you wish. From now on, this file should look like this (watch [this video](https://www.youtube.com/watch?v=sugvnHA7ElY) for an explanation concerning the `if __name__ == "__main__"` protector.):
+
+``` Python
+from alfred3.run import ExperimentRunner
+
+if __name__ == "__main__":
+    runner = ExperimentRunner()
+    runner.auto_run() 
+```
+
+This feature eliminates the need for a `run.py` file in your experiment directory. The API might still change in the future, so this feature is considered experimental.
+
+If you want to gain more control over your run.py you can execute individual steps (*only recommended for advanced users. Usually, this will not be necessary.*):
+
+``` python
+from alfred3.run import ExperimentRunner
+
+if __name__ == "__main__":
+    runner = ExperimentRunner()
+    runner.configure_logging()
+    runner.create_experiment_app()
+    runner.set_port()
+    runner.start_browser_thread()
+    runner.print_startup_message()
+    runner.app.run()
+```
+
+This will allow you to customize logging configuration or to extract the flask app that is created through your alfred experiment.
+
+* The former can be achieved by configuring a logger of the name `exp.<exp_id>` , where `<exp_id>` is the experiment ID, accessible via `runner.config["exp_config"].get("metadata", "exp_id")`
+* The latter can be achieved by assigning the returned value of `runner.create_experiment_app()` to an object, or by accessing `runner.app` after `create_experiment_app` was run.
+
+#### `alfred3.template` command line interface for experiment template
+
+We have a new convenience feature for accessing the latest experiment template. Just use your terminal to execute the following command:
+
+``` bash
+python3 -m alfred3.template
+```
+
+This will download the latest experiment template from GitHub to your current working directory, including a useful `.gitignore` that will automatically prevent your `secrets.conf` from being included in your git repository.
+
+With the optional argument `--path` , you can hand over a directory path to be used instead of your current working directory.
+
+Of course, you can still download the template manually from GitHub, if you prefer so.
+
+Additional options allow for more flexibility. Take a look at them with the following command:
+
+``` bash
+python3 -m alfred3.template --help
+```
+
+### Changed
+
+#### Enhanced configuration
+
+* If you don't want to change the default configuration, you don't need a `config.conf` file in your experiment directory anymore.
+
+* We separated the values provided in `config.conf` into two files to enable easier code sharing and enhance security at the same time:
+    - `config.conf` from now on holds exclusively publicly available configuration. **This file is meant to be shared.**
+    - `secrets.conf` is a new configuration file that only holds secret information like database credentials. **This file should never be shared.** It is included in the `.gitignore` of our experiment template to prevent accidental sharing.
+
+* You can now supply your own custom configuration options via `config.conf` and `secrets.conf` . The experiment object gains a `config` and a `secrets` attribute, both of which are instances of a modified [configparser. ConfigParser](https://docs.python.org/3/library/configparser.html) and provided the same methods for accessing options.
+    - Pay attention to the way that values are returned. `ConfigParser` objects don't guess the type of your values. Instead, they provide specialized methods. `get` returns *str*, `getint` returns *int*, `getfloat` returns *float*, and `getboolean` returns *boolean* values (which should be entered as "true"/"false" or "1"/"0" in `config.conf` ).
+    - All of these methods take as first argument the section and as second argument the key (as demonstrated below).
+
+Usage example of custom cofiguration:
+
+``` ini
+# config.conf
+[my_section]
+my_key = my_value
+my_bool = true
+```
+
+``` python
+# script.py
+from alfred3 import Experiment, page, element
+
+class Welcome(page.Page):
+
+    def on_showing(self):
+        my_value = self.experiment.config.get("my_section", "my_value")
+
+        text = element.TextElement(my_value)
+        self.append(text)
+
+def generate_experiment(self, config=None):
+    exp = Experiment(config=config)
+
+    welcome = Welcome(title="Welcome page")
+    
+    if exp.config.getboolean("my_section", "my_bool"):
+        exp.append(welcome)
+    
+    return exp
+```
+
+#### Enhanced logging
+
+* All instances and children of `Experiment` , `element.Element` , `page.Page` , and `section.Section` gain a `log` attribute.
+* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` , `info` , `warning` , `error` , `critical` , `exception` , `log` , and `setLevel` .
+* If you want to access the logger object directly to apply more detailed configuration, you can do so via `log.queue_logger` .
+
+See [logging documentation](https://docs.python.org/3/howto/logging.html#logging-levels) for more information on the levels and configuration.
+
+Usage:
+
+``` python
+from alfred3 import Experiment, page
+
+class Welcome(page.Page):
+    def on_showing(self):
+        self.log.info("This message will be logged on showing of the page")
+
+def generate_experiment(self, config=None):
+    exp = Experiment(config=config)
+
+    exp.log.info("This message will be logged after initialization of the experiment.")
+
+    welcome = Welcome(title="Welcome page")
+    
+    # Sets the log level to 'WARNING'
+    # The message logged above in the 'on_showing' definition will therefore
+    # not be logged, as it is of level 'info'
+    welcome.log.setLevel("WARNING") 
+
+    exp.append(welcome)
+```
+
+#### Minor changes
+
+* You can now define an encryption key either in `secrets.conf` or in an environment variable named `ALFRED_ENCRYPTION_KEY` .
+
+### Removed
+
+#### Removed qt-webkit support
+
+We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf is no longer available:
+
+We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf no longer has any effect:
+
+``` ini
+[experiment]
+type = qt-wk
+```
+
+Instead, you can turn to the new option for running experiments in Google Chrome's fullscren (aka "kiosk") mode (see above).
+
 ## alfred v1.1.7 (Released 2020-06-22)
 
 ### Added
@@ -16,6 +215,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
     - A method `get_page_data()` , which is a shortcut for `self.data_manager.find_experiment_data_by_uid()` 
     - A method `set_additional_data()` , which is a shortcut for `self.data_manager.add_additional_data()` 
     - A method `get_additional_data()` , which is a shortcut for `self.data_manager.get_additional_data()` 
+
+## alfred3 v1.1.5 (Released 2020-05-13)
+
+### Fixed
+
+* Fixed a bug in the parsing of the auth_source parameter in `config.conf`
+
 
 ## alfred v1.1.4 (Released 2020-05-05)
 
@@ -107,7 +313,7 @@ pip install alfred3
     - The parameters `mp4_path` , `mp4_url` , `ogg_path` , `ogg_url` , `web_m_path` , and `web_m_url` are replaced by `source` . They still work, but will now log a deprecation warning.
     - New parameter `muted=False` : If `True` , the video will play with muted sound by default.
     - The parameter `width` now defaults to `width=720` .
-    - Disabled the right-click context menu for videos included via `alfred.element.WebVideoElement` 
+    - Disabled the right-click context menu for videos included via `alfred.element.WebVideoElement`
     - Disabled video download for videos implemented via `alfred.element.WebVideoElement` (was only possible in Chrome).
 * `Page` gets a new parameter `run_on_showing` , which defaults to `run_on_showing='once'` . This means, by default a Page executes the `on_showing` method only when it is shown for the first time. This behavior can be altered by setting the new parameter to `run_on_showing='always'` . The latter can lead to duplicate elements on a page, if a subject goes backward inside an experiment, which will be unwanted behavior in most cases.
 
@@ -130,13 +336,13 @@ pip install alfred3
 
 #### New class names
 
-* `Page` replaces `WebCompositeQuestion` 
-* `Section` replaces `QuestionGroup` 
-* `SegmentedSection` replaces `SegmentedQG` 
-* `HeadOpenSection` repladces `HeadOpenQG` 
+* `Page` replaces `WebCompositeQuestion`
+* `Section` replaces `QuestionGroup`
+* `SegmentedSection` replaces `SegmentedQG`
+* `HeadOpenSection` repladces `HeadOpenQG`
 * These changes should clarify the functionality of the corresponding classes.
 
-#### Switch from `lowerCamelCase` to `underscore_case` 
+#### Switch from `lowerCamelCase` to `underscore_case`
 
 * Throughout alfreds complete code base, we switched from `lowerCamelCase` to `underscore_case` .**ATTENTION: This affects almost every line of code!**
 * This change reflects our effort to adhere to PEP 8 Styleguide ([PEP - click for more info](https://www.python.org/dev/peps/pep-0008/)). Some excerpts:
@@ -172,18 +378,18 @@ pip install alfred3
 
 ### New Features
 
-#### Define navigation button text in `config.conf` 
+#### Define navigation button text in `config.conf`
 
 * `config.conf` gets a new section `[navigation]` that lets you define `forward` , `backward` , and `finish` button texts.
 
 #### New recommended `script.py` style
 
 * Removed the need to define a script class ( `class Script(object)` ), saving one layer of indentation
-* Removed the need to end a script with `generate_experiment = Script().generate_experiment` 
+* Removed the need to end a script with `generate_experiment = Script().generate_experiment`
 * Removed the need to define `expName` and `expVersion` inside script
 * Recommended style: Define a new class for every page in your experiment. This has a couple of advantages:
     - No difference between defining static pages and dynamic pages anymore. This lowers the hurdle for creating dynamic experiments.
-    - Separation of experiment structure and experiment content is enhanced, which should clarify the `script.py` 
+    - Separation of experiment structure and experiment content is enhanced, which should clarify the `script.py`
     - Code reuse is facilitated (Pages can be reused)
 
 Example:
@@ -220,7 +426,7 @@ def generate_experiment(self, config):
     - Provide raw login data in `config.conf` (**not recommended**, use only for testing)
 * If your databse is correctly equipped with a valid commercial SSL certificate, you can now set the option `use_ssl = true` in the section `[mongo_saving_agent]` of your `config.conf` to enable a secure connection via SSL. You can also use self-signed SSL certificates, if you set the option `ca_file_path` to the file path of your Certificate Authority (CA) public key file (often a .pem file).
 
-#### `Page.values` 
+#### `Page.values`
 
 * `Page.values` is a dictionary that serves as a container for pages. You can use it for example to create pages using loops and if-statements. More on how to use it can soon be found in the wiki. It is a special dictionary that allows for element access (reading and writing) via dot-notation.
 

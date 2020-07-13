@@ -1,27 +1,46 @@
 # -*- coding:utf-8 -*-
 
-'''
+"""
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
-'''
+"""
 
 
 from builtins import object
 import os.path
+import logging
 from uuid import uuid4
+
+from . import alfredlog
 
 
 class ContentCore(object):
-    def __init__(self, tag=None, uid=None, tag_and_uid=None, is_jumpable=True, jumptext=None,
-                 title=None, subtitle=None, statustext=None,
-                 should_be_shown_filter_function=None, **kwargs):
+    def __init__(
+        self,
+        tag=None,
+        uid=None,
+        tag_and_uid=None,
+        is_jumpable=True,
+        jumptext=None,
+        title=None,
+        subtitle=None,
+        statustext=None,
+        should_be_shown_filter_function=None,
+        instance_level_logging=False,
+        **kwargs,
+    ):
 
         if kwargs != {}:
             raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
 
         self._tag = None
         self._uid = uid if uid is not None else uuid4().hex
+        self.instance_level_logging = instance_level_logging
         self._should_be_shown = True
-        self._should_be_shown_filter_function = should_be_shown_filter_function if should_be_shown_filter_function is not None else lambda exp: True
+        self._should_be_shown_filter_function = (
+            should_be_shown_filter_function
+            if should_be_shown_filter_function is not None
+            else lambda exp: True
+        )
         self._parent_group = None
         self._experiment = None
         self._jumptext = None
@@ -36,7 +55,7 @@ class ContentCore(object):
             self.tag = tag
 
         if tag_and_uid and (tag or uid):
-            raise ValueError('tag_and_uid cannot be set together with tag or uid!')
+            raise ValueError("tag_and_uid cannot be set together with tag or uid!")
 
         if tag_and_uid is not None:
             self.tag = tag_and_uid
@@ -110,8 +129,7 @@ class ContentCore(object):
 
     @property
     def data(self):
-        data = {'tag': self.tag,
-                'uid': self.uid}
+        data = {"tag": self.tag, "uid": self.uid}
 
         return data
 
@@ -161,7 +179,7 @@ class ContentCore(object):
 
     def added_to_experiment(self, exp):
         self._experiment = exp
-    
+
     @property
     def experiment(self):
         return self._experiment
@@ -182,23 +200,23 @@ class Direction(object):
     @staticmethod
     def to_str(direction):
         if direction == Direction.UNKNOWN:
-            return u"unknown"
+            return "unknown"
         elif direction == Direction.FORWARD:
-            return u"forward"
+            return "forward"
         elif direction == Direction.BACKWARD:
-            return u"backward"
+            return "backward"
         elif direction == Direction.JUMP:
-            return u"jump"
+            return "jump"
         else:
             raise ValueError("Unexpected Value")
 
 
 def package_path():
-    '''
+    """
     DEPRECATED
 
     use alfred.settings.package_path instead
-    '''
+    """
 
     root = __file__
     if os.path.islink(root):
