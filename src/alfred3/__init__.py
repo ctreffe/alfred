@@ -22,6 +22,7 @@ import time
 import logging
 from builtins import object
 from uuid import uuid4
+from configparser import NoOptionError
 
 from cryptography.fernet import Fernet
 
@@ -44,24 +45,8 @@ class Experiment(object):
         self.config = config.get("exp_config")
         self.secrets = config.get("exp_secrets")
 
-        exp_id = self.config.get("metadata", "exp_id")
-        self.log = QueuedLoggingInterface(base_logger="alfred3", queue_logger="exp." + exp_id)
-        self.log.session_id = self.config.get("metadata", "session_id")
-
-        self.log.info(
-            (
-                f"Alfred {self.config.get('experiment', 'type')} experiment session initialized! "
-                f"Alfred version: {self.alfred_version}, "
-                f"experiment title: {self.config.get('metadata', 'title')}, "
-                f"experiment version: {self.config.get('metadata', 'version')}"
-            )
-        )
-
-        self._encryptor = Fernet(key=self.secrets.get("encryption", "key").encode())
-        if self.secrets.getboolean("encryption", "public_key"):
-            self.log.warning(
-                "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
-            )
+        self._init_logging()
+        self._set_encryptor()
 
         # update settings with custom settings from mortimer
         # TODO: Remove self._settings altogether
@@ -118,6 +103,37 @@ class Experiment(object):
                     + "alfred3.config.ExperimentConfig with the appropriate arguments instead."
                 )
             )
+
+    def _session_id_check(self):
+        """Checks if a session ID is present. If not, sets it to 'n/a'.
+        Usually, the session ID is set in localserver.py or alfredo.py.
+        This method allows the experiment to be initialized on its own,
+        which is very useful for testing. 
+        """
+        try:
+            self.config.get("metadata", "session_id")
+        except NoOptionError:
+            self.config.read_dict({"metadata": {"session_id": "n/a"}})
+            self.log.info(
+                (
+                    "Session ID could not be accessed. This might be valid for testing."
+                    "In production, you should always have a valid session ID."
+                )
+            )
+
+    def _init_logging(self):
+        self.log = QueuedLoggingInterface(base_logger="alfred3", queue_logger="exp." + self.exp_id)
+        self._session_id_check()
+        self.log.session_id = self.config.get("metadata", "session_id")
+
+        self.log.info(
+            (
+                f"Alfred {self.config.get('experiment', 'type')} experiment session initialized! "
+                f"Alfred version: {self.alfred_version}, "
+                f"experiment title: {self.config.get('metadata', 'title')}, "
+                f"experiment version: {self.config.get('metadata', 'version')}"
+            )
+        )
 
     def start(self):
         """
@@ -226,6 +242,44 @@ class Experiment(object):
     @property
     def session_id(self):
         return self.config.get("metadata", "session_id")
+
+    def _set_encryptor(self):
+        """Sets the experiments encryptor.
+
+        Four possible outcomes:
+
+        1. Encryptor with key from default secrets.conf
+            If neither environment variable nor non-public custom key 
+            in the experiments' *secrets.conf* is defined.
+        2. Encryptor with key from environment variable
+            If 'ALFRED_ENCRYPTION_KEY' is defined in the environment
+            and no non-public custom key is defined in the experiments'
+            *secrets.conf*.
+        3. Encryptor with key from experiment secrets.conf
+            If 'public_key = false' and a key is defined in the 
+            experiments' *secrets.conf*.
+        4. No encryptor
+            If 'public_key = false' and no key is defined in the 
+            experiments' *secrets.conf*.
+
+        """
+
+        key = os.environ.get("ALFRED_ENCRYPTION_KEY", None)
+
+        if not key or not self.secrets.getboolean("encryption", "public_key"):
+            key = self.secrets.get("encryption", "key")
+
+        if key:
+            self._encryptor = Fernet(key=key.encode())
+        else:
+            self.log.warning(
+                "No encryption key found. Thus, no encryptor was set, and the methods 'encrypt' and 'decrypt' will not work."
+            )
+
+        if self.secrets.getboolean("encryption", "public_key"):
+            self.log.warning(
+                "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
+            )
 
     def encrypt(self, data) -> str:
         """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
