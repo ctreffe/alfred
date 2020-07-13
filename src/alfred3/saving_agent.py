@@ -94,7 +94,9 @@ class SavingAgentController(object):
         self._failure_agents = []
         """agents that run if running a normal agent fails """
 
-        if self._experiment.config.getboolean("debug", "disable_saving"):
+        if self._experiment.config.getboolean(
+            "general", "debug"
+        ) and self._experiment.config.getboolean("debug", "disable_saving"):
             self.log.warning("Saving has been disabled!")
         else:
             self.initialize_local_agents(config=self._experiment.config)
