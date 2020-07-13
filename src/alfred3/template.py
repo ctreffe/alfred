@@ -8,6 +8,7 @@ internet connection.
 """
 
 from pathlib import Path
+import shutil
 
 import click
 import dload
@@ -54,7 +55,7 @@ def remove_files(path: str, files: list):
     is_flag=True,
 )
 def download_template(name: str, path: str, release: str, big: bool, runpy: bool):
-    p = Path(path).resolve()
+    p = Path(path).resolve()  # parent directory, e.g. exps/
 
     filenames = ["LICENSE"]
 
@@ -83,9 +84,9 @@ def download_template(name: str, path: str, release: str, big: bool, runpy: bool
 
     dload.save_unzip(zip_url=url, extract_path=str(p), delete_after=True)
 
-    repo_dir = p / dirname
+    repo_dir = p / dirname  # exp directory, e.g.: exps/alfred_hello-world-master
     if name:
-        target_dir = repo_dir.rename(name)
+        shutil.move(src=repo_dir, dst=p.joinpath(name))
     else:
         name = dirname
 
