@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
-## alfred v1.2.0 (Released 2020-07-08)
+## alfred v1.2.0 (Released 2020-07-13)
 
 ### Added
 
@@ -186,6 +186,10 @@ def generate_experiment(self, config=None):
 
     exp.append(welcome)
 ```
+
+#### Minor changes
+
+* You can now define an encryption key either in `secrets.conf` or in an environment variable named `ALFRED_ENCRYPTION_KEY` .
 
 ### Removed
 
