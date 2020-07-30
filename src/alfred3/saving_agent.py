@@ -77,9 +77,6 @@ _thread.daemon = True
 _thread.start()
 
 
-# class SavingAgent
-
-
 class SavingAgentController(object):
     def __init__(self, experiment):
         self._latest_data_time = None
