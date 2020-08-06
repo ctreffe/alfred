@@ -149,6 +149,29 @@ class ExperimentConfig(ConfigParser):
         except KeyError:
             return None
 
+    def combine_sections(self, *args):
+        """Parses the given sections on top of each other and returns
+        the resulting section.
+
+        Example with section in dict notation for simplicity::
+
+            config = ExperimentConfig(expdir=Path.cwd())
+
+            # config["sec1"] = {"key": "value"}
+            # config["sec2"] = {"key": "different value"}
+            # config["sec3"] = {"new_key": "new_value"}
+
+            config.combine_section("sec1", "sec2", "sec3")
+            # Result: {"key": "different_value", "new_key": "new_value"}
+
+        """
+
+        parser = ConfigParser()
+        for section in args:
+            parser.read_dict({"section": dict(self[section])})
+
+        return parser["section"]
+
 
 class ExperimentSecrets(ExperimentConfig):
     """Provides functionality for parsing secrets like DB credentials.
