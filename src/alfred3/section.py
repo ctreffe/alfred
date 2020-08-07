@@ -43,13 +43,41 @@ class Section(ContentCore):
         return self._page_list
 
     @property
+    def only_pages(self):
+        return [member for member in self.page_list if isinstance(member, PageCore)]
+
+    @property
     def data(self):
         data = super(Section, self).data
         data["subtree_data"] = []
         for q_core in self._page_list:
+            if isinstance(q_core, UnlinkedDataPage):
+                continue
             data["subtree_data"].append(q_core.data)
 
         return data
+
+    @property
+    def unlinked_data(self):
+        data = super(Section, self).data
+        data["subtree_data"] = []
+        for q_core in self._page_list:
+            try:
+                data["subtree_data"].append(q_core.unlinked_data)
+            except AttributeError:
+                pass
+
+        return data
+
+    def unlinked_data_present(self):
+        present = False
+        for member in self._page_list:
+            if isinstance(member, UnlinkedDataPage):
+                present = True
+            elif isinstance(member, Section):
+                present = member.unlinked_data_present()
+
+        return present
 
     @property
     def current_page(self):
@@ -172,13 +200,13 @@ class Section(ContentCore):
 
     def append_item(self, item):
 
-        self.log.warning("section.append_item() is deprecated. Use section.append() instead.")
+        self.log.warning("Section.append_item() is deprecated. Use Section.append() instead.")
 
         self.append(item)
 
     def append_items(self, *items):
 
-        self.log.warning("section.append_items() is deprecated. Use section.append() instead.")
+        self.log.warning("Section.append_items() is deprecated. Use Section.append() instead.")
 
         for item in items:
             self.append(item)
