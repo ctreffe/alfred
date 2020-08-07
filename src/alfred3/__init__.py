@@ -24,15 +24,26 @@ from builtins import object
 from uuid import uuid4
 from configparser import NoOptionError
 
+import pymongo
 from cryptography.fernet import Fernet
 
-from . import layout, messages, settings
+from . import layout, messages, settings, page
+from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
 from .page_controller import PageController
-from .saving_agent import SavingAgentController
+from .saving_agent import SavingAgentController, AutoLocalSavingAgent, AutoMongoSavingAgent
 from .ui_controller import WebUserInterfaceController
+from .exceptions import SavingAgentException
+
+_LSA = "local_saving_agent"
+_LSA_FB = ["fallback_local_saving_agent", "level2_fallback_local_saving_agent"]
+_LSA_U = "local_saving_agent_unlinked"
+_F_LSA = "failure_local_saving_agent"
+_MSA = "mongo_saving_agent"
+_MSA_FB = ["fallback_mongo_saving_agent"]
+_MSA_U = "mongo_saving_agent_unlinked"
 
 
 class Experiment(object):
@@ -86,7 +97,11 @@ class Experiment(object):
             ValueError("unknown type: '%s'" % self._type)
 
         self._data_manager = DataManager(self)
-        self._saving_agent_controller = SavingAgentController(self)
+        self._mongo_manager = saving_agent.MongoManager(self)
+        self.sac_main = self._init_sac_main()
+        self.sac_unlinked = self._init_sac_unlinked()
+
+        self._saving_agent_controller = self.sac_main
 
         self._condition = ""
         self._session = ""
@@ -106,7 +121,7 @@ class Experiment(object):
             )
 
     def _session_id_check(self):
-        """Checks if a session ID is present. If not, sets it to 'n/a'.
+        """Checks if a session ID is present. If not, sets it to 'NA'.
         Usually, the session ID is set in localserver.py or alfredo.py.
         This method allows the experiment to be initialized on its own,
         which is very useful for testing. 
@@ -114,7 +129,7 @@ class Experiment(object):
         try:
             self.config.get("metadata", "session_id")
         except NoOptionError:
-            self.config.read_dict({"metadata": {"session_id": "n/a"}})
+            self.config.read_dict({"metadata": {"session_id": "NA"}})
             self.log.info(
                 (
                     "Session ID could not be accessed. This might be valid for testing."
@@ -135,6 +150,62 @@ class Experiment(object):
                 f"experiment version: {self.config.get('metadata', 'version')}"
             )
         )
+
+    def _init_sac_main(self):
+        sac_main = saving_agent.SavingAgentController(self)
+
+        if self.config.getboolean(_LSA, "use"):
+            agent_local = AutoLocalSavingAgent(config=self.config[_LSA], experiment=self)
+            for fb in _LSA_FB:
+                if self.config.getboolean(fb, "use"):
+                    fb_agent = AutoLocalSavingAgent(config=self.config[fb], experiment=self)
+                    agent_local.append_fallback(fb_agent)
+            sac_main.append(agent_local)
+
+        if self.config.getboolean(_F_LSA, "use"):
+            agent_fail = AutoLocalSavingAgent(config=self.config[_F_LSA], experiment=self)
+            sac_main.append_failure_agent(agent_fail)
+
+        if self.secrets.getboolean(_MSA, "use"):
+            agent_mongo = self._mongo_manager.init_agent(section=_MSA, fallbacks=_MSA_FB)
+            sac_main.append(agent_mongo)
+
+        if self.config.getboolean(_MSA, "use"):
+            agent_mongo_bw = self._mongo_manager.init_agent(
+                section=_MSA, fallbacks=_MSA_FB, config_name="config"
+            )
+            msg = (
+                "Initialized a MongoSavingAgent that was configured in config.conf. "
+                "This is deprecated. Please configure your MongoSavingAgents in secrets.conf."
+            )
+            DeprecationWarning(msg)
+            self.log.warning(msg)
+            sac_main.append(agent_mongo_bw)
+
+        return sac_main
+
+    def _init_sac_unlinked(self):
+
+        sac_unlinked = saving_agent.SavingAgentController(self)
+
+        if self.config.getboolean(_LSA_U, "use"):
+            agent_loc_unlnkd = AutoLocalSavingAgent(config=self.config[_LSA_U], experiment=self)
+            sac_unlinked.append(agent_loc_unlnkd)
+
+        if self.secrets.getboolean(_MSA_U, "use"):
+            agent_mongo_unlinked = self._mongo_manager.init_agent(_MSA_U, _MSA)
+            for agent in self.sac_main.agents.values():
+                if isinstance(agent, saving_agent.MongoSavingAgent):
+                    if agent_mongo_unlinked.check_equality(agent):
+                        raise SavingAgentException(
+                            (
+                                "Unlinked MongoSavingAgent and main MongoSavingAgent must save to "
+                                "different collections."
+                            )
+                        )
+            sac_unlinked.append(agent_mongo_unlinked)
+
+        return sac_unlinked
 
     def start(self):
         """
@@ -161,9 +232,24 @@ class Experiment(object):
         self.log.info("Experiment.finish() called. Session is finishing.")
         self._finished = True
         self._page_controller.change_to_finished_section()
+        self.save_data()
 
-        # run saving_agent_controller
-        self._saving_agent_controller.run_saving_agents(99)
+    def save_data(self):
+        """Saves data with the main, unlinked and codebook :class:`SavingAgentController`s.
+
+        .. warning::
+            Note that a call to this function will NOT prompt a call to
+            the :meth:`~page.CustomSavingPage.save_data` method of
+            :class:`page.CustomSavingPage`s attached to the experiment.
+            You need to call those manually.
+        """
+
+        data = self.data_manager.get_data()
+        self.sac_main.save_with_all_agents(data=data, level=99)
+
+        if self.page_controller.unlinked_data_present():
+            unlinked_data = self.data_manager.get_unlinked_data()
+            self.sac_unlinked.save_with_all_agents(data=unlinked_data, level=99)
 
     def append(self, *items):
         for item in items:
@@ -322,9 +408,14 @@ class Experiment(object):
         return self.data_manager.find_experiment_data_by_uid(uid)
 
     def encrypt(self, data) -> str:
-        """Converts input (given in `data` ) to `bytes`, performs encryption, and returns the encrypted object as ` str`.
+        """Converts input (given in `data` ) to `bytes`, performs 
+        encryption, and returns the encrypted object as ` str`.
 
-        In web experiments deployed via mortimer, a safe, user-specific secret key will be used for encryption. The method will also work in offline experiments, but does NOT provide safe encryption in this case, as a PUBLIC key is used for encryption. This is only ok for testing purposes.
+        In web experiments deployed via mortimer, a safe, user-specific 
+        secret key will be used for encryption. The method will also 
+        work in offline experiments, but does NOT provide safe 
+        encryption in this case, as a PUBLIC key is used for encryption. 
+        This is only ok for testing purposes.
 
         :param data: Input object that you want to encrypt.
         """

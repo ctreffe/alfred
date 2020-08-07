@@ -77,7 +77,6 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
             self._experiment.page_controller.current_page._on_hiding_widget()
             if self._experiment.page_controller.can_move_forward:
                 self._experiment.page_controller.move_forward()
-                self._experiment.saving_agent_controller.run_saving_agents(1)
             else:
                 self._experiment.finish()
             self._experiment.page_controller.current_page._on_showing_widget()
@@ -86,14 +85,12 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         if self._experiment.page_controller.allow_leaving(Direction.BACKWARD):
             self._experiment.page_controller.current_page._on_hiding_widget()
             self._experiment.page_controller.move_backward()
-            self._experiment.saving_agent_controller.run_saving_agents(1)
             self._experiment.page_controller.current_page._on_showing_widget()
 
     def move_to_position(self, pos_list):
         if self._experiment.page_controller.allow_leaving(Direction.JUMP):
             self._experiment.page_controller.current_page._on_hiding_widget()
             self._experiment.page_controller.move_to_position(pos_list)
-            self._experiment.saving_agent_controller.run_saving_agents(1)
             self._experiment.page_controller.current_page._on_showing_widget()
 
     def start(self):
