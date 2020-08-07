@@ -7,13 +7,14 @@ from __future__ import absolute_import
 
 import time
 import logging
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
 
 from future.utils import with_metaclass
 
 from . import element, settings, alfredlog
+from . import saving_agent
 from ._core import ContentCore
 from ._helper import _DictObj
 from .element import Element, ExperimenterMessages, TextElement, WebElementInterface
@@ -758,9 +759,181 @@ class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
 
 
 class NoDataPage(Page):
+    """This Page does not save any data except its tag and uid."""
+
     @property
     def data(self):
         # Pages must always return tag and uid!
         data = {"tag": self.tag, "uid": self.uid}
 
         return data
+
+
+class UnlinkedDataPage(NoDataPage):
+    """This Page saves unlinked data.
+
+    Unlinked data is data that does not contain any identifiers that
+    would allow someone to establish a connection between an 
+    experiment data set and the unlinked data set. 
+    A common use case is the sepration of identifying personal 
+    information that might be needed for non-experimental purposes such 
+    as compensation admninistration, from experiment data.
+
+    In practice that means that the UnlinkedDataPage does not save any
+    of the following:
+
+    - Time of saving
+    - Session ID
+    - Experiment condition
+    - Additional data
+    - Start time
+    - Experiment version
+    - Alfred version
+
+    It will, however, save the following information:
+
+    - Experiment Title
+    - Experiment ID
+    - Experiment Author
+    - Page tag
+    - Page ID
+
+    Thus, the saved data *can* be linked to an *experiment* and to a
+    page. That is intended and indeed necessary so that data 
+    can be retrieved and processed. The key point is that there is no
+    identifier for linking data to data from a specific experimental 
+    *session* (i.e. the name of a subject, saved with an 
+    UnlinkedDataPage cannot be linked to his/her answers given on other
+    Pages).
+
+    .. warning::
+        All data from UnlinkedDataPages is saved in a single unlinked 
+        document.
+
+    """
+
+    @property
+    def unlinked_data(self):
+        data = super(PageCore, self).data
+        data.update(self.data)
+        return data
+
+    def save_data(self, level: int = 1, sync: bool = False):
+        """Saves current unlinked data.
+        
+        Collects the unlinked data from all UnlinkedDataPages in the
+        experiment and engages the experiment's unlinked
+        SavingAgentController to save the data with all SavingAgents.
+
+        Args: 
+            level: Level of the saving task. High level means high 
+                importance. If the level is below a SavingAgent's 
+                activation level, that agent will not be used for 
+                processing this task. Defaults to 1.
+            sync: If True, the saving task will be prioritised and the
+                experiment will pause until the task was fully completed.
+                Should be used carefully. Defaults to False.
+        """
+        data = self._experiment.data_manager.get_unlinked_data()
+        self._experiment.sac_unlinked.save_with_all_agents(data=data, level=level, sync=sync)
+
+
+class CustomSavingPage(Page, ABC):
+    """Allows you to add custom SavingAgents directly to the page.
+
+    Since this is an abstract class, it can not be instantiated directly.
+    You have to derive a child class and define the property
+    :meth:`custom_save_data`, which must return a dictionary. Through
+    this property, you control exactly which data will be saved by this
+    page.
+
+    Example 1: Saving ordinary page data (like other pages)::
+
+        class MyPage(CustomSavingPage):
+
+            @property
+            def custom_save_data(self):
+                return self.data
+
+
+    Example 2: Saving a static dictionary
+
+        class MyPage(CustomSavingPage):
+
+            @property
+            def custom_save_data(self):
+                return {"key": "value"}
+
+    .. warning::
+        Each SavingAgent maintains one file or one document. 
+        On saving, the document will be fully replaced with the current
+        data. That means, you should never let two CustomSavingPages
+        share a SavingAgent, as they will override each other's data.
+
+    Args:
+        experiment: Alfred experiment. This page must be initialized
+            with an experiment.
+        save_to_main: If True, data will be *also* saved using the
+            experiment's main SavingAgentController and all of its
+            SavingAgents. Defaults to False.
+    """
+
+    def __init__(self, experiment, save_to_main: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self._experiment = experiment
+        self.saving_agent_controller = saving_agent.SavingAgentController(self._experiment)
+        self.save_to_main = save_to_main
+
+    def added_to_experiment(self, experiment):
+        if not self._experiment:
+            super().added_to_experiment(experiment=experiment)
+            self.saving_agent_controller = saving_agent.SavingAgentController(self._experiment)
+        self._check_for_duplicate_agents()
+
+    def _check_for_duplicate_agents(self):
+        comparison = []
+        comparison += list(self._experiment.sac_main.agents.values())
+        comparison += list(self._experiment.sac_unlinked.agents.values())
+
+        for pg in self._experiment.page_controller.pages():
+            if pg == self:
+                continue
+            try:
+                comparison += list(pg.saving_agent_controller.agents.values())
+            except AttributeError:
+                pass
+
+        for agent in self.saving_agent_controller.agents.values():
+            self._check_one_duplicate(agent, comparison)
+
+    @staticmethod
+    def _check_one_duplicate(agent, agents_list):
+        for ag in agents_list:
+            if ag == agent:
+                raise ValueError("A SavingAgent added to a CustomSavingPage must be unique")
+
+    def append_saving_agents(self, *args):
+        for agent in args:
+            self.saving_agent_controller.append(agent)
+        self._check_for_duplicate_agents()
+
+    def append_failure_saving_agents(self, *args):
+        for agent in args:
+            self.saving_agent_controller.append_failure_agent(agent)
+
+    @abstractproperty
+    def custom_save_data(self):
+        pass
+
+    def save_data(self, level=1, sync=False):
+
+        if not isinstance(self.custom_save_data, dict):
+            raise ValueError("The porperty 'custom_page_data' must return a dictionary.")
+
+        if self.save_to_main:
+            self._experiment.sac_main.save_with_all_agents(level=level, sync=sync)
+
+        self.saving_agent_controller.save_with_all_agents(
+            data=self.custom_save_data, level=level, sync=sync
+        )
+

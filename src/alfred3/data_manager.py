@@ -40,6 +40,13 @@ class DataManager(object):
         data["alfred_version"] = self._experiment.alfred_version
         data["save_time"] = time.time()
 
+        return data
+
+    def get_unlinked_data(self):
+        data = self._experiment.page_controller.unlinked_data
+        data["exp_author"] = self._experiment.author
+        data["exp_title"] = self._experiment.title
+        data["exp_id"] = self._experiment.exp_id
 
         return data
 

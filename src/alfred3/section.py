@@ -12,7 +12,7 @@ import logging
 from functools import reduce
 
 from ._core import ContentCore, Direction
-from .page import PageCore, HeadOpenSectionCantClose
+from .page import PageCore, HeadOpenSectionCantClose, UnlinkedDataPage
 from .exceptions import MoveError
 from . import alfredlog
 from random import shuffle
