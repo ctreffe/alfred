@@ -169,7 +169,7 @@ class QueuedLoggingInterface:
             configuration.
         
         session_id (str): Allows you to set a session ID that will be
-            included in logged messages. (Defaults to "n/a".)
+            included in logged messages. (Defaults to "NA".)
     """
 
     def __init__(self, base_logger: str = None, queue_logger: str = None):
@@ -180,7 +180,7 @@ class QueuedLoggingInterface:
         self._queue_logger = logging.getLogger(queue_logger) if queue_logger is not None else None
         self._queue = queue.Queue()
         self._level = None
-        self.session_id = "n/a"
+        self.session_id = "NA"
 
     @property
     def queue_logger(self):
