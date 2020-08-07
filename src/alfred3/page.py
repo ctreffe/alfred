@@ -208,6 +208,25 @@ class PageCore(ContentCore):
 
         return ".".join(name)
 
+    def save_data(self, level: int = 1, sync: bool = False):
+        """Saves current experiment data.
+        
+        Collects the current experimental data and calls the 
+        experiment's main SavingAgentController to save the data with
+        all SavingAgents.
+
+        Args: 
+            level: Level of the saving task. High level means high 
+                importance. If the level is below a SavingAgent's 
+                activation level, that agent will not be used for 
+                processing this task. Defaults to 1.
+            sync: If True, the saving task will be prioritised and the
+                experiment will pause until the task was fully completed.
+                Should be used carefully. Defaults to False.
+        """
+        data = self._experiment.data_manager.get_data()
+        self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
+
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepare_web_widget(self):
