@@ -5,6 +5,8 @@
 """
 from __future__ import absolute_import
 
+import time
+
 from builtins import object
 from .exceptions import AlfredError
 
@@ -36,6 +38,8 @@ class DataManager(object):
         data["session_status"] = self._experiment.session_status
         data["additional_data"] = self._additional_data
         data["alfred_version"] = self._experiment.alfred_version
+        data["save_time"] = time.time()
+
 
         return data
 

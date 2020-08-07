@@ -232,6 +232,8 @@ class Section(ContentCore):
         )
 
     def move_forward(self):
+        self.current_page.save_data()
+
         # test if moving is possible and leaving is allowed
         if not (self.can_move_forward and self.allow_leaving(Direction.FORWARD)):
             raise MoveError()
@@ -255,6 +257,9 @@ class Section(ContentCore):
                     break
 
     def move_backward(self):
+
+        self.current_page.save_data()
+
         if not (self.can_move_backward and self.allow_leaving(Direction.BACKWARD)):
             raise MoveError()
 
@@ -277,6 +282,9 @@ class Section(ContentCore):
                     break
 
     def move_to_first(self):
+
+        self.current_page.save_data()
+
         self.log.debug(f"Section {self.tag}: move to first")
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
@@ -291,6 +299,9 @@ class Section(ContentCore):
             self.move_forward()
 
     def move_to_last(self):
+
+        self.current_page.save_data()
+
         self.log.debug(f"Section {self.tag}: move to last")
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
@@ -305,6 +316,9 @@ class Section(ContentCore):
             self.move_backward()
 
     def move_to_position(self, pos_list):
+
+        self.current_page.save_data()
+
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
 
