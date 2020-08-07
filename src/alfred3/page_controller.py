@@ -10,7 +10,7 @@ from builtins import object
 from ._core import Direction
 
 from .section import Section
-from .page import CompositePage, WebCompositePage
+from .page import CompositePage, WebCompositePage, PageCore
 from .element import TextElement, WebExitEnabler
 from . import alfredlog
 
@@ -126,6 +126,15 @@ class PageController(object):
             "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
         self.change_to_finished_section()
+
+    def pages(self):
+        out = []
+        for member in self.page_list:
+            if isinstance(member, Section):
+                out += member.only_pages
+            elif isinstance(member, PageCore):
+                out.append(member)
+        return out
 
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
