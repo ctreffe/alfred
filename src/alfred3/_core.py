@@ -187,6 +187,20 @@ class ContentCore(object):
     def added_to_section(self, group):
         self._parent_group = group
 
+    @property
+    def parent(self):
+        return self._parent_group
+
+    @property
+    def tree(self):
+        if not self.parent:
+            return self.tag
+
+        if self.parent.tree:
+            return self.parent.tree + "." + self.tag
+        else:
+            return self.tag
+
     def allow_leaving(self, direction):
         return True
 
