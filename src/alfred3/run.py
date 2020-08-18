@@ -158,13 +158,18 @@ class ExperimentRunner:
     "-a/-m",
     "--auto-open/--manual-open",
     default=True,
-    help="If this flag is set to '-a', a browser window or tab with the experiment will be opened automatically.",
-    show_default=True,
+    help="If this flag is set to '-a', the experiment will open a browser window automatically. [default: '-a']",
 )
 @click.option("--path", default=Path.cwd())
-def run_cli(path, auto_open):
+@click.option(
+    "-debug/-production",
+    "--debug/--production",
+    default=False,
+    help="If this flag is set to to '-debug', the alfred experiment will start in flask's debug mode. [default: '-production']",
+)
+def run_cli(path, auto_open, debug):
     runner = ExperimentRunner(path)
-    runner.auto_run(open_browser=auto_open)
+    runner.auto_run(open_browser=auto_open, debug=debug)
 
 
 if __name__ == "__main__":
