@@ -23,6 +23,7 @@ from ._core import Direction
 from .layout import BaseWebLayout
 
 from .helpmates import localserver as localserver
+from .alfredlog import QueuedLoggingInterface
 from future.utils import with_metaclass
 
 
@@ -45,6 +46,8 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         self._experiment = experiment
         self._layout = None
         self._oldPage = None
+        self.log = QueuedLoggingInterface(base_logger=__name__, queue_logger=self.prepare_logger_name())
+        self.log.session_id = self.experiment.config.get("metadata", "session_id")
 
         if layout is None:
             self.change_layout(BaseWebLayout())
@@ -54,6 +57,10 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         self._layout.forward_text = self._experiment.config.get("navigation", "forward")
         self._layout.backward_text = self._experiment.config.get("navigation", "backward")
         self._layout.finish_text = self._experiment.config.get("navigation", "finish")
+
+    @property
+    def experiment(self):
+        return self._experiment
 
     @abstractmethod
     def render(self):
@@ -99,6 +106,28 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
     def start(self):
         self._experiment.page_controller.enter()
         self._experiment.page_controller.current_page._on_showing_widget()
+    
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.class_uid
+        
+        with *class_uid* only added, if 
+        :attr:`~Section.instance_level_logging` is set to *True*.
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self.experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        return ".".join(name)
 
 
 class WebUserInterfaceController(UserInterfaceController):
@@ -199,6 +228,7 @@ class WebUserInterfaceController(UserInterfaceController):
             path = self._experiment.subpath(path)
 
         identifier = uuid4().hex
+        
 
         if self._experiment.config.getboolean("general", "debug"):
             if not hasattr(self, "sf_counter"):
