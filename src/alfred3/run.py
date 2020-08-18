@@ -33,6 +33,7 @@ with arguments of your choice.
         runner.print_startup_message()
         runner.app.run(use_reloader=False, debug=False)
 
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
 import importlib
