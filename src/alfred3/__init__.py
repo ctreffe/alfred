@@ -40,10 +40,12 @@ from .exceptions import SavingAgentException
 _LSA = "local_saving_agent"
 _LSA_FB = ["fallback_local_saving_agent", "level2_fallback_local_saving_agent"]
 _LSA_U = "local_saving_agent_unlinked"
+_LSA_C = "local_saving_agent_codebook"
 _F_LSA = "failure_local_saving_agent"
 _MSA = "mongo_saving_agent"
 _MSA_FB = ["fallback_mongo_saving_agent"]
 _MSA_U = "mongo_saving_agent_unlinked"
+_MSA_C = "mongo_saving_agent_codebook"
 
 
 class Experiment(object):
@@ -100,6 +102,7 @@ class Experiment(object):
         self._mongo_manager = saving_agent.MongoManager(self)
         self.sac_main = self._init_sac_main()
         self.sac_unlinked = self._init_sac_unlinked()
+        self.sac_codebook = self._init_sac_codebook()
 
         self._saving_agent_controller = self.sac_main
 
@@ -153,17 +156,21 @@ class Experiment(object):
 
     def _init_sac_main(self):
         sac_main = saving_agent.SavingAgentController(self)
+        init_time = time.strftime("%Y-%m-%d_t%H%M%S")
 
         if self.config.getboolean(_LSA, "use"):
             agent_local = AutoLocalSavingAgent(config=self.config[_LSA], experiment=self)
+            agent_local.filename = f"{init_time}_{agent_local.name}_{self.session_id}.json"
             for fb in _LSA_FB:
                 if self.config.getboolean(fb, "use"):
                     fb_agent = AutoLocalSavingAgent(config=self.config[fb], experiment=self)
+                    fb_agent.filename = f"{init_time}_{fb_agent.name}_{self.session_id}.json"
                     agent_local.append_fallback(fb_agent)
             sac_main.append(agent_local)
 
         if self.config.getboolean(_F_LSA, "use"):
             agent_fail = AutoLocalSavingAgent(config=self.config[_F_LSA], experiment=self)
+            agent_fail.filename = f"{init_time}_{agent_fail.name}_{self.session_id}.json"
             sac_main.append_failure_agent(agent_fail)
 
         if self.secrets.getboolean(_MSA, "use"):
@@ -190,6 +197,7 @@ class Experiment(object):
 
         if self.config.getboolean(_LSA_U, "use"):
             agent_loc_unlnkd = AutoLocalSavingAgent(config=self.config[_LSA_U], experiment=self)
+            agent_loc_unlnkd.filename = f"unlinked_{uuid4().hex}.json"
             sac_unlinked.append(agent_loc_unlnkd)
 
         if self.secrets.getboolean(_MSA_U, "use"):
@@ -206,6 +214,29 @@ class Experiment(object):
             sac_unlinked.append(agent_mongo_unlinked)
 
         return sac_unlinked
+
+    def _init_sac_codebook(self):
+
+        sac_codebook = saving_agent.SavingAgentController(self)
+
+        if self.config.getboolean(_LSA_C, "use"):
+            agent_local = saving_agent.CodebookLocalSavingAgent(
+                config=self.config[_LSA_C], experiment=self
+            )
+            title = self.title.lower().replace(" ", "_")
+            agent_local.filename = f"codebook_{title}_v{self.version}.json"
+            sac_codebook.append(agent_local)
+
+        if self.secrets.getboolean(_MSA_C, "use"):
+            agent_mongo = self._mongo_manager.init_agent(
+                agent_class=saving_agent.CodebookMongoSavingAgent,
+                section=_MSA_C,
+                fill_section=_MSA,
+            )
+            agent_mongo.identifier = {"exp_id": self.exp_id, "exp_version": self.version}
+            sac_codebook.append(agent_mongo)
+
+        return sac_codebook
 
     def start(self):
         """
@@ -250,6 +281,9 @@ class Experiment(object):
         if self.page_controller.unlinked_data_present():
             unlinked_data = self.data_manager.get_unlinked_data()
             self.sac_unlinked.save_with_all_agents(data=unlinked_data, level=99)
+
+        codebook_data = self.data_manager.get_codebook_data()
+        self.sac_codebook.save_with_all_agents(data=codebook_data, level=99)
 
     def append(self, *items):
         for item in items:
