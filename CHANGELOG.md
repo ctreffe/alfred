@@ -7,6 +7,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.2.1 (Released 2020-08-18)
+
+### Fixed
+
+* Fixed an underspecified filepath handling that caused trouble with the logging initialization under windows.
+
+### Changed
+
+* We made using the flask debugger easier:
+    - If you use the command line interface, you can add the flag 'debug' to start an experiment in debugging mode and use flask's builtin debugging tools. The command becomes `python -m alfred3.run -debug` .
+    - If you use the small `run.py` , you can pass `debug=True` as a parameter in `auto_run()` : `runner.auto_run(debug=True)`
+* Upgraded the command line interface for downloading templates. 
+    - Most notably, the interface gained the flag '-h'/'--here', that you can use to indicate that you want the template's files to be placed directly in the '--path' (by default, in the current working directory).
+    - Instead of the '-b'/'--big' and '-r'/'--runpy' flags, you can now choose between variants by setting the option '--variant' to 's', 'm' (default), or 'l'.
+    - Enhanced handling of naming conflicts.
+    - This is the full new usage:
+
+``` 
+Usage: template.py [OPTIONS]
+
+Options:
+  --name TEXT     Name of the new experiment directory.  [default:
+                  alfred3_experiment]
+
+  --path TEXT     Path to the target directory. [default: Current working
+                  directory]
+
+  --release TEXT  You can specify a release tag here, if you want to use a
+                  specific version of the template.
+
+  --variant TEXT  Which type of template do you want to download? The
+                  available options are: 's' (minimalistic), 'm' (includes
+                  'run.py' and 'secrets.conf') and 'b' (includes subdirectory
+                  with imported classes and instructions.)  [default: m]
+
+  -h, --here      If this flag is set to '-h', the template files will be
+                  placed directly into the directory specified in '--path',
+                  ignoring the paramter '--name'.  [default: False]
+
+  --help          Show this message and exit.
+  ```
+
 ## alfred v1.2.0 (Released 2020-07-13)
 
 ### Added
@@ -76,12 +118,13 @@ from alfred3.run import ExperimentRunner
 
 if __name__ == "__main__":
     runner = ExperimentRunner()
+    runner.generate_session_id()
     runner.configure_logging()
     runner.create_experiment_app()
     runner.set_port()
     runner.start_browser_thread()
     runner.print_startup_message()
-    runner.app.run()
+    runner.app.run(use_reloader=False, debug=False)
 ```
 
 This will allow you to customize logging configuration or to extract the flask app that is created through your alfred experiment.
@@ -206,24 +249,13 @@ type = qt-wk
 
 Instead, you can turn to the new option for running experiments in Google Chrome's fullscren (aka "kiosk") mode (see above).
 
-## alfred v1.1.7 (Released 2020-06-22)
-
-### Added
-
-* The `alfred3.Experiment` class gains the following:
-    - An attribute `session_status` . It is intended to store a string, indicating a session status.
-    - A method `get_page_data()` , which is a shortcut for `self.data_manager.find_experiment_data_by_uid()` 
-    - A method `set_additional_data()` , which is a shortcut for `self.data_manager.add_additional_data()` 
-    - A method `get_additional_data()` , which is a shortcut for `self.data_manager.get_additional_data()` 
-
 ## alfred3 v1.1.5 (Released 2020-05-13)
 
 ### Fixed
 
 * Fixed a bug in the parsing of the auth_source parameter in `config.conf`
 
-
-## alfred v1.1.4 (Released 2020-05-05)
+## alfred3 v1.1.4 (Released 2020-05-05)
 
 ### Announcement: Released to PyPi under the new name **alfred3**
 

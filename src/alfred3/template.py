@@ -8,102 +8,186 @@ internet connection.
 """
 
 from pathlib import Path
+from uuid import uuid4
 import shutil
+import os
 
 import click
 import dload
 
 
-def remove_files(path: str, files: list):
-    p = Path(path)
-    for filename in files:
-        f = p / filename
-        f.unlink()
+class TemplateDownloader:
+    def __init__(self):
+        self._root_dir = Path.cwd()
+        self._expdir = None
+        self.here = False
+
+        self.files_to_remove = ["LICENSE"]
+        self.release = None
+        self.url_base = None
+        self.repo = None
+        self._tmp_dir = None
+
+        self.include_secrets = False
+        self.secrets = None
+
+        self.conflict_counter = 0
+
+    @property
+    def root_dir(self):
+        return self._root_dir
+
+    @root_dir.setter
+    def root_dir(self, name):
+        d = Path(name)
+        self._root_dir = d
+
+    @property
+    def expdir(self):
+        if not self.here and self._expdir is not None:
+            return self.root_dir / self._expdir
+        else:
+            return self.root_dir
+
+    @expdir.setter
+    def expdir(self, directory):
+        if directory is None:
+            self._expdir = directory
+        else:
+            d = Path(directory)
+            if d.is_absolute():
+                self._expdir = str(d.stem)
+                self.root_dir = d.parent
+            else:
+                self._expdir = str(d)
+
+    @property
+    def downloaded_dir(self):
+        if self.release.startswith("v"):
+            parsed_release = self.release[1:]
+        else:
+            parsed_release = self.release
+        return f"{self.repo}-{parsed_release}"
+
+    @property
+    def tmp_dir(self):
+        if not self._tmp_dir:
+            raise FileNotFoundError("No tmp_dir found.")
+        return self.root_dir / self._tmp_dir
+
+    @property
+    def tmp_dir_downloaded(self):
+        return self.tmp_dir / self.downloaded_dir
+
+    @property
+    def url(self):
+        return f"{self.url_base}/{self.repo}/archive/{self.release}.zip"
+
+    def _create_directory(self):
+        if not self.here:
+            try:
+                self.expdir.mkdir()
+            except FileExistsError:
+                self.conflict_counter += 1
+                self._expdir = self._expdir + f"_conflict{self.conflict_counter}"
+                print(f"Target directory already existed. Created new directory {self.expdir}")
+                self._create_directory()
+
+    def download_template(self):
+        self._create_directory()
+        if os.listdir(self.expdir):
+            raise FileExistsError("Target directory must be empty.")
+        self._tmp_dir = uuid4().hex
+        self.tmp_dir.mkdir()
+        dload.save_unzip(zip_url=self.url, extract_path=str(self.tmp_dir), delete_after=True)
+        self._remove_files()
+        self._move_files()
+        if self.include_secrets:
+            self._add_secrets_conf()
+
+    def _remove_files(self):
+        for filename in self.files_to_remove:
+            f = self.tmp_dir_downloaded / filename
+            f.unlink()
+
+    def _move_files(self):
+        for f in os.listdir(self.tmp_dir_downloaded):
+            shutil.move(src=str(self.tmp_dir_downloaded / f), dst=str(self.expdir))
+        shutil.rmtree(str(self.tmp_dir))
+
+    def _add_secrets_conf(self):
+        # pkg_path = Path(__file__).resolve().parent
+        # pkg_secrets_file = pkg_path / "files" / "secrets.conf"
+        # pkg_secrets = pkg_secrets_file.read_text()
+
+        secrets_file = self.expdir / "secrets.conf"
+        secrets_file.write_text(self.secrets)
 
 
 @click.command()
-@click.option("--name", default=None, help="Name of the new experiment directory.")
+@click.option(
+    "--name",
+    default="alfred3_experiment",
+    help="Name of the new experiment directory.",
+    show_default=True,
+)
 @click.option(
     "--path",
     default=Path.cwd(),
-    help="Path to the target directory. The template directory will be placed in this directory.",
+    help="Path to the target directory. [default: Current working directory]",
 )
 @click.option(
     "--release",
-    default="master",
+    default="v1.0.0",
     help=(
-        "You can specify a release tag here, if you"
+        "You can specify a release tag here, if you "
         "want to use a specific version of the template."
     ),
 )
 @click.option(
-    "-b/-s",
-    "--big/--small",
-    default=False,
+    "--variant",
+    default="m",
     help=(
-        "If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which "
-        "contains a more sophistaced default structure compared to the 'small' hello-world template."
+        "Which type of template do you want to download? "
+        "The available options are: 's' (minimalistic), 'm' (includes 'run.py' and 'secrets.conf') "
+        "and 'b' (includes subdirectory with imported classes and instructions.)"
     ),
     show_default=True,
 )
 @click.option(
-    "-r",
-    "--runpy",
+    "-h",
+    "--here",
     default=False,
-    help="If this flag is set, the 'run.py' will be included in the download.",
+    help="If this flag is set to '-h', the template files will be placed directly into the directory specified in '--path', ignoring the paramter '--name'.",
     show_default=True,
     is_flag=True,
 )
-def download_template(name: str, path: str, release: str, big: bool, runpy: bool):
-    p = Path(path).resolve()  # parent directory, e.g. exps/
+def download_template(name, path, release, variant, here):
+    loader = TemplateDownloader()
+    loader.root_dir = path
+    loader.expdir = name
+    loader.here = here
+    loader.release = release
+    loader.url_base = "https://github.com/jobrachem"
+    msg = "Download successful."
 
-    filenames = ["LICENSE"]
+    if variant not in ["s", "m", "l"]:
+        raise NotImplementedError
 
-    if release.startswith("v"):
-        parsed_release = release[1:]
-    else:
-        parsed_release = release
+    if variant == "s":
+        loader.repo = "alfred-hello_world"
+        loader.files_to_remove.append("alfred-hello_world.png")
+        loader.files_to_remove.append("run.py")
+        start_msg = "Start your experiment via 'python -m alfred3.run'."
 
-    if big:
-        dirname = f"alfred-template-{parsed_release}"
-        url = f"https://github.com/jobrachem/alfred-template/archive/{release}.zip"
+    if variant == "m":
+        loader.repo = "alfred-hello_world"
+        loader.files_to_remove.append("alfred-hello_world.png")
 
-    else:
-        dirname = f"alfred-hello_world-{parsed_release}"
-        url = f"https://github.com/jobrachem/alfred-hello_world/archive/{release}.zip"
-        filenames.append("alfred-hello_world.png")
-
-    if not runpy:
-        filenames.append("run.py")
-
-    if p.joinpath(dirname).exists():
-        raise FileExistsError("Directory already exists")
-
-    if name is not None and p.joinpath(name).exists():
-        raise FileExistsError("Directory already exists")
-
-    dload.save_unzip(zip_url=url, extract_path=str(p), delete_after=True)
-
-    repo_dir = p / dirname  # exp directory, e.g.: exps/alfred_hello-world-master
-    if name:
-        shutil.move(src=repo_dir, dst=p.joinpath(name))
-    else:
-        name = dirname
-
-    target_dir = p / name
-
-    remove_files(path=target_dir, files=filenames)
-
-    if big:
-        pkg_path = Path(__file__).resolve().parent
-        pkg_secrets_file = pkg_path / "files" / "secrets.conf"
-        pkg_secrets = pkg_secrets_file.read_text()
-
-        secrets_file = target_dir / "secrets.conf"
-        secrets_file.write_text("# place secret information here.")
-        secrets_file.write_text("# NEVER share this file.")
-        secrets_file.write_text(
-            """# Place secret information here.
+    if variant == "m" or variant == "b":
+        start_msg = "Start your experiment via 'python -m alfred3.run' or by executing 'run.py'."
+        loader.include_secrets = True
+        loader.secrets = """# Place secret information here.
 # NEVER share this file.
 [mongo_saving_agent]
 use = false
@@ -119,14 +203,12 @@ auth_source = alfred
 use_ssl = false
 ca_file_path = 
         """
-        )
 
-    print(
-        f"\nalfred3: Created an alfred3 experiment template in the directory '{str(target_dir)}'."
-    )
-    print(
-        f"alfred3: You can start the experiment by changig to the directory and running 'python3 -m alfred.run' from a terminal."
-    )
+    if variant == "b":
+        loader.repo = "alfred-template"
+
+    loader.download_template()
+    print(msg + " " + start_msg)
 
 
 if __name__ == "__main__":

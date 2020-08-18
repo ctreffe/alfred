@@ -40,7 +40,6 @@ class Experiment(object):
         self, config: dict = None, config_string=None, basepath=None, custom_layout=None,
     ):
 
-
         self._alfred_version = __version__
         self._session_status = None
 

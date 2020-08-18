@@ -25,12 +25,13 @@ with arguments of your choice.
 
     if __name__ == "__main__":
         runner = ExperimentRunner()
+        runner.generate_session_id()
         runner.configure_logging()
         runner.create_experiment_app()
         runner.set_port()
         runner.start_browser_thread()
         runner.print_startup_message()
-        runner.app.run()
+        runner.app.run(use_reloader=False, debug=False)
 
 """
 
@@ -88,6 +89,8 @@ class ExperimentRunner:
             logfile = "alfred.log"
 
         logpath = Path(config.get("log", "path")).resolve() / logfile
+        if not logpath.is_absolute():
+            logpath = self.expdir / logpath
         file_handler = alfredlog.prepare_file_handler(logpath)
         file_handler.setFormatter(formatter)
 
@@ -140,7 +143,7 @@ class ExperimentRunner:
         browser = threading.Thread(target=self._open_browser)
         browser.start()
 
-    def auto_run(self, open_browser: bool = True):
+    def auto_run(self, open_browser: bool = True, debug=False):
         self.generate_session_id()
         self.configure_logging()
         self.create_experiment_app()
@@ -148,7 +151,7 @@ class ExperimentRunner:
         if open_browser:
             self.start_browser_thread()
         self.print_startup_message()
-        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=True)
+        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=debug)
 
 
 @click.command()
@@ -156,13 +159,18 @@ class ExperimentRunner:
     "-a/-m",
     "--auto-open/--manual-open",
     default=True,
-    help="If this flag is set to '-a', a browser window or tab with the experiment will be opened automatically.",
-    show_default=True,
+    help="If this flag is set to '-a', the experiment will open a browser window automatically. [default: '-a']",
 )
 @click.option("--path", default=Path.cwd())
-def run_cli(path, auto_open):
+@click.option(
+    "-debug/-production",
+    "--debug/--production",
+    default=False,
+    help="If this flag is set to to '-debug', the alfred experiment will start in flask's debug mode. [default: '-production']",
+)
+def run_cli(path, auto_open, debug):
     runner = ExperimentRunner(path)
-    runner.auto_run(open_browser=auto_open)
+    runner.auto_run(open_browser=auto_open, debug=debug)
 
 
 if __name__ == "__main__":
