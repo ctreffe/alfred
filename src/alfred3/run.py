@@ -88,6 +88,8 @@ class ExperimentRunner:
             logfile = "alfred.log"
 
         logpath = Path(config.get("log", "path")).resolve() / logfile
+        if not logpath.is_absolute():
+            logpath = self.expdir / logpath
         file_handler = alfredlog.prepare_file_handler(logpath)
         file_handler.setFormatter(formatter)
 
@@ -140,7 +142,7 @@ class ExperimentRunner:
         browser = threading.Thread(target=self._open_browser)
         browser.start()
 
-    def auto_run(self, open_browser: bool = True):
+    def auto_run(self, open_browser: bool = True, debug=False):
         self.generate_session_id()
         self.configure_logging()
         self.create_experiment_app()
@@ -148,7 +150,7 @@ class ExperimentRunner:
         if open_browser:
             self.start_browser_thread()
         self.print_startup_message()
-        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=True)
+        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=debug)
 
 
 @click.command()
