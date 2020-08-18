@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.2.1 (Released 2020-08-18)
+
+### Fixed
+
+* Fixed an underspecified filepath handling that caused trouble with the logging initialization under windows.
+
+### Changed
+
+* We made using the flask debugger easier:
+    - If you use the command line interface, you can add the flag 'debug' to start an experiment in debugging mode and use flask's builtin debugging tools. The command becomes `python -m alfred3.run -debug` .
+    - If you use the small `run.py` , you can pass `debug=True` as a parameter in `auto_run()` : `runner.auto_run(debug=True)`
+* Upgraded the command line interface for downloading templates.
+
+
+
 ## alfred v1.2.0 (Released 2020-07-13)
 
 ### Added
@@ -76,12 +91,13 @@ from alfred3.run import ExperimentRunner
 
 if __name__ == "__main__":
     runner = ExperimentRunner()
+    runner.generate_session_id()
     runner.configure_logging()
     runner.create_experiment_app()
     runner.set_port()
     runner.start_browser_thread()
     runner.print_startup_message()
-    runner.app.run()
+    runner.app.run(use_reloader=False, debug=False)
 ```
 
 This will allow you to customize logging configuration or to extract the flask app that is created through your alfred experiment.
