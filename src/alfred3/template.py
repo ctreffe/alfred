@@ -41,8 +41,11 @@ def remove_files(path: str, files: list):
     "--big/--small",
     default=False,
     help=(
-        "If this flag is set to 'b' / '--big', a 'big' template will be downloaded, which "
-        "contains a more sophistaced default structure compared to the 'small' hello-world template."
+        "If this flag is set to 'b' / '--big', a 'big' template will be downloaded from "
+        " https://github.com/jobrachem/alfred-template, which "
+        "contains a little more sophistaced structure compared to the 'small' hello-world "
+        "template, e.g. it contains a secrets.conf. If this flag is set to 's' (the default), "
+        "the template will be downloaded from https://github.com/jobrachem/alfred-hello_world."
     ),
     show_default=True,
 )
