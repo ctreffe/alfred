@@ -348,6 +348,17 @@ class CoreCompositePage(PageCore):
         return data
 
     @property
+    def codebook_data(self):
+        data = {}
+        for el in self._element_list:
+            key = self.tree.replace("rootSection.", "") + "." + el.name
+            try:
+                data.update(el.codebook_data)
+            except AttributeError:
+                pass
+        return data
+
+    @property
     def can_display_corrective_hints_in_line(self):
         return reduce(
             lambda b, element: b and element.can_display_corrective_hints_in_line,
@@ -815,7 +826,8 @@ class UnlinkedDataPage(NoDataPage):
     @property
     def unlinked_data(self):
         data = super(PageCore, self).data
-        data.update(self.data)
+        for elmnt in self._element_list:
+            data.update(elmnt.data)
         return data
 
     def save_data(self, level: int = 1, sync: bool = False):
