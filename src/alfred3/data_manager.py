@@ -24,6 +24,7 @@ class DataManager(object):
 
     def get_data(self):
         data = self._experiment.page_controller.data
+        data["type"] = "_main"
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_version"] = self._experiment.version
@@ -44,6 +45,7 @@ class DataManager(object):
 
     def get_unlinked_data(self):
         data = self._experiment.page_controller.unlinked_data
+        data["type"] = "_unlinked"
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_id"] = self._experiment.exp_id
