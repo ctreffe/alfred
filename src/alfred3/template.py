@@ -171,6 +171,9 @@ def download_template(name, path, release, variant, here):
     loader.url_base = "https://github.com/jobrachem"
     msg = "Download successful."
 
+    if variant not in ["s", "m", "l"]:
+        raise NotImplementedError
+
     if variant == "s":
         loader.repo = "alfred-hello_world"
         loader.files_to_remove.append("alfred-hello_world.png")
