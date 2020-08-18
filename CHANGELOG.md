@@ -20,8 +20,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
     - If you use the small `run.py` , you can pass `debug=True` as a parameter in `auto_run()` : `runner.auto_run(debug=True)`
 * Upgraded the command line interface for downloading templates.
 
-
-
 ## alfred v1.2.0 (Released 2020-07-13)
 
 ### Added
