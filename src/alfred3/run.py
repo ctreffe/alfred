@@ -25,12 +25,13 @@ with arguments of your choice.
 
     if __name__ == "__main__":
         runner = ExperimentRunner()
+        runner.generate_session_id()
         runner.configure_logging()
         runner.create_experiment_app()
         runner.set_port()
         runner.start_browser_thread()
         runner.print_startup_message()
-        runner.app.run()
+        runner.app.run(use_reloader=False, debug=False)
 
 """
 
