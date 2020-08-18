@@ -1,4 +1,4 @@
-"""
+"""Provides flexible saving capabilities for alfred3 experiments.
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 
 """
@@ -12,11 +12,10 @@ import json
 import copy
 import re
 
-
 from abc import ABC, abstractmethod
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple
 from uuid import uuid4
 
 import pymongo
@@ -294,17 +293,13 @@ class LocalSavingAgent(SavingAgent):
     individually by calling the :meth:`~LocalSavingAgent.save_data` 
     method.
 
-    The default filename will be something like::
-
-        2019-11-04_filename_session_id.json
-    
-    *Filename* is a placeholder for the input to the *filename* 
-    argument and *session_id* is a placeholder for the experiment's session
-    id.
-
     Args:
-        filename: Filename for .json files. This will not be the 
-            complete name, but a part of it.
+        filename: Filename for .json file. By default, the full filename
+            will be combined with the associated experiment's session id
+            to ensure that data for each session is saved. You can over-
+            write the filename after initialization by assigning a value
+            to the instance attribute. A '.json' suffix will be added
+            automatically.
         filepath: Path to the directory in which to save the data.
         activation_level: The activation level is used by 
             :meth:`save_data` to determine whether data should be saved. 
@@ -313,11 +308,13 @@ class LocalSavingAgent(SavingAgent):
             hurdle to pass. (Defaults to 1)
         experiment: The experiment to which the saving agent belongs.
         name: Name of the saving agent instance.
-        anonymous_name: If True, the date and session id don't appear 
-            in the name of the saved file. Instead, a uuid is appended
-            to the filename.
     
     Attributes:
+        filename: Full name of the .json file in which data is saved.
+        save_directory: Directory containing the saved data files. If
+            you set this directory with a path that is not absolute,
+            it will be treated as a subdirectory of the experiment 
+            directory.
         name: The name of the saving agent.
         activation_level: The saving agent's activation level.
         log: An instance of 
@@ -327,69 +324,64 @@ class LocalSavingAgent(SavingAgent):
     def __init__(
         self,
         filename: str,
-        filepath: Union[str, Path],
+        directory: Union[str, Path],
         activation_level: int = 1,
         experiment=None,
         name: str = None,
-        anonymous_name: bool = False,
     ):
         """Constructor method."""
         super().__init__(activation_level, experiment, name)
 
-        self._anonymous_name = anonymous_name
-        self._save_directory = self._prepare_directory(filepath)
-        self._file = self._prepare_filename(filename)
+        self.directory = directory
+        self.filename = filename
 
-    def _prepare_directory(self, filepath: Union[str, Path]):
-        """Resolves the path to saving directory and checks if it's
-        writable."""
-        save_directory = Path(filepath)
+    @property
+    def filename(self):
+        return self._filename
 
-        if not save_directory.is_absolute():
-            save_directory = Path(self._experiment.path) / save_directory
+    @filename.setter
+    def filename(self, filename: Union[str, Path]):
+        f = Path(filename)
+        if not f.suffix:
+            f = Path(filename + ".json")
+        self.directory / f  # to test, whether concatenation succeeds
+        self._filename = f
 
-        save_directory.mkdir(exist_ok=True)
+    @property
+    def directory(self):
+        return self._directory
 
-        if not save_directory.is_dir():
-            raise RuntimeError(f"Save path {str(save_directory)} must be an directory.")
+    @directory.setter
+    def directory(self, path: Union[str, Path]):
+        directory = Path(path)
+        if not directory.is_absolute():
+            directory = Path(self._experiment.path) / directory
 
-        if not os.access(str(save_directory), os.W_OK):
-            raise RuntimeError(f"Save path {str(save_directory)} must be writable")
+        directory.mkdir(exist_ok=True)
 
-        return save_directory
+        if not directory.is_dir():
+            raise RuntimeError(f"Save path {str(directory)} must be an directory.")
 
-    def _prepare_filename(self, filename: str):
-        """Construct the full filename and check if it's writable."""
+        if not os.access(str(directory), os.R_OK):
+            raise RuntimeError(f"Save path {str(directory)} must be readable.")
 
-        if self._anonymous_name:
-            filename = filename + uuid4().hex + ".json"
-        else:
-            filename = "{date}_{filename}_{session_id}.json".format(
-                date=time.strftime("%Y-%m-%d_t%H%M%S"),
-                filename=filename,
-                session_id=self._experiment.session_id,
-            )
+        if not os.access(str(directory), os.W_OK):
+            raise RuntimeError(f"Save path {str(directory)} must be writable.")
 
-        _file = self._save_directory / filename
-
-        if _file.is_file():
-            if not os.access(_file, os.W_OK) or not os.access(_file, os.R_OK):
-                raise RuntimeError(f"File {str(self._file)} must be readable and writable.")
-
-        return _file
+        self._directory = directory
 
     def _save(self, data: dict):
         """Write data to file."""
-        with open(self._file, "w") as outfile:
+        with open(self.file, "w") as outfile:
             json.dump(data, outfile, indent=4, sort_keys=True)
 
     @property
     def file(self):
-        return self._file
+        return self.directory / self.filename
 
     def __str__(self):
         return (
-            f"<LocalSavingAgent [name: '{self.name}', path: '{str(self._file)}', "
+            f"<LocalSavingAgent [name: '{self.name}', path: '{str(self.file)}', "
             f"activation_level: '{str(self.activation_level)}']>"
         )
 
@@ -406,11 +398,10 @@ class AutoLocalSavingAgent(LocalSavingAgent):
     def __init__(self, config: SectionProxy, experiment):
         super().__init__(
             filename=config.get("name"),
-            filepath=config.get("path"),
+            directory=config.get("path"),
             activation_level=config.getint("level"),
             experiment=experiment,
             name=config.get("name"),
-            anonymous_name=config.getboolean("anonymous_name"),
         )
 
 
@@ -432,6 +423,13 @@ class MongoSavingAgent(SavingAgent):
 
         MongoSavingAgent_2020-08-05_t125518_6c8cda18e924486a9ab31a3072592d14
 
+    By defining a custom identifier, you can change the SavingAgent's
+    behavior, e.g. from saving a new document for every experiment 
+    session to saving only one document for the experiment::
+
+        agent = MongoSavingAgent(...)
+        agent.identifier = {"exp_id": agent.exp.exp_id}
+
     Args:
         client: An active MongoClient.
         db: Name of the database to use.
@@ -449,6 +447,13 @@ class MongoSavingAgent(SavingAgent):
         activation_level: The saving agent's activation level.
         log: An instance of 
             :class:`alfred3.alfredlog.QueuedLoggingInterface` for logging.
+        identifier: A filter dictionary that allows for
+            fine-grained control of the SavingAgent's saving behavior.
+            The filter will be used to query the connected MongoDB.
+            If a document is found, it will be replaced with the data.
+            If no document is found, the data will be inserted as a new
+            document. Defaults to an instance-specific (and therefore
+            session-specific) ObjectId.
     """
 
     client_pattern = re.compile(r"host=\['(?P<host>.+):(?P<port>\d+)'\]")
@@ -470,15 +475,22 @@ class MongoSavingAgent(SavingAgent):
 
         self._doc_id = str(bson.objectid.ObjectId())
 
+        self._identifier = {"_id": self._doc_id}
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+    @identifier.setter
+    def identifier(self, identifier: dict):
+        if not isinstance(identifier, dict):
+            raise ValueError("Identifier must be a dictionary.")
+        else:
+            self._identifier = identifier
+
     def _save(self, data):
 
-        try:
-            data["_id"]
-            raise ValueError("Your experiment data must not have a field '_id'.")
-        except KeyError:
-            pass
-
-        f = {"_id": self._doc_id}
+        f = self.identifier
         data["_id"] = self._doc_id
 
         if self._col.find_one(filter=f):
@@ -486,7 +498,7 @@ class MongoSavingAgent(SavingAgent):
         else:
             self._col.insert_one(document=data)
 
-        check = self._col.find_one(filter={"_id": self._doc_id})
+        check = self._col.find_one(filter=f)
         if not check == data:
             raise SavingAgentRunException("Failed to validate data saving.")
 
@@ -628,6 +640,7 @@ class MongoManager:
 
     def init_agent(
         self,
+        agent_class,
         section: str,
         fill_section: str = None,
         fallbacks: list = None,
@@ -643,6 +656,8 @@ class MongoManager:
             new agent in order to save resources.
         
         Args:
+            agent_class: The class that will be used to instantiate
+                a saving agent.
             section: Name of section with configuration information.
             fill_section: Name of section with configuration for
                 filling in information that is missing in *section*. 
@@ -664,12 +679,14 @@ class MongoManager:
             conf = parser[section]
 
         client = self._available_client(conf)
-        agent = AutoMongoSavingAgent(config=conf, client=client, experiment=self.exp)
+        agent = agent_class(config=conf, client=client, experiment=self.exp)
 
         if fallbacks:
             for fb_section_name in fallbacks:
                 if parser.getboolean(fb_section_name, "use"):
-                    fb_agent = self.init_agent(section=fb_section_name, config_name=config_name)
+                    fb_agent = self.init_agent(
+                        agent_class=agent_class, section=fb_section_name, config_name=config_name
+                    )
                     agent.append_fallback(fb_agent)
 
         return agent
@@ -697,6 +714,7 @@ class MongoManager:
 class SavingAgentController:
     """Orchestrates the  operation of multiple SavingAgents.
 
+    Usage:
     Initiate the SavingAgentController with an alfred experiment and
     append saving agents using :meth:`~SavingAgentController.append`.
 
@@ -901,3 +919,107 @@ class SavingAgentController:
 
         return ".".join(name)
 
+
+class CodebookMixin:
+    @staticmethod
+    def _identify_duplicates_and_update(old_data: dict, new_data: dict) -> Tuple[int, dict]:
+        """Updates a nested dictionary with values from another nested dictionary.
+
+        If duplicate keys with different values are encountered, the keys
+        will be mutated to include the term '_duplicate' plus a counter
+        of duplicates. The value dicts will receive an additional field 
+        of ``"duplicate_identifier": True``.
+
+        Example::
+
+            a = {"exp_title": "test", 
+                "codebook": {
+                    "name1": {"instruction": "instr1"}
+                    },
+                }
+            
+            b = {
+                "exp_title": "test",
+                "codebook": {
+                    "name1": {"instruction": "instr2", "desription": "desc"},
+                    "name2": {"instruction": "instr2"},
+                },
+            }
+
+            counter, updated_data = duplicate_save_update(old_data=a, new_data=b)
+
+            # counter = 2
+            # updated_data =  { 'name1_duplicate1': {'duplicate_identifier': True, 'instruction': 'instr1'},
+                                'name1_duplicate2': {'desription': 'desc',
+                                                    'duplicate_identifier': True,
+                                                    'instruction': 'instr2'},
+                                'name2': {'instruction': 'instr2'}}
+
+
+
+        Returns:
+            A tuple containing the duplicate counter (total number of
+            affected key-value pairs in the updated dictionary) and the
+            updated dictionary.
+        """
+        duplicate_entries = 0
+
+        update_entries = []
+        for identifier, new_element in new_data.items():
+            try:
+                duplicate_elements = 0
+                old_element = old_data[identifier]
+                if not old_element == new_element:
+                    new_element["duplicate_identifier"] = True
+                    old_element["duplicate_identifier"] = True
+                    old_data.pop(identifier)
+
+                    duplicate_entries += 2
+                    duplicate_elements += 1
+
+                    entry2 = {f"{identifier}_duplicate{duplicate_elements}": new_element}
+
+                    update_entries.append({identifier: old_element})
+                    update_entries.append(entry2)
+            except KeyError:
+                update_entries.append({identifier: new_element})
+
+        for entry in update_entries:
+            old_data.update(entry)
+
+        return duplicate_entries, old_data
+
+
+class CodebookLocalSavingAgent(AutoLocalSavingAgent, CodebookMixin):
+    def _save(self, data: dict):
+
+        try:
+            with open(self.file, "r") as f:
+                existing_data = json.load(f)
+
+            _, updated_codebook = self._identify_duplicates_and_update(
+                old_data=existing_data["codebook"], new_data=data["codebook"]
+            )
+
+            existing_data["codebook"] = updated_codebook
+
+            super()._save(data=existing_data)
+        except FileNotFoundError:
+            super()._save(data=data)
+
+
+class CodebookMongoSavingAgent(AutoMongoSavingAgent, CodebookMixin):
+    def _save(self, data: dict):
+
+        f = self.identifier
+        existing_data = self._col.find_one(filter=f)
+
+        try:
+            _, updated_codebook = self._identify_duplicates_and_update(
+                old_data=existing_data["codebook"], new_data=data["codebbok"]
+            )
+            existing_data["codebook"] = updated_codebook
+            self.col.find_one_and_replace(filter=f, replacement=data)
+            super()._save(data=existing_data)
+        except KeyError:
+            super()._save(data=data)
