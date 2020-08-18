@@ -55,7 +55,7 @@ class Section(ContentCore):
 
     @property
     def unlinked_data(self):
-        data = super(Section, self).data
+        data = super(Section, self).data  # ContentCore.data
         data["subtree_data"] = []
         for q_core in self._page_list:
             try:
@@ -74,6 +74,16 @@ class Section(ContentCore):
                 present = member.unlinked_data_present()
 
         return present
+
+    @property
+    def codebook_data(self):
+        data = {}
+        for member in self.page_list:
+            try:
+                data.update(member.codebook_data)
+            except AttributeError:
+                pass
+        return data
 
     @property
     def current_page(self):

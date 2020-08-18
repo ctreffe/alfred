@@ -29,7 +29,7 @@ class PageCore(ContentCore):
         values: dict = {},
         run_on_showing="always",
         run_on_hiding="always",
-        **kwargs
+        **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
@@ -340,6 +340,17 @@ class CoreCompositePage(PageCore):
         return data
 
     @property
+    def codebook_data(self):
+        data = {}
+        for el in self._element_list:
+            key = self.tree.replace("rootSection.", "") + "." + el.name
+            try:
+                data.update(el.codebook_data)
+            except AttributeError:
+                pass
+        return data
+
+    @property
     def can_display_corrective_hints_in_line(self):
         return reduce(
             lambda b, element: b and element.can_display_corrective_hints_in_line,
@@ -487,23 +498,23 @@ class DemographicPage(CompositePage):
 
         if instruction:
             self.append(element.TextElement(instruction))
-        self.append(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
+        self.append(element.TextElement("Bitte gib deine persönlichen Datein ein."))
         if age:
-            self.append(element.TextEntryElement(u"Dein Alter: ", name="age"))
+            self.append(element.TextEntryElement("Dein Alter: ", name="age"))
 
         if sex:
-            self.append(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
+            self.append(element.TextEntryElement("Dein Geschlecht: ", name="sex"))
 
         if course_of_studies:
             self.append(
                 element.TextEntryElement(
-                    instruction=u"Dein Studiengang: ", name="course_of_studies"
+                    instruction="Dein Studiengang: ", name="course_of_studies"
                 )
             )
 
         if semester:
             self.append(
-                element.TextEntryElement(instruction=u"Dein Fachsemester ", name="semester")
+                element.TextEntryElement(instruction="Dein Fachsemester ", name="semester")
             )
 
 
@@ -595,7 +606,7 @@ class MongoSaveCompositePage(CompositePage):
         error="ignore",
         hide_data=True,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
         self._host = host
@@ -807,7 +818,8 @@ class UnlinkedDataPage(NoDataPage):
     @property
     def unlinked_data(self):
         data = super(PageCore, self).data
-        data.update(self.data)
+        for elmnt in self._element_list:
+            data.update(elmnt.data)
         return data
 
     def save_data(self, level: int = 1, sync: bool = False):
