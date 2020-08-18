@@ -139,7 +139,7 @@ class QueuedLoggingInterface:
         experiment specific.
     
     * The necessary information only becomes available to pages and elements
-        once the page or it's parent section get appended to the 
+        once the page or its parent section get appended to the 
         experiment.
     
     * So, logged messages are collected in a queue and logged as soon 
