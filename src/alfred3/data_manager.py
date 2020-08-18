@@ -50,6 +50,17 @@ class DataManager(object):
 
         return data
 
+    def get_codebook_data(self):
+        data = {}
+        data["codebook"] = self._experiment.page_controller.codebook_data
+        data["type"] = "_codebook"
+        data["exp_author"] = self._experiment.author
+        data["exp_title"] = self._experiment.title
+        data["exp_version"] = self._experiment.version
+        data["alfred_version"] = self._experiment.alfred_version
+        data["save_time"] = time.time()
+        return data
+
     def find_experiment_data_by_uid(self, uid):
         data = self._experiment._page_controller.data
         return DataManager._find_by_uid(data, uid)
