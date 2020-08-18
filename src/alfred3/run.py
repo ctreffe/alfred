@@ -32,6 +32,7 @@ with arguments of your choice.
         runner.print_startup_message()
         runner.app.run()
 
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
 import importlib
