@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 * Upgraded the command line interface for downloading templates. 
     - Most notably, the interface gained the flag '-h'/'--here', that you can use to indicate that you want the template's files to be placed directly in the '--path' (by default, in the current working directory).
     - Instead of the '-b'/'--big' and '-r'/'--runpy' flags, you can now choose between variants by setting the option '--variant' to 's', 'm' (default), or 'l'.
+    - Enhanced handling of naming conflicts.
     - This is the full new usage:
 
 ``` 
