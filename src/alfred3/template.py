@@ -23,6 +23,7 @@ class TemplateDownloader:
         self.here = False
 
         self.files_to_remove = ["LICENSE"]
+        self.allowed_names = [".git", ".idea"]
         self.release = None
         self.url_base = None
         self.repo = None
@@ -95,7 +96,14 @@ class TemplateDownloader:
 
     def download_template(self):
         self._create_directory()
-        if os.listdir(self.expdir):
+        dir_content = os.listdir(self.expdir)
+        print(dir_content)
+        for f in self.allowed_names:
+            try:
+                dir_content.remove(f)
+            except ValueError:
+                pass
+        if dir_content:
             raise FileExistsError("Target directory must be empty.")
         self._tmp_dir = uuid4().hex
         self.tmp_dir.mkdir()
@@ -150,7 +158,7 @@ class TemplateDownloader:
     help=(
         "Which type of template do you want to download? "
         "The available options are: 's' (minimalistic), 'm' (includes 'run.py' and 'secrets.conf') "
-        "and 'b' (includes subdirectory with imported classes and instructions.)"
+        "and 'l' (includes subdirectory with imported classes and instructions.)"
     ),
     show_default=True,
 )
@@ -184,7 +192,7 @@ def download_template(name, path, release, variant, here):
         loader.repo = "alfred-hello_world"
         loader.files_to_remove.append("alfred-hello_world.png")
 
-    if variant == "m" or variant == "b":
+    if variant == "m" or variant == "l":
         start_msg = "Start your experiment via 'python -m alfred3.run' or by executing 'run.py'."
         loader.include_secrets = True
         loader.secrets = """# Place secret information here.
@@ -204,7 +212,7 @@ use_ssl = false
 ca_file_path = 
         """
 
-    if variant == "b":
+    if variant == "l":
         loader.repo = "alfred-template"
 
     loader.download_template()
