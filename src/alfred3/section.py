@@ -34,6 +34,10 @@ class Section(ContentCore):
         s = "Section (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
         return s
 
+    def __iadd__(self, other):
+        self.append(other)
+        return self
+
     @property
     def page_list(self):
         return self._page_list
@@ -181,6 +185,8 @@ class Section(ContentCore):
 
     def append(self, *items):
         for item in items:
+            if not isinstance(item, (PageCore, Section)):
+                raise TypeError("Can only add pages and section to section.")
             self._page_list.append(item)
             item.added_to_section(self)
 

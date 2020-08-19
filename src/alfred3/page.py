@@ -28,7 +28,7 @@ class PageCore(ContentCore):
         values: dict = {},
         run_on_showing="always",
         run_on_hiding="always",
-        **kwargs
+        **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
@@ -275,7 +275,7 @@ class CoreCompositePage(PageCore):
     def append(self, *elements):
         for elmnt in elements:
             if not isinstance(elmnt, Element):
-                raise TypeError
+                raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
             exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
@@ -295,6 +295,14 @@ class CoreCompositePage(PageCore):
 
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
+
+    def __iadd__(self, other):
+        self.append(other)
+        return self
+
+    @property
+    def element_list(self):
+        return self._element_list
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
@@ -467,23 +475,23 @@ class DemographicPage(CompositePage):
 
         if instruction:
             self.append(element.TextElement(instruction))
-        self.append(element.TextElement(u"Bitte gib deine persönlichen Datein ein."))
+        self.append(element.TextElement("Bitte gib deine persönlichen Datein ein."))
         if age:
-            self.append(element.TextEntryElement(u"Dein Alter: ", name="age"))
+            self.append(element.TextEntryElement("Dein Alter: ", name="age"))
 
         if sex:
-            self.append(element.TextEntryElement(u"Dein Geschlecht: ", name="sex"))
+            self.append(element.TextEntryElement("Dein Geschlecht: ", name="sex"))
 
         if course_of_studies:
             self.append(
                 element.TextEntryElement(
-                    instruction=u"Dein Studiengang: ", name="course_of_studies"
+                    instruction="Dein Studiengang: ", name="course_of_studies"
                 )
             )
 
         if semester:
             self.append(
-                element.TextEntryElement(instruction=u"Dein Fachsemester ", name="semester")
+                element.TextEntryElement(instruction="Dein Fachsemester ", name="semester")
             )
 
 
@@ -575,7 +583,7 @@ class MongoSaveCompositePage(CompositePage):
         error="ignore",
         hide_data=True,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
         self._host = host
@@ -734,6 +742,6 @@ class NoDataPage(Page):
     @property
     def data(self):
         # Pages must always return tag and uid!
-        data = {'tag': self.tag, 'uid': self.uid}
+        data = {"tag": self.tag, "uid": self.uid}
 
         return data
