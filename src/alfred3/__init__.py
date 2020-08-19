@@ -426,3 +426,7 @@ class Experiment(object):
 
     def add_session(self, s):
         self._session = self._session + "." + s if self._session else s
+
+    def __iadd__(self, other):
+        self.append(other)
+        return self

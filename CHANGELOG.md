@@ -7,6 +7,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.3.0 (Released 2020-08-19)
+
+### Added
+
+* We defined the *iadd* ( `+=` ) operator for all pages, sections and the experiment class. In many cases, it can replace a call to the `append()` method of these classes. Don't worry, the `append()` method is not going away. You can use this operator...
+    - ... to append elements to a page
+    - ... to append pages and sections to a sections
+    - ... to append pages and section to the experiment
+
+Simple examples:
+
+``` python
+# (assuming correct imports)
+
+# Append element to a page
+page = Page(title="Test Page")
+page += TextElement("Testtext", name="text1")
+```
+
+``` python
+# (assuming correct imports)
+# Append page and section to a section
+main = Section()
+
+second = Section()
+page = Page(title="Test Page")
+second += page # using the page instance from the
+
+main += second
+```
+
+``` python
+# (assuming correct imports)
+# Append sections and pages to the experiment
+exp = Experiment()
+main = Section()
+exp += main
+```
+
+When using the `+=` operator in class definitions, you refer to "self":
+
+``` python
+# (assuming correct imports)
+
+class Welcome(Page):
+    def on_showing(self):
+        self += TextElement("Testtext", name="text1")
+```
+
+### Changed
+
+* When downloading a template, it is now allowed to have a `.idea` and a `.git` file already present in the target directory. Otherwise, the directory must be empty.
+
 ## alfred v1.2.1 (Released 2020-08-18)
 
 ### Fixed
