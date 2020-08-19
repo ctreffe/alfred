@@ -96,14 +96,18 @@ class TemplateDownloader:
 
     def download_template(self):
         self._create_directory()
+
         dir_content = os.listdir(self.expdir)
-        print(dir_content)
+
         for f in self.allowed_names:
             try:
                 dir_content.remove(f)
             except ValueError:
                 pass
         if dir_content:
+
+        if os.listdir(self.expdir):
+
             raise FileExistsError("Target directory must be empty.")
         self._tmp_dir = uuid4().hex
         self.tmp_dir.mkdir()
