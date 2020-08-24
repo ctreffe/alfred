@@ -141,3 +141,4 @@ src/tests/manualtesting.py
 # project-specifics
 .vscode/
 tests/manual/
+alfred_venv/
