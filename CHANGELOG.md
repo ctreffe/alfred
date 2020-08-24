@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+## alfred v1.3.1 (Released 2020-08-24)
+
+### Fixed
+
+* Fixed a bug in the template donwloading CLI.
+
 ## alfred v1.3.0 (Released 2020-08-19)
 
 ### Added
