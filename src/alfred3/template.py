@@ -106,8 +106,6 @@ class TemplateDownloader:
                 pass
         if dir_content:
 
-        if os.listdir(self.expdir):
-
             raise FileExistsError("Target directory must be empty.")
         self._tmp_dir = uuid4().hex
         self.tmp_dir.mkdir()
