@@ -272,6 +272,7 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).__init__(**kwargs)
 
         self._element_list = []
+        self._element_dict = {}
         self._element_name_counter = 1
         self._thumbnail_element = None
         if elements is not None:
@@ -316,6 +317,10 @@ class CoreCompositePage(PageCore):
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
 
+            if elmnt.name in self._element_dict:
+                raise ValueError("Element name must be unique on Page.")
+            self._element_dict[elmnt.name] = element
+
     def __iadd__(self, other):
         self.append(other)
         return self
@@ -345,13 +350,14 @@ class CoreCompositePage(PageCore):
         for elmnt in self._element_list:
             data.update(elmnt.data)
 
+        data["tree"] = self.short_tree
+
         return data
 
     @property
     def codebook_data(self):
         data = {}
         for el in self._element_list:
-            key = self.tree.replace("rootSection.", "") + "." + el.name
             try:
                 data.update(el.codebook_data)
             except AttributeError:
@@ -603,58 +609,58 @@ class HeadOpenSectionCantClose(CompositePage):
         )
 
 
-class MongoSaveCompositePage(CompositePage):
-    def __init__(
-        self,
-        host,
-        database,
-        collection,
-        user,
-        password,
-        error="ignore",
-        hide_data=True,
-        *args,
-        **kwargs,
-    ):
-        super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
-        self._host = host
-        self._database = database
-        self._collection = collection
-        self._user = user
-        self._password = password
-        self._error = error
-        self._hide_data = hide_data
-        self._saved = False
+# class MongoSaveCompositePage(CompositePage):
+#     def __init__(
+#         self,
+#         host,
+#         database,
+#         collection,
+#         user,
+#         password,
+#         error="ignore",
+#         hide_data=True,
+#         *args,
+#         **kwargs,
+#     ):
+#         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
+#         self._host = host
+#         self._database = database
+#         self._collection = collection
+#         self._user = user
+#         self._password = password
+#         self._error = error
+#         self._hide_data = hide_data
+#         self._saved = False
 
-    @property
-    def data(self):
-        if self._hide_data:
-            # this is needed for some other functions to work properly
-            data = {"tag": self.tag, "uid": self.uid}
-            return data
-        else:
-            return super(MongoSaveCompositePage, self).data
+#     @property
+#     def data(self):
+#         if self._hide_data:
+#             # this is needed for some other functions to work properly
+#             data = {"tag": self.tag, "uid": self.uid}
+#             return data
+#         else:
+#             return super(MongoSaveCompositePage, self).data
 
-    def close_page(self):
-        rv = super(MongoSaveCompositePage, self).close_page()
-        if self._saved:
-            return rv
-        from pymongo import MongoClient
+#     def close_page(self):
+#         rv = super(MongoSaveCompositePage, self).close_page()
+#         if self._saved:
+#             return rv
+#         from pymongo import MongoClient
 
-        try:
-            client = MongoClient(self._host)
-            db = client[self._database]
-            db.authenticate(self._user, self._password)
-            col = db[self._collection]
-            data = super(MongoSaveCompositePage, self).data
-            data.pop("first_show_time", None)
-            data.pop("closing_time", None)
-            col.insert(data)
-            self._saved = True
-        except Exception as e:
-            if self._error != "ignore":
-                raise e
-        return rv
+#         try:
+#             client = MongoClient(self._host)
+#             db = client[self._database]
+#             db.authenticate(self._user, self._password)
+#             col = db[self._collection]
+#             data = super(MongoSaveCompositePage, self).data
+#             data.pop("first_show_time", None)
+#             data.pop("closing_time", None)
+#             col.insert(data)
+#             self._saved = True
+#         except Exception as e:
+#             if self._error != "ignore":
+#                 raise e
+#         return rv
 
 
 ####################
@@ -828,6 +834,7 @@ class UnlinkedDataPage(NoDataPage):
         data = super(PageCore, self).data
         for elmnt in self._element_list:
             data.update(elmnt.data)
+        data["tree"] = self.short_tree
         return data
 
     def save_data(self, level: int = 1, sync: bool = False):
@@ -879,8 +886,10 @@ class CustomSavingPage(Page, ABC):
     .. warning::
         Each SavingAgent maintains one file or one document. 
         On saving, the document will be fully replaced with the current
-        data. That means, you should never let two CustomSavingPages
+        data. That means, you should not let two CustomSavingPages
         share a SavingAgent, as they will override each other's data.
+        That is, unless that is your intended behavior, e.g. when the
+        pages share data.
 
     Args:
         experiment: Alfred experiment. This page must be initialized
