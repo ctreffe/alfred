@@ -356,22 +356,22 @@ class LocalSavingAgent(SavingAgent):
         directory = Path(path)
         if not directory.is_absolute():
             directory = Path(self._experiment.path) / directory
-
-        directory.mkdir(exist_ok=True)
-
-        if not directory.is_dir():
-            raise RuntimeError(f"Save path {str(directory)} must be an directory.")
-
-        if not os.access(str(directory), os.R_OK):
-            raise RuntimeError(f"Save path {str(directory)} must be readable.")
-
-        if not os.access(str(directory), os.W_OK):
-            raise RuntimeError(f"Save path {str(directory)} must be writable.")
-
         self._directory = directory
+
+    def _check_directory(self):
+        self.directory.mkdir(exist_ok=True, parents=True)
+        if not self.directory.is_dir():
+            raise RuntimeError(f"Save path {str(self.directory)} must be an directory.")
+
+        if not os.access(str(self.directory), os.R_OK):
+            raise RuntimeError(f"Save path {str(self.directory)} must be readable.")
+
+        if not os.access(str(self.directory), os.W_OK):
+            raise RuntimeError(f"Save path {str(self.directory)} must be writable.")
 
     def _save(self, data: dict):
         """Write data to file."""
+        self._check_directory()
         with open(self.file, "w") as outfile:
             json.dump(data, outfile, indent=4, sort_keys=True)
 
@@ -640,8 +640,8 @@ class MongoManager:
 
     def init_agent(
         self,
-        agent_class,
         section: str,
+        agent_class=AutoMongoSavingAgent,
         fill_section: str = None,
         fallbacks: list = None,
         config_name: str = "secrets",
