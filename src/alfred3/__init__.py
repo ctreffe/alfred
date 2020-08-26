@@ -20,14 +20,19 @@ import os
 import sys
 import time
 import logging
+import json
+import random
+import threading
 from builtins import object
 from uuid import uuid4
 from configparser import NoOptionError
+from typing import Union
+from pathlib import Path
 
 import pymongo
 from cryptography.fernet import Fernet
 
-from . import layout, messages, settings, page
+from . import layout, messages, settings, page, export
 from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
@@ -265,6 +270,9 @@ class Experiment(object):
         self._page_controller.change_to_finished_section()
         self.save_data()
 
+        save_csv = threading.Thread(target=self._save_all_data_to_csv)
+        save_csv.start()
+
     def save_data(self):
         """Saves data with the main, unlinked and codebook :class:`SavingAgentController`s.
 
@@ -284,6 +292,85 @@ class Experiment(object):
 
         codebook_data = self.data_manager.get_codebook_data()
         self.sac_codebook.save_with_all_agents(data=codebook_data, level=99)
+
+    def _save_all_data_to_csv(self):
+        time.sleep(1)
+        self._save_exp_data_to_csv()
+        self._save_unlinked_data_to_csv()
+        self._save_codebook_data_to_csv()
+
+    def _save_exp_data_to_csv(self):
+        if not self.config.getboolean(_LSA, "use"):
+            return
+
+        data_dir = Path(self.path) / "data"
+        data_dir.mkdir(exist_ok=True)
+
+        lsa_name = self.config.get(_LSA, "name")
+        lsa_dir = self.sac_main.agents[lsa_name].directory
+        self._save_to_csv(sa_name=lsa_name, directory=lsa_dir, datafile="exp_data.csv")
+        self.log.info(
+            f"Processed experiment data. The data is stored in '{str(data_dir)}/exp_data.csv'"
+        )
+
+    def _save_unlinked_data_to_csv(self):
+        if not self.config.getboolean(_LSA_U, "use"):
+            return
+
+        data_dir = Path(self.path) / "data"
+        data_dir.mkdir(exist_ok=True)
+
+        lsa_name = self.config.get(_LSA_U, "name")
+        lsa_dir = self.sac_unlinked.agents[lsa_name].directory
+        self._save_to_csv(
+            sa_name=lsa_name, directory=lsa_dir, datafile="unlinked_data.csv", shuffle_docs=True,
+        )
+        self.log.info(
+            f"Processed unlinked data. The data is stored in '{str(data_dir)}/unlinked_data.csv'"
+        )
+
+    def _save_codebook_data_to_csv(self):
+        if not self.config.getboolean(_LSA_C, "use"):
+            return
+
+        data_dir = Path(self.path) / "data"
+        data_dir.mkdir(exist_ok=True)
+
+        lsa_name = self.config.get(_LSA_C, "name")
+        cb_name = self.sac_codebook.agents[lsa_name].file
+
+        with open(cb_name, "r") as f:
+            raw_codebook = json.load(f)
+
+        ex = export.CodeBookExporter(raw=raw_codebook)
+
+        with open(data_dir / "codebook.csv", "w") as csvfile:
+            ex.write_to_file(csvfile)
+
+        self.log.info(
+            f"Processed codebook data. The data is stored in '{str(data_dir)}/codebook.csv'"
+        )
+
+    def _save_to_csv(self, sa_name: str, directory: Path, datafile: str, shuffle_docs=False):
+
+        ex = export.ExpDataExporter()
+
+        filenames_list = os.listdir(directory)
+        if shuffle_docs:
+            random.shuffle(filenames_list)
+
+        for filename in os.listdir(directory):
+            fp = directory / filename
+            with open(fp, "r") as f:
+                session_doc = json.load(f)
+
+            if not session_doc.get("type") in ["_main", "_unlinked"]:
+                continue
+
+            ex.process_one(session_doc)
+
+        with open(Path(self.path) / "data" / datafile, "w") as csvfile:
+            ex.write_to_file(csvfile)
 
     def append(self, *items):
         for item in items:
