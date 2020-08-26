@@ -46,7 +46,9 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
         self._experiment = experiment
         self._layout = None
         self._oldPage = None
-        self.log = QueuedLoggingInterface(base_logger=__name__, queue_logger=self.prepare_logger_name())
+        self.log = QueuedLoggingInterface(
+            base_logger=__name__, queue_logger=self.prepare_logger_name()
+        )
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
 
         if layout is None:
@@ -81,6 +83,7 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
 
     def move_forward(self):
         if self._experiment.page_controller.allow_leaving(Direction.FORWARD):
+            self._experiment.page_controller.current_page.save_data()
             self._experiment.page_controller.current_page._on_hiding_widget()
             if self._experiment.page_controller.can_move_forward:
                 self._experiment.page_controller.move_forward()
@@ -90,20 +93,23 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
 
     def move_backward(self):
         if self._experiment.page_controller.allow_leaving(Direction.BACKWARD):
+            self._experiment.page_controller.current_page.save_data()
             self._experiment.page_controller.current_page._on_hiding_widget()
             self._experiment.page_controller.move_backward()
             self._experiment.page_controller.current_page._on_showing_widget()
 
     def move_to_position(self, pos_list):
         if self._experiment.page_controller.allow_leaving(Direction.JUMP):
+            self._experiment.page_controller.current_page.save_data()
             self._experiment.page_controller.current_page._on_hiding_widget()
             self._experiment.page_controller.move_to_position(pos_list)
             self._experiment.page_controller.current_page._on_showing_widget()
 
     def start(self):
+        self._experiment.page_controller.current_page.save_data()
         self._experiment.page_controller.enter()
         self._experiment.page_controller.current_page._on_showing_widget()
-    
+
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
 
@@ -225,7 +231,6 @@ class WebUserInterfaceController(UserInterfaceController):
             path = self._experiment.subpath(path)
 
         identifier = uuid4().hex
-        
 
         if self._experiment.config.getboolean("general", "debug"):
             if not hasattr(self, "sf_counter"):
