@@ -265,7 +265,7 @@ class Element(object):
 
     @property
     def identifier(self):
-        return self.tree.replace("rootSection.", "") + "." + self._name
+        return self.tree.replace("rootSection_", "") + "_" + self._name
 
 
 class WebElementInterface(with_metaclass(ABCMeta, object)):
@@ -596,7 +596,7 @@ class DataElement(Element, WebElementInterface):
     def codebook_data_flat(self):
         data = {}
         data["name"] = self.name
-        data["tree"] = self.tree.replace("rootSection.", "")
+        data["tree"] = self.tree.replace("rootSection_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
@@ -691,7 +691,7 @@ class InputElement(Element):
     def codebook_data_flat(self):
         data = {}
         data["name"] = self.name
-        data["tree"] = self.tree.replace("rootSection.", "")
+        data["tree"] = self.tree.replace("rootSection_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
