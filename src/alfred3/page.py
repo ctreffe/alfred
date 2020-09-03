@@ -853,6 +853,11 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
+        if not self._experiment.sac_unlinked.agents:
+            if not self._experiment.config.getboolean("general", "debug"):
+                raise ValueError("No saving agent for unlinked data available.")
+            else:
+                self.log.warning("No saving agent for unlinked data available.")
         data = self._experiment.data_manager.get_unlinked_data()
         self._experiment.sac_unlinked.save_with_all_agents(data=data, level=level, sync=sync)
 
