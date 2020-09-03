@@ -73,36 +73,26 @@ def start():
 
     # Try-except block for compatibility with alfred3 previous to v1.2.0
     # TODO: Remove try-except block in v2.0.0 (keep "try" part)
-    try:
-        # configure logging
-        exp_id = script.config["exp_config"].get("metadata", "exp_id")
-        session_id = script.config["exp_config"].get("metadata", "session_id")
-        log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
-        log.session_id = session_id
+    exp_id = script.config["exp_config"].get("metadata", "exp_id")
+    session_id = script.config["exp_config"].get("metadata", "session_id")
+    log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
+    log.session_id = session_id
 
-        # generate experiment
-        script.experiment = script.generate_experiment(config=script.config)
+    # generate experiment
+    script.experiment = script.generate_experiment(config=script.config)
 
-        # log initialization message
-        log_msg = (
-            f"Alfred {script.config['exp_config'].get('experiment', 'type')} experiment session initialized! "
-            f"Alfred version: {script.experiment.alfred_version}, "
-            f"experiment title: {script.config['exp_config'].get('metadata', 'title')}, "
-            f"experiment version: {script.config['exp_config'].get('metadata', 'version')}"
-        )
+    # log initialization message
+    log_msg = (
+        f"Alfred {script.config['exp_config'].get('experiment', 'type')} experiment session initialized! "
+        f"Alfred version: {script.experiment.alfred_version}, "
+        f"experiment title: {script.config['exp_config'].get('metadata', 'title')}, "
+        f"experiment version: {script.config['exp_config'].get('metadata', 'version')}"
+    )
 
-        log.info(log_msg)
+    log.info(log_msg)
 
-        # start experiment
-        script.experiment.start()
-    except (AttributeError, TypeError):
-        from alfred3.config import init_configuration
-
-        session_id = uuid4().hex
-        script.config = init_configuration(Path.cwd())
-        script.config["exp_config"].read_dict({"metadata": {"session_id": session_id}})
-        script.experiment = script.generate_experiment(config=script.config)
-        script.experiment.start()
+    # start experiment
+    script.experiment.start()
 
     # Experiment startup message
 
