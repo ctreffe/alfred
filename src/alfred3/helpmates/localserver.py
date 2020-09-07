@@ -73,6 +73,7 @@ def start():
 
     # Try-except block for compatibility with alfred3 previous to v1.2.0
     # TODO: Remove try-except block in v2.0.0 (keep "try" part)
+    # pylint: disable=unsubscriptable-object
     exp_id = script.config["exp_config"].get("metadata", "exp_id")
     session_id = script.config["exp_config"].get("metadata", "session_id")
     log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
