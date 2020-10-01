@@ -492,12 +492,7 @@ class MongoSavingAgent(SavingAgent):
 
     def _save(self, data):
         f = self.identifier
-
-        if not list(f) in list(data):
-            data.update(f)
-            self.log.debug(
-                f"MongoSavingAgent: Identifier was not present in data. The data dictionary was updated with the identifier."
-            )
+        data.update(f)
 
         if self._col.find_one(filter=f):
             self._col.find_one_and_replace(filter=f, replacement=data)
