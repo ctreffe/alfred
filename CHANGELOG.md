@@ -9,11 +9,69 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ### Added
 
-* New page classes
-    + `page.UnlinkedDataPage`
-    + `page.CustomSavingPage`
-* Automatic codebook generation
-* Command line interface for exporting alfred3 data
+* **New page hooks for more control**. All page classes now provide the possibility to define additional hooks, granting you more fine-grained control over the exact time your code gets executed. Here is a list of all (old and new) hooks:
+    + `Page.on_activation` (new): Hook for code that is meant to be executed as soon as a page is added to an experiment. This is your go-to-hook, if you want to have access to the experiment, but don't need access to data from other pages.
+    + `Page.on_opening` (new): Hook for code that is meant to be executed when a page is shown for the first time. This is your go-to-hook, if you want to have access to data from other pages within the experiment, and your code is meant to be executed only once (i.e. the first time a page is shown).
+    + `Page.on_closing` (new): Hook for code that is meant to be executed when a page is closed. This is your go-to-hook, if you want to have the page execute code only once, when submitting the data from a page. Closing happens, when you leave a page for the first time in a `HeadOpenSection` (participants can revisit the page, but can't change their input), and when you leave a page in a `SegmentedSection` (participants cannot go back to previous pages).
+    + `Page.on_showing` (old): Hook for code that is meant to be executed *every time* the page is shown.
+    + `Page.on_hiding` (old): Hook for code that is meant to be executed *every time* the page is hidden.
+
+* **New page classes**
+    + `page.UnlinkedDataPage`: Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamp and other metadata that would allow connecting an unlinked dataset to an experiment dataset are saved. Otherwise, usage is fully equivalent to ordinary pages.
+    + `page.CustomSavingPage`: This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more, call `help(CustomSavingPage)`.
+* **Automatic codebook generation**. Alfred now automatically generates a codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.
+* **Automatic transformation of local data to .csv**. Upon finishing an experiment session, alfred will now by default automatically transform the experiment data (including unlinked and codebook data) to .csv. You can control this behavior through two options in config.conf:
+
+```ini
+[general]
+transform_data_to_csv = true # controls, whether to transform data or not
+csv_directory = data # the .csv files will be placed in this directory
+```
+
+* **Command line interface for exporting alfred3 data**. Through a new command line interface, you can export alfred data, both from your local `save` directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.
+
+```
+python3 -m alfred3.export --src=local_saving_agent
+```
+
+Detailed description of all parameters (available also from the terminal via `python3 -m alfred3.export --help`)
+
+```
+Options:
+  --src TEXT           The name of the configuration section in 'config.conf'
+                       or 'secrets.conf' that defines the SavingAgent whose
+                       data you want to export.  [default: local_saving_agent]
+
+  --directory TEXT     The path to the experiment whose data you want to
+                       export. [default: Current working directory]
+
+  -h, --here           With this flag, you can indicate, that you want to
+                       export .json files located in the current working
+                       directory.  [default: False]
+
+  --data_type TEXT     The type of data that you want to export. Accepted
+                       values are 'exp_data', 'unlinked', and 'codebook'. If
+                       you specify a 'src', the function tries to infer the
+                       data type from the 'src's suffix. (Example:
+                       'mongo_saving_agent_codebook' would lead to 'data_type'
+                       = 'codebook'. If you give a value for 'data_type', that
+                       always takes precedence. [default: exp_data]
+
+  --missings TEXT      Here, you can manually specify a value that you want to
+                       insert for missing values
+
+  --remove_linebreaks  Indicates, whether linebreak characters should be
+                       deleted from the file. If you don't use this flag (the
+                       default), linebreaks will be replaced with spaces.
+                       [default: False]
+
+  --delimiter TEXT     Here, you can manually specify a delimiter for your
+                       .csv file. You need to put the delimiter inside
+                       quotation marks, e.g. like this: --delimiter=';'.
+                       [default: ,]
+
+  --help               Show this message and exit.
+```
 
 
 ## alfred v1.3.1 (Released 2020-08-24)
