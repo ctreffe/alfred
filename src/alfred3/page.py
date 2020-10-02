@@ -23,21 +23,13 @@ from .exceptions import AlfredError
 
 class PageCore(ContentCore):
     def __init__(
-        self,
-        minimum_display_time=0,
-        minimum_display_time_msg=None,
-        values: dict = {},
-        run_on_showing="always",
-        run_on_hiding="always",
-        **kwargs,
+        self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
-        self._run_on_showing = run_on_showing
-        self._run_on_hiding = run_on_hiding
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
@@ -68,6 +60,8 @@ class PageCore(ContentCore):
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
 
+        self._on_activation()
+
     @property
     def show_thumbnail(self):
         return True
@@ -97,21 +91,23 @@ class PageCore(ContentCore):
 
         if not self._has_been_shown:
             self._data["first_show_time"] = time.time()
+            self._on_opening()
 
-        if self._run_on_showing == "once" and not self._has_been_shown:
-            self.on_showing_widget()
-            self.on_showing()
-
-        elif self._run_on_showing == "always":
-            self.on_showing_widget()
-            self.on_showing()
+        self.on_showing_widget()
+        self.on_showing()
 
         self._has_been_shown = True
 
     def on_showing_widget(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is shown.
+        """
         pass
 
     def on_showing(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is shown.
+        """
         pass
 
     def _on_hiding_widget(self):
@@ -131,9 +127,51 @@ class PageCore(ContentCore):
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
     def on_hiding_widget(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is hidden.
+        """
         pass
 
     def on_hiding(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is hidden.
+        """
+        pass
+
+    def _on_activation(self):
+        self.on_activation()
+
+    def on_activation(self):
+        """Hook for code that is meant to be executed as soon as a page 
+        is added to an experiment.
+        
+        This is your go-to-hook, if you want to have access to the 
+        experiment, but don't need access to data from other pages.
+        """
+        pass
+
+    def _on_opening(self):
+        self.on_opening()
+
+    def on_opening(self):
+        """Hook for code that is meant to be executed when a page is
+        shown for the first time.
+
+        This is your go-to-hook, if you want to have access to data 
+        from other pages within the experiment, and your code is meant
+        to be executed only once (i.e. the first time a page is shown).
+        """
+
+    def _on_closing(self):
+        self.on_closing()
+
+    def on_closing(self):
+        """Hook for code that is meant to be executed when a page is 
+        closed.
+
+        This is your go-to-hook, if you want to have the page execute 
+        this code only once, when submitting the data from a page.
+        """
         pass
 
     def close_page(self):
@@ -149,6 +187,7 @@ class PageCore(ContentCore):
         ):
             self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
 
+        self._on_closing()
         self._is_closed = True
 
     def allow_closing(self):
@@ -225,6 +264,10 @@ class PageCore(ContentCore):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
+        if not self._experiment.sac_main.agents and not self._experiment.config.getboolean(
+            "general", "debug"
+        ):
+            self.log.warning("No saving agents available.")
         data = self._experiment.data_manager.get_data()
         self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
 
@@ -853,11 +896,10 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.sac_unlinked.agents:
-            if not self._experiment.config.getboolean("general", "debug"):
-                raise ValueError("No saving agent for unlinked data available.")
-            else:
-                self.log.warning("No saving agent for unlinked data available.")
+        if not self._experiment.sac_unlinked.agents and not self._experiment.config.getboolean(
+            "general", "debug"
+        ):
+            self.log.warning("No saving agent for unlinked data available.")
         data = self._experiment.data_manager.get_unlinked_data()
         self._experiment.sac_unlinked.save_with_all_agents(data=data, level=level, sync=sync)
 
