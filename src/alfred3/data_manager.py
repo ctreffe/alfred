@@ -10,6 +10,7 @@ import os
 import csv
 import io
 import json
+import random
 
 from pathlib import Path
 from builtins import object
@@ -519,7 +520,9 @@ class ExpDataExporter:
 
         return d
 
-    def write_to_object(self, **writer_args) -> io.StringIO:
+    def write_to_object(self, shuffle=False, **writer_args) -> io.StringIO:
+        if shuffle:
+            random.shuffle(self.list_of_docs)
 
         csvfile = io.StringIO()
 
@@ -529,7 +532,10 @@ class ExpDataExporter:
 
         return csvfile
 
-    def write_to_file(self, csvfile, **writer_args):
+    def write_to_file(self, csvfile, shuffle=False, **writer_args):
+        if shuffle:
+            random.shuffle(self.list_of_docs)
+
         with open(csvfile, "w", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=self.fieldnames, **writer_args)
             writer.writeheader()
@@ -616,8 +622,8 @@ class ExpDataExporter:
             self.process_one(doc, **kwargs)
 
         csvfile = Path(out_dir) / csv_name
-
-        self.write_to_file(csvfile, delimiter=kwargs.get("delimiter", ","))
+        shuffle = True if data_type == "unlinked" else False
+        self.write_to_file(csvfile, shuffle=shuffle, delimiter=kwargs.get("delimiter", ","))
 
     def write_mongo_data_to_file(
         self,
