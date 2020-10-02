@@ -928,8 +928,6 @@ class CodebookMixin:
     def _identify_duplicates_and_update(old_data: dict, new_data: dict) -> Tuple[int, dict]:
         """Updates a nested dictionary with values from another nested dictionary.
 
-        Duplicates occur, if 
-
         If duplicate keys with different values are encountered, the keys
         will be mutated to include the term '_duplicate' plus a counter
         of duplicates. The value dicts will receive an additional field 
