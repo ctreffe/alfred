@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+### Added
+
+* New page classes
+    + `page.UnlinkedDataPage`
+    + `page.CustomSavingPage`
+* Automatic codebook generation
+* Command line interface for exporting alfred3 data
+
+
 ## alfred v1.3.1 (Released 2020-08-24)
 
 ### Fixed

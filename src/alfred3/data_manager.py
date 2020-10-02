@@ -129,8 +129,9 @@ class CodeBookExporter:
     """Used to turn the codebook data into .csv format
     
     Usage:
-    1. Initialize with codebook data dictionary
-    2. Use :meth:`write_to_file` or :meth:`write_to_object` to create
+    1. Initialize
+    2. Process codebook via :meth:`process`
+    3. Use :meth:`write_to_file` or :meth:`write_to_object` to create
         the csv file / object. 
     """
 
@@ -287,7 +288,7 @@ class CodeBookExporter:
             return
 
         self.process(doc)
-        self.write_to_file(outfile, delimiter=kwargs.get("delimiter"))
+        self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
 
     def write_mongo_data_to_file(
         self, collection, exp_id, exp_version, out_dir: Union[str, Path], csv_name: str, **kwargs
@@ -319,7 +320,7 @@ class CodeBookExporter:
             {"exp_id": exp_id, "exp_version": exp_version, "type": DataManager.CODEBOOK_DATA}
         )
         self.process(doc)
-        self.write_to_file(outfile, delimiter=kwargs.get("delimiter"))
+        self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
 
 
 class ExpDataExporter:
@@ -393,6 +394,16 @@ class ExpDataExporter:
         
         The dict is flattened and returned.
         The fields 'tag', 'type', and 'uid' are removed.
+
+        
+        pageargs:
+            remove_linebreaks: Indicates, whether `\n` should be removed
+                    from strings. Defaults to `False`.
+            missings: An optional value to be inserted for missing values.
+                Defaults to `None`.
+            dot_notation: Indicates, whether the section tree in the
+                variable name should be written with dots or underscores 
+                as separation symbols. Defaults to `True`.
         """
 
         try:
@@ -509,6 +520,7 @@ class ExpDataExporter:
         return d
 
     def write_to_object(self, **writer_args) -> io.StringIO:
+
         csvfile = io.StringIO()
 
         writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames, **writer_args)
@@ -567,6 +579,9 @@ class ExpDataExporter:
         if not in_dir.is_absolute():
             in_dir = Path.cwd() / in_dir
 
+        if not in_dir.exists():
+            return
+
         type_previous = None
         for filename in os.listdir(in_dir):
             if not filename.endswith(".json"):
@@ -602,7 +617,7 @@ class ExpDataExporter:
 
         csvfile = Path(out_dir) / csv_name
 
-        self.write_to_file(csvfile, delimiter=kwargs.get("delimiter"))
+        self.write_to_file(csvfile, delimiter=kwargs.get("delimiter", ","))
 
     def write_mongo_data_to_file(
         self,
@@ -632,4 +647,4 @@ class ExpDataExporter:
 
         docs = list(collection.find({"exp_id": exp_id, "type": data_type}))
         self.process_many(docs, **kwargs)
-        self.write_to_file(outfile, delimiter=kwargs.get("delimiter"))
+        self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
