@@ -23,21 +23,13 @@ from .exceptions import AlfredError
 
 class PageCore(ContentCore):
     def __init__(
-        self,
-        minimum_display_time=0,
-        minimum_display_time_msg=None,
-        values: dict = {},
-        run_on_showing="always",
-        run_on_hiding="always",
-        **kwargs,
+        self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
-        self._run_on_showing = run_on_showing
-        self._run_on_hiding = run_on_hiding
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
@@ -68,6 +60,8 @@ class PageCore(ContentCore):
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
 
+        self._on_activation()
+
     @property
     def show_thumbnail(self):
         return True
@@ -97,21 +91,23 @@ class PageCore(ContentCore):
 
         if not self._has_been_shown:
             self._data["first_show_time"] = time.time()
+            self._on_opening()
 
-        if self._run_on_showing == "once" and not self._has_been_shown:
-            self.on_showing_widget()
-            self.on_showing()
-
-        elif self._run_on_showing == "always":
-            self.on_showing_widget()
-            self.on_showing()
+        self.on_showing_widget()
+        self.on_showing()
 
         self._has_been_shown = True
 
     def on_showing_widget(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is shown.
+        """
         pass
 
     def on_showing(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is shown.
+        """
         pass
 
     def _on_hiding_widget(self):
@@ -131,9 +127,51 @@ class PageCore(ContentCore):
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
 
     def on_hiding_widget(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is hidden.
+        """
         pass
 
     def on_hiding(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is hidden.
+        """
+        pass
+
+    def _on_activation(self):
+        self.on_activation()
+
+    def on_activation(self):
+        """Hook for code that is meant to be executed as soon as a page 
+        is added to an experiment.
+        
+        This is your go-to-hook, if you want to have access to the 
+        experiment, but don't need access to data from other pages.
+        """
+        pass
+
+    def _on_opening(self):
+        self.on_opening()
+
+    def on_opening(self):
+        """Hook for code that is meant to be executed when a page is
+        shown for the first time.
+
+        This is your go-to-hook, if you want to have access to data 
+        from other pages within the experiment, and your code is meant
+        to be executed only once (i.e. the first time a page is shown).
+        """
+
+    def _on_closing(self):
+        self.on_closing()
+
+    def on_closing(self):
+        """Hook for code that is meant to be executed when a page is 
+        closed.
+
+        This is your go-to-hook, if you want to have the page execute 
+        this code only once, when submitting the data from a page.
+        """
         pass
 
     def close_page(self):
@@ -149,6 +187,7 @@ class PageCore(ContentCore):
         ):
             self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
 
+        self._on_closing()
         self._is_closed = True
 
     def allow_closing(self):
@@ -225,6 +264,10 @@ class PageCore(ContentCore):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
+        if not self._experiment.sac_main.agents and not self._experiment.config.getboolean(
+            "general", "debug"
+        ):
+            self.log.warning("No saving agents available.")
         data = self._experiment.data_manager.get_data()
         self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
 
@@ -272,6 +315,7 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).__init__(**kwargs)
 
         self._element_list = []
+        self._element_dict = {}
         self._element_name_counter = 1
         self._thumbnail_element = None
         if elements is not None:
@@ -295,7 +339,7 @@ class CoreCompositePage(PageCore):
     def append(self, *elements):
         for elmnt in elements:
             if not isinstance(elmnt, Element):
-                raise TypeError
+                raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
             exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
@@ -315,6 +359,18 @@ class CoreCompositePage(PageCore):
 
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
+
+            if elmnt.name in self._element_dict:
+                raise ValueError("Element name must be unique on Page.")
+            self._element_dict[elmnt.name] = element
+
+    def __iadd__(self, other):
+        self.append(other)
+        return self
+
+    @property
+    def element_list(self):
+        return self._element_list
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
@@ -337,13 +393,14 @@ class CoreCompositePage(PageCore):
         for elmnt in self._element_list:
             data.update(elmnt.data)
 
+        data["tree"] = self.short_tree
+
         return data
 
     @property
     def codebook_data(self):
         data = {}
         for el in self._element_list:
-            key = self.tree.replace("rootSection.", "") + "." + el.name
             try:
                 data.update(el.codebook_data)
             except AttributeError:
@@ -595,58 +652,58 @@ class HeadOpenSectionCantClose(CompositePage):
         )
 
 
-class MongoSaveCompositePage(CompositePage):
-    def __init__(
-        self,
-        host,
-        database,
-        collection,
-        user,
-        password,
-        error="ignore",
-        hide_data=True,
-        *args,
-        **kwargs,
-    ):
-        super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
-        self._host = host
-        self._database = database
-        self._collection = collection
-        self._user = user
-        self._password = password
-        self._error = error
-        self._hide_data = hide_data
-        self._saved = False
+# class MongoSaveCompositePage(CompositePage):
+#     def __init__(
+#         self,
+#         host,
+#         database,
+#         collection,
+#         user,
+#         password,
+#         error="ignore",
+#         hide_data=True,
+#         *args,
+#         **kwargs,
+#     ):
+#         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
+#         self._host = host
+#         self._database = database
+#         self._collection = collection
+#         self._user = user
+#         self._password = password
+#         self._error = error
+#         self._hide_data = hide_data
+#         self._saved = False
 
-    @property
-    def data(self):
-        if self._hide_data:
-            # this is needed for some other functions to work properly
-            data = {"tag": self.tag, "uid": self.uid}
-            return data
-        else:
-            return super(MongoSaveCompositePage, self).data
+#     @property
+#     def data(self):
+#         if self._hide_data:
+#             # this is needed for some other functions to work properly
+#             data = {"tag": self.tag, "uid": self.uid}
+#             return data
+#         else:
+#             return super(MongoSaveCompositePage, self).data
 
-    def close_page(self):
-        rv = super(MongoSaveCompositePage, self).close_page()
-        if self._saved:
-            return rv
-        from pymongo import MongoClient
+#     def close_page(self):
+#         rv = super(MongoSaveCompositePage, self).close_page()
+#         if self._saved:
+#             return rv
+#         from pymongo import MongoClient
 
-        try:
-            client = MongoClient(self._host)
-            db = client[self._database]
-            db.authenticate(self._user, self._password)
-            col = db[self._collection]
-            data = super(MongoSaveCompositePage, self).data
-            data.pop("first_show_time", None)
-            data.pop("closing_time", None)
-            col.insert(data)
-            self._saved = True
-        except Exception as e:
-            if self._error != "ignore":
-                raise e
-        return rv
+#         try:
+#             client = MongoClient(self._host)
+#             db = client[self._database]
+#             db.authenticate(self._user, self._password)
+#             col = db[self._collection]
+#             data = super(MongoSaveCompositePage, self).data
+#             data.pop("first_show_time", None)
+#             data.pop("closing_time", None)
+#             col.insert(data)
+#             self._saved = True
+#         except Exception as e:
+#             if self._error != "ignore":
+#                 raise e
+#         return rv
 
 
 ####################
@@ -820,6 +877,7 @@ class UnlinkedDataPage(NoDataPage):
         data = super(PageCore, self).data
         for elmnt in self._element_list:
             data.update(elmnt.data)
+        data["tree"] = self.short_tree
         return data
 
     def save_data(self, level: int = 1, sync: bool = False):
@@ -838,6 +896,10 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
+        if not self._experiment.sac_unlinked.agents and not self._experiment.config.getboolean(
+            "general", "debug"
+        ):
+            self.log.warning("No saving agent for unlinked data available.")
         data = self._experiment.data_manager.get_unlinked_data()
         self._experiment.sac_unlinked.save_with_all_agents(data=data, level=level, sync=sync)
 
@@ -871,8 +933,10 @@ class CustomSavingPage(Page, ABC):
     .. warning::
         Each SavingAgent maintains one file or one document. 
         On saving, the document will be fully replaced with the current
-        data. That means, you should never let two CustomSavingPages
+        data. That means, you should not let two CustomSavingPages
         share a SavingAgent, as they will override each other's data.
+        That is, unless that is your intended behavior, e.g. when the
+        pages share data.
 
     Args:
         experiment: Alfred experiment. This page must be initialized

@@ -174,7 +174,7 @@ class ExperimentConfig(ConfigParser):
 
 
 class ExperimentSecrets(ExperimentConfig):
-    """Provides functionality for parsing secrets like DB credentials.
+    """Provides functionality for parsing secret config, e.g. DB credentials.
 
     This class is used only to set the attributes :attr:`env_location`,
     :attr:`global_config_name`, and :attr:`exp_config_name`. Otherwise

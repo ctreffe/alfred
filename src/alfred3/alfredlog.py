@@ -56,7 +56,7 @@ def init_logging(name: str):
         "The function init_logging is deprecated. You are probably seeing this warning, "
         "because you are using the traditional run.py formulation. "
         "Please switch to the current version. "
-        "The function will be removed in the next major release."
+        "The function will be removed in the next major release (v2.0)."
     )
 
     DeprecationWarning(msg)
@@ -77,12 +77,14 @@ def getLogger(name: str):
     """Get an instance of :class:`QueuedLoggingInterface` with a
     *queue_logger* of the given name.
 
-    Included for backwards compatibility from v1.2.0 onwards.
+    Included for backwards compatibility.
 
     TODO: Remove in v2.0.0
     """
 
-    return QueuedLoggingInterface(queue_logger=name)
+    DeprecationWarning("This function is deprecated. Please use the QueuedLoggingInterface class.")
+
+    return BWCompatibleLogger(base_logger=name)
 
 
 def prepare_file_handler(filepath: Union[str, Path]) -> logging.FileHandler:
@@ -139,7 +141,7 @@ class QueuedLoggingInterface:
         experiment specific.
     
     * The necessary information only becomes available to pages and elements
-        once the page or it's parent section get appended to the 
+        once the page or its parent section get appended to the 
         experiment.
     
     * So, logged messages are collected in a queue and logged as soon 
@@ -248,30 +250,167 @@ class QueuedLoggingInterface:
         self.use_base_logger = True
 
     def log(self, level: str, msg: str, *args, **kwargs):
-        """Log a message with a level handed over in the *level*
-        argument."""
         self._handle_msg(msg, level, *args, **kwargs)
 
     def debug(self, msg: str, *args, **kwargs):
-        """Log a message with level 'debug'."""
         self._handle_msg(msg, "debug", *args, **kwargs)
 
     def info(self, msg: str, *args, **kwargs):
-        """Log a message with level 'info'."""
         self._handle_msg(msg, "info", *args, **kwargs)
 
     def warning(self, msg: str, *args, **kwargs):
-        """Log a message with level 'warning'."""
         self._handle_msg(msg, "warning", *args, **kwargs)
 
     def error(self, msg: str, *args, **kwargs):
-        """Log a message with level 'error'."""
         self._handle_msg(msg, "error", *args, **kwargs)
 
     def critical(self, msg: str, *args, **kwargs):
-        """Log a message with level 'critical'."""
         self._handle_msg(msg, "critical", *args, **kwargs)
 
     def exception(self, msg: str, *args, **kwargs):
-        """Log a message with level 'exception'."""
         self._handle_msg(msg, "exception", *args, **kwargs)
+
+
+class BWCompatibleLogger(QueuedLoggingInterface):
+    """Offers backwards compatibility for logging.
+    
+    This class accepts an *experiment* parameter in its logging methods.
+    """
+
+    def process_experiment(self, exp):
+        self.queue_logger = logging.getLogger(f"exp.{exp.exp_id}.general")
+        self.session_id = exp.session_id
+
+    def log(self, level: str, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().log(level=level, msg=msg, *args, **kwargs)
+        except TypeError:
+            super().log(level=level, msg=msg)
+
+    def debug(self, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().debug(msg=msg, *args, **kwargs)
+        except TypeError:
+            super().debug(msg=msg)
+
+    def info(self, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().info(msg=msg, *args, **kwargs)
+        except TypeError:
+            super().info(msg=msg)
+
+    def warning(self, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().warning(msg=msg, *args, **kwargs)
+        except TypeError:
+            super().warning(msg=msg)
+
+    def error(self, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().error(msg=msg, *args, **kwargs)
+        except TypeError:
+            super().error(msg=msg)
+
+    def critical(self, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().critical(msg=msg, *args, **kwargs)
+        except TypeError:
+            super().critical(msg=msg)
+
+    def exception(self, msg: str, *args, **kwargs):
+        for arg in args:
+            try:
+                self.process_experiment(arg)
+                args.remove(arg)
+            except AttributeError:
+                pass
+
+        try:
+            exp = kwargs.pop("experiment")
+            self.process_experiment(exp)
+        except KeyError:
+            pass
+
+        try:
+            super().exception(msg=msg, *args, **kwargs)
+        except TypeError:
+            super().exception(msg=msg)
+

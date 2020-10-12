@@ -265,7 +265,7 @@ class Element(object):
 
     @property
     def identifier(self):
-        return self.tree.replace("rootSection.", "") + "." + self._name
+        return self.tree.replace("rootSection_", "") + "_" + self._name
 
 
 class WebElementInterface(with_metaclass(ABCMeta, object)):
@@ -596,7 +596,7 @@ class DataElement(Element, WebElementInterface):
     def codebook_data_flat(self):
         data = {}
         data["name"] = self.name
-        data["tree"] = self.tree.replace("rootSection.", "")
+        data["tree"] = self.tree.replace("rootSection_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
@@ -606,7 +606,7 @@ class DataElement(Element, WebElementInterface):
 
     @property
     def codebook_data(self):
-        return {self.identifier: self.flat_codebook_data}
+        return {self.identifier: self.codebook_data_flat}
 
 
 class InputElement(Element):
@@ -691,7 +691,7 @@ class InputElement(Element):
     def codebook_data_flat(self):
         data = {}
         data["name"] = self.name
-        data["tree"] = self.tree.replace("rootSection.", "")
+        data["tree"] = self.tree.replace("rootSection_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
@@ -1431,7 +1431,7 @@ class LikertMatrix(InputElement, WebElementInterface):
     def data(self):
         lm_data = {}
         for i in range(self._items):
-            label = self.name + "_" + str(i + 1)
+            label = self.name + "_item" + str(i + 1)
             if self._use_short_labels:
                 short_labels = self._short_labels()
                 label += "_" + short_labels[i]
@@ -1685,7 +1685,6 @@ class LikertMatrix(InputElement, WebElementInterface):
         for item in range(self._items):
             element = super().codebook_data_flat
             label_left, label_right = labels[item]
-            add = {}
             element["identifier"] = self._likert_name(item + 1)
             element["item"] = item + 1
             element["instruction"] = self._instruction

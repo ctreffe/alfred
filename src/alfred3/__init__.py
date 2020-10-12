@@ -20,9 +20,14 @@ import os
 import sys
 import time
 import logging
+import json
+import random
+import threading
 from builtins import object
 from uuid import uuid4
 from configparser import NoOptionError
+from typing import Union
+from pathlib import Path
 
 import pymongo
 from cryptography.fernet import Fernet
@@ -32,8 +37,15 @@ from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
+from .data_manager import CodeBookExporter
+from .data_manager import ExpDataExporter
 from .page_controller import PageController
-from .saving_agent import SavingAgentController, AutoLocalSavingAgent, AutoMongoSavingAgent
+from .saving_agent import SavingAgentController
+from .saving_agent import AutoLocalSavingAgent
+from .saving_agent import AutoMongoSavingAgent
+from .saving_agent import CodebookLocalSavingAgent
+from .saving_agent import CodebookMongoSavingAgent
+from .saving_agent import MongoManager
 from .ui_controller import WebUserInterfaceController
 from .exceptions import SavingAgentException
 
@@ -98,8 +110,10 @@ class Experiment(object):
         else:
             ValueError("unknown type: '%s'" % self._type)
 
+        self._unlinked_id = uuid4().hex  # Allows for session-specific saving of unlinked data.
+
         self._data_manager = DataManager(self)
-        self._mongo_manager = saving_agent.MongoManager(self)
+        self._mongo_manager = MongoManager(self)
         self.sac_main = self._init_sac_main()
         self.sac_unlinked = self._init_sac_unlinked()
         self.sac_codebook = self._init_sac_codebook()
@@ -155,8 +169,13 @@ class Experiment(object):
         )
 
     def _init_sac_main(self):
-        sac_main = saving_agent.SavingAgentController(self)
+        sac_main = SavingAgentController(self)
         init_time = time.strftime("%Y-%m-%d_t%H%M%S")
+        mongodb_filter = {
+            "exp_id": self.exp_id,
+            "type": DataManager.EXP_DATA,
+            "session_id": self.session_id,
+        }
 
         if self.config.getboolean(_LSA, "use"):
             agent_local = AutoLocalSavingAgent(config=self.config[_LSA], experiment=self)
@@ -175,12 +194,18 @@ class Experiment(object):
 
         if self.secrets.getboolean(_MSA, "use"):
             agent_mongo = self._mongo_manager.init_agent(section=_MSA, fallbacks=_MSA_FB)
+            agent_mongo.identifier = mongodb_filter
+            for fb_agent in agent_mongo.fallback_agents:
+                fb_agent.identifier = mongodb_filter
             sac_main.append(agent_mongo)
 
         if self.config.getboolean(_MSA, "use"):
             agent_mongo_bw = self._mongo_manager.init_agent(
                 section=_MSA, fallbacks=_MSA_FB, config_name="config"
             )
+            agent_mongo_bw.identifier = mongodb_filter
+            for fb_agent in agent_mongo_bw.fallback_agents:
+                fb_agent.identifier = mongodb_filter
             msg = (
                 "Initialized a MongoSavingAgent that was configured in config.conf. "
                 "This is deprecated. Please configure your MongoSavingAgents in secrets.conf."
@@ -193,47 +218,45 @@ class Experiment(object):
 
     def _init_sac_unlinked(self):
 
-        sac_unlinked = saving_agent.SavingAgentController(self)
+        sac_unlinked = SavingAgentController(self)
 
         if self.config.getboolean(_LSA_U, "use"):
             agent_loc_unlnkd = AutoLocalSavingAgent(config=self.config[_LSA_U], experiment=self)
-            agent_loc_unlnkd.filename = f"unlinked_{uuid4().hex}.json"
+            agent_loc_unlnkd.filename = f"unlinked_{self._unlinked_id}.json"
             sac_unlinked.append(agent_loc_unlnkd)
 
         if self.secrets.getboolean(_MSA_U, "use"):
-            agent_mongo_unlinked = self._mongo_manager.init_agent(_MSA_U, _MSA)
-            for agent in self.sac_main.agents.values():
-                if isinstance(agent, saving_agent.MongoSavingAgent):
-                    if agent_mongo_unlinked.check_equality(agent):
-                        raise SavingAgentException(
-                            (
-                                "Unlinked MongoSavingAgent and main MongoSavingAgent must save to "
-                                "different collections."
-                            )
-                        )
+            agent_mongo_unlinked = self._mongo_manager.init_agent(
+                section=_MSA_U, fill_section=_MSA
+            )
+            agent_mongo_unlinked.identifier = {
+                "exp_id": self.exp_id,
+                "type": DataManager.UNLINKED_DATA,
+                "_unlinked_id": self._unlinked_id,
+            }
             sac_unlinked.append(agent_mongo_unlinked)
 
         return sac_unlinked
 
     def _init_sac_codebook(self):
 
-        sac_codebook = saving_agent.SavingAgentController(self)
+        sac_codebook = SavingAgentController(self)
 
         if self.config.getboolean(_LSA_C, "use"):
-            agent_local = saving_agent.CodebookLocalSavingAgent(
-                config=self.config[_LSA_C], experiment=self
-            )
+            agent_local = CodebookLocalSavingAgent(config=self.config[_LSA_C], experiment=self)
             title = self.title.lower().replace(" ", "_")
             agent_local.filename = f"codebook_{title}_v{self.version}.json"
             sac_codebook.append(agent_local)
 
         if self.secrets.getboolean(_MSA_C, "use"):
             agent_mongo = self._mongo_manager.init_agent(
-                agent_class=saving_agent.CodebookMongoSavingAgent,
-                section=_MSA_C,
-                fill_section=_MSA,
+                agent_class=CodebookMongoSavingAgent, section=_MSA_C, fill_section=_MSA,
             )
-            agent_mongo.identifier = {"exp_id": self.exp_id, "exp_version": self.version}
+            agent_mongo.identifier = {
+                "exp_id": self.exp_id,
+                "exp_version": self.version,
+                "type": DataManager.CODEBOOK_DATA,
+            }
             sac_codebook.append(agent_mongo)
 
         return sac_codebook
@@ -265,6 +288,10 @@ class Experiment(object):
         self._page_controller.change_to_finished_section()
         self.save_data()
 
+        if self.config.getboolean("general", "transform_data_to_csv"):
+            export_to_csv = threading.Thread(target=self._export_data_to_csv)
+            export_to_csv.start()
+
     def save_data(self):
         """Saves data with the main, unlinked and codebook :class:`SavingAgentController`s.
 
@@ -284,6 +311,44 @@ class Experiment(object):
 
         codebook_data = self.data_manager.get_codebook_data()
         self.sac_codebook.save_with_all_agents(data=codebook_data, level=99)
+
+    def _export_data_to_csv(self):
+        csv_directory = Path(self.config.get("general", "csv_directory"))
+        if csv_directory.is_absolute():
+            data_dir = csv_directory
+        else:
+            data_dir = Path(self.path) / csv_directory
+        data_dir.mkdir(exist_ok=True, parents=True)
+
+        time.sleep(1)
+
+        if self.config.getboolean(_LSA, "use"):
+            lsa_name = self.config.get(_LSA, "name")
+            lsa_dir = self.sac_main.agents[lsa_name].directory
+            exp_exporter = ExpDataExporter()
+            exp_exporter.write_local_data_to_file(
+                in_dir=lsa_dir, out_dir=data_dir, data_type=DataManager.EXP_DATA, overwrite=True
+            )
+            self.log.info(f"Exported experiment data to '{str(data_dir)}'")
+
+        if self.config.getboolean(_LSA_U, "use"):
+            lsa_name = self.config.get(_LSA_U, "name")
+            lsa_dir = self.sac_unlinked.agents[lsa_name].directory
+            unlinked_exporter = ExpDataExporter()
+            unlinked_exporter.write_local_data_to_file(
+                in_dir=lsa_dir,
+                out_dir=data_dir,
+                data_type=DataManager.UNLINKED_DATA,
+                overwrite=True,
+            )
+            self.log.info(f"Exported unlinked data to '{str(data_dir)}'")
+
+        if self.config.getboolean(_LSA_C, "use"):
+            lsa_name = self.config.get(_LSA_C, "name")
+            cb_name = self.sac_codebook.agents[lsa_name].file
+            cb_exporter = CodeBookExporter()
+            cb_exporter.write_local_data_to_file(in_file=cb_name, out_dir=data_dir, overwrite=True)
+            self.log.info(f"Exported codebook data to '{str(data_dir)}'")
 
     def append(self, *items):
         for item in items:
@@ -511,7 +576,7 @@ class Experiment(object):
         """
         Achtung: *read-only*
 
-        :return: :py:class:`saving_agent.SavingAgentController`
+        :return: :py:class:`SavingAgentController`
         """
         return self._saving_agent_controller
 
@@ -551,3 +616,7 @@ class Experiment(object):
 
     def add_session(self, s):
         self._session = self._session + "." + s if self._session else s
+
+    def __iadd__(self, other):
+        self.append(other)
+        return self

@@ -197,9 +197,13 @@ class ContentCore(object):
             return self.tag
 
         if self.parent.tree:
-            return self.parent.tree + "." + self.tag
+            return self.parent.tree + "_" + self.tag
         else:
             return self.tag
+
+    @property
+    def short_tree(self):
+        return self.tree.replace("rootSection_", "")
 
     def allow_leaving(self, direction):
         return True

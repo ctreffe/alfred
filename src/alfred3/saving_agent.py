@@ -71,7 +71,7 @@ def wait_for_saving_thread():
 
 # Setup an aplication wide saving thread
 _queue = queue.PriorityQueue()
-"""Global queue for saving tasks."""
+"""Global (application-wide) queue for saving tasks."""
 
 _quit_event = threading.Event()
 """Event for signalling the :func:`_save_looper` to stop."""
@@ -248,6 +248,10 @@ class SavingAgent(ABC):
         return (True, "success")
 
     @property
+    def fallback_agents(self):
+        return self._fallback_agents
+
+    @property
     def exp(self):
         return self._experiment
 
@@ -356,22 +360,22 @@ class LocalSavingAgent(SavingAgent):
         directory = Path(path)
         if not directory.is_absolute():
             directory = Path(self._experiment.path) / directory
-
-        directory.mkdir(exist_ok=True)
-
-        if not directory.is_dir():
-            raise RuntimeError(f"Save path {str(directory)} must be an directory.")
-
-        if not os.access(str(directory), os.R_OK):
-            raise RuntimeError(f"Save path {str(directory)} must be readable.")
-
-        if not os.access(str(directory), os.W_OK):
-            raise RuntimeError(f"Save path {str(directory)} must be writable.")
-
         self._directory = directory
+
+    def _check_directory(self):
+        self.directory.mkdir(exist_ok=True, parents=True)
+        if not self.directory.is_dir():
+            raise RuntimeError(f"Save path {str(self.directory)} must be an directory.")
+
+        if not os.access(str(self.directory), os.R_OK):
+            raise RuntimeError(f"Save path {str(self.directory)} must be readable.")
+
+        if not os.access(str(self.directory), os.W_OK):
+            raise RuntimeError(f"Save path {str(self.directory)} must be writable.")
 
     def _save(self, data: dict):
         """Write data to file."""
+        self._check_directory()
         with open(self.file, "w") as outfile:
             json.dump(data, outfile, indent=4, sort_keys=True)
 
@@ -473,9 +477,7 @@ class MongoSavingAgent(SavingAgent):
         self._db = self._mc[database]
         self._col = self._db[collection]
 
-        self._doc_id = str(bson.objectid.ObjectId())
-
-        self._identifier = {"_id": self._doc_id}
+        self._identifier = {"_default_id": uuid4().hex}
 
     @property
     def identifier(self):
@@ -489,18 +491,26 @@ class MongoSavingAgent(SavingAgent):
             self._identifier = identifier
 
     def _save(self, data):
-
         f = self.identifier
-        data["_id"] = self._doc_id
+        data.update(f)
 
         if self._col.find_one(filter=f):
             self._col.find_one_and_replace(filter=f, replacement=data)
         else:
             self._col.insert_one(document=data)
 
+        try:
+            data.pop("_id")
+        except KeyError:
+            pass
+
         check = self._col.find_one(filter=f)
+        doc_id = check.pop("_id")
+
         if not check == data:
             raise SavingAgentRunException("Failed to validate data saving.")
+
+        return doc_id
 
     @property
     def client(self):
@@ -590,14 +600,7 @@ class AutoMongoSavingAgent(MongoSavingAgent):
     ):
 
         if not client:
-            client = pymongo.MongoClient(
-                host=config.get("host"),
-                port=config.getint("port"),
-                username=config.get("user"),
-                password=config.get("password"),
-                tls=config.getboolean("use_ssl"),
-                tlsCAFile=config.get("ca_file_path"),
-            )
+            client = AutoMongoClient(config=config)
 
         if not self.validate_client(client, config):
             raise ValueError("The client and configuration contain different values for 'host'.")
@@ -640,9 +643,9 @@ class MongoManager:
 
     def init_agent(
         self,
-        agent_class,
         section: str,
         fill_section: str = None,
+        agent_class=AutoMongoSavingAgent,
         fallbacks: list = None,
         config_name: str = "secrets",
     ):
@@ -1016,10 +1019,36 @@ class CodebookMongoSavingAgent(AutoMongoSavingAgent, CodebookMixin):
 
         try:
             _, updated_codebook = self._identify_duplicates_and_update(
-                old_data=existing_data["codebook"], new_data=data["codebbok"]
+                old_data=existing_data["codebook"], new_data=data["codebook"]
             )
             existing_data["codebook"] = updated_codebook
-            self.col.find_one_and_replace(filter=f, replacement=data)
+            # self.col.find_one_and_replace(filter=f, replacement=data)
             super()._save(data=existing_data)
-        except KeyError:
+        except (KeyError, TypeError):
             super()._save(data=data)
+
+
+class AutoMongoClient(pymongo.MongoClient):
+    """Constructs a :class:`pymongo.MongoClient` directly from an alfred
+    configuration section.
+    
+    """
+
+    def __init__(self, config: SectionProxy, **kwargs):
+        host = config.get("host")
+        port = config.getint("port")
+        username = config.get("user")
+        password = config.get("password")
+        tls = config.getboolean("use_ssl")
+        tlsCAFile = config.get("ca_file_path") if tls else None
+        authSource = config.get("auth_source")
+        super().__init__(
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            authSource=authSource,
+            tls=tls,
+            tlsCAFile=tlsCAFile,
+            **kwargs,
+        )

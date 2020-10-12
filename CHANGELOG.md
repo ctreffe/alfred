@@ -7,6 +7,174 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+### Added
+
+* **New page hooks for more control**. All page classes now provide the possibility to define additional hooks, granting you more fine-grained control over the exact time your code gets executed. Here is a list of all (old and new) hooks:
+    + `Page.on_activation` (new): Hook for code that is meant to be executed as soon as a page is added to an experiment. This is your go-to-hook, if you want to have access to the experiment, but don't need access to data from other pages.
+    + `Page.on_opening` (new): Hook for code that is meant to be executed when a page is shown for the first time. This is your go-to-hook, if you want to have access to data from other pages within the experiment, and your code is meant to be executed only once (i.e. the first time a page is shown).
+    + `Page.on_closing` (new): Hook for code that is meant to be executed when a page is closed. This is your go-to-hook, if you want to have the page execute code only once, when submitting the data from a page. Closing happens, when you leave a page for the first time in a `HeadOpenSection` (participants can revisit the page, but can't change their input), and when you leave a page in a `SegmentedSection` (participants cannot go back to previous pages).
+    + `Page.on_showing` (old): Hook for code that is meant to be executed *every time* the page is shown.
+    + `Page.on_hiding` (old): Hook for code that is meant to be executed *every time* the page is hidden.
+
+* **New page classes**
+    + `page.UnlinkedDataPage`: Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamp and other metadata that would allow connecting an unlinked dataset to an experiment dataset are saved. Otherwise, usage is fully equivalent to ordinary pages.
+    + `page.CustomSavingPage`: This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more, call `help(CustomSavingPage)`.
+* **Automatic codebook generation**. Alfred now automatically generates a codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.
+* **Automatic transformation of local data to .csv**. Upon finishing an experiment session, alfred will now by default automatically transform the experiment data (including unlinked and codebook data) to .csv. You can control this behavior through two options in config.conf:
+
+```ini
+[general]
+transform_data_to_csv = true # controls, whether to transform data or not
+csv_directory = data # the .csv files will be placed in this directory
+```
+
+* **Command line interface for exporting alfred3 data**. Through a new command line interface, you can export alfred data, both from your local `save` directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.
+
+```
+python3 -m alfred3.export --src=local_saving_agent
+```
+
+Detailed description of all parameters (available also from the terminal via `python3 -m alfred3.export --help`)
+
+```
+Options:
+  --src TEXT           The name of the configuration section in 'config.conf'
+                       or 'secrets.conf' that defines the SavingAgent whose
+                       data you want to export.  [default: local_saving_agent]
+
+  --directory TEXT     The path to the experiment whose data you want to
+                       export. [default: Current working directory]
+
+  -h, --here           With this flag, you can indicate, that you want to
+                       export .json files located in the current working
+                       directory.  [default: False]
+
+  --data_type TEXT     The type of data that you want to export. Accepted
+                       values are 'exp_data', 'unlinked', and 'codebook'. If
+                       you specify a 'src', the function tries to infer the
+                       data type from the 'src's suffix. (Example:
+                       'mongo_saving_agent_codebook' would lead to 'data_type'
+                       = 'codebook'. If you give a value for 'data_type', that
+                       always takes precedence. [default: exp_data]
+
+  --missings TEXT      Here, you can manually specify a value that you want to
+                       insert for missing values
+
+  --remove_linebreaks  Indicates, whether linebreak characters should be
+                       deleted from the file. If you don't use this flag (the
+                       default), linebreaks will be replaced with spaces.
+                       [default: False]
+
+  --delimiter TEXT     Here, you can manually specify a delimiter for your
+                       .csv file. You need to put the delimiter inside
+                       quotation marks, e.g. like this: --delimiter=';'.
+                       [default: ,]
+
+  --help               Show this message and exit.
+```
+
+
+## alfred v1.3.1 (Released 2020-08-24)
+
+### Fixed
+
+* Fixed a bug in the template donwloading CLI.
+
+## alfred v1.3.0 (Released 2020-08-19)
+
+### Added
+
+* We defined the *iadd* ( `+=` ) operator for all pages, sections and the experiment class. In many cases, it can replace a call to the `append()` method of these classes. Don't worry, the `append()` method is not going away. You can use this operator...
+    - ... to append elements to a page
+    - ... to append pages and sections to a sections
+    - ... to append pages and section to the experiment
+
+Simple examples:
+
+``` python
+# (assuming correct imports)
+
+# Append element to a page
+page = Page(title="Test Page")
+page += TextElement("Testtext", name="text1")
+```
+
+``` python
+# (assuming correct imports)
+# Append page and section to a section
+main = Section()
+
+second = Section()
+page = Page(title="Test Page")
+second += page # using the page instance from the
+
+main += second
+```
+
+``` python
+# (assuming correct imports)
+# Append sections and pages to the experiment
+exp = Experiment()
+main = Section()
+exp += main
+```
+
+When using the `+=` operator in class definitions, you refer to "self":
+
+``` python
+# (assuming correct imports)
+
+class Welcome(Page):
+    def on_showing(self):
+        self += TextElement("Testtext", name="text1")
+```
+
+### Changed
+
+* When downloading a template, it is now allowed to have a `.idea` and a `.git` file already present in the target directory. Otherwise, the directory must be empty.
+
+## alfred v1.2.1 (Released 2020-08-18)
+
+### Fixed
+
+* Fixed an underspecified filepath handling that caused trouble with the logging initialization under windows.
+
+### Changed
+
+* We made using the flask debugger easier:
+    - If you use the command line interface, you can add the flag 'debug' to start an experiment in debugging mode and use flask's builtin debugging tools. The command becomes `python -m alfred3.run -debug` .
+    - If you use the small `run.py` , you can pass `debug=True` as a parameter in `auto_run()` : `runner.auto_run(debug=True)`
+* Upgraded the command line interface for downloading templates. 
+    - Most notably, the interface gained the flag '-h'/'--here', that you can use to indicate that you want the template's files to be placed directly in the '--path' (by default, in the current working directory).
+    - Instead of the '-b'/'--big' and '-r'/'--runpy' flags, you can now choose between variants by setting the option '--variant' to 's', 'm' (default), or 'l'.
+    - Enhanced handling of naming conflicts.
+    - This is the full new usage:
+
+``` 
+Usage: template.py [OPTIONS]
+
+Options:
+  --name TEXT     Name of the new experiment directory.  [default:
+                  alfred3_experiment]
+
+  --path TEXT     Path to the target directory. [default: Current working
+                  directory]
+
+  --release TEXT  You can specify a release tag here, if you want to use a
+                  specific version of the template.
+
+  --variant TEXT  Which type of template do you want to download? The
+                  available options are: 's' (minimalistic), 'm' (includes
+                  'run.py' and 'secrets.conf') and 'b' (includes subdirectory
+                  with imported classes and instructions.)  [default: m]
+
+  -h, --here      If this flag is set to '-h', the template files will be
+                  placed directly into the directory specified in '--path',
+                  ignoring the paramter '--name'.  [default: False]
+
+  --help          Show this message and exit.
+  ```
+
 ## alfred v1.2.0 (Released 2020-07-13)
 
 ### Added
@@ -76,12 +244,13 @@ from alfred3.run import ExperimentRunner
 
 if __name__ == "__main__":
     runner = ExperimentRunner()
+    runner.generate_session_id()
     runner.configure_logging()
     runner.create_experiment_app()
     runner.set_port()
     runner.start_browser_thread()
     runner.print_startup_message()
-    runner.app.run()
+    runner.app.run(use_reloader=False, debug=False)
 ```
 
 This will allow you to customize logging configuration or to extract the flask app that is created through your alfred experiment.
