@@ -43,9 +43,6 @@ class PageCore(ContentCore):
             raise TypeError("The parameter 'values' requires a dictionary as input.")
         self.values = _DictObj(values)
 
-        if self._run_on_showing not in ["once", "always"]:
-            raise ValueError("The parameter 'run_on_showing' must be either 'once' or 'always'.")
-
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
             raise TypeError(
@@ -115,12 +112,8 @@ class PageCore(ContentCore):
         Method for internal processes on hiding Widget
         """
 
-        if self._run_on_hiding == "once" and not self._has_been_hidden:
-            self.on_hiding_widget()
-            self.on_hiding()
-        elif self._run_on_showing == "always":
-            self.on_hiding_widget()
-            self.on_hiding()
+        self.on_hiding_widget()
+        self.on_hiding()
 
         self._has_been_hidden = True
 
