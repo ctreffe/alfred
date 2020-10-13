@@ -111,13 +111,22 @@ class PageCore(ContentCore):
         """
         Method for internal processes on hiding Widget
         """
-
-        self.on_hiding_widget()
-        self.on_hiding()
+        if not self._has_been_hidden:
+            self.on_first_hide()
+            hide_time = time.time()
+            self._data["first_hide_time"] = hide_time
+            self._data["first_display_duration"] = hide_time - self._data["first_show_time"]
+        else:
+            self.on_hiding_widget()
+            self.on_hiding()
 
         self._has_been_hidden = True
+        self.save_data()
 
         # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
+
+    def on_first_hide(self):
+        pass
 
     def on_hiding_widget(self):
         """Hook for code that is meant to be executed *every time* 
@@ -182,6 +191,7 @@ class PageCore(ContentCore):
 
         self._on_closing()
         self._is_closed = True
+        self.save_data()
 
     def allow_closing(self):
         return True
