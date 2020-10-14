@@ -63,13 +63,16 @@ class Section(ContentCore):
         data["subtree_data"] = []
         for q_core in self._page_list:
             try:
-                data["subtree_data"].append(q_core.unlinked_data)
+                data["subtree_data"].append(q_core.unlinked_data(encrypt=encrypt))
             except AttributeError:
                 pass
 
         return data
 
     def unlinked_data_present(self):
+        """Returns *True*, if unlinked data was collected during the
+        experiment and *False*, if no unlinked data was collected.
+        """
         present = False
         for member in self._page_list:
             if isinstance(member, UnlinkedDataPage):

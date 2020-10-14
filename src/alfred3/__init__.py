@@ -306,8 +306,9 @@ class Experiment(object):
         self.sac_main.save_with_all_agents(data=data, level=99)
 
         if self.page_controller.unlinked_data_present():
-            unlinked_data = self.data_manager.get_unlinked_data()
-            self.sac_unlinked.save_with_all_agents(data=unlinked_data, level=99)
+            for agent in self.sac_unlinked.agents.values():
+                unlinked_data = self.data_manager.get_unlinked_data(encrypt=agent.encrypt)
+                self.sac_unlinked.save_with_agent(data=unlinked_data, name=agent.name, level=99)
 
         codebook_data = self.data_manager.get_codebook_data()
         self.sac_codebook.save_with_all_agents(data=codebook_data, level=99)
@@ -516,8 +517,13 @@ class Experiment(object):
         encryption in this case, as a PUBLIC key is used for encryption. 
         This is only ok for testing purposes.
 
-        :param data: Input object that you want to encrypt.
+        Args:
+            data: Input object that you want to encrypt. If the input is
+                *None*, the function will return *None*.
         """
+        if data is None:
+            return None
+
         if type(data) not in [str, int, float]:
             raise TypeError("Input must be of type str, int, or float.")
 

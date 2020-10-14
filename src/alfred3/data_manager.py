@@ -15,8 +15,10 @@ import random
 from pathlib import Path
 from builtins import object
 from typing import Union
+from cryptography.fernet import Fernet, InvalidToken
 
 from .exceptions import AlfredError
+from .config import ExperimentSecrets
 
 
 class DataManager(object):
@@ -55,15 +57,12 @@ class DataManager(object):
 
         return data
 
-    def get_unlinked_data(self):
-        data = self._experiment.page_controller.unlinked_data
+    def get_unlinked_data(self, encrypt=False):
+        data = self._experiment.page_controller.unlinked_data(encrypt=encrypt)
         data["type"] = self.UNLINKED_DATA
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_id"] = self._experiment.exp_id
-
-        # helper id, gets removed upon csv-transformation
-        data["_unlinked_id"] = self._experiment._unlinked_id
 
         return data
 
@@ -419,9 +418,7 @@ class ExpDataExporter:
         subtree_data = self._process_subtree(subtree=subtree_data_raw, **pageargs)
 
         meta_data = doc
-        meta_data.pop("tag")
         meta_data.pop("type")
-        meta_data.pop("uid")
         try:
             meta_data.pop("_id")
             meta_data.pop("_default_id")
@@ -499,8 +496,6 @@ class ExpDataExporter:
                 variable name should be written with dots or underscores 
                 as separation symbols.
         """
-        page.pop("tag")
-        page.pop("uid")
         tree = page.pop("tree")
 
         d = {}
@@ -654,3 +649,46 @@ class ExpDataExporter:
         docs = list(collection.find({"exp_id": exp_id, "type": data_type}))
         self.process_many(docs, **kwargs)
         self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
+
+
+class DataDecryptor:
+    """Used for decrypting encrypted values in a nested dictionary.
+    
+    The encryption/decryption mechanism is symmetric. The decryptor 
+    needs to be initialized with a valid key.
+    
+    Use the method :meth:`decrypt` for decryption.
+    """
+
+    def __init__(self, key):
+        self.f = Fernet(key=key)
+
+    def decrypt(self, data):
+
+        if isinstance(data, bytes):
+            try:
+                decrypted_value = self.f.decrypt(data)
+                return decrypted_value
+            except InvalidToken:
+                return data
+
+        if isinstance(data, (int, float, str)):
+            try:
+                original_type = type(data)
+                data_in_bytes = str(data).encode()
+                decrypted_value = original_type(self.f.decrypt(data_in_bytes).decode())
+                return decrypted_value
+            except InvalidToken:
+                return data
+
+        elif isinstance(data, list):
+            derypted_list = []
+            for entry in data:
+                derypted_list.append(self.decrypt(entry))
+            return derypted_list
+
+        elif isinstance(data, dict):
+            decrypted_dict = {}
+            for k, v in data.items():
+                decrypted_dict[k] = self.decrypt(v)
+            return decrypted_dict

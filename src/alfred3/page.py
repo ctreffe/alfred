@@ -879,7 +879,11 @@ class UnlinkedDataPage(NoDataPage):
     def unlinked_data(self):
         data = super(PageCore, self).data
         for elmnt in self._element_list:
-            data.update(elmnt.data)
+            if encrypt:
+                data.update(elmnt.encrypted_data)
+            else:
+                data.update(elmnt.data)
+
         data["tree"] = self.short_tree
         return data
 
@@ -903,8 +907,12 @@ class UnlinkedDataPage(NoDataPage):
             "general", "debug"
         ):
             self.log.warning("No saving agent for unlinked data available.")
-        data = self._experiment.data_manager.get_unlinked_data()
-        self._experiment.sac_unlinked.save_with_all_agents(data=data, level=level, sync=sync)
+
+        for agent in self._experiment.sac_unlinked.agents.values():
+            data = self._experiment.data_manager.get_unlinked_data(encrypt=agent.encrypt)
+            self._experiment.sac_unlinked.save_with_agent(
+                data=data, name=agent.name, level=level, sync=sync
+            )
 
 
 class CustomSavingPage(Page, ABC):

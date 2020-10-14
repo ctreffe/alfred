@@ -45,7 +45,7 @@ from jinja2 import Environment, PackageLoader, Template
 from past.utils import old_div
 
 
-from . import alfredlog, settings
+from . import alfredlog, settings, page
 from ._helper import alignment_converter, fontsize_converter, is_url
 from .exceptions import AlfredError
 
@@ -593,6 +593,11 @@ class DataElement(Element, WebElementInterface):
         return {self.name: self._variable}
 
     @property
+    def encrypted_data(self):
+        encrypted_variable = self.experiment.encrypt(self._variable)
+        return {self.name: encrypted_variable}
+
+    @property
     def codebook_data_flat(self):
         data = {}
         data["name"] = self.name
@@ -602,6 +607,7 @@ class DataElement(Element, WebElementInterface):
         data["element_type"] = type(self).__name__
         data["description"] = self.description
         data["duplicate_identifier"] = False
+        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
     @property
@@ -683,6 +689,19 @@ class InputElement(Element):
     def data(self):
         return {self.name: self._input}
 
+    @property
+    def encrypted_data(self):
+        enrcypted_dict = {}
+        for k, v in self.data.items():
+            try:
+                enrcypted_dict[k] = self.experiment.encrypt(v)
+            except TypeError:
+                if isinstance(v, list):
+                    v = [self.experiment.encrypt(entry) for entry in v]
+                enrcypted_dict[k] = v
+
+        return enrcypted_dict
+
     def set_data(self, d):
         if self.enabled:
             self._input = d.get(self.name, "")
@@ -699,6 +718,7 @@ class InputElement(Element):
         data["default"] = self.default
         data["description"] = self.description
         data["duplicate_identifier"] = False
+        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
     @property

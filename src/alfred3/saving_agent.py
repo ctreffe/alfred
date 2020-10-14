@@ -118,7 +118,7 @@ class SavingAgent(ABC):
     """
 
     def __init__(
-        self, activation_level: int = 10, experiment=None, name: str = None,
+        self, activation_level: int = 10, experiment=None, name: str = None, encrypt: bool = False
     ):
         """Constructor method."""
 
@@ -150,6 +150,12 @@ class SavingAgent(ABC):
         self._lock = threading.Lock()
         self._latest_save_time = None
         self._fallback_agents = []
+        self.encrypt = encrypt
+
+        if self.encrypt and not self._experiment.secrets.get("encryption", "key"):
+            raise ValueError(
+                f"Encryption was turned on for {self}, but the experiment does not have an encryption key. Turn encryption off in the saving agent configuration, or provide an encryption key in secrets.conf."
+            )
 
     def append_fallback(self, *args):
         """Appends saving agents to the list of fallback saving agents. 
@@ -312,6 +318,8 @@ class LocalSavingAgent(SavingAgent):
             hurdle to pass. (Defaults to 1)
         experiment: The experiment to which the saving agent belongs.
         name: Name of the saving agent instance.
+        encrypt: Should data be encrypted before saving? (Currently
+            only available for unlinked data)
     
     Attributes:
         filename: Full name of the .json file in which data is saved.
@@ -332,9 +340,10 @@ class LocalSavingAgent(SavingAgent):
         activation_level: int = 1,
         experiment=None,
         name: str = None,
+        encrypt: bool = False,
     ):
         """Constructor method."""
-        super().__init__(activation_level, experiment, name)
+        super().__init__(activation_level, experiment, name, encrypt)
 
         self.directory = directory
         self.filename = filename
@@ -406,6 +415,7 @@ class AutoLocalSavingAgent(LocalSavingAgent):
             activation_level=config.getint("level"),
             experiment=experiment,
             name=config.get("name"),
+            encrypt=config.getboolean("encrypt", fallback=False),
         )
 
 
@@ -445,6 +455,8 @@ class MongoSavingAgent(SavingAgent):
             hurdle to pass. (Defaults to 1)
         experiment: The experiment to which the saving agent belongs.
         name: Name of the saving agent instance.
+        encrypt: Should data be encrypted before saving? (Currently
+            only available for unlinked data)
 
     Attributes:
         name: The name of the saving agent.
@@ -470,14 +482,18 @@ class MongoSavingAgent(SavingAgent):
         activation_level: int = 1,
         experiment=None,
         name: str = None,
+        encrypt: bool = False,
     ):
         """Constructor method."""
-        super().__init__(activation_level=activation_level, experiment=experiment, name=name)
+        super().__init__(
+            activation_level=activation_level, experiment=experiment, name=name, encrypt=encrypt
+        )
         self._mc = client
         self._db = self._mc[database]
         self._col = self._db[collection]
+        self.doc_id = uuid4().hex
 
-        self._identifier = {"_default_id": uuid4().hex}
+        self._identifier = {"_id": self.doc_id}
 
     @property
     def identifier(self):
@@ -493,6 +509,7 @@ class MongoSavingAgent(SavingAgent):
     def _save(self, data):
         f = self.identifier
         data.update(f)
+        data["_id"] = self.doc_id
 
         if self._col.find_one(filter=f):
             self._col.find_one_and_replace(filter=f, replacement=data)
@@ -612,6 +629,7 @@ class AutoMongoSavingAgent(MongoSavingAgent):
             activation_level=config.getint("level"),
             experiment=experiment,
             name=config.get("name"),
+            encrypt=config.getboolean("encrypt", fallback=False),
         )
 
 
@@ -809,7 +827,7 @@ class SavingAgentController:
             level: Level of saving task. If the task level is 
                 below a saving agent's activation level, it will not
                 be saved.
-            group: Name of the saving agent group.
+            name: Name of the saving agent.
             sync: Whether to synchronise the task. If
                 True, the experiment will continue only after the task
                 was completed. Defaults to False.
@@ -1016,6 +1034,7 @@ class CodebookMongoSavingAgent(AutoMongoSavingAgent, CodebookMixin):
 
         f = self.identifier
         existing_data = self._col.find_one(filter=f)
+        self.doc_id = existing_data["_id"]
 
         try:
             _, updated_codebook = self._identify_duplicates_and_update(
