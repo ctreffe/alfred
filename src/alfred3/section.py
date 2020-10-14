@@ -57,9 +57,8 @@ class Section(ContentCore):
 
         return data
 
-    @property
-    def unlinked_data(self):
-        data = super(Section, self).data  # ContentCore.data
+    def unlinked_data(self, encrypt):
+        data = {"tag": self.tag}
         data["subtree_data"] = []
         for q_core in self._page_list:
             try:

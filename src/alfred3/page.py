@@ -875,9 +875,8 @@ class UnlinkedDataPage(NoDataPage):
 
     """
 
-    @property
-    def unlinked_data(self):
-        data = super(PageCore, self).data
+    def unlinked_data(self, encrypt):
+        data = {"tag": self.tag}
         for elmnt in self._element_list:
             if encrypt:
                 data.update(elmnt.encrypted_data)

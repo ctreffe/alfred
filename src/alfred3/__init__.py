@@ -110,7 +110,9 @@ class Experiment(object):
         else:
             ValueError("unknown type: '%s'" % self._type)
 
-        self._unlinked_id = uuid4().hex  # Allows for session-specific saving of unlinked data.
+        self._unlinked_random_name_part = (
+            uuid4().hex
+        )  # Allows for session-specific saving of unlinked data.
 
         self._data_manager = DataManager(self)
         self._mongo_manager = MongoManager(self)
@@ -222,7 +224,7 @@ class Experiment(object):
 
         if self.config.getboolean(_LSA_U, "use"):
             agent_loc_unlnkd = AutoLocalSavingAgent(config=self.config[_LSA_U], experiment=self)
-            agent_loc_unlnkd.filename = f"unlinked_{self._unlinked_id}.json"
+            agent_loc_unlnkd.filename = f"unlinked_{self._unlinked_random_name_part}.json"
             sac_unlinked.append(agent_loc_unlnkd)
 
         if self.secrets.getboolean(_MSA_U, "use"):
@@ -232,7 +234,7 @@ class Experiment(object):
             agent_mongo_unlinked.identifier = {
                 "exp_id": self.exp_id,
                 "type": DataManager.UNLINKED_DATA,
-                "_unlinked_id": self._unlinked_id,
+                "_id": agent_mongo_unlinked.doc_id,
             }
             sac_unlinked.append(agent_mongo_unlinked)
 
