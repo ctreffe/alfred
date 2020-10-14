@@ -1149,11 +1149,10 @@ class NumberEntryElement(RegEntryElement):
             except Exception:
                 temp_input = ""
 
-        return (
-            {self.name: temp_input}
-            if self.validate_data() and temp_input != ""
-            else {self.name: ""}
-        )
+        if self.validate_data() and temp_input != "":
+            return {self.name: temp_input}
+        else:
+            return {self.name: ""}
 
     def set_data(self, d):
 
