@@ -97,7 +97,7 @@ class SavingAgent(ABC):
 
     If you do not pass a value to the argument *name*, a name will be
     generated automatically, and a warning will be logged. The 
-    genrated name has the form::
+    generated name has the form::
 
         classname_time_uid
 
@@ -429,7 +429,7 @@ class MongoSavingAgent(SavingAgent):
 
     If you do not pass a value to the argument *name*, a name will be
     generated automatically, and a warning will be logged. The 
-    genrated name has the form::
+    generated name has the form::
 
         classname_time_uid
 
@@ -758,6 +758,7 @@ class SavingAgentController:
         self.log = self._init_log()
 
     def append(self, saving_agent: SavingAgent):
+        """Appends a saving agent to the controller."""
         if not isinstance(saving_agent, SavingAgent):
             raise TypeError("Can only add children of SavingAgent.")
 
@@ -1034,7 +1035,8 @@ class CodebookMongoSavingAgent(AutoMongoSavingAgent, CodebookMixin):
 
         f = self.identifier
         existing_data = self._col.find_one(filter=f)
-        self.doc_id = existing_data["_id"]
+        if existing_data:
+            self.doc_id = existing_data["_id"]
 
         try:
             _, updated_codebook = self._identify_duplicates_and_update(
