@@ -141,6 +141,7 @@ class CodeBookExporter:
         "exp_title": "0c",
         "exp_version": "0d",
         "exp_id": "0d1",
+        "page_title": "0d2",
         "identifier": "0e",
         "tree": "0f",
         "name": "0g",
@@ -150,7 +151,18 @@ class CodeBookExporter:
         "default": "0k",
         "force_input": "0l",
         "description": "0m",
-        "page_title": "0n",
+        "prefix": "0n",
+        "suffix": "0o",
+        "item": "1a",
+        "n_levels": "1b",
+        "item_label_left": "1c",
+        "item_label_right": "1c1",
+        "top_labels": "1d",
+        "bottom_labels": "1e",
+        "shuffle": "1f",
+        "transposed": "1g",
+        "unlinked": "z1",
+        "duplicate_identifier": "z2",
     }
 
     def __init__(self):
@@ -158,6 +170,10 @@ class CodeBookExporter:
         self.codebook = None
         self.sorted = None
         self.fieldnames = None
+
+    @property
+    def full_codebook(self):
+        return {**self.meta, "codebook": self.codebook}
 
     def reset(self):
         self.meta = None
@@ -397,7 +413,7 @@ class ExpDataExporter:
 
         
         pageargs:
-            remove_linebreaks: Indicates, whether `\n` should be removed
+            remove_linebreaks: Indicates, whether ``\\n`` should be removed
                     from strings. Defaults to `False`.
             missings: An optional value to be inserted for missing values.
                 Defaults to `None`.
@@ -419,6 +435,8 @@ class ExpDataExporter:
 
         meta_data = doc
         meta_data.pop("type")
+        meta_data.pop("tag")
+        meta_data.pop("uid")
         try:
             meta_data.pop("_id")
             meta_data.pop("_default_id")
@@ -497,6 +515,11 @@ class ExpDataExporter:
                 as separation symbols.
         """
         tree = page.pop("tree")
+        try:
+            page.pop("tag")
+            page.pop("uid")
+        except KeyError:
+            pass
 
         d = {}
         for key, value in page.items():
