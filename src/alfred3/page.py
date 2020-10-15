@@ -655,60 +655,6 @@ class HeadOpenSectionCantClose(CompositePage):
         )
 
 
-# class MongoSaveCompositePage(CompositePage):
-#     def __init__(
-#         self,
-#         host,
-#         database,
-#         collection,
-#         user,
-#         password,
-#         error="ignore",
-#         hide_data=True,
-#         *args,
-#         **kwargs,
-#     ):
-#         super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
-#         self._host = host
-#         self._database = database
-#         self._collection = collection
-#         self._user = user
-#         self._password = password
-#         self._error = error
-#         self._hide_data = hide_data
-#         self._saved = False
-
-#     @property
-#     def data(self):
-#         if self._hide_data:
-#             # this is needed for some other functions to work properly
-#             data = {"tag": self.tag, "uid": self.uid}
-#             return data
-#         else:
-#             return super(MongoSaveCompositePage, self).data
-
-#     def close_page(self):
-#         rv = super(MongoSaveCompositePage, self).close_page()
-#         if self._saved:
-#             return rv
-#         from pymongo import MongoClient
-
-#         try:
-#             client = MongoClient(self._host)
-#             db = client[self._database]
-#             db.authenticate(self._user, self._password)
-#             col = db[self._collection]
-#             data = super(MongoSaveCompositePage, self).data
-#             data.pop("first_show_time", None)
-#             data.pop("closing_time", None)
-#             col.insert(data)
-#             self._saved = True
-#         except Exception as e:
-#             if self._error != "ignore":
-#                 raise e
-#         return rv
-
-
 ####################
 # Page Mixins
 ####################
@@ -869,14 +815,33 @@ class UnlinkedDataPage(NoDataPage):
     UnlinkedDataPage cannot be linked to his/her answers given on other
     Pages).
 
+    Args:
+        encrypt: Takes one the following values: 'agent' (default) will
+            encrypt data based on each saving agent's configuration.
+            'always' will encrypt all data entered on this page, 
+            regardless of saving agent configuration. 'never' will turn
+            off encryption for this page, regardless of saving agent
+            configuration.
+
     .. warning::
         All data from UnlinkedDataPages is saved in a single unlinked 
-        document.
+        data document, so data from two different unlinked pages *are* 
+        linked to each other (though not to the rest of the experiment
+        data).
 
     """
 
+    def __init__(self, encrypt: str = "agent", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.encrypt = encrypt
+
+        if self.encrypt not in ["agent", "always", "never"]:
+            raise ValueError(
+                "The argument 'encrypt' must take one of the following values: 'agent', 'always', 'never'."
+            )
+
     def unlinked_data(self, encrypt):
-        data = {"tag": self.tag}
+        data = {"tag": self.tag, "uid": self.uid}
         for elmnt in self._element_list:
             if encrypt:
                 data.update(elmnt.encrypted_data)
@@ -908,7 +873,15 @@ class UnlinkedDataPage(NoDataPage):
             self.log.warning("No saving agent for unlinked data available.")
 
         for agent in self._experiment.sac_unlinked.agents.values():
-            data = self._experiment.data_manager.get_unlinked_data(encrypt=agent.encrypt)
+
+            if self.encrypt == "agent":
+                encrypt = agent.encrypt
+            if self.encrypt == "always":
+                encrypt = True
+            if self.encrypt == "never":
+                encrypt = False
+
+            data = self._experiment.data_manager.get_unlinked_data(encrypt=encrypt)
             self._experiment.sac_unlinked.save_with_agent(
                 data=data, name=agent.name, level=level, sync=sync
             )
