@@ -81,23 +81,17 @@ def start():
     script.log = log
 
     # generate experiment
-    script.experiment = script.generate_experiment(config=script.config)
-
-    # log initialization message
-    log_msg = (
-        f"Alfred {script.config['exp_config'].get('experiment', 'type')} experiment session initialized! "
-        f"Alfred version: {script.experiment.alfred_version}, "
-        f"experiment title: {script.config['exp_config'].get('metadata', 'title')}, "
-        f"experiment version: {script.config['exp_config'].get('metadata', 'version')}"
-    )
-
-    log.info(log_msg)
+    try:
+        script.experiment = script.generate_experiment(config=script.config)
+    except Exception:
+        script.log.exception("Expection during experiment generation.")
+        abort(500)
 
     # start experiment
     try:
         script.experiment.start()
     except Exception:
-        log.exception("")
+        log.exception("Exception during experiment startup.")
         abort(500)
 
     # Experiment startup message
