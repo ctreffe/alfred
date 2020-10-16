@@ -12,7 +12,7 @@ import logging
 from functools import reduce
 
 from ._core import ContentCore, Direction
-from .page import PageCore, HeadOpenSectionCantClose
+from .page import PageCore, HeadOpenSectionCantClose, UnlinkedDataPage
 from .exceptions import MoveError
 from . import alfredlog
 from random import shuffle
@@ -43,12 +43,52 @@ class Section(ContentCore):
         return self._page_list
 
     @property
+    def only_pages(self):
+        return [member for member in self.page_list if isinstance(member, PageCore)]
+
+    @property
     def data(self):
         data = super(Section, self).data
         data["subtree_data"] = []
         for q_core in self._page_list:
+            if isinstance(q_core, UnlinkedDataPage):
+                continue
             data["subtree_data"].append(q_core.data)
 
+        return data
+
+    def unlinked_data(self, encrypt):
+        data = {"tag": self.tag}
+        data["subtree_data"] = []
+        for q_core in self._page_list:
+            try:
+                data["subtree_data"].append(q_core.unlinked_data(encrypt=encrypt))
+            except AttributeError:
+                pass
+
+        return data
+
+    def unlinked_data_present(self):
+        """Returns *True*, if unlinked data was collected during the
+        experiment and *False*, if no unlinked data was collected.
+        """
+        present = False
+        for member in self._page_list:
+            if isinstance(member, UnlinkedDataPage):
+                present = True
+            elif isinstance(member, Section):
+                present = member.unlinked_data_present()
+
+        return present
+
+    @property
+    def codebook_data(self):
+        data = {}
+        for member in self.page_list:
+            try:
+                data.update(member.codebook_data)
+            except AttributeError:
+                pass
         return data
 
     @property
@@ -122,11 +162,14 @@ class Section(ContentCore):
         if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.enter()
 
+        self.on_enter()
+
     def leave(self, direction):
         assert self.allow_leaving(direction)
         if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(direction)
 
+        self.on_leave()
         self.log.debug(f"Leaving Section {self.tag} in direction {Direction.to_str(direction)}")
 
     @property
@@ -170,15 +213,17 @@ class Section(ContentCore):
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
 
+        self.on_exp_access()
+
     def append_item(self, item):
 
-        self.log.warning("section.append_item() is deprecated. Use section.append() instead.")
+        self.log.warning("Section.append_item() is deprecated. Use Section.append() instead.")
 
         self.append(item)
 
     def append_items(self, *items):
 
-        self.log.warning("section.append_items() is deprecated. Use section.append() instead.")
+        self.log.warning("Section.append_items() is deprecated. Use Section.append() instead.")
 
         for item in items:
             self.append(item)
@@ -232,6 +277,8 @@ class Section(ContentCore):
         )
 
     def move_forward(self):
+        self.log.debug(f"Section {self.tag}: move forward")
+
         # test if moving is possible and leaving is allowed
         if not (self.can_move_forward and self.allow_leaving(Direction.FORWARD)):
             raise MoveError()
@@ -255,6 +302,9 @@ class Section(ContentCore):
                     break
 
     def move_backward(self):
+
+        self.log.debug(f"Section {self.tag}: move backward")
+
         if not (self.can_move_backward and self.allow_leaving(Direction.BACKWARD)):
             raise MoveError()
 
@@ -277,7 +327,9 @@ class Section(ContentCore):
                     break
 
     def move_to_first(self):
+
         self.log.debug(f"Section {self.tag}: move to first")
+
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
         if isinstance(self._core_page_at_index, Section):
@@ -291,7 +343,9 @@ class Section(ContentCore):
             self.move_forward()
 
     def move_to_last(self):
+
         self.log.debug(f"Section {self.tag}: move to last")
+
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
         if isinstance(self._core_page_at_index, Section):
@@ -305,6 +359,7 @@ class Section(ContentCore):
             self.move_backward()
 
     def move_to_position(self, pos_list):
+
         if not self.allow_leaving(Direction.JUMP):
             raise MoveError()
 
@@ -338,6 +393,51 @@ class Section(ContentCore):
     @property
     def _core_page_at_index(self):
         return self._page_list[self._currentPageIndex]
+
+    def on_exp_access(self):
+        """Hook for code that is meant to be executed as soon as a 
+        section is added to an experiment.
+
+        Example::
+            class MainSection(SegmentedSection):
+
+                def on_exp_access(self):
+                    self += Page(title='Example Page')
+        
+        *New in v1.4.*
+        """
+        pass
+
+    def on_enter(self):
+        """Hook for code that is meant to be executed upon entering
+        a section in an ongoing experiment.
+
+        Example::
+            class MainSection(SegmentedSection):
+
+                def on_enter(self):
+                    print("Code executed upon entering section.")
+
+        *New in v1.4.*
+        """
+        pass
+
+    def on_leave(self):
+        """Hook for code that is meant to be executed upon leaving a 
+        section in an ongoing experiment.
+
+        This code will be executed *after* closing the section's last
+        page.
+
+        Example::
+            class MainSection(SegmentedSection):
+
+                def on_leave(self):
+                    print("Code executed upon leaving section.")
+        
+        *New in v1.4.*
+        """
+        pass
 
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
@@ -460,7 +560,7 @@ class HeadOpenSection(Section):
 
     def leave(self, direction):
         if direction == Direction.FORWARD:
-            self.log.debug("Leaving HeadOpenSection direction forward. closing last page.")
+            self.log.debug("Leaving HeadOpenSection direction forward. Closing last page.")
             if isinstance(self._core_page_at_index, PageCore):
                 self._core_page_at_index.close_page()
             else:

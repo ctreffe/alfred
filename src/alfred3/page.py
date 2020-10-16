@@ -7,13 +7,14 @@ from __future__ import absolute_import
 
 import time
 import logging
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
 
 from future.utils import with_metaclass
 
 from . import element, settings, alfredlog
+from . import saving_agent
 from ._core import ContentCore
 from ._helper import _DictObj
 from .element import Element, ExperimenterMessages, TextElement, WebElementInterface
@@ -22,21 +23,13 @@ from .exceptions import AlfredError
 
 class PageCore(ContentCore):
     def __init__(
-        self,
-        minimum_display_time=0,
-        minimum_display_time_msg=None,
-        values: dict = {},
-        run_on_showing="always",
-        run_on_hiding="always",
-        **kwargs,
+        self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         if settings.debugmode and settings.debug.disable_minimum_display_time:
             self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
-        self._run_on_showing = run_on_showing
-        self._run_on_hiding = run_on_hiding
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
@@ -49,9 +42,6 @@ class PageCore(ContentCore):
         if not isinstance(values, dict):
             raise TypeError("The parameter 'values' requires a dictionary as input.")
         self.values = _DictObj(values)
-
-        if self._run_on_showing not in ["once", "always"]:
-            raise ValueError("The parameter 'run_on_showing' must be either 'once' or 'always'.")
 
     def added_to_experiment(self, experiment):
         if not isinstance(self, WebPageInterface):
@@ -96,43 +86,161 @@ class PageCore(ContentCore):
 
         if not self._has_been_shown:
             self._data["first_show_time"] = time.time()
+            self.on_first_show()
 
-        if self._run_on_showing == "once" and not self._has_been_shown:
-            self.on_showing_widget()
-            self.on_showing()
-
-        elif self._run_on_showing == "always":
-            self.on_showing_widget()
-            self.on_showing()
+        self.on_showing_widget()
+        self.on_showing()
+        self.on_each_show()
 
         self._has_been_shown = True
 
     def on_showing_widget(self):
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is shown.
+        
+        .. note::
+            **Note**: on_showing_widget is deprecated and will be 
+            removed in future releases. Please use one of the 
+            replacements:
+
+            - on_first_show
+            - on_each_show
+        """
         pass
 
     def on_showing(self):
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is shown.
+
+        .. note::
+            **Note**: on_showing is deprecated and will be removed in
+            future releases. Please use one of the replacements:
+
+            - on_first_show
+            - on_each_show
+        """
+        pass
+
+    def on_first_show(self):
+        """Hook for code that is meant to be executed when a page is
+        shown for the first time.
+
+        This is your go-to-hook, if you want to have access to data 
+        from other pages within the experiment, and your code is meant
+        to be executed only once (i.e. the first time a page is shown).
+
+        *New in v1.4.*
+        """
+        pass
+
+    def on_each_show(self):
+        """Hook for code that is meant to be executed *every time* the 
+        page is shown.
+
+        *New in v1.4.*
+        """
         pass
 
     def _on_hiding_widget(self):
         """
         Method for internal processes on hiding Widget
         """
+        if not self._has_been_hidden:
+            self.on_first_hide()
+            hide_time = time.time()
+            self._data["first_hide_time"] = hide_time
+            self._data["first_display_duration"] = hide_time - self._data["first_show_time"]
 
-        if self._run_on_hiding == "once" and not self._has_been_hidden:
-            self.on_hiding_widget()
-            self.on_hiding()
-        elif self._run_on_showing == "always":
-            self.on_hiding_widget()
-            self.on_hiding()
+        self.on_hiding_widget()
+        self.on_hiding()
+        self.on_each_hide()
 
         self._has_been_hidden = True
-
-        # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
+        self.save_data()
 
     def on_hiding_widget(self):
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is hidden.
+
+        .. note::
+            **Note**: on_hiding_widget is deprecated and will be removed
+            in future releases. Please use one of the replacements:
+
+            - on_first_hide
+            - on_each_hide
+            - on_close
+        """
         pass
 
     def on_hiding(self):
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is hidden.
+
+        .. note::
+            **Note**: on_hiding is deprecated and will be removed in
+            future releases. Please use one of the replacements:
+
+            - on_first_hide
+            - on_each_hide
+            - on_close
+        """
+        pass
+
+    def on_first_hide(self):
+        """Hook for code that is meant to be executed only once, when
+        the page is hidden for the first time, **before** saving the
+        page's data.
+
+        .. note: **Important**: Note the difference to :meth:`on_close`, which is
+        executed upon final submission of the page's data. When using
+        :meth:`on_first_hide`, subject input can change (e.g., when a
+        subject revists a page and changes his/her input).
+
+        *New in v1.4.*
+        """
+        pass
+
+    def on_each_hide(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is hidden, **before** saving the page's data.
+
+        *New in v1.4*
+        """
+        pass
+
+    def on_close(self):
+        """Hook for code that is meant to be executed when a page is 
+        closed, **before** saving the page's data.
+
+        This is your go-to-hook, if you want to have the page execute 
+        this code only once, when submitting the data from a page. After
+        a page is closed, there can be no more changes to subject input.
+        This is the most important difference of :meth:`on_close` from
+        :meth:`on_first_hide`.
+
+        *New in v1.4*
+        """
+        pass
+
+    def on_exp_access(self):
+        """Hook for code that is meant to be executed as soon as a page 
+        is added to an experiment.
+        
+        This is your go-to-hook, if you want to have access to the 
+        experiment, but don't need access to data from other pages.
+
+        .. note::
+            Compared to :meth:`on_first_show`, this method gets executed
+            earlier, i.e. during experiment generation, while 
+            :meth:`on_first_show` is executed on runtime.
+        
+        .. note::
+            Internally, the hook is executed at the end of the 
+            :class:`CoreCompositePage`'s added_to_experiment method,
+            not the :class:`PageCore`'s.
+
+        *New in v1.4*
+        """
         pass
 
     def close_page(self):
@@ -148,7 +256,9 @@ class PageCore(ContentCore):
         ):
             self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
 
+        self.on_close()
         self._is_closed = True
+        self.save_data()
 
     def allow_closing(self):
         return True
@@ -208,6 +318,29 @@ class PageCore(ContentCore):
 
         return ".".join(name)
 
+    def save_data(self, level: int = 1, sync: bool = False):
+        """Saves current experiment data.
+        
+        Collects the current experimental data and calls the 
+        experiment's main SavingAgentController to save the data with
+        all SavingAgents.
+
+        Args: 
+            level: Level of the saving task. High level means high 
+                importance. If the level is below a SavingAgent's 
+                activation level, that agent will not be used for 
+                processing this task. Defaults to 1.
+            sync: If True, the saving task will be prioritised and the
+                experiment will pause until the task was fully completed.
+                Should be used carefully. Defaults to False.
+        """
+        if not self._experiment.sac_main.agents and not self._experiment.config.getboolean(
+            "general", "debug"
+        ):
+            self.log.warning("No saving agents available.")
+        data = self._experiment.data_manager.get_data()
+        self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
+
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepare_web_widget(self):
@@ -252,6 +385,7 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).__init__(**kwargs)
 
         self._element_list = []
+        self._element_dict = {}
         self._element_name_counter = 1
         self._thumbnail_element = None
         if elements is not None:
@@ -296,6 +430,10 @@ class CoreCompositePage(PageCore):
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
 
+            if elmnt.name in self._element_dict:
+                raise ValueError("Element name must be unique on Page.")
+            self._element_dict[elmnt.name] = element
+
     def __iadd__(self, other):
         self.append(other)
         return self
@@ -307,7 +445,8 @@ class CoreCompositePage(PageCore):
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         for element in self._element_list:
-            element.activate(experiment)
+            element.added_to_experiment(experiment)
+        self.on_exp_access()
 
     @property
     def allow_closing(self):
@@ -325,6 +464,18 @@ class CoreCompositePage(PageCore):
         for elmnt in self._element_list:
             data.update(elmnt.data)
 
+        data["tree"] = self.short_tree
+
+        return data
+
+    @property
+    def codebook_data(self):
+        data = {}
+        for el in self._element_list:
+            try:
+                data.update(el.codebook_data)
+            except AttributeError:
+                pass
         return data
 
     @property
@@ -572,60 +723,6 @@ class HeadOpenSectionCantClose(CompositePage):
         )
 
 
-class MongoSaveCompositePage(CompositePage):
-    def __init__(
-        self,
-        host,
-        database,
-        collection,
-        user,
-        password,
-        error="ignore",
-        hide_data=True,
-        *args,
-        **kwargs,
-    ):
-        super(MongoSaveCompositePage, self).__init__(*args, **kwargs)
-        self._host = host
-        self._database = database
-        self._collection = collection
-        self._user = user
-        self._password = password
-        self._error = error
-        self._hide_data = hide_data
-        self._saved = False
-
-    @property
-    def data(self):
-        if self._hide_data:
-            # this is needed for some other functions to work properly
-            data = {"tag": self.tag, "uid": self.uid}
-            return data
-        else:
-            return super(MongoSaveCompositePage, self).data
-
-    def close_page(self):
-        rv = super(MongoSaveCompositePage, self).close_page()
-        if self._saved:
-            return rv
-        from pymongo import MongoClient
-
-        try:
-            client = MongoClient(self._host)
-            db = client[self._database]
-            db.authenticate(self._user, self._password)
-            col = db[self._collection]
-            data = super(MongoSaveCompositePage, self).data
-            data.pop("first_show_time", None)
-            data.pop("closing_time", None)
-            col.insert(data)
-            self._saved = True
-        except Exception as e:
-            if self._error != "ignore":
-                raise e
-        return rv
-
-
 ####################
 # Page Mixins
 ####################
@@ -739,9 +836,223 @@ class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
 
 
 class NoDataPage(Page):
+    """This Page does not save any data except its tag and uid."""
+
     @property
     def data(self):
         # Pages must always return tag and uid!
         data = {"tag": self.tag, "uid": self.uid}
 
         return data
+
+
+class UnlinkedDataPage(NoDataPage):
+    """This Page saves unlinked data.
+
+    Unlinked data is data that does not contain any identifiers that
+    would allow someone to establish a connection between an 
+    experiment data set and the unlinked data set. 
+    A common use case is the sepration of identifying personal 
+    information that might be needed for non-experimental purposes such 
+    as compensation admninistration, from experiment data.
+
+    In practice that means that the UnlinkedDataPage does not save any
+    of the following:
+
+    - Time of saving
+    - Session ID
+    - Experiment condition
+    - Additional data
+    - Start time
+    - Experiment version
+    - Alfred version
+
+    It will, however, save the following information:
+
+    - Experiment Title
+    - Experiment ID
+    - Experiment Author
+    - Page tag
+    - Page ID
+
+    Thus, the saved data *can* be linked to an *experiment* and to a
+    page. That is intended and indeed necessary so that data 
+    can be retrieved and processed. The key point is that there is no
+    identifier for linking data to data from a specific experimental 
+    *session* (i.e. the name of a subject, saved with an 
+    UnlinkedDataPage cannot be linked to his/her answers given on other
+    Pages).
+
+    Args:
+        encrypt: Takes one the following values: 'agent' (default) will
+            encrypt data based on each saving agent's configuration.
+            'always' will encrypt all data entered on this page, 
+            regardless of saving agent configuration. 'never' will turn
+            off encryption for this page, regardless of saving agent
+            configuration.
+
+    .. warning::
+        All data from UnlinkedDataPages is saved in a single unlinked 
+        data document, so data from two different unlinked pages *are* 
+        linked to each other (though not to the rest of the experiment
+        data).
+
+    """
+
+    def __init__(self, encrypt: str = "agent", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.encrypt = encrypt
+
+        if self.encrypt not in ["agent", "always", "never"]:
+            raise ValueError(
+                "The argument 'encrypt' must take one of the following values: 'agent', 'always', 'never'."
+            )
+
+    def unlinked_data(self, encrypt):
+        data = {"tag": self.tag, "uid": self.uid}
+        for elmnt in self._element_list:
+            if encrypt:
+                data.update(elmnt.encrypted_data)
+            else:
+                data.update(elmnt.data)
+
+        data["tree"] = self.short_tree
+        return data
+
+    def save_data(self, level: int = 1, sync: bool = False):
+        """Saves current unlinked data.
+        
+        Collects the unlinked data from all UnlinkedDataPages in the
+        experiment and engages the experiment's unlinked
+        SavingAgentController to save the data with all SavingAgents.
+
+        Args: 
+            level: Level of the saving task. High level means high 
+                importance. If the level is below a SavingAgent's 
+                activation level, that agent will not be used for 
+                processing this task. Defaults to 1.
+            sync: If True, the saving task will be prioritised and the
+                experiment will pause until the task was fully completed.
+                Should be used carefully. Defaults to False.
+        """
+        if not self._experiment.sac_unlinked.agents and not self._experiment.config.getboolean(
+            "general", "debug"
+        ):
+            self.log.warning("No saving agent for unlinked data available.")
+
+        for agent in self._experiment.sac_unlinked.agents.values():
+
+            if self.encrypt == "agent":
+                encrypt = agent.encrypt
+            if self.encrypt == "always":
+                encrypt = True
+            if self.encrypt == "never":
+                encrypt = False
+
+            data = self._experiment.data_manager.get_unlinked_data(encrypt=encrypt)
+            self._experiment.sac_unlinked.save_with_agent(
+                data=data, name=agent.name, level=level, sync=sync
+            )
+
+
+class CustomSavingPage(Page, ABC):
+    """Allows you to add custom SavingAgents directly to the page.
+
+    Since this is an abstract class, it can not be instantiated directly.
+    You have to derive a child class and define the property
+    :meth:`custom_save_data`, which must return a dictionary. Through
+    this property, you control exactly which data will be saved by this
+    page.
+
+    Example 1: Saving ordinary page data (like other pages)::
+
+        class MyPage(CustomSavingPage):
+
+            @property
+            def custom_save_data(self):
+                return self.data
+
+
+    Example 2: Saving a static dictionary
+
+        class MyPage(CustomSavingPage):
+
+            @property
+            def custom_save_data(self):
+                return {"key": "value"}
+
+    .. warning::
+        Each SavingAgent maintains one file or one document. 
+        On saving, the document will be fully replaced with the current
+        data. That means, you should not let two CustomSavingPages
+        share a SavingAgent, as they will override each other's data.
+        That is, unless that is your intended behavior, e.g. when the
+        pages share data.
+
+    Args:
+        experiment: Alfred experiment. This page must be initialized
+            with an experiment.
+        save_to_main: If True, data will be *also* saved using the
+            experiment's main SavingAgentController and all of its
+            SavingAgents. Defaults to False.
+    """
+
+    def __init__(self, experiment, save_to_main: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self._experiment = experiment
+        self.saving_agent_controller = saving_agent.SavingAgentController(self._experiment)
+        self.save_to_main = save_to_main
+
+    def added_to_experiment(self, experiment):
+        if not self._experiment:
+            super().added_to_experiment(experiment=experiment)
+            self.saving_agent_controller = saving_agent.SavingAgentController(self._experiment)
+        self._check_for_duplicate_agents()
+
+    def _check_for_duplicate_agents(self):
+        comparison = []
+        comparison += list(self._experiment.sac_main.agents.values())
+        comparison += list(self._experiment.sac_unlinked.agents.values())
+
+        for pg in self._experiment.page_controller.pages():
+            if pg == self:
+                continue
+            try:
+                comparison += list(pg.saving_agent_controller.agents.values())
+            except AttributeError:
+                pass
+
+        for agent in self.saving_agent_controller.agents.values():
+            self._check_one_duplicate(agent, comparison)
+
+    @staticmethod
+    def _check_one_duplicate(agent, agents_list):
+        for ag in agents_list:
+            if ag == agent:
+                raise ValueError("A SavingAgent added to a CustomSavingPage must be unique")
+
+    def append_saving_agents(self, *args):
+        for agent in args:
+            self.saving_agent_controller.append(agent)
+        self._check_for_duplicate_agents()
+
+    def append_failure_saving_agents(self, *args):
+        for agent in args:
+            self.saving_agent_controller.append_failure_agent(agent)
+
+    @abstractproperty
+    def custom_save_data(self):
+        pass
+
+    def save_data(self, level=1, sync=False):
+
+        if not isinstance(self.custom_save_data, dict):
+            raise ValueError("The porperty 'custom_page_data' must return a dictionary.")
+
+        if self.save_to_main:
+            self._experiment.sac_main.save_with_all_agents(level=level, sync=sync)
+
+        self.saving_agent_controller.save_with_all_agents(
+            data=self.custom_save_data, level=level, sync=sync
+        )
+

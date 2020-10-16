@@ -33,6 +33,7 @@ with arguments of your choice.
         runner.print_startup_message()
         runner.app.run(use_reloader=False, debug=False)
 
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
 import importlib
@@ -56,10 +57,32 @@ from alfred3.config import init_configuration
 
 class ExperimentRunner:
     def __init__(self, path: str = None):
-        self.expdir = Path(path).resolve() if path else Path.cwd()
+        self.expdir = self.find_path(path)
         self.config = init_configuration(self.expdir)
         self.app = None
         self.expurl = None
+
+    def find_path(self, path):
+        if path:
+            p = Path(path).resolve()
+            script0 = p / "script.py"
+            if script0.is_file():
+                sys.stderr.writelines([f" * Using script '{str(script0)}'\n"])
+                return p
+
+        fp = Path(sys.argv[0]).resolve().parent
+        script2 = fp / "script.py"
+        if script2.is_file():
+            sys.stderr.writelines([f" * Using script '{str(script2)}'\n"])
+            return fp
+
+        wd = Path.cwd()
+        script1 = wd / "script.py"
+        if script1.is_file():
+            sys.stderr.writelines([f" * Using script '{str(script1)}'\n"])
+            return wd
+
+        raise FileNotFoundError("No script.py found.")
 
     def generate_session_id(self):
         session_id = uuid4().hex
@@ -110,6 +133,7 @@ class ExperimentRunner:
         # set generate_experiment function
         localserver.Script.expdir = self.expdir
         localserver.Script.config = self.config
+
         localserver.Script.generate_experiment = script.generate_experiment
         self.app = localserver.app
         self.app.secret_key = self.config["exp_secrets"].get("flask", "secret_key")

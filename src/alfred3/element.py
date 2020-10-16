@@ -45,7 +45,7 @@ from jinja2 import Environment, PackageLoader, Template
 from past.utils import old_div
 
 
-from . import alfredlog, settings
+from . import alfredlog, settings, page
 from ._helper import alignment_converter, fontsize_converter, is_url
 from .exceptions import AlfredError
 
@@ -140,11 +140,10 @@ class Element(object):
 
         self._page = q
         if self._page.experiment:
-            self.activate(self._page.experiment)
+            self.added_to_experiment(self._page.experiment)
 
-    def activate(self, experiment):
+    def added_to_experiment(self, experiment):
         self.experiment = experiment
-
         queue_logger_name = self.prepare_logger_name()
         self.log.queue_logger = logging.getLogger(queue_logger_name)
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
@@ -254,6 +253,18 @@ class Element(object):
             name.append(self._name)
 
         return ".".join(name)
+
+    @property
+    def page(self):
+        return self._page
+
+    @property
+    def tree(self):
+        return self.page.tree
+
+    @property
+    def identifier(self):
+        return self.tree.replace("rootSection_", "") + "_" + self._name
 
 
 class WebElementInterface(with_metaclass(ABCMeta, object)):
@@ -554,7 +565,7 @@ class CodeElement(Element, WebElementInterface):
 
 
 class DataElement(Element, WebElementInterface):
-    def __init__(self, variable, **kwargs):
+    def __init__(self, variable, description=None, **kwargs):
         """
         **DataElement** returns no widget, but can save a variable of any type into experiment data.
 
@@ -562,6 +573,7 @@ class DataElement(Element, WebElementInterface):
         """
         super(DataElement, self).__init__(**kwargs)
         self._variable = variable
+        self.description = description
 
     @property
     def variable(self):
@@ -578,6 +590,28 @@ class DataElement(Element, WebElementInterface):
     @property
     def data(self):
         return {self.name: self._variable}
+
+    @property
+    def encrypted_data(self):
+        encrypted_variable = self.experiment.encrypt(self._variable)
+        return {self.name: encrypted_variable}
+
+    @property
+    def codebook_data_flat(self):
+        data = {}
+        data["name"] = self.name
+        data["tree"] = self.tree.replace("rootSection_", "")
+        data["identifier"] = self.identifier
+        data["page_title"] = self.page.title
+        data["element_type"] = type(self).__name__
+        data["description"] = self.description
+        data["duplicate_identifier"] = False
+        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
+        return data
+
+    @property
+    def codebook_data(self):
+        return {self.identifier: self.codebook_data_flat}
 
 
 class InputElement(Element):
@@ -597,6 +631,7 @@ class InputElement(Element):
         debug_string=None,
         debug_value=None,
         default=None,
+        description=None,
         **kwargs,
     ):
         super(InputElement, self).__init__(**kwargs)
@@ -605,6 +640,8 @@ class InputElement(Element):
         self._no_input_corrective_hint = no_input_corrective_hint
         self._debug_string = debug_string
         self._debug_value = debug_value
+        self.description = description
+        self.default = default
 
         if settings.debugmode and settings.debug.default_values:
             if self._debug_value:
@@ -651,9 +688,41 @@ class InputElement(Element):
     def data(self):
         return {self.name: self._input}
 
+    @property
+    def encrypted_data(self):
+        enrcypted_dict = {}
+        for k, v in self.data.items():
+            try:
+                enrcypted_dict[k] = self.experiment.encrypt(v)
+            except TypeError:
+                if isinstance(v, list):
+                    v = [self.experiment.encrypt(entry) for entry in v]
+                enrcypted_dict[k] = v
+
+        return enrcypted_dict
+
     def set_data(self, d):
         if self.enabled:
             self._input = d.get(self.name, "")
+
+    @property
+    def codebook_data_flat(self):
+        data = {}
+        data["name"] = self.name
+        data["tree"] = self.tree.replace("rootSection_", "")
+        data["identifier"] = self.identifier
+        data["page_title"] = self.page.title
+        data["element_type"] = type(self).__name__
+        data["force_input"] = self._force_input
+        data["default"] = self.default
+        data["description"] = self.description
+        data["duplicate_identifier"] = False
+        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
+        return data
+
+    @property
+    def codebook_data(self):
+        return {self.identifier: self.codebook_data_flat}
 
 
 class TextEntryElement(InputElement, WebElementInterface):
@@ -753,6 +822,15 @@ class TextEntryElement(InputElement, WebElementInterface):
         """
         if self.enabled:
             super(TextEntryElement, self).set_data(d)
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["instruction"] = self._instruction
+        data["prefix"] = self._prefix
+        data["suffix"] = self._suffix
+
+        return data
 
 
 class TextAreaElement(TextEntryElement):
@@ -920,6 +998,12 @@ class RegEntryElement(TextEntryElement):
         else:
             return [self.match_hint]
 
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["reg_ex_pattern"] = self._reg_ex
+        return data
+
 
 class NumberEntryElement(RegEntryElement):
     def __init__(
@@ -1064,11 +1148,10 @@ class NumberEntryElement(RegEntryElement):
             except Exception:
                 temp_input = ""
 
-        return (
-            {self.name: temp_input}
-            if self.validate_data() and temp_input != ""
-            else {self.name: ""}
-        )
+        if self.validate_data() and temp_input != "":
+            return {self.name: temp_input}
+        else:
+            return {self.name: ""}
 
     def set_data(self, d):
 
@@ -1133,6 +1216,16 @@ class NumberEntryElement(RegEntryElement):
                 return [hint]
 
             return []
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+
+        data["decimals"] = self._decimals
+        data["min"] = self._min
+        data["max"] = self._max
+
+        return data
 
 
 class PasswordElement(TextEntryElement):
@@ -1249,6 +1342,12 @@ class PasswordElement(TextEntryElement):
     def data(self):
         return {}
 
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["password"] = self._password
+        return data
+
 
 class LikertMatrix(InputElement, WebElementInterface):
     def __init__(
@@ -1310,6 +1409,7 @@ class LikertMatrix(InputElement, WebElementInterface):
         self._default_set = False
 
         self._permutation = list(range(items))
+        self._shuffle = shuffle
         if shuffle:
             random.shuffle(self._permutation)
 
@@ -1349,7 +1449,7 @@ class LikertMatrix(InputElement, WebElementInterface):
     def data(self):
         lm_data = {}
         for i in range(self._items):
-            label = self.name + "_" + str(i + 1)
+            label = self.name + "_item" + str(i + 1)
             if self._use_short_labels:
                 short_labels = self._short_labels()
                 label += "_" + short_labels[i]
@@ -1583,6 +1683,45 @@ class LikertMatrix(InputElement, WebElementInterface):
         else:
             return super(InputElement, self).corrective_hints
 
+    @property
+    def codebook_data_flat(self):
+        raise NotImplementedError("Property not implemented for LikertMatrix.")
+
+    def _likert_name(self, item: int) -> str:
+        suffix = f"_item{item}" if self.__class__.__name__ == "LikertMatrix" else ""
+        return self.identifier + suffix
+
+    @property
+    def codebook_data(self):
+        data = {}
+
+        labels = []
+        for i in range(len(self._item_labels)):
+            if i % 2 == 0:
+                labels.append(self._item_labels[i : i + 2])
+
+        for item in range(self._items):
+            element = super().codebook_data_flat
+            label_left, label_right = labels[item]
+            element["identifier"] = self._likert_name(item + 1)
+            element["item"] = item + 1
+            element["instruction"] = self._instruction
+            element["n_levels"] = self._levels
+            element["top_labels"] = (
+                ", ".join(self._top_scale_labels) if self._top_scale_labels else None
+            )
+            element["bottom_labels"] = (
+                ", ".join(self._bottom_scale_labels) if self._bottom_scale_labels else None
+            )
+            element["item_label_left"] = label_left
+            element["item_label_right"] = label_right
+            element["transposed"] = self._transpose
+            element["shuffle"] = self._shuffle
+            element["duplicate_identifier"] = False
+            data[element["identifier"]] = element
+
+        return data
+
 
 class LikertElement(LikertMatrix):
     def __init__(
@@ -1647,7 +1786,7 @@ class SingleChoiceElement(LikertElement):
     def __init__(
         self,
         instruction="",
-        item_labels=[],
+        item_labels=None,
         item_label_width=None,
         item_label_height=None,
         no_input_corrective_hint=None,
@@ -1681,7 +1820,6 @@ class SingleChoiceElement(LikertElement):
 
         if len(item_labels) == 0:
             raise ValueError("Es müssen Itemlabels übergeben werden.")
-
         super(SingleChoiceElement, self).__init__(
             instruction=instruction,
             no_input_corrective_hint=no_input_corrective_hint,
@@ -1697,7 +1835,8 @@ class SingleChoiceElement(LikertElement):
         self._item_label_width = item_label_width
         self._item_label_height = item_label_height
         self._table_striped = table_striped
-        self._items = len(item_labels)
+        self._items = 1
+        self._levels = len(item_labels)
         self._item_labels = item_labels
         self._suffle = shuffle
 
@@ -1735,7 +1874,7 @@ class SingleChoiceElement(LikertElement):
         )  # Beginning Table
 
         for i in range(
-            self._items
+            self._levels
         ):  # Adding Radiobuttons for each sclae level in each likert item
 
             widget = (
@@ -1871,9 +2010,10 @@ class MultipleChoiceElement(LikertElement):
         self._item_label_width = item_label_width
         self._item_label_height = item_label_height
         self._table_striped = table_striped
-        self._items = len(item_labels)
+        self._levels = len(item_labels)
+        self._items = 1
 
-        if min_select and min_select > self._items:
+        if min_select and min_select > self._levels:
             raise ValueError("min_select must be smaller than number of items")
 
         if max_select and max_select < 2:
@@ -1954,7 +2094,7 @@ class MultipleChoiceElement(LikertElement):
             )
         )  # Beginning Table
 
-        for i in range(self._items):
+        for i in range(self._levels):
             widget = (
                 widget
                 + '<tr style="height: %spx;"><td class="pagination-centered" style="vertical-align: middle; margin: auto auto;"><input type="checkbox" style="vertical-align: middle; margin: 4px 4px 4px 4px;" name="%s" value="%s" %s %s /></td>'
@@ -1992,7 +2132,7 @@ class MultipleChoiceElement(LikertElement):
     @property
     def data(self):
         mc_data = {}
-        for i in range(self._items):
+        for i in range(self._levels):
             mc_data.update({self.name + "_" + str(i + 1): int(self._input[i])})
         if self._suffle:
             mc_data[self.name + "_permutation"] = [i + 1 for i in self._permutation]
@@ -2000,7 +2140,7 @@ class MultipleChoiceElement(LikertElement):
 
     def set_data(self, d):
         if self.enabled:
-            for i in range(self._items):
+            for i in range(self._levels):
                 self._input[i] = d.get(self.name + "_" + str(i), "0")
 
     def validate_data(self):
@@ -2046,6 +2186,17 @@ class MultipleChoiceElement(LikertElement):
             return hints
 
         return super(InputElement, self).corrective_hints
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["min_select"] = self._min_select
+        data["max_select"] = self._max_select
+        data["top_labels"] = ", ".join(self._top_scale_labels) if self._top_scale_labels else None
+        data["bottom_labels"] = (
+            ", ".join(self._bottom_scale_labels) if self._bottom_scale_labels else None
+        )
+        return data
 
 
 class LikertListElement(InputElement, WebElementInterface):
@@ -2250,6 +2401,17 @@ class LikertListElement(InputElement, WebElementInterface):
             return [self.no_input_hint]
         else:
             return super(LikertListElement, self).corrective_hints
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["labels"] = "(images)"
+        data["n_levels"] = self._levels
+        data["top_labels"] = ", ".join(self._top_scale_labels) if self._top_scale_labels else None
+        data["bottom_labels"] = (
+            ", ".join(self._bottom_scale_labels) if self._bottom_scale_labels else None
+        )
+        return data
 
 
 class ImageElement(Element, WebElementInterface):
@@ -2669,6 +2831,21 @@ class WebSliderElement(InputElement, WebElementInterface):
 
         if self._input == "None":
             self._input = ""
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["min"] = self._min
+        data["max"] = self._max
+        data["step"] = self._step
+
+        if self._item_labels:
+            data["item_label_1"] = self._item_labels[0]
+            data["item_label_1"] = self._item_labels[1]
+
+        data["top_labels"] = self._top_label
+        data["bottom_labels"] = self._bottom_label
+        return data
 
 
 class WebAudioElement(Element, WebElementInterface):

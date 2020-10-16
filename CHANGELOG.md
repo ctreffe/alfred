@@ -7,6 +7,140 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+### Added
+
+With this version, alfred3 gains some powerful new features. This is the overview:
+
+* The `UnlinkedDataPage` can be used to safely collect data that cannot be linked to any specific experiment session.
+* Alfred3 now automatically generates a comprehensive codebook that describes your data set.
+* Alfred3 now offers functionalizy for transforming locally collected data from .json to .csv format (both automatically at the end of each session, and manully via a command line interface).
+* New hooks for pages and sections make it easier to tidily organize experiment code.
+
+Details below!
+
+#### New page classes
+
+* `page.UnlinkedDataPage` : Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamp and other metadata that would allow connecting an unlinked dataset to an experiment dataset are saved. Otherwise, usage is fully equivalent to ordinary pages.
+* `page.CustomSavingPage` : This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more, call `help(CustomSavingPage)` .
+
+#### Automatic codebook generation
+
+Alfred now automatically generates a codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.
+
+#### Automatic transformation of local data to .csv
+
+Upon finishing an experiment session, alfred will now by default automatically transform the experiment data (including unlinked and codebook data) to .csv. You can control this behavior through two options in config.conf:
+
+``` ini
+[general]
+transform_data_to_csv = true # controls, whether to transform data or not
+csv_directory = data # the .csv files will be placed in this directory
+```
+
+#### Command line interface for exporting alfred3 data
+
+Through a new command line interface, you can export alfred data, both from your local `save` directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.
+
+``` 
+python3 -m alfred3.export --src=local_saving_agent
+```
+
+Detailed description of all parameters (available also from the terminal via `python3 -m alfred3.export --help` )
+
+``` 
+Usage: export.py [OPTIONS]
+
+Options:
+  --src TEXT           The name of the configuration section in 'config.conf'
+                       or 'secrets.conf' that defines the SavingAgent whose
+                       data you want to export.  [default: local_saving_agent]
+
+  --directory TEXT     The path to the experiment whose data you want to
+                       export. [default: Current working directory]
+
+  -h, --here           With this flag, you can indicate that you want to
+                       export .json files located in the current working
+                       directory.  [default: False]
+
+  --data_type TEXT     The type of data that you want to export. Accepted
+                       values are 'exp_data', 'unlinked', and 'codebook'. If
+                       you specify a 'src', the function tries to infer the
+                       data type from the 'src's suffix. (Example:
+                       'mongo_saving_agent_codebook' would lead to 'data_type'
+                       = 'codebook'. If you give a value for 'data_type', that
+                       always takes precedence. If no data_type is provide and
+                       no data_type can be inferred, 'exp_data' is used.
+
+  --missings TEXT      Here, you can manually specify a value that you want to
+                       insert for missing values
+
+  --remove_linebreaks  Indicates, whether linebreak characters should be
+                       deleted from the file. If you don't use this flag (the
+                       default), linebreaks will be replaced with spaces.
+                       [default: False]
+
+  --delimiter TEXT     Here, you can manually specify a delimiter for your
+                       .csv file. You need to put the delimiter inside
+                       quotation marks, e.g. like this: --delimiter=';'.
+                       [default: ,]
+
+  --help               Show this message and exit.
+```
+
+#### New page hooks for more control 
+
+All page classes now provide the possibility to define additional hooks, granting you more fine-grained control over the exact time your code gets executed. Here is a list of them:
+
+| Hook            | Explanation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `on_exp_access` | Hook for code that is meant to be executed as soon as a page is added to an experiment. This is your go-to-hook, if you want to have access to the experiment, but don't need access to data from other pages.                                                                                                                                                                                                                                                                                                                                    |
+| `on_first_show` | Hook for code that is meant to be executed when a page is shown for the first time. This is your go-to-hook, if you want to have access to data from other pages within the experiment, and your code is meant to be executed only once (i.e. the first time a page is shown).                                                                                                                                                                                                                                                                    |
+| `on_each_show` | Hook for code that is meant to be executed *every time* the page is shown.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `on_first_hide` | Hook for code that is meant to be executed only once, when the page is hidden for the first time, **before** saving the page's data. **Important**: Note the difference to `on_close` , which is executed upon final submission of the page's data. When using `on_first_hide` , subject input can change (e.g., when a subject revists a page and changes his/her input).                                                                                                                                                                                                                                                                                                   |
+| `on_each_hide` | Hook for code that is meant to be executed *every time* the page is hidden, **before** saving the page's data.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `on_close` | Hook for code that is meant to be executed when a page is closed. This is your go-to-hook, if you want to have the page execute code only once, when submitting the data from a page. Closing happens, when you leave a page for the first time in a `HeadOpenSection` (participants can revisit the page, but can't change their input), and when you leave a page in a `SegmentedSection` (participants cannot go back to previous pages). That means, this hook has no effect inside a standard `Section` , because its pages don't get closed. |
+
+In the same change, the old hooks `on_showing` , `on_showing_widget` (both equivalent to `on_each_show` ) and `on_hiding` , aswell as `on_hiding_widget` (both equivalent to `on_each_hide` ) are deprecated and, while still functioning, will be removed in future releases. Please use the new hooks from on.
+
+Here is an example:
+
+``` python
+from alfred3.page import Page
+from alfred3.element import TextElement
+
+class Welcome(Page):
+    def on_exp_access(self):
+        self += TextElement("This code is executed upon adding the page to the experiment.")
+    
+    def on_first_show(self):
+        self += TextElement("This code is executed right before showing the page for the first time")
+
+```
+
+#### New section hooks for more control
+
+The section classes also gain some hooks:
+
+| Hook | Explanation |
+| --- | --- |
+| `on_exp_access` | Hook for code that is meant to be executed as soon as a section is added to an experiment. |
+| `on_enter` | Hook for code that is meant to be executed upon entering a section in an ongoing experiment. |
+| `on_leave` | Hook for code that is meant to be executed upon leaving a section in an ongoing experiment. This code will be executed *after* closing the section's last page. |
+
+Here is an example:
+
+``` python
+from alfred3.section import Section
+from alfred3.page import Page
+
+class Main(Section):
+    def on_exp_access(self):
+        self += Page(title="Demo Page, added upon adding the section to the experiment.")
+    
+    def on_enter(self):
+        print("Code executed upon entering the section.")
+```
+
 ## alfred v1.3.1 (Released 2020-08-24)
 
 ### Fixed

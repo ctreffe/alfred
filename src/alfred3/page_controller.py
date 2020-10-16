@@ -10,7 +10,7 @@ from builtins import object
 from ._core import Direction
 
 from .section import Section
-from .page import CompositePage, WebCompositePage
+from .page import CompositePage, WebCompositePage, PageCore
 from .element import TextElement, WebExitEnabler
 from . import alfredlog
 
@@ -29,27 +29,10 @@ class PageController(object):
 
         self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
 
-        if self._experiment.type == "qt":
-            self._finishedSection.append(
-                CompositePage(
-                    elements=[
-                        TextElement(
-                            u"Das Experiment ist nun beendet. Vielen Dank für die Teilnahme."
-                        )
-                    ]
-                )
-            )
-        else:
-            self._finishedSection.append(
-                WebCompositePage(
-                    elements=[
-                        TextElement(
-                            u"Das Experiment ist nun beendet. Vielen Dank für die Teilnahme."
-                        ),
-                        WebExitEnabler(),
-                    ]
-                )
-            )
+        final_page = WebCompositePage(tag="finalPage")
+        final_page += TextElement("Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.")
+        final_page += WebExitEnabler()
+        self._finishedSection += final_page
 
         self._finishedSection.added_to_experiment(experiment)
 
@@ -65,6 +48,7 @@ class PageController(object):
         Achtung: Nur bei Items in der switch_list wird zwischen rootSection und finishedSection unterschieden.
         """
         switch_list = [
+            "append",
             "current_page",
             "current_title",
             "current_subtitle",
@@ -126,6 +110,15 @@ class PageController(object):
             "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
         self.change_to_finished_section()
+
+    def pages(self):
+        out = []
+        for member in self.page_list:
+            if isinstance(member, Section):
+                out += member.only_pages
+            elif isinstance(member, PageCore):
+                out.append(member)
+        return out
 
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
