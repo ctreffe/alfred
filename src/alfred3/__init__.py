@@ -165,8 +165,8 @@ class Experiment(object):
             (
                 f"Alfred {self.config.get('experiment', 'type')} experiment session initialized! "
                 f"Alfred version: {self.alfred_version}, "
-                f"experiment title: {self.config.get('metadata', 'title')}, "
-                f"experiment version: {self.config.get('metadata', 'version')}"
+                f"Experiment title: {self.config.get('metadata', 'title')}, "
+                f"Experiment version: {self.config.get('metadata', 'version')}"
             )
         )
 
@@ -432,44 +432,6 @@ class Experiment(object):
     def session_id(self):
         return self.config.get("metadata", "session_id")
 
-    def _set_encryptor(self):
-        """Sets the experiments encryptor.
-
-        Four possible outcomes:
-
-        1. Encryptor with key from default secrets.conf
-            If neither environment variable nor non-public custom key 
-            in the experiments' *secrets.conf* is defined.
-        2. Encryptor with key from environment variable
-            If 'ALFRED_ENCRYPTION_KEY' is defined in the environment
-            and no non-public custom key is defined in the experiments'
-            *secrets.conf*.
-        3. Encryptor with key from experiment secrets.conf
-            If 'public_key = false' and a key is defined in the 
-            experiments' *secrets.conf*.
-        4. No encryptor
-            If 'public_key = false' and no key is defined in the 
-            experiments' *secrets.conf*.
-
-        """
-
-        key = os.environ.get("ALFRED_ENCRYPTION_KEY", None)
-
-        if not key or not self.secrets.getboolean("encryption", "public_key"):
-            key = self.secrets.get("encryption", "key")
-
-        if key:
-            self._encryptor = Fernet(key=key.encode())
-        else:
-            self.log.warning(
-                "No encryption key found. Thus, no encryptor was set, and the methods 'encrypt' and 'decrypt' will not work."
-            )
-
-        if self.secrets.getboolean("encryption", "public_key"):
-            self.log.warning(
-                "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
-            )
-
     @property
     def session_status(self):
         return self._session_status
@@ -509,6 +471,39 @@ class Experiment(object):
         """
         return self.data_manager.find_experiment_data_by_uid(uid)
 
+    def _set_encryptor(self):
+        """Sets the experiments encryptor.
+
+        Four possible outcomes:
+
+        1. Encryptor with key from default secrets.conf
+            If neither environment variable nor non-public custom key 
+            in the experiments' *secrets.conf* is defined.
+        2. Encryptor with key from environment variable
+            If 'ALFRED_ENCRYPTION_KEY' is defined in the environment
+            and no non-public custom key is defined in the experiments'
+            *secrets.conf*.
+        3. Encryptor with key from experiment secrets.conf
+            If 'public_key = false' and a key is defined in the 
+            experiments' *secrets.conf*.
+        4. No encryptor
+            If 'public_key = false' and no key is defined in the 
+            experiments' *secrets.conf*.
+
+        """
+
+        key = os.environ.get("ALFRED_ENCRYPTION_KEY", None)
+
+        if not key or not self.secrets.getboolean("encryption", "public_key"):
+            key = self.secrets.get("encryption", "key")
+
+        if key:
+            self._encryptor = Fernet(key=key.encode())
+        else:
+            self.log.warning(
+                "No encryption key found. Thus, no encryptor was set, and the methods 'encrypt' and 'decrypt' will not work."
+            )
+
     def encrypt(self, data) -> str:
         """Converts input (given in `data` ) to `bytes`, performs 
         encryption, and returns the encrypted object as ` str`.
@@ -530,8 +525,13 @@ class Experiment(object):
             raise TypeError("Input must be of type str, int, or float.")
 
         d_str = str(data)
-
         d_bytes = d_str.encode()
+
+        if self.secrets.getboolean("encryption", "public_key"):
+            self.log.warning(
+                "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
+            )
+
         encrypted = self._encryptor.encrypt(d_bytes)
         return encrypted.decode()
 
