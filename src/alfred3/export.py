@@ -304,13 +304,13 @@ class LocalToCSV:
     "--here",
     default=False,
     is_flag=True,
-    help="With this flag, you can indicate, that you want to export .json files located in the current working directory.",
+    help="With this flag, you can indicate that you want to export .json files located in the current working directory.",
     show_default=True,
 )
 @click.option(
     "--data_type",
     default=None,
-    help="The type of data that you want to export. Accepted values are 'exp_data', 'unlinked', and 'codebook'. If you specify a 'src', the function tries to infer the data type from the 'src's suffix. (Example: 'mongo_saving_agent_codebook' would lead to 'data_type' = 'codebook'. If you give a value for 'data_type', that always takes precedence. [default: exp_data]",
+    help="The type of data that you want to export. Accepted values are 'exp_data', 'unlinked', and 'codebook'. If you specify a 'src', the function tries to infer the data type from the 'src's suffix. (Example: 'mongo_saving_agent_codebook' would lead to 'data_type' = 'codebook'. If you give a value for 'data_type', that always takes precedence. If no data_type is provide and no data_type can be inferred, 'exp_data' is used.",
     show_default=True,
 )
 @click.option(
@@ -353,6 +353,7 @@ def export_cli(data_type, src, directory, here, missings, remove_linebreaks, del
             )
             exporter.reset()
         print(f"Export completed. Files are located in '{wd}'.")
+
     elif here and data_type in [DataManager.EXP_DATA, DataManager.UNLINKED_DATA]:
         wd = Path.cwd()
         exporter = ExpDataExporter()
