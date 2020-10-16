@@ -57,8 +57,6 @@ class PageCore(ContentCore):
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
 
-        self._on_activation()
-
     @property
     def show_thumbnail(self):
         return True
@@ -88,22 +86,58 @@ class PageCore(ContentCore):
 
         if not self._has_been_shown:
             self._data["first_show_time"] = time.time()
-            self._on_opening()
+            self.on_first_show()
 
         self.on_showing_widget()
         self.on_showing()
+        self.on_each_show()
 
         self._has_been_shown = True
 
     def on_showing_widget(self):
-        """Hook for code that is meant to be executed *every time* 
-        the page is shown.
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is shown.
+        
+        .. note::
+            **Note**: on_showing_widget is deprecated and will be 
+            removed in future releases. Please use one of the 
+            replacements:
+
+            - on_first_show
+            - on_each_show
         """
         pass
 
     def on_showing(self):
-        """Hook for code that is meant to be executed *every time* 
-        the page is shown.
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is shown.
+
+        .. note::
+            **Note**: on_showing is deprecated and will be removed in
+            future releases. Please use one of the replacements:
+
+            - on_first_show
+            - on_each_show
+        """
+        pass
+
+    def on_first_show(self):
+        """Hook for code that is meant to be executed when a page is
+        shown for the first time.
+
+        This is your go-to-hook, if you want to have access to data 
+        from other pages within the experiment, and your code is meant
+        to be executed only once (i.e. the first time a page is shown).
+
+        *New in v1.4.*
+        """
+        pass
+
+    def on_each_show(self):
+        """Hook for code that is meant to be executed *every time* the 
+        page is shown.
+
+        *New in v1.4.*
         """
         pass
 
@@ -116,63 +150,96 @@ class PageCore(ContentCore):
             hide_time = time.time()
             self._data["first_hide_time"] = hide_time
             self._data["first_display_duration"] = hide_time - self._data["first_show_time"]
-        else:
-            self.on_hiding_widget()
-            self.on_hiding()
+
+        self.on_hiding_widget()
+        self.on_hiding()
+        self.on_each_hide()
 
         self._has_been_hidden = True
         self.save_data()
 
-        # TODO: Sollten nicht on_hiding closingtime und duration errechnet werden? Passiert momentan on_closing und funktioniert daher nicht in allen page groups!
-
-    def on_first_hide(self):
-        pass
-
     def on_hiding_widget(self):
-        """Hook for code that is meant to be executed *every time* 
-        the page is hidden.
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is hidden.
+
+        .. note::
+            **Note**: on_hiding_widget is deprecated and will be removed
+            in future releases. Please use one of the replacements:
+
+            - on_first_hide
+            - on_each_hide
+            - on_close
         """
         pass
 
     def on_hiding(self):
-        """Hook for code that is meant to be executed *every time* 
-        the page is hidden.
+        """**DEPRECATED**: Hook for code that is meant to be executed 
+        *every time* the page is hidden.
+
+        .. note::
+            **Note**: on_hiding is deprecated and will be removed in
+            future releases. Please use one of the replacements:
+
+            - on_first_hide
+            - on_each_hide
+            - on_close
         """
         pass
 
-    def _on_activation(self):
-        self.on_activation()
+    def on_first_hide(self):
+        """Hook for code that is meant to be executed only once, when
+        the page is hidden for the first time, **before** saving the
+        page's data.
 
-    def on_activation(self):
+        .. note: **Important**: Note the difference to :meth:`on_close`, which is
+        executed upon final submission of the page's data. When using
+        :meth:`on_first_hide`, subject input can change (e.g., when a
+        subject revists a page and changes his/her input).
+
+        *New in v1.4.*
+        """
+        pass
+
+    def on_each_hide(self):
+        """Hook for code that is meant to be executed *every time* 
+        the page is hidden, **before** saving the page's data.
+
+        *New in v1.4*
+        """
+        pass
+
+    def on_close(self):
+        """Hook for code that is meant to be executed when a page is 
+        closed, **before** saving the page's data.
+
+        This is your go-to-hook, if you want to have the page execute 
+        this code only once, when submitting the data from a page. After
+        a page is closed, there can be no more changes to subject input.
+        This is the most important difference of :meth:`on_close` from
+        :meth:`on_first_hide`.
+
+        *New in v1.4*
+        """
+        pass
+
+    def on_exp_access(self):
         """Hook for code that is meant to be executed as soon as a page 
         is added to an experiment.
         
         This is your go-to-hook, if you want to have access to the 
         experiment, but don't need access to data from other pages.
-        """
-        pass
 
-    def _on_opening(self):
-        self.on_opening()
+        .. note::
+            Compared to :meth:`on_first_show`, this method gets executed
+            earlier, i.e. during experiment generation, while 
+            :meth:`on_first_show` is executed on runtime.
+        
+        .. note::
+            Internally, the hook is executed at the end of the 
+            :class:`CoreCompositePage`'s added_to_experiment method,
+            not the :class:`PageCore`'s.
 
-    def on_opening(self):
-        """Hook for code that is meant to be executed when a page is
-        shown for the first time.
-
-        This is your go-to-hook, if you want to have access to data 
-        from other pages within the experiment, and your code is meant
-        to be executed only once (i.e. the first time a page is shown).
-        """
-
-    def _on_closing(self):
-        self.on_closing()
-
-    def on_closing(self):
-        """Hook for code that is meant to be executed when a page is 
-        closed.
-
-        This is your go-to-hook, if you want to have the page execute 
-        this code only once, when submitting the data from a page.
+        *New in v1.4*
         """
         pass
 
@@ -189,7 +256,7 @@ class PageCore(ContentCore):
         ):
             self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
 
-        self._on_closing()
+        self.on_close()
         self._is_closed = True
         self.save_data()
 
@@ -378,7 +445,8 @@ class CoreCompositePage(PageCore):
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         for element in self._element_list:
-            element.activate(experiment)
+            element.added_to_experiment(experiment)
+        self.on_exp_access()
 
     @property
     def allow_closing(self):
