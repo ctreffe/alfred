@@ -140,11 +140,10 @@ class Element(object):
 
         self._page = q
         if self._page.experiment:
-            self.activate(self._page.experiment)
+            self.added_to_experiment(self._page.experiment)
 
-    def activate(self, experiment):
+    def added_to_experiment(self, experiment):
         self.experiment = experiment
-
         queue_logger_name = self.prepare_logger_name()
         self.log.queue_logger = logging.getLogger(queue_logger_name)
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
