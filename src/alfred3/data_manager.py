@@ -229,6 +229,7 @@ class CodeBookExporter:
         self.fieldnames.sort(key=lambda item: self._sort_helper(item))
 
     def write_to_file(self, csvfile, **kwargs):
+
         with open(csvfile, "w", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=self.fieldnames, **kwargs)
             writer.writeheader()
@@ -274,16 +275,15 @@ class CodeBookExporter:
             overwrite: If true, existing files of the name *csv_name* 
                 will be overwritten.
         """
-
         if csv_name and overwrite:
             csv_name = csv_name
         elif csv_name and not overwrite:
             csv_name = find_unique_name(directory=out_dir, filename=csv_name)
         elif not csv_name and overwrite:
-            csv_name = str(in_file).replace(".json", ".csv")
+            csv_name = Path(in_file).name.replace(".json", ".csv")
         else:
             csv_name = find_unique_name(
-                directory=out_dir, filename=str(in_file).replace(".json", ".csv")
+                directory=out_dir, filename=Path(in_file).name.replace(".json", ".csv")
             )
 
         in_file = Path(in_file).resolve()
@@ -297,10 +297,13 @@ class CodeBookExporter:
             with open(in_file, "r") as f:
                 doc = json.load(f)
         except json.decoder.JSONDecodeError:
-            print(f"Skipped file '{in_file}' (not valid .json).")
             self.reset()
             return
         except IsADirectoryError:
+            return
+
+        if not doc.get("type") == DataManager.CODEBOOK_DATA:
+            self.reset()
             return
 
         self.process(doc)
@@ -436,7 +439,7 @@ class ExpDataExporter:
         meta_data = doc
         meta_data.pop("type")
         meta_data.pop("tag")
-        meta_data.pop("uid")
+        # meta_data.pop("uid")
         try:
             meta_data.pop("_id")
             meta_data.pop("_default_id")
