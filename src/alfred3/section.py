@@ -162,11 +162,14 @@ class Section(ContentCore):
         if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.enter()
 
+        self.on_enter()
+
     def leave(self, direction):
         assert self.allow_leaving(direction)
         if isinstance(self._core_page_at_index, Section):
             self._core_page_at_index.leave(direction)
 
+        self.on_leave()
         self.log.debug(f"Leaving Section {self.tag} in direction {Direction.to_str(direction)}")
 
     @property
@@ -209,6 +212,8 @@ class Section(ContentCore):
         self.log.queue_logger = logging.getLogger(queue_logger_name)
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
+
+        self.on_exp_access()
 
     def append_item(self, item):
 
@@ -389,6 +394,51 @@ class Section(ContentCore):
     def _core_page_at_index(self):
         return self._page_list[self._currentPageIndex]
 
+    def on_exp_access(self):
+        """Hook for code that is meant to be executed as soon as a 
+        section is added to an experiment.
+
+        Example::
+            class MainSection(SegmentedSection):
+
+                def on_exp_access(self):
+                    self += Page(title='Example Page')
+        
+        *New in v1.4.*
+        """
+        pass
+
+    def on_enter(self):
+        """Hook for code that is meant to be executed upon entering
+        a section in an ongoing experiment.
+
+        Example::
+            class MainSection(SegmentedSection):
+
+                def on_enter(self):
+                    print("Code executed upon entering section.")
+
+        *New in v1.4.*
+        """
+        pass
+
+    def on_leave(self):
+        """Hook for code that is meant to be executed upon leaving a 
+        section in an ongoing experiment.
+
+        This code will be executed *after* closing the section's last
+        page.
+
+        Example::
+            class MainSection(SegmentedSection):
+
+                def on_leave(self):
+                    print("Code executed upon leaving section.")
+        
+        *New in v1.4.*
+        """
+        pass
+
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
 
@@ -510,7 +560,7 @@ class HeadOpenSection(Section):
 
     def leave(self, direction):
         if direction == Direction.FORWARD:
-            self.log.debug("Leaving HeadOpenSection direction forward. closing last page.")
+            self.log.debug("Leaving HeadOpenSection direction forward. Closing last page.")
             if isinstance(self._core_page_at_index, PageCore):
                 self._core_page_at_index.close_page()
             else:
