@@ -199,8 +199,15 @@ def download_template(name, path, release, variant, here):
         loader.include_secrets = True
         loader.secrets = """# Place secret information here.
 # NEVER share this file.
+
+# [encryption]
+# encryption_key =
+# public_key = true
+
+
 [mongo_saving_agent]
 use = false
+name = mongo
 assure_initialization = true
 level = 1
 host = 
@@ -212,6 +219,18 @@ password =
 auth_source = alfred
 use_ssl = false
 ca_file_path = 
+
+# The following section can take the same field as 'mongo_saving_agent'.
+# Field that are not provided will be filled with the input from 'mongo_saving_agent'
+[mongo_saving_agent_unlinked]
+use = false
+name = mongo_unlinked
+
+# The following section can take the same field as 'mongo_saving_agent'.
+# Field that are not provided will be filled with the input from 'mongo_saving_agent'
+[mongo_saving_agent_codebook]
+use = false
+name = mongo_codebook
         """
 
     if variant == "l":
