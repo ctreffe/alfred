@@ -29,27 +29,10 @@ class PageController(object):
 
         self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
 
-        if self._experiment.type == "qt":
-            self._finishedSection.append(
-                CompositePage(
-                    elements=[
-                        TextElement(
-                            u"Das Experiment ist nun beendet. Vielen Dank für die Teilnahme."
-                        )
-                    ]
-                )
-            )
-        else:
-            self._finishedSection.append(
-                WebCompositePage(
-                    elements=[
-                        TextElement(
-                            u"Das Experiment ist nun beendet. Vielen Dank für die Teilnahme."
-                        ),
-                        WebExitEnabler(),
-                    ]
-                )
-            )
+        final_page = WebCompositePage(tag="finalPage")
+        final_page += TextElement("Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.")
+        final_page += WebExitEnabler()
+        self._finishedSection += final_page
 
         self._finishedSection.added_to_experiment(experiment)
 
@@ -65,6 +48,7 @@ class PageController(object):
         Achtung: Nur bei Items in der switch_list wird zwischen rootSection und finishedSection unterschieden.
         """
         switch_list = [
+            "append",
             "current_page",
             "current_title",
             "current_subtitle",
