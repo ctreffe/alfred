@@ -347,6 +347,12 @@ class PageCore(ContentCore):
         data = self._experiment.data_manager.get_data()
         self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
 
+    def __str__(self):
+        """*New in v1.4.*"""
+        title = self.title if self.title is not None else "<None>"
+        tag = self.tag if self.tag is not None else "<None>"
+        return f"<Page of class '{type(self).__name__}', title: '{title}', tag: '{tag}', uid: '{self.uid}'>"
+
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepare_web_widget(self):
