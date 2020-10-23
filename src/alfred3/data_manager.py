@@ -79,12 +79,58 @@ class DataManager(object):
         return data
 
     def find_experiment_data_by_uid(self, uid):
+        """Returns a dictionary with data from a specific page in the
+        experiment.
+
+        Args:
+            uid: The uid of the page whose data you want to be returned.
+        """
+
+        # First: Look for uid in ordinary exp data
         data = self._experiment._page_controller.data
-        return DataManager._find_by_uid(data, uid)
+        page_data = DataManager.find_data_by_uid(data, uid)
+
+        if page_data:
+            return page_data
+
+        # If uid is not found, look for it in unlinked data
+        unlinked_data = self._experiment.page_controller.unlinked_data(encrypt=False)
+        unlinked_page_data = DataManager.find_data_by_uid(unlinked_data, uid)
+
+        if unlinked_page_data:
+            return unlinked_page_data
+
+        # If uid is found in neither data tree, raise an error
+        raise AlfredError("Did not find uid in experiment or unlinked data.")
 
     def find_additional_data_by_key_and_uid(self, key, uid):
         data = self._additional_data[key]
         return DataManager._find_by_uid(data, uid)
+
+    @classmethod
+    def find_data_by_uid(cls, data, uid):
+        """Scans a data dictionary for a uid. Returns the part of the
+        dictionary that is identified by the uid (usually used to identify
+        page data). If the uid is not found in the dictionary, *None* is
+        returned.
+
+        Args:
+            data: Data dictionary to search in.
+            uid: Unique ID of a page or section in the data dictionary.
+        
+        *New in v1.4, replaces ``DataManager._find_by_uid``*
+        """
+        try:
+            if data["uid"] == uid:
+                return data
+        except KeyError:
+            pass
+
+        try:
+            for item in data["subtree_data"]:
+                return cls.find_data_by_uid(item, uid)
+        except KeyError:
+            return None
 
     @staticmethod
     def _find_by_uid(data, uid):
