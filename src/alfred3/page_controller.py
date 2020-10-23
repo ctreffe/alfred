@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from builtins import object
 from ._core import Direction
 
+from .exceptions import AlfredError
 from .section import Section
 from .page import CompositePage, WebCompositePage, PageCore
 from .element import TextElement, WebExitEnabler
@@ -19,22 +20,31 @@ class PageController(object):
     """
     | PageController stellt die obersten Fragengruppen des Experiments (*rootSection* und *finishedSection*)
     | bereit und ermöglicht den Zugriff auf auf deren Methoden und Attribute.
+
+    Attributes:
+        page_dict: A flat dictionary, providing access to all pages of 
+            the experiment. Keys are the page's uids. *New in v1.4*
+        section_dict: A flat dictionary, providing access to all 
+            sections of the experiment. Keys are the section's uids.
+            *New in v1.4*
     """
 
     def __init__(self, experiment):
         self._experiment = experiment
+        self.page_dict = {}
+        self.section_dict = {}
 
         self._rootSection = Section(tag="rootSection")
         self._rootSection.added_to_experiment(experiment)
+        self.add_section(self._rootSection)
 
         self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
-
         final_page = WebCompositePage(tag="finalPage")
         final_page += TextElement("Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.")
         final_page += WebExitEnabler()
         self._finishedSection += final_page
-
         self._finishedSection.added_to_experiment(experiment)
+        self.add_section(self._finishedSection)
 
         self._finished = False
         self._finishedPageAdded = False
@@ -119,6 +129,31 @@ class PageController(object):
             elif isinstance(member, PageCore):
                 out.append(member)
         return out
+
+    def add_page(self, page):
+        """Adds a page to the flat :attr:`page_dict`. Raises an
+        AlfredError, if duplicate uids are found.
+        
+        *New in v1.4.* 
+        """
+
+        try:
+            p = self.page_dict[page.uid]
+            raise AlfredError(f"Page uid must be unique. {page} and {p} have the same uid.")
+        except KeyError:
+            self.page_dict[page.uid] = page
+
+    def add_section(self, section):
+        """Adds a section to the flat :attr:`section_dict`. Raises an
+        AlfredError, if duplicate uids are found.
+        
+        *New in v1.4.* 
+        """
+        try:
+            s = self.section_dict[section.uid]
+            raise AlfredError(f"Section uid must be unique. {section} and {s} have the same uid.")
+        except KeyError:
+            self.section_dict[section.uid] = section
 
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.

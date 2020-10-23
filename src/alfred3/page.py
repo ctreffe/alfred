@@ -57,6 +57,12 @@ class PageCore(ContentCore):
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
 
+        try:
+            self.experiment.page_controller.add_page(self)
+        except AttributeError:
+            if self.parent.tag == "finishedSection":
+                pass
+
     @property
     def show_thumbnail(self):
         return True

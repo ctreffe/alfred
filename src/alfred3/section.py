@@ -213,6 +213,11 @@ class Section(ContentCore):
         self.log.session_id = self.experiment.config.get("metadata", "session_id")
         self.log.log_queued_messages()
 
+        try:
+            self.experiment.page_controller.add_section(self)
+        except AttributeError:
+            if self.tag == "finishedSection" or self.tag == "rootSection":
+                pass
         self.on_exp_access()
 
     def append_item(self, item):
