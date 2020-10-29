@@ -97,7 +97,7 @@ class ExperimentConfig(ConfigParser):
             self.read_file(f)
 
         self._collect_config_files()
-        self.read(self._config_files)
+        self.read(self._config_files, encoding="utf-8")
 
         for obj in self._config_objects:
             if type(obj) not in [str, dict]:
