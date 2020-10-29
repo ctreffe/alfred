@@ -29,12 +29,13 @@ Alfred now automatically generates a raw codebook from your experiment. The code
 
 #### Automatic transformation of local data to .csv
 
-Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through two options in config.conf:
+Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through the following options in config.conf:
 
 ``` ini
 [general]
 transform_data_to_csv = true # controls, whether to transform data or not
 csv_directory = data # the .csv files will be placed in this directory
+csv_delimiter = ; # Controls the delimiter. Default is semicolon.
 ```
 
 #### Command line interface for exporting alfred3 data
