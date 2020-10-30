@@ -19,6 +19,25 @@ from ._core import package_path
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
 
+class Layout2:
+
+    def __init__(self, experiment, template: str):
+        self.template = jinja_env.get_template(template)
+        self.experiment = experiment
+        self.content = {}
+        self.ui_controller = None
+
+        self.css_urls = []
+        self.js_urls = []
+    
+    def activate(self):
+        self.content["backward_text"] = self.experiment.config.get("navigation", "backward")
+        self.content["forward_text"] = self.experiment.config.get("navigation", "forward")
+        self.content["finish_text"] = self.experiment.config.get("navigation", "finish")
+
+    def render(self):
+        self.template.render(d=self.content)
+
 class Layout(with_metaclass(ABCMeta, object)):
     def __init__(self):
         self._experiment = None

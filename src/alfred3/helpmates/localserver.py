@@ -122,13 +122,16 @@ def experiment():
             except ValueError:
                 return redirect(url_for("experiment"))
 
-            kwargs = request.values.to_dict()
-            kwargs.pop("move", None)
-            kwargs.pop("directjump", None)
-            kwargs.pop("par", None)
+            data = request.values.to_dict()
+            data.pop("move", None)
+            data.pop("directjump", None)
+            data.pop("par", None)
 
-            script.experiment.user_interface_controller.update_with_user_input(kwargs)
-            if move is None and directjump is None and par is None and kwargs == {}:
+            res = data.pop("screen_resolution")
+            script.experiment.data_manager.add_additional_data("screen_resolution", res)
+
+            script.experiment.page_controller.current_page.set_data(data)
+            if move is None and directjump is None and par is None and not data:
                 pass
             elif directjump and par:
                 posList = list(map(int, par.split(".")))
@@ -144,6 +147,7 @@ def experiment():
                 script.experiment.user_interface_controller.move_to_position(posList)
             else:
                 abort(400)
+
             return redirect(url_for("experiment"))
 
         elif request.method == "GET":

@@ -47,6 +47,7 @@ from .saving_agent import CodebookLocalSavingAgent
 from .saving_agent import CodebookMongoSavingAgent
 from .saving_agent import MongoManager
 from .ui_controller import WebUserInterfaceController
+from .ui_controller import UserInterface
 from .exceptions import SavingAgentException
 
 _LSA = "local_saving_agent"
@@ -106,13 +107,14 @@ class Experiment(object):
 
         if self._type == "web":
             self._user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
-
         else:
             ValueError("unknown type: '%s'" % self._type)
 
-        self._unlinked_random_name_part = (
-            uuid4().hex
-        )  # Allows for session-specific saving of unlinked data.
+        if "responsive" in self.config.get("experiment", "web_layout"):
+            self._user_interface_controller = UserInterface(self)
+
+        # Allows for session-specific saving of unlinked data.
+        self._unlinked_random_name_part = uuid4().hex
 
         self._data_manager = DataManager(self)
         self._mongo_manager = MongoManager(self)

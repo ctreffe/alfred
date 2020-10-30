@@ -7,24 +7,252 @@ Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung
 """
 from __future__ import absolute_import
 
-
 from future import standard_library
 
 standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import os
-from abc import ABCMeta, abstractmethod
-from uuid import uuid4
-from io import StringIO
 import threading
+from abc import ABCMeta, abstractmethod
+from builtins import object, str
+from io import StringIO
+from pathlib import Path
+from uuid import uuid4
+
+import importlib.resources
+
+from future.utils import with_metaclass
+from jinja2 import Environment, PackageLoader
 
 from ._core import Direction
-from .layout import BaseWebLayout
-
-from .helpmates import localserver as localserver
 from .alfredlog import QueuedLoggingInterface
-from future.utils import with_metaclass
+from .helpmates import localserver as localserver
+from .layout import BaseWebLayout
+from .static import js
+from .static import css
+from .static import img
+
+jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
+
+
+class UserInterface:
+    _css_files = ["bootstrap-4.5.3.min.css", "responsive.css"]
+
+    _js_files = ["jquery-3.5.1.min.js", "popper.min.js", "bootstrap-4.5.3.min.js", "responsive.js"]
+
+    _logo = "uni_goe_logo_white.png"
+
+    def __init__(self, experiment):
+        self.template = jinja_env.get_template("page.html")
+
+        self.experiment = experiment
+        self.log = QueuedLoggingInterface(
+            base_logger=__name__, queue_logger=self.prepare_logger_name()
+        )
+        self._basepath = self.experiment.config.get("webserver", "basepath")
+        self._static_files = {}
+
+        self.config = dict(self.experiment.config["layout"])
+        self.config["logo_url"] = self.add_logo()
+
+        self.css_urls = []
+        self.js_urls = []
+
+        self._add_resources(self._js_files, "js")
+        self._add_resources(self._css_files, "css")
+
+        self.forward_enabled = True
+        self.backward_enabled = True
+        self.finish_enabled = True
+
+    def add_logo(self):
+        custom_logo = self.experiment.config.get("layout", "logo")
+
+        if custom_logo:
+            logo_path = Path(custom_logo).resolve()
+            if not logo_path.is_absolute():
+                logo_path = self.experiment.path / logo_path
+
+            if logo_path.suffix == ".png":
+                content_type = "image/png"
+            elif logo_path.suffix == ".jpg" or logo_path.suffix == ".jpeg":
+                content_type = "image/jpeg"
+
+            return self.add_static_file(logo_path, content_type=content_type)
+
+        else:
+            with importlib.resources.path(img, self._logo) as p:
+                url = self.add_static_file(p, content_type="image/png")
+
+            return url
+
+    def _add_resources(self, resources: list, resource_type: str):
+        """Adds resources to the UI via add_static_file.
+        
+        Args:
+            resources: A list of tuples of the form (pkg, resource).
+            resource_typetype: A string indicating the type of resource. 
+                "js" for JavaScript, "css" for Cascading Style Sheets.
+        """
+
+        if resource_type == "js":
+            container = self.js_urls
+            pkg = js
+        elif resource_type == "css":
+            container = self.css_urls
+            pkg = css
+
+        for i, f in enumerate(resources):
+            with importlib.resources.path(pkg, f) as p:
+                url = self.add_static_file(p)
+                container.append((i, url))
+
+    def code(self, page):
+        """Wraps the basic layout CSS and JavaScript together with
+        the page's CSS and JavaScript in a single dictionary
+        for easy use.
+        """
+
+        code = {}
+
+        code["layout_css"] = self.css_urls
+        code["layout_js"] = self.js_urls
+
+        code["css_urls"] = page.css_urls
+        code["css_code"] = page.css_code
+        code["js_urls"] = page.js_urls
+        code["js_code"] = page.js_code
+
+        return code
+
+    def render(self, page_token):
+        """Renders the current page."""
+
+        page = self.experiment.page_controller.current_page
+        page.prepare_web_widget()
+
+        code = self.code(page=page)
+
+        d = {**self.config}
+
+        d["title"] = self.experiment.page_controller.current_title
+        d["subtitle"] = self.experiment.page_controller.current_subtitle
+        d["page_token"] = page_token
+
+        if self.experiment.page_controller.current_status_text:
+            d["statustext"] = self.experiment.page_controller.current_status_text
+
+        if (
+            not self.experiment.page_controller.current_page.can_display_corrective_hints_in_line
+            and self.experiment.page_controller.current_page.corrective_hints
+        ):
+            d["corrective_hints"] = self.experiment.page_controller.current_page.corrective_hints
+
+        if self.backward_enabled:
+            if self.experiment.page_controller.can_move_backward:
+                d["backward_text"] = self.experiment.config.get("navigation", "backward")
+
+        if self.forward_enabled:
+            if self.experiment.page_controller.can_move_forward:
+                d["forward_text"] = self.experiment.config.get("navigation", "forward")
+            elif self.finish_enabled and not self.experiment.finished:
+                d["finish_text"] = self.experiment.config.get("navigation", "finish")
+
+        messages = self.experiment.message_manager.get_messages()
+        if messages:
+            for message in messages:
+                message.level = (
+                    "" if message.level == "warning" else "alert-" + message.level
+                )  # level to bootstrap
+            d["messages"] = messages
+
+        return self.template.render(d=d, element_list=page.element_list, code=code)
+
+    def render_html(self, page_token):
+        """Alia for render, provided for compatibility."""
+        return self.render(page_token=page_token)
+
+    @property
+    def basepath(self):
+
+        if self._basepath is not None:
+            return self._basepath
+        else:
+            return ""
+
+    def get_static_file(self, identifier):
+        """Returns the filepath to a static file based on its unique ID.
+
+        Args:
+            identifier: Unique ID of a static file.
+        """
+        return self._static_files[identifier]
+
+    def add_static_file(self, path, content_type=None):
+        """Adds a static file to an internal list. This allows us to
+        keep the actual filepath private, which is a security feature
+        for web experiments.
+
+        Returns the anonymized url for the added file.
+
+        Args:
+            path: Path to file.
+            content_type: Mimetype of the added file.
+        """
+        path = Path(path)
+        if not path.is_absolute():
+            path = self.experiment.path / path
+
+        identifier = uuid4().hex
+
+        if self.experiment and self.experiment.config.getboolean("general", "debug"):
+            if not hasattr(self, "sf_counter"):
+                self.sf_counter = 0
+            self.sf_counter += 1
+            identifier = str(self.sf_counter)
+
+        self._static_files[identifier] = (path, content_type)
+
+        url = f"{self.basepath}/staticfile/{identifier}"
+        return url
+
+    def move_forward(self):
+        if self.experiment.page_controller.allow_leaving(Direction.FORWARD):
+            self.experiment.page_controller.current_page._on_hiding_widget()
+            if self.experiment.page_controller.can_move_forward:
+                self.experiment.page_controller.move_forward()
+            else:
+                self.experiment.finish()
+
+    def move_backward(self):
+        if self.experiment.page_controller.allow_leaving(Direction.BACKWARD):
+            self.experiment.page_controller.current_page._on_hiding_widget()
+            self.experiment.page_controller.move_backward()
+
+    def start(self):
+        self.experiment.page_controller.current_page.save_data()
+        self.experiment.page_controller.enter()
+
+    def prepare_logger_name(self) -> str:
+        """Returns a logger name for use in *self.log.queue_logger*.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.class_uid
+        
+        with *class_uid* only added, if 
+        :attr:`~Section.instance_level_logging` is set to *True*.
+        """
+        # remove "alfred3" from module name
+        module_name = __name__.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(self.experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(self).__name__)
+
+        return ".".join(name)
 
 
 class UserInterfaceController(with_metaclass(ABCMeta, object)):

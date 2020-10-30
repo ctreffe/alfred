@@ -29,7 +29,7 @@ class PageController(object):
 
         self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
 
-        final_page = WebCompositePage(tag="finalPage")
+        final_page = WebCompositePage(tag="finalPage", title="Experiment beendet")
         final_page += TextElement("Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.")
         final_page += WebExitEnabler()
         self._finishedSection += final_page
@@ -102,7 +102,10 @@ class PageController(object):
         self._rootSection.leave(Direction.FORWARD)
         self._finishedSection.enter()
         self._finishedSection.move_to_first()
-        self._experiment.user_interface_controller.layout.finish_disabled = True
+        try:
+            self._experiment.user_interface_controller.layout.finish_disabled = True
+        except AttributeError:
+            self._experiment.user_interface_controller.finish_enabled = False
 
     def change_to_finished_group(self):
         # TODO: Remove in next major update

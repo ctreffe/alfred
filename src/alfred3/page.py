@@ -519,7 +519,12 @@ class CoreCompositePage(PageCore):
 
 
 class WebCompositePage(CoreCompositePage, WebPageInterface):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def prepare_web_widget(self):
+        self._on_showing_widget()
+
         for elmnt in self._element_list:
             elmnt.prepare_web_widget()
 

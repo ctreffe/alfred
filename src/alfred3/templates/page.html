@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+
+{% block page %}
+<div class="container-fluid page-container {{ d.get('page_width') }}" id="page-container">
+
+    <!-- Experimenter Messages -->
+    {% if d.get('messages') %}
+    {% for message in d.get('messages') %}
+    <div class="alert {{ message.level }}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {% if message.title %}
+        <strong>{{message.title}}</strong>
+        {% endif %}
+        {{ message.msg }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Corrective Hints -->
+    {% if d.get('corrective_hints') %}
+    <div class="row alert alert-block" id="correctiveBar">
+        <ul>
+            {% for hint in d.get('corrective_hints') %}
+            <li>{{ hint }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Page Header -->
+    <div class="page-header" id="page-header">
+        {% if d.get("title") %}
+        <h1 class="page-title">{{ d["title"] }}</h1>
+        {% endif %}
+
+        {% if d.get("subtitle") %}
+        <p class="page-subtitle">{{ d["subtitle"] }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Main Page Body -->
+    <form class="page-form" method="post">
+
+        <!-- Element widgets -->
+        <div class="page-body" id="page-body">
+
+            {% for element in element_list %}
+
+            {% if element.web_widget and element.should_be_shown %}
+            <div class="row">
+                <div class="col">
+                    <div class="element" id="elid-{{ element.name }}">
+                        {{ element.web_widget | safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Status Text -->
+            <div class="row with-margin">
+                <div class="span12" id="statustext">
+                    {{statustext}}
+                </div>
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" name="page_token" value="{{ d.get('page_token') }}">
+            <input type="hidden" name="screen_resolution" value="" id="screen_resolution">
+        </div>
+
+        <!-- navigation area-->
+        <div class="page-navigation" id="page-navigation">
+
+            <div class="row justify-content-center p-3">
+                <div class="col text-center form-actions" id="controls">
+
+                    <!-- backward button -->
+                    {% if d.get("backward_text") %}
+                    <button type="submit" class="btn btn-dark btn-lg" id="back_button" name="move" value="backward"
+                        submit="backward">{{ d.get("backward_text") }}</button>
+                    {% endif %}
+
+                    <!-- forward button -->
+                    {% if d.get("forward_text") %}
+                    <button type="submit" class="btn btn-dark btn-lg" id="forward_button" name="move" value="forward"
+                        submit="forward">{{ d.get("forward_text") }}</button>
+                    {% endif %}
+
+                    <!-- finish button -->
+                    {% if d.get("finish_text") %}
+                    <button type="submit" class="btn btn-dark btn-lg" id="finish_button" name="move" value="forward"
+                        submit="forward">{{ d.get("finish_text") }}</button>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+{% endblock page %}

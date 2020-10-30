@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- CSS -->
+
+    {% for _, url in code.get("layout_css") %}
+    <link rel="stylesheet" href="{{ url }}">
+    {% endfor %}
+
+    {% for _, url in code.get("css_urls") %}
+    <link rel="stylesheet" href="{{ url }}">
+    {% endfor %}
+
+    {% for _, css in code.get("css_code") %}
+    <style type="text/css">
+        {{ css }}
+    </style>
+    {% endfor %}
+
+    <title>{{ d.get('website_title') }}</title>
+</head>
+
+<body>
+
+    {% if d.get('page_width') == 'responsive-width' %}
+    <div class="container-fluid d-flex justify-content-center logo-bg">
+        <div class="logo-content {{ d.get('page_width') }}">
+            <img src="{{ d.get('logo_url') }}" class="float-left logo logo-responsive p-1" alt="Logo">
+            <span class="float-right text-right logo-text logo-text-responsive small p-1">{{ d.get('logo_text') }}</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="container-fluid min-width d-flex justify-content-center logo-bg">
+        <div class="logo-content {{ d.get('page_width') }}">
+            <img src="{{ d.get('logo_url') }}" class="float-left logo p-1" alt="Logo">
+            <span class="float-right text-right logo-text small p-1">{{ d.get('logo_text') }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% block page %}
+    {% endblock page %}
+
+    {% if d.get('page_width') == 'responsive-width' %}
+    <div class="footer-container d-flex justify-content-center">
+        {% else %}
+        <div class="footer-container min-width d-flex justify-content-center">
+            {% endif %}
+            <div class="footer {{ d.get('page_width') }} text-center small muted mt-1">
+                {% if d.get('footer_text') %}
+                <p class="footer-text mt-1">{{ d.get('footer_text') }}</p>
+                {% endif %}
+                <p class="footer-brand">Alfred3 experiment.</p>
+            </div>
+
+        </div>
+
+
+        <!-- Javascript -->
+        {% for _, url in code.get("layout_js") %}
+        <script type="text/javascript" src="{{ url }}"></script>
+        {% endfor %}
+
+        {% for _, url in code.get("js_urls") %}
+        <script type="text/javascript" src="{{ url }}"></script>
+        {% endfor %}
+
+        {% for _, js in code.get("js_code") %}
+        <script type="text/javascript">{ { js } }</script>
+        {% endfor %}
+
+
+</body>
+
+</html>
