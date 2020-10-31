@@ -1044,6 +1044,10 @@ class CustomSavingPage(Page, ABC):
                 raise ValueError("A SavingAgent added to a CustomSavingPage must be unique")
 
     def append_saving_agents(self, *args):
+        """Appends saving agents to this page.
+        
+        These saving agents will be used to save the page's data.
+        """
         for agent in args:
             self.saving_agent_controller.append(agent)
         self._check_for_duplicate_agents()
