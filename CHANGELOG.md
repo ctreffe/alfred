@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 With this version, alfred3 gains some powerful new features. This is the overview:
 
 * The `UnlinkedDataPage` can be used to safely collect data that cannot be linked to any specific experiment session.
-* Alfred3 now automatically generates a comprehensive codebook that describes your data set.
+* Alfred3 now automatically generates a comprehensive, machine-readable codebook that describes your data set.
 * Alfred3 now offers functionality for transforming locally collected data from .json to .csv format (both automatically at the end of each session, and manually via a command line interface).
 * New hooks for pages and sections make it easier to tidily organize experiment code.
 
