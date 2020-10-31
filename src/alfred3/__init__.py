@@ -317,6 +317,10 @@ class Experiment(object):
 
     def _export_data_to_csv(self):
         csv_directory = Path(self.config.get("general", "csv_directory"))
+        delim = self.config.get("general", "csv_delimiter")
+        import pdb
+
+        pdb.set_trace()
         if csv_directory.is_absolute():
             data_dir = csv_directory
         else:
@@ -330,7 +334,11 @@ class Experiment(object):
             lsa_dir = self.sac_main.agents[lsa_name].directory
             exp_exporter = ExpDataExporter()
             exp_exporter.write_local_data_to_file(
-                in_dir=lsa_dir, out_dir=data_dir, data_type=DataManager.EXP_DATA, overwrite=True
+                in_dir=lsa_dir,
+                out_dir=data_dir,
+                data_type=DataManager.EXP_DATA,
+                overwrite=True,
+                delimiter=delim,
             )
             self.log.info(f"Exported experiment data to '{str(data_dir)}'")
 
@@ -343,6 +351,7 @@ class Experiment(object):
                 out_dir=data_dir,
                 data_type=DataManager.UNLINKED_DATA,
                 overwrite=True,
+                delimiter=delim,
             )
             self.log.info(f"Exported unlinked data to '{str(data_dir)}'")
 
@@ -350,7 +359,9 @@ class Experiment(object):
             lsa_name = self.config.get(_LSA_C, "name")
             cb_name = self.sac_codebook.agents[lsa_name].file
             cb_exporter = CodeBookExporter()
-            cb_exporter.write_local_data_to_file(in_file=cb_name, out_dir=data_dir, overwrite=True)
+            cb_exporter.write_local_data_to_file(
+                in_file=cb_name, out_dir=data_dir, overwrite=True, delimiter=delim
+            )
             self.log.info(f"Exported codebook data to '{str(data_dir)}'")
 
     def append(self, *items):

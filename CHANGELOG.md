@@ -20,21 +20,22 @@ Details below!
 
 #### New page classes
 
-* `page.UnlinkedDataPage` : Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamp and other metadata that would allow connecting an unlinked dataset to an experiment dataset are saved. Otherwise, usage is fully equivalent to ordinary pages.
-* `page.CustomSavingPage` : This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more, call `help(CustomSavingPage)` .
+* `page.UnlinkedDataPage` : Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamps or other metadata are stored that would make it possible to link an unlinked dataset to an experiment dataset. Otherwise, usage is fully equivalent to ordinary pages.
+* `page.CustomSavingPage` : This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more information, call `help(CustomSavingPage)` .
 
 #### Automatic codebook generation
 
-Alfred now automatically generates a codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.
+Alfred now automatically generates a raw codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.
 
 #### Automatic transformation of local data to .csv
 
-Upon finishing an experiment session, alfred will now by default automatically transform the experiment data (including unlinked and codebook data) to .csv. You can control this behavior through two options in config.conf:
+Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through the following options in config.conf:
 
 ``` ini
 [general]
 transform_data_to_csv = true # controls, whether to transform data or not
 csv_directory = data # the .csv files will be placed in this directory
+csv_delimiter = ; # Controls the delimiter. Default is semicolon.
 ```
 
 #### Command line interface for exporting alfred3 data
@@ -68,11 +69,11 @@ Options:
                        data type from the 'src's suffix. (Example:
                        'mongo_saving_agent_codebook' would lead to 'data_type'
                        = 'codebook'. If you give a value for 'data_type', that
-                       always takes precedence. If no data_type is provide and
+                       always takes precedence. If no data_type is provided and
                        no data_type can be inferred, 'exp_data' is used.
 
   --missings TEXT      Here, you can manually specify a value that you want to
-                       insert for missing values
+                       insert for missing values.
 
   --remove_linebreaks  Indicates, whether linebreak characters should be
                        deleted from the file. If you don't use this flag (the
@@ -100,7 +101,7 @@ All page classes now provide the possibility to define additional hooks, grantin
 | `on_each_hide` | Hook for code that is meant to be executed *every time* the page is hidden, **before** saving the page's data.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `on_close` | Hook for code that is meant to be executed when a page is closed. This is your go-to-hook, if you want to have the page execute code only once, when submitting the data from a page. Closing happens, when you leave a page for the first time in a `HeadOpenSection` (participants can revisit the page, but can't change their input), and when you leave a page in a `SegmentedSection` (participants cannot go back to previous pages). That means, this hook has no effect inside a standard `Section` , because its pages don't get closed. |
 
-In the same change, the old hooks `on_showing` , `on_showing_widget` (both equivalent to `on_each_show` ) and `on_hiding` , aswell as `on_hiding_widget` (both equivalent to `on_each_hide` ) are deprecated and, while still functioning, will be removed in future releases. Please use the new hooks from on.
+For now, the old hooks `on_showing` , `on_showing_widget` (both equivalent to `on_each_show` ) and `on_hiding` , as well as `on_hiding_widget` (both equivalent to `on_each_hide` ) will still work but are deprecated and will be removed in future versions. Therefore we ask you to use the new hooks from now on.
 
 Here is an example:
 
