@@ -15,9 +15,16 @@
 .element {
     padding-left: 1em;
     padding-right: 1em;
-    margin-bottom: 1em;
     display: flex;
     flex-direction: row;
+}
+
+.input-element {
+    margin-bottom: 1em;
+}
+
+.text-element {
+    margin-bottom: 0;
 }
 
 .input-field {
@@ -93,16 +100,16 @@
     text-align: center;
     border-style: none none solid none;
     border-width: 1px;
-    border-color: var(--grau60);
+    border-color: lightgrey;
 }
 
 .page-subtitle {
     text-align: center;
-
 }
 
-
-
+p.page-subtitle {
+    margin-bottom: 0;
+}
 
 /* BREAKPOINTS */
 
@@ -167,4 +174,6 @@ label p {
 /* Code block font size */
 pre[class*="language-"] {
     font-size: 11pt;
+    margin-top: 0;
+    margin-bottom: 1em;
 }
