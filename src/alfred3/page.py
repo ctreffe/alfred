@@ -423,16 +423,19 @@ class CoreCompositePage(PageCore):
                     "%s is not an instance of WebElementInterface" % type(elmnt).__name__
                 )
 
-            if elmnt.name is None:
-                elmnt.name = ("%02d" % self._element_name_counter) + "_" + elmnt.__class__.__name__
-                self._element_name_counter = self._element_name_counter + 1
-
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
 
             if elmnt.name in self._element_dict:
                 raise ValueError("Element name must be unique on Page.")
             self._element_dict[elmnt.name] = element
+
+    def generate_element_name(self, element):
+        i = self._element_name_counter
+        c = element.__class__.__name__
+        self._element_name_counter += 1
+
+        return f"{i}_{c}"
 
     def __iadd__(self, other):
         self.append(other)

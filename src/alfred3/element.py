@@ -38,12 +38,14 @@ from abc import ABCMeta, abstractproperty
 from builtins import object, range, str
 from functools import reduce
 from uuid import uuid4
+from pathlib import Path
 
 from future import standard_library
 from future.utils import with_metaclass
 from jinja2 import Environment, PackageLoader, Template
 from past.utils import old_div
 
+import cmarkgfm
 
 from . import alfredlog, settings, page
 from ._helper import alignment_converter, fontsize_converter, is_url
@@ -139,6 +141,9 @@ class Element(object):
             raise TypeError()
 
         self._page = q
+        if self.name is None:
+            self.name = self.page.generate_element_name(self)
+
         if self._page.experiment:
             self.added_to_experiment(self._page.experiment)
 
@@ -413,7 +418,9 @@ class ProgressBar(Element, WebElementInterface):
 
 
 class TextElement(Element, WebElementInterface):
-    def __init__(self, text, text_width=None, text_height=None, **kwargs):
+    def __init__(
+        self, text=None, text_width=None, text_height=None, position="center", path=None, **kwargs
+    ):
         """
         **TextElement** allows display of simple text labels.
 
@@ -424,15 +431,26 @@ class TextElement(Element, WebElementInterface):
         :param int text_height: Set the height of the label to a fixed size (sometimes necessary when using rich text).
         """
         super(TextElement, self).__init__(**kwargs)
+        self._template = jinja_env.get_template("TextElement.html")
 
         self._text = text
         self._text_width = text_width
         self._text_height = text_height
         self._text_label = None
+        self._position = position
+        self._path = path
 
     @property
     def text(self):
-        return self._text
+        if self._path:
+            p = Path(self.experiment.path) / self._path
+            return p.read_text()
+        else:
+            return self._text
+
+    @property
+    def rendered_text(self):
+        return cmarkgfm.github_flavored_markdown_to_html(self.text)
 
     @text.setter
     def text(self, text):
@@ -440,6 +458,23 @@ class TextElement(Element, WebElementInterface):
         if self._text_label:
             self._text_label.set_text(self._text)
             self._text_label.repaint()
+
+    @property
+    def responsive_widget(self):
+        d = {}
+        d["name"] = self.name
+        d["position"] = self._position
+        d["narrow"] = True
+        d["element_class"] = "text-element"
+        d["text"] = self.rendered_text
+        d["align"] = f"text-{self._alignment}"
+        size = f"font-size: {fontsize_converter(self._font_size)};"
+        width = f"width: {self._text_width};" if self._text_width is not None else ""
+        height = f"height: {self._text_height};" if self._text_height is not None else ""
+
+        d["style"] = f"{size} {width} {height}"
+
+        return self._template.render(d)
 
     @property
     def web_widget(self):
@@ -784,6 +819,26 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         """
         )
+
+        self._responsive_template = jinja_env.get_template("TextEntryElement.html")
+
+    @property
+    def responsive_widget(self):
+
+        d = {}
+        d["id"] = self.name
+        d["col_size"] = "2"
+        d["placeholder"] = "Placeholder."
+        d["type"] = "text"
+        d["instruction"] = self._instruction
+        d["element-class"] = "text-entry-element"
+        d["style"] = "width: 80%;"
+        d["align"] = f"text-{self._alignment}"
+        d["position"] = "center"
+        # d["prefix"] = "p"
+        # d["suffix"] = "s"
+
+        return self._responsive_template.render(d)
 
     @property
     def web_widget(self):
@@ -3121,7 +3176,35 @@ class ExperimenterMessages(TableElement):
 
 class WebExitEnabler(Element, WebElementInterface):
     @property
-    def web_widget(self):
-        widget = "<script>$(document).ready(function(){glob_unbind_leaving();});</script>"
+    def js_code(self):
+        call = "$(document).ready(function(){glob_unbind_leaving();});"
+        return [(10, call)]
 
-        return widget
+    @property
+    def web_widget(self):
+        return ""
+
+
+# class Html:
+
+#     def __init__(self, classes: list = None):
+#         self.classes = classes if classes is not None else []
+
+#     @property
+#     def class_html(self):
+#         return " ".join(self.classes)
+
+
+# class Row(Html):
+
+#     template = """<div class='row'>
+#     {% for col in cols %}
+
+#     </div>"""
+
+#     def __init__(self):
+#         self.cols = []
+
+#     def row_html(self):
+#         return
+

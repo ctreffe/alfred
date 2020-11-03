@@ -35,11 +35,18 @@ jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
 
 class UserInterface:
-    _css_files = ["bootstrap-4.5.3.min.css", "responsive.css"]
+    _css_files = ["bootstrap-4.5.3.min.css", "prism.css", "responsive.css", "layout_goe.css"]
 
-    _js_files = ["jquery-3.5.1.min.js", "popper.min.js", "bootstrap-4.5.3.min.js", "responsive.js"]
+    _js_files = [
+        "jquery-3.5.1.min.js",
+        "popper.min.js",
+        "bootstrap-4.5.3.min.js",
+        "prism.js",
+        "responsive.js",
+    ]
 
     _logo = "uni_goe_logo_white.png"
+    _alfred_logo = "alfred_logo_color.png"
 
     def __init__(self, experiment):
         self.template = jinja_env.get_template("page.html")
@@ -53,6 +60,8 @@ class UserInterface:
 
         self.config = dict(self.experiment.config["layout"])
         self.config["logo_url"] = self.add_logo()
+        with importlib.resources.path(img, self._alfred_logo) as p:
+            self.config["alfred_logo_url"] = self.add_static_file(p, content_type="image/png")
 
         self.css_urls = []
         self.js_urls = []
@@ -229,7 +238,6 @@ class UserInterface:
             self.experiment.page_controller.move_backward()
 
     def start(self):
-        self.experiment.page_controller.current_page.save_data()
         self.experiment.page_controller.enter()
 
     def prepare_logger_name(self) -> str:
@@ -316,24 +324,20 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
                 self._experiment.page_controller.move_forward()
             else:
                 self._experiment.finish()
-            self._experiment.page_controller.current_page._on_showing_widget()
 
     def move_backward(self):
         if self._experiment.page_controller.allow_leaving(Direction.BACKWARD):
             self._experiment.page_controller.current_page._on_hiding_widget()
             self._experiment.page_controller.move_backward()
-            self._experiment.page_controller.current_page._on_showing_widget()
 
     def move_to_position(self, pos_list):
         if self._experiment.page_controller.allow_leaving(Direction.JUMP):
             self._experiment.page_controller.current_page._on_hiding_widget()
             self._experiment.page_controller.move_to_position(pos_list)
-            self._experiment.page_controller.current_page._on_showing_widget()
 
     def start(self):
         self._experiment.page_controller.current_page.save_data()
         self._experiment.page_controller.enter()
-        self._experiment.page_controller.current_page._on_showing_widget()
 
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.

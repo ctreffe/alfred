@@ -1,0 +1,7 @@
+{% extends 'InputElement.html' %}
+
+{% block element_class %}
+{# Main Input #}
+<input type="{{ type }}" class="form-control form-rounded input-element {{ element_class }}" id="{{ id }}"
+    placeholder="{{ placeholder }}">
+{% endblock element_class %}

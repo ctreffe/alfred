@@ -1,0 +1,31 @@
+{% extends 'Element.html' %}
+
+{% block element %}
+
+<div class="form-group row" style="margin: auto;">
+    <div class="col-12 col-sm-{{ col_size }}">
+        <label for="{{ id }}">{{ instruction }}</label>
+    </div>
+    <div class="col input-group">
+
+        {# Prefix #}
+        {% if prefix %}
+        <div class="input-group-prepend">
+            <div class="input-group-text"> {{ prefix }}</div>
+        </div>
+        {% endif %}
+
+        {% block element_class %}
+
+        {% endblock element_class %}
+
+        {# Suffix #}
+        {% if suffix %}
+        <div class="input-group-append">
+            <div class="input-group-text"> {{ suffix }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock element %}

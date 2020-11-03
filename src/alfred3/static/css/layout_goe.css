@@ -1,0 +1,28 @@
+/* VARIABLE DEFINITIONS */
+
+:root {
+    --body-color: ;
+    --main-color: #153268;
+    --secondary-color: #bccde2;
+    --light-color: #ffffff;
+    --dark-color: #000000;
+    --chamois: #e9e1d7;
+    --altweiss: #f6f4f0;
+    --grau90: #3b3b3a;
+    --grau80: #575656;
+    --grau60: #878786;
+}
+
+.logo-bg {
+    background-color: var(--main-color);
+}
+
+.logo-text {
+    color: var(--altweiss);
+}
+
+/* BASE OBJECTS */
+
+body {
+    background-color: var(--chamois);
+}

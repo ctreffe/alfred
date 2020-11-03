@@ -39,21 +39,16 @@
     </div>
 
     <!-- Main Page Body -->
-    <form class="page-form" method="post">
+    <form class="page-form" method="post" id="form">
 
         <!-- Element widgets -->
         <div class="page-body" id="page-body">
 
             {% for element in element_list %}
-
-            {% if element.web_widget and element.should_be_shown %}
-            <div class="row">
-                <div class="col">
-                    <div class="element" id="elid-{{ element.name }}">
-                        {{ element.web_widget | safe }}
-                    </div>
-                </div>
-            </div>
+            {% if element.responsive_widget and element.should_be_shown %}
+            {{ element.responsive_widget | safe }}
+            {% elif element.web_widget and element.should_be_shown %}
+            {{ element.web_widget | safe }}
             {% endif %}
             {% endfor %}
 
@@ -66,30 +61,30 @@
 
             <!-- Hidden fields -->
             <input type="hidden" name="page_token" value="{{ d.get('page_token') }}">
-            <input type="hidden" name="screen_resolution" value="" id="screen_resolution">
+            {# <input type="hidden" name="screen_resolution" value="" id="screen_resolution"> #}
         </div>
 
         <!-- navigation area-->
         <div class="page-navigation" id="page-navigation">
-
-            <div class="row justify-content-center p-3">
+            <hr />
+            <div class="row justify-content-center p-1">
                 <div class="col text-center form-actions" id="controls">
 
                     <!-- backward button -->
                     {% if d.get("backward_text") %}
-                    <button type="submit" class="btn btn-dark btn-lg" id="back_button" name="move" value="backward"
+                    <button type="submit" class="btn btn-dark" id="back_button" name="move" value="backward"
                         submit="backward">{{ d.get("backward_text") }}</button>
                     {% endif %}
 
                     <!-- forward button -->
                     {% if d.get("forward_text") %}
-                    <button type="submit" class="btn btn-dark btn-lg" id="forward_button" name="move" value="forward"
+                    <button type="submit" class="btn btn-dark" id="forward_button" name="move" value="forward"
                         submit="forward">{{ d.get("forward_text") }}</button>
                     {% endif %}
 
                     <!-- finish button -->
                     {% if d.get("finish_text") %}
-                    <button type="submit" class="btn btn-dark btn-lg" id="finish_button" name="move" value="forward"
+                    <button type="submit" class="btn btn-dark" id="finish_button" name="move" value="forward"
                         submit="forward">{{ d.get("finish_text") }}</button>
                     {% endif %}
 

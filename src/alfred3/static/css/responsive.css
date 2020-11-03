@@ -1,24 +1,25 @@
-/* VARIABLE DEFINITIONS */
-
-:root {
-    --body-color: ;
-    --main-color: #153268;
-    --secondary-color: #bccde2;
-    --light-color: #ffffff;
-    --dark-color: #000000;
-    --chamois: #e9e1d7;
-    --altweiss: #f6f4f0;
-    --grau90: #3b3b3a;
-    --grau80: #575656;
-    --grau60: #878786;
-}
-
 /* CLASSES */
 
+.alfred-logo {
+    height: 30px;
+}
+
+.element {
+    margin-bottom: 1em;
+}
+
+.footer-container {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.form-rounded {
+    border-radius: 1rem;
+}
+
 .logo-bg {
-    background-color: var(--main-color);
     height: 5vh;
-    min-height: 40px;
+    min-height: 60px;
     max-height: 60px;
 }
 
@@ -38,10 +39,6 @@
     height: 100%;
 }
 
-.logo-text {
-    color: var(--altweiss);
-}
-
 .page-container {
     width: 95%;
     min-height: 65vh;
@@ -49,7 +46,7 @@
     display: flex;
     flex-direction: column;
     background-color: white;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
 }
 
 .page-form {
@@ -62,6 +59,10 @@
     flex-grow: 1;
 }
 
+.page-header {
+    margin-bottom: 1em;
+}
+
 .fixed-width {
     width: 920px;
 }
@@ -70,6 +71,7 @@
     text-align: center;
     border-style: none none solid none;
     border-width: 1px;
+    border-color: var(--grau60);
 }
 
 .page-subtitle {
@@ -102,7 +104,7 @@
     .responsive-width {
         width: 75%;
     }
-    
+
 }
 
 /* Large devices (desktops, 992px and up) */
@@ -111,7 +113,7 @@
     .responsive-width {
         width: 65%;
     }
-    
+
 }
 
 /* Extra large devices (large desktops, 1200px and up) */
@@ -123,9 +125,12 @@
     }
 }
 
-/* BASE OBJECTS */
 
-body {
-    background-color: var(--chamois);
+
+blockquote {
+    background: #f9f9f9;
+    border-left: 10px solid #ccc;
+    margin: 1.5em 10px;
+    padding: 0.5em 10px;
+    quotes: "\201C""\201D""\2018""\2019";
 }
-

@@ -25,19 +25,20 @@
     <title>{{ d.get('website_title') }}</title>
 </head>
 
-<body>
+<body class="line-numbers">
 
     {% if d.get('page_width') == 'responsive-width' %}
     <div class="container-fluid d-flex justify-content-center logo-bg">
         <div class="logo-content {{ d.get('page_width') }}">
-            <img src="{{ d.get('logo_url') }}" class="float-left logo logo-responsive p-1" alt="Logo">
-            <span class="float-right text-right logo-text logo-text-responsive small p-1">{{ d.get('logo_text') }}</span>
+            <img src="{{ d.get('logo_url') }}" class="float-left logo logo-responsive p-2" alt="Logo">
+            <span
+                class="float-right text-right logo-text logo-text-responsive small p-1">{{ d.get('logo_text') }}</span>
         </div>
     </div>
     {% else %}
     <div class="container-fluid min-width d-flex justify-content-center logo-bg">
         <div class="logo-content {{ d.get('page_width') }}">
-            <img src="{{ d.get('logo_url') }}" class="float-left logo p-1" alt="Logo">
+            <img src="{{ d.get('logo_url') }}" class="float-left logo p-2" alt="Logo">
             <span class="float-right text-right logo-text small p-1">{{ d.get('logo_text') }}</span>
         </div>
     </div>
@@ -55,7 +56,8 @@
                 {% if d.get('footer_text') %}
                 <p class="footer-text mt-1">{{ d.get('footer_text') }}</p>
                 {% endif %}
-                <p class="footer-brand">Alfred3 experiment.</p>
+                <img src="{{ d.get('alfred_logo_url') }}" class="alfred-logo" alt="Alfred logo"> <br>
+                <span class="footer-brand">Alfred3 experiment.</span>
             </div>
 
         </div>
@@ -71,7 +73,9 @@
         {% endfor %}
 
         {% for _, js in code.get("js_code") %}
-        <script type="text/javascript">{ { js } }</script>
+        <script type="text/javascript">
+            {{ js }}
+        </script>
         {% endfor %}
 
 
