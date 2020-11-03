@@ -3398,7 +3398,7 @@ class Row(Element, WebElementInterface):
         lg: List[int] = None,
         xl: List[int] = None,
         height: str = "auto",
-        col_position: List[str] = None
+        col_position: List[str] = None,
     ):
         """Constructor method."""
         super().__init__()
@@ -3575,6 +3575,28 @@ class Row(Element, WebElementInterface):
                 out.append(f"col-{bp}-{n}")
 
         return out
+
+
+class VerticalSpace(Element, WebElementInterface):
+    """The easiest way to add vertical space to a page.
+    
+    Args:
+        space: Desired space in any unit that is understood by a CSS
+            margin (e.g. em, px, cm). Include the unit (e.g. '1em').
+    """
+
+    def __init__(self, space: str = "1em"):
+        """Constructor method."""
+        super().__init__()
+        self.space = space
+
+    @property
+    def responsive_widget(self):
+        return f"<div style='margin-bottom: {self.space};'></div>"
+
+    @property
+    def web_widget(self):
+        return self.responsive_widget
 
 
 # class Html:
