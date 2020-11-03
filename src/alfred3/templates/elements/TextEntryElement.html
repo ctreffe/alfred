@@ -2,6 +2,6 @@
 
 {% block element_class %}
 {# Main Input #}
-<input type="{{ type }}" class="form-control form-rounded input-element {{ element_class }}" id="{{ id }}"
-    placeholder="{{ placeholder }}">
+<input type="text" class="form-control input-element input-field" id="{{ name }}" placeholder="{{ placeholder }}"
+    name="{{ name }}" {% if default %} value="{{ default }}" {% endif %}">
 {% endblock element_class %}

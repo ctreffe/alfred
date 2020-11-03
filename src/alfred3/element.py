@@ -39,6 +39,7 @@ from builtins import object, range, str
 from functools import reduce
 from uuid import uuid4
 from pathlib import Path
+from typing import Tuple, List, Union
 
 from future import standard_library
 from future.utils import with_metaclass
@@ -70,9 +71,11 @@ class Element(object):
 
     def __init__(
         self,
-        name=None,
+        name: str = None,
         should_be_shown_filter_function=None,
-        instance_level_logging=False,
+        instance_level_logging: bool = False,
+        element_width: List[int] = None,
+        position: str = "center",
         **kwargs,
     ):
         if not isinstance(self, WebElementInterface):
@@ -98,6 +101,8 @@ class Element(object):
 
         self._alignment = kwargs.pop("alignment", "left")
         self._font_size = kwargs.pop("font_size", "normal")
+        self._element_width = self._format_element_width(element_width)
+        self._position = position
         self._maximum_widget_width = None
         self.experiment = None
 
@@ -109,6 +114,39 @@ class Element(object):
 
         self.instance_level_logging = instance_level_logging
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+
+    @property
+    def font_size(self):
+        return fontsize_converter(self._font_size)
+
+    @property
+    def element_width(self):
+        return self._element_width
+
+    @element_width.setter
+    def element_width(self, value: List[int]):
+        self._element_width = self._format_element_width(element_width=value)
+
+    def _format_element_width(self, element_width: List[int]):
+        out = []
+
+        if not element_width:
+            out.append("col-12")
+            return " ".join(out)
+
+        for i, w in enumerate(element_width):
+            if i == 0:
+                out.append(f"col-{w}")
+            elif i == 1:
+                out.append(f"col-sm-{w}")
+            elif i == 2:
+                out.append(f"col-md-{w}")
+            elif i == 3:
+                out.append(f"col-lg-{w}")
+            elif i == 4:
+                out.append(f"col-xl-{w}")
+
+        return " ".join(out)
 
     @property
     def name(self):
@@ -418,27 +456,82 @@ class ProgressBar(Element, WebElementInterface):
 
 
 class TextElement(Element, WebElementInterface):
-    def __init__(
-        self, text=None, text_width=None, text_height=None, position="center", path=None, **kwargs
-    ):
-        """
-        **TextElement** allows display of simple text labels.
+    """Displays text.
 
-        :param str text: Text to be displayed by TextElement (can contain html commands).
-        :param str alignment: Alignment of TextElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Fontsize used in TextElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param int text_width: Set the width of the label to a fixed size, still allowing for word wrapping and growing height of text.
-        :param int text_height: Set the height of the label to a fixed size (sometimes necessary when using rich text).
+        You can use GitHub-flavored Markdown syntax to format your text
+        (see https://guides.github.com/features/mastering-markdown/ for
+        details).
+        Additionally, you can use raw html for advanced formatting.
+
+        Text can be entered directly through the `text` parameter, or
+        it can be read from a file by specifying the 'path' parameter.
+        Note that you can only use one of these options, if you specify
+        both, the element will raise an error.
+
+        .. example::
+            # Text element that is displayed as full-width on very 
+            # small screens and as half-width on small and larger 
+            # screens.
+            text = TextElement('Text display', element_width=[12, 6])
+        
+        .. example::
+        # Text element that is always displayed as full-width
+            text = TextElement('Text display', element_width=[12])
+
+        Args:
+            text: Text to be displayed.
+            text_width: Text width in px. **Deprecated** for responsive
+                design (v1.5). Use `element_width` instead, when using
+                the responsive design.
+            text_height: Element height in px.
+            font_size: Font size for normal text in the element. Values
+                can be 'normal', 'big', 'huge', or any integer. Integers
+                are used directly as font size in pt.
+            path: Filepath to a textfile (relative to the experiment 
+                directory).
+            position: Horizontal position of the full element on the 
+                page. Values can be 'start' (default), 'center', 'end'.
+            alignment: Alignment of text inside the element. Values can
+                be 'left' (default), 'center', 'right', and 'justify'.
+            element_width = A list of relative width definitions. The
+                list can contain up to 5 width definitions, given as
+                integers from 1 to 12. They refer to Bootstrap 4's
+                12-column-grid system 
+                (https://getbootstrap.com/docs/4.0/layout/grid/). The
+                horizontal width is divided into 12 equal parts. 
+                Therefore, a value of 12 indicates a full-width element, 
+                a value of 6 a half-width elment, and so on. The 
+                elements of the list refer to Bootstrap's breakpoints,
+                i.e. [xs, sm, md, lg, xl].
+                Defaults to [12, 11, 11, 10, 8], which usually provides
+                a reader-friendly layout.
         """
-        super(TextElement, self).__init__(**kwargs)
+
+    def __init__(
+        self,
+        text: str = None,
+        text_width: int = None,
+        text_height: int = None,
+        position: str = "center",
+        path: Union[Path, str] = None,
+        **kwargs,
+    ):
+
+        """Constructor method."""
+        super(TextElement, self).__init__(position=position, **kwargs)
         self._template = jinja_env.get_template("TextElement.html")
 
         self._text = text
         self._text_width = text_width
         self._text_height = text_height
         self._text_label = None
-        self._position = position
         self._path = path
+        self._element_width = self._format_element_width(
+            kwargs.get("element_width", [12, 11, 11, 10, 8])
+        )
+
+        if self._text and self._path:
+            raise ValueError("You can only specify one of 'text' and 'path'.")
 
     @property
     def text(self):
@@ -464,7 +557,7 @@ class TextElement(Element, WebElementInterface):
         d = {}
         d["name"] = self.name
         d["position"] = self._position
-        d["narrow"] = True
+        d["element_width"] = self._element_width
         d["element_class"] = "text-element"
         d["text"] = self.rendered_text
         d["align"] = f"text-{self._alignment}"
@@ -477,6 +570,17 @@ class TextElement(Element, WebElementInterface):
         return self._template.render(d)
 
     @property
+    def css_code(self):
+        styles = []
+        if self._text_height:
+            styles.append(f"height: {self._text_height}px;")
+        if self._font_size:
+            styles.append(f"font-size: {self.font_size}pt;")
+
+        code = f"#elid-{self.name}" + "{" + " ".join(styles) + "}"
+        return [(10, code)]
+
+    @property
     def web_widget(self):
         widget = (
             '<div class="text-element"><div class="%s" style="font-size: %spt; %s %s">%s</div></div>'
@@ -485,7 +589,7 @@ class TextElement(Element, WebElementInterface):
                 fontsize_converter(self._font_size),
                 "width: %spx;" % self._text_width if self._text_width is not None else "",
                 "height: %spx;" % self._text_height if self._text_height is not None else "",
-                self._text,
+                self.rendered_text,
             )
         )
 
@@ -678,16 +782,22 @@ class InputElement(Element):
         self.description = description
         self.default = default
 
-        if settings.debugmode and settings.debug.default_values:
-            if self._debug_value:
-                self._input = self._debug_value
-            elif not self._debug_string:
-                self._input = settings.debug.get(self.__class__.__name__)
-            else:
-                self._input = settings._config_parser.get("debug", debug_string)
+        if not self._debug_value:
+            if self._debug_string:
+                self._debug_value = self._debug_string
 
         if default is not None:
             self._input = default
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+
+        if self.experiment.config.getboolean("general", "debug"):
+            if self._debug_value:
+                self._input = self._debug_value
+            else:
+                cls_name = self.__class__.__name__
+                self._input = self.experiment.config.get("debug", cls_name, fallback=cls_name)
 
     def validate_data(self):
         return not self._force_input or not self._should_be_shown or bool(self._input)
@@ -761,37 +871,75 @@ class InputElement(Element):
 
 
 class TextEntryElement(InputElement, WebElementInterface):
+    """Provides a text entry field.
+
+    Args:
+        instruction: Instruction to be displayed with the field. Can
+            contain GitHub flavored Markdown and html.
+        no_input_corrective_hint: Hint to be displayed if force_input 
+            set to True and no user input registered. Defaults to the
+            experiment-wide value specified in config.conf.
+        instruction_width: Horizontal width of instructions. 
+            **Deprecated** for responsive design (v1.5+). Use 
+            `instruction_col_width` instead, when using the responsive 
+            design.
+        instruction_height: Minimum vertical size of instruction label.
+        prefix: Prefix for the input field.
+        suffix: Suffix for the input field.
+        placeholder: Placeholder text, displayed inside the input field.
+        default: Default value.
+        position: Horizontal position of the full element on the 
+                page. Values can be 'start' (default), 'center', 'end'.
+        alignment: Alignment of instruction text. Values can
+            be 'left' (default), 'center', 'right', and 'justify'.
+        force_input: If `True`, users can only progress to the next page
+            if they enter data into this field. **Note** that this works
+            only in HeadOpenSections and SegmentedSections, not in plain
+            Sections.
+        description: An additional description of the element. This will
+            show up in the additional alfred-generated codebook. It has
+            no effect on the display of the experiment.
+        debug_value: A value that will be inserted for the element 
+            automatically, when the experiment is started in debug mode.
+        debug_string: A deprecated version of debug_value. Please use
+            debug_value.
+    """
+
     def __init__(
         self,
         instruction="",
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        prefix=None,
-        suffix=None,
+        no_input_corrective_hint: str = None,
+        instruction_width: int = None,
+        instruction_height: int = None,
+        prefix: str = None,
+        suffix: str = None,
+        placeholder: str = "",
+        instruction_col_width: int = 12,
+        input_col_width: int = None,
+        position: str = "center",
         **kwargs,
     ):
-        """
-        **TextEntryElement*** returns a single line text edit with an instruction text on its' left.
-
-        :param str name: Name of TextEntryElement and stored input variable.
-        :param str instruction: Instruction to be displayed with line edit field (can contain html commands).
-        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
-        :param str alignment: Alignment of TextEntryElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
+        """Constructor method."""
         super(TextEntryElement, self).__init__(
             no_input_corrective_hint=no_input_corrective_hint, **kwargs
         )
 
         self._instruction_width = instruction_width
         self._instruction_height = instruction_height
-        self._instruction = instruction
+        self._instruction = cmarkgfm.github_flavored_markdown_to_html(instruction)
         self._prefix = prefix
         self._suffix = suffix
+        self._placeholder = placeholder
+
+        self._instruction_col_width = instruction_col_width
+        if input_col_width:
+            self._input_col_width = input_col_width
+        else:
+            self._input_col_width = 12 - self._instruction_col_width
+
+        self._position = position
+        self._responsive_template = jinja_env.get_template("TextEntryElement.html")
+
         self._template = Template(
             """
         <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
@@ -820,23 +968,27 @@ class TextEntryElement(InputElement, WebElementInterface):
         """
         )
 
-        self._responsive_template = jinja_env.get_template("TextEntryElement.html")
-
     @property
     def responsive_widget(self):
 
         d = {}
         d["id"] = self.name
-        d["col_size"] = "2"
-        d["placeholder"] = "Placeholder."
-        d["type"] = "text"
+        d["element_width"] = self._element_width
+        d["page_width"] = self.experiment.config.get("layout", "page_width")
+        if self._input:  # using input here to cover default and debug_value simultaneously
+            d["default"] = self._input
+        d["instruction_width"] = self._instruction_col_width
+        d["instruction_height"] = self._instruction_height
+        d["input_width"] = self._input_col_width
+        if self.corrective_hints:
+            d["corrective_hint"] = self.corrective_hints[0]
+
+        d["placeholder"] = self._placeholder
         d["instruction"] = self._instruction
-        d["element-class"] = "text-entry-element"
-        d["style"] = "width: 80%;"
         d["align"] = f"text-{self._alignment}"
-        d["position"] = "center"
-        # d["prefix"] = "p"
-        # d["suffix"] = "s"
+        d["position"] = self._position
+        d["prefix"] = self._prefix
+        d["suffix"] = self._suffix
 
         return self._responsive_template.render(d)
 
@@ -884,6 +1036,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         data["instruction"] = self._instruction
         data["prefix"] = self._prefix
         data["suffix"] = self._suffix
+        data["placeholder"] = self._placeholder
 
         return data
 
@@ -3183,6 +3336,245 @@ class WebExitEnabler(Element, WebElementInterface):
     @property
     def web_widget(self):
         return ""
+
+
+class Row(Element, WebElementInterface):
+    """Allows you to arrange up to 12 elements in a row.
+
+    The row will arrange your elements using Bootstrap 4's grid system
+    and breakpoints, making the arrangement responsive. You can 
+    customize the behavior of the row for five different screen sizes
+    (Bootstrap 4's default break points).
+
+    If you don't specify breakpoints manually, the columns will default
+    to equal width and wrap on breakpoints automatically.
+
+    .. info::
+        In Bootstrap's grid, the horizontal space is divided into 12
+        equally wide units. You can define the horizontal width of a
+        column by assigning it a number of those units. A column of 
+        width 12 will take up all available horizontal space, other 
+        columns will be placed below such a full-width column.
+
+        You can define the column width for each of five breakpoints
+        separately. The definition will be valid for screens of the
+        respective size up to the next breakpoint.
+
+        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
+        for detailed documentation of how Bootstrap's breakpoints work.
+    
+    .. info::
+        If you specify fewer values than the number of columns, the 
+        columns with undefined width will take up equal portions of
+        the remaining horizontal space.
+    
+    .. info::
+        If a breakpoint is not specified manually, the values from the
+        next smaller breakpoint are inherited.
+    
+    Args:
+        elements: The elements that you want to arrange in a row.
+        xs: List of column widths on screens of size 'xs' or bigger 
+            (<576px).
+        sm: List of column widths on screens of size 'sm' or bigger
+            (>=576px).
+        md: List of column widths on screens of size 'md' or bigger
+            (>=768px).
+        lg: List of column widths on screens of size 'lg' or bigger
+            (>=992px).
+        xl: List of column widths on screens of size 'lg' or bigger
+            (>=1200px).
+        height: Custom row height (with unit, e.g. '100px').
+        col_position: List of column positions. Valid values are 'auto'
+            (default), 'top', 'center', and 'bottom'.
+    """
+
+    def __init__(
+        self,
+        *elements,
+        xs: List[int] = None,
+        sm: List[int] = None,
+        md: List[int] = None,
+        lg: List[int] = None,
+        xl: List[int] = None,
+        height: str = "auto",
+        col_position: List[str] = None
+    ):
+        """Constructor method."""
+        super().__init__()
+        self.elements = elements
+
+        self.height = height
+        self.col_position = self.format_col_position(col_position)
+
+        self._breaks_xs = self.format_breaks(xs, "xs")
+        self._breaks_sm = self.format_breaks(sm, "sm")
+        self._breaks_md = self.format_breaks(md, "md")
+        self._breaks_lg = self.format_breaks(lg, "lg")
+        self._breaks_xl = self.format_breaks(xl, "xl")
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for element in self.elements:
+            if element is None:
+                continue
+            element.should_be_shown = False
+            page += element
+
+    def format_col_position(self, col_position: List[str]):
+        try:
+            if len(col_position) > len(self.elements):
+                raise ValueError(
+                    "Col position list must be of the same or smaller length as number of elements."
+                )
+        except TypeError:
+            pass
+
+        out = []
+        for i, _ in enumerate(self.elements):
+            try:
+                n = col_position[i]
+            except IndexError:
+                out.append("")
+                continue
+            except TypeError:
+                out.append("")
+                continue
+
+            if not isinstance(n, str):
+                raise TypeError("Col position must be of type str.")
+
+            if n == "auto":
+                out.append("")
+            elif n == "top":
+                out.append("align-self-start")
+            elif n == "center":
+                out.append("align-self-center")
+            elif n == "bottom":
+                out.append("align-self-end")
+            else:
+                raise ValueError(
+                    "Col position allowed values are 'auto', 'top', 'center', and 'bottom'."
+                )
+
+        return out
+
+    @property
+    def cols(self) -> list:
+        """Returns a list of html code for all columns."""
+        out = []
+        for i, element in enumerate(self.elements):
+            breaks = (
+                " ".join(self.col_breaks(i)) if "".join(self.col_breaks(i)) != "" else "col-sm"
+            )
+            pos = self.col_position[i]
+            html = element.responsive_widget if element is not None else ""
+            t = Template("<div class='{{ breaks }} {{ position }} col-element'>{{ html }}</div>")
+            out.append(t.render(breaks=breaks, position=pos, html=html))
+        return out
+
+    @property
+    def responsive_widget(self):
+        t = Template(
+            "<div class='row row-element' style='height: {{ height}};'>{{ cols | safe }}</div>"
+        )
+        columns_html = "".join(self.cols)
+        return t.render(cols=columns_html, height=self.height)
+
+    @property
+    def web_widget(self):
+        return self.responsive_widget
+
+    def col_breaks(self, i: int) -> str:
+        xs = self.breaks_xs[i]
+        sm = self.breaks_sm[i]
+        md = self.breaks_md[i]
+        lg = self.breaks_lg[i]
+        xl = self.breaks_xl[i]
+
+        return [xs, sm, md, lg, xl]
+
+    @property
+    def breaks_xs(self):
+        return self._breaks_xs
+
+    @breaks_xs.setter
+    def breaks_xs(self, breaks: List[int]):
+        self._breaks_xs = self.format_breaks(breaks, "xs")
+
+    @property
+    def breaks_sm(self):
+        return self._breaks_sm
+
+    @breaks_sm.setter
+    def breaks_sm(self, breaks: List[int]):
+        self._breaks_sm = self.format_breaks(breaks, "sm")
+
+    @property
+    def breaks_md(self):
+        return self._breaks_md
+
+    @breaks_md.setter
+    def breaks_md(self, breaks: List[int]):
+        self._breaks_md = self.format_breaks(breaks, "md")
+
+    @property
+    def breaks_lg(self):
+        return self._breaks_lg
+
+    @breaks_lg.setter
+    def breaks_lg(self, breaks: List[int]):
+        self._breaks_lg = self.format_breaks(breaks, "lg")
+
+    @property
+    def breaks_xl(self):
+        return self._breaks_xl
+
+    @breaks_xl.setter
+    def breaks_xl(self, breaks: List[int]):
+        self._breaks_xl = self.format_breaks(breaks, "xl")
+
+    def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
+        """Takes a tuple of column sizes (in integers from 1 to 12) and
+        returns a corresponding list of formatted Bootstrap column 
+        classes.
+
+        Args:
+            breaks: List of integers, indicating the breakpoints.
+            bp: Specifies the relevant bootstrap breakpoint. (xs, sm,
+                md, lg, or xl).
+        """
+        try:
+            if len(breaks) > len(self.elements):
+                raise ValueError(
+                    "Break list must be of the same or smaller length as number of elements."
+                )
+        except TypeError:
+            pass
+
+        out = []
+        for i, _ in enumerate(self.elements):
+            try:
+                n = breaks[i]
+            except IndexError:
+                out.append("")
+                continue
+            except TypeError:
+                out.append("")
+                continue
+
+            if not isinstance(n, int):
+                raise TypeError("Break values must be of type integer.")
+            if not n >= 1 and n <= 12:
+                raise ValueError("Break values must be between 1 and 12.")
+
+            if bp == "xs":
+                out.append(f"col-{n}")
+            else:
+                out.append(f"col-{bp}-{n}")
+
+        return out
 
 
 # class Html:

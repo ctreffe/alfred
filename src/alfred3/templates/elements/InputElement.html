@@ -2,11 +2,12 @@
 
 {% block element %}
 
-<div class="form-group row" style="margin: auto;">
-    <div class="col-12 col-sm-{{ col_size }}">
-        <label for="{{ id }}">{{ instruction }}</label>
-    </div>
-    <div class="col input-group">
+<div class="row">
+    <label for="{{ name }}"
+        class="{% if page_width == 'responsive-width' %} col-12 col-sm-{{ instruction_width }} {% else %} col-{{ instruction_width }} {% endif %} col-form-label"
+        style="height: {{ instruction_height}};">{{ instruction }}</label>
+    <div
+        class="{% if page_width == 'responsive-width' %} col-12 col-sm-{{ input_width }} {% else %} col-{{ input_width }} {% endif %} input-group">
 
         {# Prefix #}
         {% if prefix %}
@@ -26,6 +27,12 @@
         </div>
         {% endif %}
     </div>
+    {% if corrective_hint %}
+    <div class="col-12 corrective-hint">
+        {{ corrective_hint }}
+    </div>
+    {% endif %}
 </div>
+
 
 {% endblock element %}

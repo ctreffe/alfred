@@ -127,6 +127,8 @@ def experiment():
             data.pop("directjump", None)
             data.pop("par", None)
 
+            script.experiment.page_controller.current_page.set_data(data)
+
             if move is None and directjump is None and par is None and not data:
                 pass
             elif directjump and par:

@@ -1,5 +1,5 @@
 // Save screen resolution, if the current page is the first page.
-$.get("/is_first_page", function(data) {
+$.get("/is_first_page", function (data) {
     if (data == "True") {
         const height = window.screen.height;
         const width = window.screen.width;
@@ -10,12 +10,12 @@ $.get("/is_first_page", function(data) {
     }
 })
 
-$("table").addClass("table table-hover")
+$(".text-element table").addClass("table table-hover")
 
 // call this method when you want to leave the page without asking the user
 var glob_unbind_leaving;
 
-$(document).ready(function(){
+$(document).ready(function () {
 
     // This is commented out, because jumplist is currently not implemented in the responsive design
     // jump on change in jumplist
@@ -26,12 +26,12 @@ $(document).ready(function(){
     // });
 
     // ask user before leaving, but not if he/she uses the form go to the next page.
-    var beforeunload = function(event){
+    var beforeunload = function (event) {
         return "Möchten Sie wirklich die Seite verlassen?\n"
             + "Dadurch wird das Ausfüllen des Fragebogens abgebrochen.";
     };
 
-    glob_unbind_leaving = function() {
+    glob_unbind_leaving = function () {
         $(window).unbind('beforeunload', beforeunload);
     };
 
