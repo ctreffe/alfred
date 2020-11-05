@@ -58,8 +58,10 @@ class UserInterface:
         self._basepath = self.experiment.config.get("webserver", "basepath")
         self._static_files = {}
 
-        self.config = dict(self.experiment.config["layout"])
+        self.config = {}
+        self.config["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         self.config["logo_url"] = self.add_logo()
+        self.config["logo_text"] = self.experiment.config.get("layout", "logo_text")
         with importlib.resources.path(img, self._alfred_logo) as p:
             self.config["alfred_logo_url"] = self.add_static_file(p, content_type="image/png")
 

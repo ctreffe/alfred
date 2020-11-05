@@ -101,7 +101,7 @@ class Element(object):
 
         self._alignment = kwargs.pop("alignment", "left")
         self._font_size = kwargs.pop("font_size", "normal")
-        self._element_width = self._format_element_width(element_width)
+        self._element_width = element_width
         self._position = position
         self._maximum_widget_width = None
         self.experiment = None
@@ -121,7 +121,11 @@ class Element(object):
 
     @property
     def element_width(self):
-        return self._element_width
+        width = self._format_element_width(self._element_width)
+        if self.experiment.config.getboolean("layout", "responsive", fallback=True):
+            return " ".join(width)
+        else:
+            return width[0]
 
     @element_width.setter
     def element_width(self, value: List[int]):
@@ -132,7 +136,7 @@ class Element(object):
 
         if not element_width:
             out.append("col-12")
-            return " ".join(out)
+            return out
 
         for i, w in enumerate(element_width):
             if i == 0:
@@ -146,7 +150,7 @@ class Element(object):
             elif i == 4:
                 out.append(f"col-xl-{w}")
 
-        return " ".join(out)
+        return out
 
     @property
     def name(self):
@@ -526,9 +530,6 @@ class TextElement(Element, WebElementInterface):
         self._text_height = text_height
         self._text_label = None
         self._path = path
-        self._element_width = self._format_element_width(
-            kwargs.get("element_width", [12, 11, 11, 10, 8])
-        )
 
         if self._text and self._path:
             raise ValueError("You can only specify one of 'text' and 'path'.")
@@ -551,13 +552,21 @@ class TextElement(Element, WebElementInterface):
         if self._text_label:
             self._text_label.set_text(self._text)
             self._text_label.repaint()
+    
+    @property
+    def element_width(self):
+        if self.experiment.config.getboolean("layout", "responsive", fallback=True):
+            width = self._element_width if self._element_width is not None else [12, 11, 11, 10, 9]
+        else:
+            width = self._element_width if self._element_width is not None else [9]
+        return " ".join(self._format_element_width(width))
 
     @property
     def responsive_widget(self):
         d = {}
         d["name"] = self.name
         d["position"] = self._position
-        d["element_width"] = self._element_width
+        d["element_width"] = self.element_width
         d["element_class"] = "text-element"
         d["text"] = self.rendered_text
         d["align"] = f"text-{self._alignment}"
@@ -973,8 +982,8 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         d = {}
         d["id"] = self.name
-        d["element_width"] = self._element_width
-        d["page_width"] = self.experiment.config.get("layout", "page_width")
+        d["element_width"] = self.element_width
+        d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         if self._input:  # using input here to cover default and debug_value simultaneously
             d["default"] = self._input
         d["instruction_width"] = self._instruction_col_width
@@ -3465,9 +3474,7 @@ class Row(Element, WebElementInterface):
         """Returns a list of html code for all columns."""
         out = []
         for i, element in enumerate(self.elements):
-            breaks = (
-                " ".join(self.col_breaks(i)) if "".join(self.col_breaks(i)) != "" else "col-sm"
-            )
+            breaks = self.col_breaks(i)
             pos = self.col_position[i]
             html = element.responsive_widget if element is not None else ""
             t = Template("<div class='{{ breaks }} {{ position }} col-element'>{{ html }}</div>")
@@ -3493,7 +3500,27 @@ class Row(Element, WebElementInterface):
         lg = self.breaks_lg[i]
         xl = self.breaks_xl[i]
 
-        return [xs, sm, md, lg, xl]
+        if self.experiment.config.getboolean("layout", "responsive", fallback=True):
+            breaks = [xs, sm, md, lg, xl]
+            print(breaks)
+            if breaks == ["", "", "", "", ""]:
+                print("----")
+                print(f"Breaks for col {i}: col-sm")
+                print("----")
+                return "col-sm"
+            else:
+                print("----")
+                print("breaks was TRUE")
+                print(f"Breaks for col {i}: {' '.join(breaks)}")
+                print("----")
+                return " ".join(breaks)
+        else:
+            out = xs if xs != "" else "col"
+            print("----")
+            print("fixed-width")
+            print(f"Breaks for col {i}: {out}")
+            print("----")
+            return out
 
     @property
     def breaks_xs(self):

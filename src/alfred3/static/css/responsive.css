@@ -9,7 +9,7 @@
 }
 
 .col-element {
-    padding: 0;
+    /* padding: 0; */
 }
 
 .element {
@@ -32,7 +32,7 @@
 }
 
 .row-element {
-    margin: auto;
+    /* margin: auto; */
 }
 
 .footer-container {
@@ -45,25 +45,24 @@
 }
 
 .logo-bg {
-    height: 5vh;
-    min-height: 60px;
-    max-height: 60px;
+    height: 60px;
 }
 
 .logo {
-    height: 100%;
+    max-height: 100%;
+    padding: 8px;
 }
 
 .logo-content {
     width: 100%;
 }
 
-.min-width {
-    min-width: 920px;
+.logo-text {
+    padding: 1em;
 }
 
-.logo-responsive {
-    height: 100%;
+.min-width {
+    min-width: 920px;
 }
 
 .page-container {

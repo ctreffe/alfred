@@ -1,7 +1,8 @@
 {% extends "layout.html" %}
 
 {% block page %}
-<div class="container-fluid page-container {{ d.get('page_width') }}" id="page-container">
+<div class="container-fluid page-container {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}"
+    id="page-container">
 
     <!-- Experimenter Messages -->
     {% if d.get('messages') %}

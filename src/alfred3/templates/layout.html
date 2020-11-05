@@ -27,32 +27,20 @@
 
 <body class="line-numbers">
 
-    {% if d.get('page_width') == 'responsive-width' %}
-    <div class="container-fluid d-flex justify-content-center logo-bg">
-        <div class="logo-content {{ d.get('page_width') }}">
-            <img src="{{ d.get('logo_url') }}" class="float-left logo logo-responsive p-2" alt="Logo">
+    
+    <div class="container-fluid d-flex justify-content-center logo-bg {% if not d.get('responsive') %} min-width {% endif %}">
+        <div class="logo-content {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}">
+            <img src="{{ d.get('logo_url') }}" class="float-left logo" alt="Logo">
             <span
-                class="float-right text-right logo-text logo-text-responsive small p-1">{{ d.get('logo_text') }}</span>
+                class="float-right text-right logo-text {% if d.get('responsive') %} logo-text-responsive {% endif %}  small">{{ d.get('logo_text') }}</span>
         </div>
     </div>
-    {% else %}
-    <div class="container-fluid min-width d-flex justify-content-center logo-bg">
-        <div class="logo-content {{ d.get('page_width') }}">
-            <img src="{{ d.get('logo_url') }}" class="float-left logo p-2" alt="Logo">
-            <span class="float-right text-right logo-text small p-1">{{ d.get('logo_text') }}</span>
-        </div>
-    </div>
-    {% endif %}
 
     {% block page %}
     {% endblock page %}
 
-    {% if d.get('page_width') == 'responsive-width' %}
-    <div class="footer-container d-flex justify-content-center">
-        {% else %}
-        <div class="footer-container min-width d-flex justify-content-center">
-            {% endif %}
-            <div class="footer {{ d.get('page_width') }} text-center small muted mt-1">
+    <div class="footer-container d-flex justify-content-center {% if not d.get('responsive') %} min-width {% endif %}">
+            <div class="footer text-center small muted mt-1">
                 {% if d.get('footer_text') %}
                 <p class="footer-text mt-1">{{ d.get('footer_text') }}</p>
                 {% endif %}
