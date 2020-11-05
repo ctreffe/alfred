@@ -3391,7 +3391,7 @@ class Row(Element, WebElementInterface):
             (>=768px).
         lg: List of column widths on screens of size 'lg' or bigger
             (>=992px).
-        xl: List of column widths on screens of size 'lg' or bigger
+        xl: List of column widths on screens of size 'xl' or bigger
             (>=1200px).
         height: Custom row height (with unit, e.g. '100px').
         col_position: List of column positions. Valid values are 'auto'
