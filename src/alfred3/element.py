@@ -102,7 +102,7 @@ class Element(object):
         self._alignment = kwargs.pop("alignment", "left")
         self._font_size = kwargs.pop("font_size", "normal")
         self._element_width = element_width
-        self._position = position
+        self.position = position
         self._maximum_widget_width = None
         self.experiment = None
 
@@ -114,6 +114,21 @@ class Element(object):
 
         self.instance_level_logging = instance_level_logging
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+    
+    @property
+    def position(self):
+        return self._position
+    
+    @position.setter
+    def position(self, value):
+        if value == "left":
+            self._position = "start"
+        elif value == "right":
+            self._position = "end"
+        elif value in ["start", "center", "end", "between", "around"]:
+            self._position = value
+        else:
+            raise ValueError(f"'{value}' is no valid value for position.")
 
     @property
     def font_size(self):
@@ -565,7 +580,7 @@ class TextElement(Element, WebElementInterface):
     def responsive_widget(self):
         d = {}
         d["name"] = self.name
-        d["position"] = self._position
+        d["position"] = self.position
         d["element_width"] = self.element_width
         d["element_class"] = "text-element"
         d["text"] = self.rendered_text
@@ -946,7 +961,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         else:
             self._input_col_width = 12 - self._instruction_col_width
 
-        self._position = position
+        self.position = position
         self._responsive_template = jinja_env.get_template("TextEntryElement.html")
 
         self._template = Template(
@@ -995,7 +1010,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         d["placeholder"] = self._placeholder
         d["instruction"] = self._instruction
         d["align"] = f"text-{self._alignment}"
-        d["position"] = self._position
+        d["position"] = self.position
         d["prefix"] = self._prefix
         d["suffix"] = self._suffix
 
