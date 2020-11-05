@@ -3502,24 +3502,12 @@ class Row(Element, WebElementInterface):
 
         if self.experiment.config.getboolean("layout", "responsive", fallback=True):
             breaks = [xs, sm, md, lg, xl]
-            print(breaks)
             if breaks == ["", "", "", "", ""]:
-                print("----")
-                print(f"Breaks for col {i}: col-sm")
-                print("----")
                 return "col-sm"
             else:
-                print("----")
-                print("breaks was TRUE")
-                print(f"Breaks for col {i}: {' '.join(breaks)}")
-                print("----")
                 return " ".join(breaks)
         else:
             out = xs if xs != "" else "col"
-            print("----")
-            print("fixed-width")
-            print(f"Breaks for col {i}: {out}")
-            print("----")
             return out
 
     @property
