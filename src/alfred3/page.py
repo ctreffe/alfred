@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 import time
 import logging
+import string
 from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
@@ -393,7 +394,7 @@ class CoreCompositePage(PageCore):
                 raise TypeError
             for elmnt in elements:
                 self.append(elmnt)
-
+        
     def add_element(self, element):
 
         self.log.warning("page.add_element() is deprecated. Use page.append() instead.")
@@ -525,11 +526,77 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._css_code = []
+
+        self._fixed_width = None
+        if kwargs.get("fixed_width"):
+            self.fixed_width = kwargs.get("fixed_width")
+        
+        self._responsive_width = None
+        if kwargs.get("responsive_width"):
+            self.responsive_width = kwargs.get("responsive_width")
+
+    
+    @property
+    def fixed_width(self):
+        return self._fixed_width
+    
+    @fixed_width.setter
+    def fixed_width(self, value):
+        self._fixed_width = value
+    
+    @property
+    def responsive_width(self):
+        return self._responsive_width
+    
+    @responsive_width.setter
+    def responsive_width(self, value):
+        self._responsive_width = value
+    
+    def _parse_responsive_width(self, width):
+        return [x.strip() for x in width.split(",")]
+
+    def _responsive_media_query(self, width):
+        if len(width) > 4:
+            raise ValueError("The option 'responsive_width' can only define up to four widths.")
+        
+        if len(width) < 4:
+            for _ in range(4 - len(width)):
+                width.append(width[-1])
+
+        screen_size = [576, 768, 992, 1200]
+        t = string.Template("@media (min-width: ${screen}px) {.responsive-width { width: ${w}%; max-width: none;}}")
+        out = []
+        for i, w in enumerate(width):
+            out.append(t.substitute(screen=screen_size[i], w=w))
+        return " ".join(out)
+
     def prepare_web_widget(self):
         self._on_showing_widget()
 
         for elmnt in self._element_list:
             elmnt.prepare_web_widget()
+    
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self._set_width()
+    
+    def _set_width(self):
+        if self.experiment.config.getboolean("layout", "responsive"):
+            if self.responsive_width:
+                w = self._parse_responsive_width(self.responsive_width)
+                self.css_code = self._responsive_media_query(w)
+            elif self.experiment.config.get("layout", "responsive_width"):
+                config_width = self.experiment.config.get("layout", "responsive_width")
+                w = self._parse_responsive_width(config_width)
+                self.css_code = self._responsive_media_query(w)
+        elif not self.fixed_width:
+            w = self.experiment.config.get('layout', 'fixed_width')
+            self.css_code = f".fixed-width {{ width: {w}; }}"
+            self.css_code = f".min-width {{ min-width: {w}; }}"
+        else:
+            self.css_code = f".fixed-width {{ width: {self.fixed_width}; }}"
+            self.css_code = f".min-width {{ min-width: {self.fixed_width}; }}"
 
     @property
     def web_widget(self):
@@ -570,7 +637,18 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
     @property
     def css_code(self):
-        return reduce(lambda l, element: l + element.css_code, self._element_list, [])
+
+        page_css = list(enumerate(self._css_code))
+        element_css = reduce(lambda l, element: l + element.css_code, self._element_list, [])
+
+        return page_css + element_css
+    
+    @css_code.setter
+    def css_code(self, value):
+        if isinstance(value, list):
+            self._css_code += value
+        elif isinstance(value, str):
+            self._css_code.append(value)
 
     @property
     def css_urls(self):
