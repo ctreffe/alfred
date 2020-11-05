@@ -125,10 +125,8 @@ class Element(object):
             self._position = "start"
         elif value == "right":
             self._position = "end"
-        elif value in ["start", "center", "end", "between", "around"]:
-            self._position = value
         else:
-            raise ValueError(f"'{value}' is no valid value for position.")
+            self._position = value
 
     @property
     def font_size(self):
@@ -509,7 +507,9 @@ class TextElement(Element, WebElementInterface):
             path: Filepath to a textfile (relative to the experiment 
                 directory).
             position: Horizontal position of the full element on the 
-                page. Values can be 'start' (default), 'center', 'end'.
+                page. Values can be 'left', 'center' (default), 'end',
+                or any valid value for the justify-content flexbox
+                utility (see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content).
             alignment: Alignment of text inside the element. Values can
                 be 'left' (default), 'center', 'right', and 'justify'.
             element_width = A list of relative width definitions. The
@@ -913,7 +913,9 @@ class TextEntryElement(InputElement, WebElementInterface):
         placeholder: Placeholder text, displayed inside the input field.
         default: Default value.
         position: Horizontal position of the full element on the 
-                page. Values can be 'start' (default), 'center', 'end'.
+                page. Values can be 'left', 'center' (default), 'end',
+                or any valid value for the justify-content flexbox
+                utility (see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content).
         alignment: Alignment of instruction text. Values can
             be 'left' (default), 'center', 'right', and 'justify'.
         force_input: If `True`, users can only progress to the next page
