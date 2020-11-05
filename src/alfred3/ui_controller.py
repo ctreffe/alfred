@@ -60,6 +60,7 @@ class UserInterface:
 
         self.config = {}
         self.config["responsive"] = self.experiment.config.getboolean("layout", "responsive")
+        self.config["website_title"] = self.experiment.config.get("layout", "website_title")
         self.config["logo_url"] = self.add_logo()
         self.config["logo_text"] = self.experiment.config.get("layout", "logo_text")
         with importlib.resources.path(img, self._alfred_logo) as p:
