@@ -176,7 +176,7 @@ class Element:
             for page_uid, condition in self._showif.items():
                 if page_uid == self.page.uid:
                     continue
-                d = self.experiment.get_page_data(page_uid)
+                d = self.experiment.get_page_data(page_uid=page_uid)
                 for target, value in condition.items():
                     try:
                         conditions.append(d[target] == value)
@@ -186,12 +186,6 @@ class Element:
         else:
             return [True]
 
-        
-        # if callable(self._showif):
-        #     return self._showif(exp=self.experiment)
-        # else:
-        #     return True
-    
     @property
     def alignment(self):
         return self._alignment

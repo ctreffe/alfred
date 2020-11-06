@@ -471,11 +471,6 @@ class Experiment(object):
         """
         return self.data_manager.get_additional_data_by_key(key)
 
-    def get_page_data(self, uid):
-        """Shortcut for :meth:`DataManager.find_experiment_data_by_uid`.
-        """
-        return self.data_manager.find_experiment_data_by_uid(uid)
-
     def _set_encryptor(self):
         """Sets the experiments encryptor.
 
