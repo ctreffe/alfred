@@ -34,6 +34,7 @@ import random
 import re
 import string
 import logging
+import copy
 from abc import ABCMeta, abstractproperty
 from builtins import object, range, str
 from functools import reduce
