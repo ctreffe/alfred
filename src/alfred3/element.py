@@ -72,6 +72,7 @@ class Element(object):
     def __init__(
         self,
         name: str = None,
+        showif: dict = None,
         should_be_shown_filter_function=None,
         instance_level_logging: bool = False,
         element_width: List[int] = None,
@@ -106,6 +107,9 @@ class Element(object):
         self._maximum_widget_width = None
         self.experiment = None
 
+        self._showif = showif if showif else {}
+        self._showif_js = []
+
         if kwargs != {}:
             raise ValueError("Parameter '%s' is not supported." % list(kwargs.keys())[0])
 
@@ -114,6 +118,21 @@ class Element(object):
 
         self.instance_level_logging = instance_level_logging
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+    def showif(self):
+        if self._showif:
+            conditions = []
+            for page_uid, condition in self._showif.items():
+                if page_uid == self.page.uid:
+                    continue
+                d = self.experiment.get_page_data(page_uid)
+                for target, value in condition.items():
+                    try:
+                        conditions.append(d[target] == value)
+                    except KeyError:
+                        self.log.warning(f"You defined a showif '{target} == {value}' for page with uid='{page_uid}', but {target} was not found on the page. The element was shown.")
+            return conditions
+        else:
+            return [True]
     
     @property
     def position(self):
@@ -201,6 +220,12 @@ class Element(object):
 
         if self._page.experiment:
             self.added_to_experiment(self._page.experiment)
+        
+        on_current_page = self._showif.get(self.page.uid, None)
+        if on_current_page:
+            t = jinja_env.get_template("showif.js")
+            js = t.render(showif=on_current_page, element=self.name)
+            self._showif_js.append((7, js))
 
     def added_to_experiment(self, experiment):
         self.experiment = experiment
@@ -274,9 +299,10 @@ class Element(object):
         Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
         Otherwise False is returned
         """
-        return self._should_be_shown and self._should_be_shown_filter_function(
-            self._page._experiment
-        )
+        cond1 = self._should_be_shown
+        cond2 = self._should_be_shown_filter_function(self.experiment)
+        cond3 = all(self.showif())
+        return cond1 and cond2 and cond3
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -584,6 +610,7 @@ class TextElement(Element, WebElementInterface):
         d["element_width"] = self.element_width
         d["element_class"] = "text-element"
         d["text"] = self.rendered_text
+        d["hide"] = "hide" if self._showif_js != [] else ""
         d["align"] = f"text-{self._alignment}"
         size = f"font-size: {fontsize_converter(self._font_size)};"
         width = f"width: {self._text_width};" if self._text_width is not None else ""
@@ -618,6 +645,10 @@ class TextElement(Element, WebElementInterface):
         )
 
         return widget
+    
+    @property
+    def js_code(self):
+        return self._showif_js
 
 
 class CodeElement(Element, WebElementInterface):
@@ -892,6 +923,10 @@ class InputElement(Element):
     @property
     def codebook_data(self):
         return {self.identifier: self.codebook_data_flat}
+    
+    @property
+    def js_code(self):
+        return self._showif_js
 
 
 class TextEntryElement(InputElement, WebElementInterface):
@@ -999,6 +1034,7 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         d = {}
         d["id"] = self.name
+        d["hide"] = "hide" if self._showif_js != [] else ""
         d["element_width"] = self.element_width
         d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         if self._input:  # using input here to cover default and debug_value simultaneously

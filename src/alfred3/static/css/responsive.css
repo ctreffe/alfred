@@ -23,6 +23,10 @@
     margin-bottom: 1em;
 }
 
+.hide{
+    display: none !important;
+  }
+
 .text-element {
     margin-bottom: 0;
 }

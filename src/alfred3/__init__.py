@@ -355,6 +355,9 @@ class Experiment(object):
             cb_exporter.write_local_data_to_file(in_file=cb_name, out_dir=data_dir, overwrite=True)
             self.log.info(f"Exported codebook data to '{str(data_dir)}'")
 
+    def get_page_data(self, page_uid):
+        return self.data_manager.find_experiment_data_by_uid(uid=page_uid)
+
     def append(self, *items):
         for item in items:
             self.page_controller.append(item)
