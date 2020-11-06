@@ -57,6 +57,8 @@ class UserInterface:
         )
         self._basepath = self.experiment.config.get("webserver", "basepath")
         self._static_files = {}
+        self._dynamic_files = {}
+        self._callables = {}
 
         self.config = {}
         self.config["responsive"] = self.experiment.config.getboolean("layout", "responsive")
@@ -225,6 +227,38 @@ class UserInterface:
         self._static_files[identifier] = (path, content_type)
 
         url = f"{self.basepath}/staticfile/{identifier}"
+        return url
+
+    def get_dynamic_file(self, identifier):
+        file_obj, content_type = self._dynamic_files[identifier]
+        file_obj.seek(0)
+        strIO = StringIO(file_obj.read())
+        strIO.seek(0)
+        return strIO, content_type
+
+    def add_dynamic_file(self, file_obj, content_type=None):
+        identifier = uuid4().hex
+        while identifier in self._dynamic_files:
+            identifier = uuid4().hex
+
+        self._dynamic_files[identifier] = (file_obj, content_type)
+        url = "{basepath}/dynamicfile/{identifier}".format(
+            basepath=self._basepath, identifier=identifier
+        )
+        return url
+
+    def get_callable(self, identifier):
+        return self._callables[identifier]
+
+    def add_callable(self, f: callable):
+        identifier = uuid4().hex
+        while identifier in self._callables:
+            identifier = uuid4().hex
+
+        self._callables[identifier] = f
+        url = "{basepath}/callable/{identifier}".format(
+            basepath=self._basepath, identifier=identifier
+        )
         return url
 
     def move_forward(self):
