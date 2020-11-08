@@ -7,6 +7,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+* New classes
+    - JavaScript
+    - Css
+    - VerticalSpace
+    - Row
+    - Stack
+
+* Element
+    - New parameters
+        - align
+        - width
+        - position
+        - showif
+    - New attributes
+        - element_width
+        - showif
+        - css_code
+        - css_urls
+        - js_code
+        - js_urls
+
+* TextElement
+    - New parameters
+        - path
+
+* InputElement
+    - New attributes
+        - instruction_col_width
+        - input_col_width
+
+## v1.4
+
 ### Added
 
 With this version, alfred3 gains some powerful new features. This is the overview:
@@ -42,12 +74,14 @@ csv_directory = data # the .csv files will be placed in this directory
 Through a new command line interface, you can export alfred data, both from your local `save` directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.
 
 ``` 
+
 python3 -m alfred3.export --src=local_saving_agent
 ```
 
 Detailed description of all parameters (available also from the terminal via `python3 -m alfred3.export --help` )
 
 ``` 
+
 Usage: export.py [OPTIONS]
 
 Options:
@@ -218,6 +252,7 @@ class Welcome(Page):
     - This is the full new usage:
 
 ``` 
+
 Usage: template.py [OPTIONS]
 
 Options:
@@ -253,12 +288,14 @@ Options:
 * We added support for custom imports of `.py` files from subdirectories that are transferable to mortimer by including the package `thesmuggler` . If you want to store content in an external `.py` file (which we highly recommend, as it leads to a clearer directory structure), you can import such a file by using `thesmuggler.smuggle()` . Example:
 
 ``` 
+
 # files/instructions.py
 
 text = "This text resides in files/instructions.py"
 ```
 
 ``` 
+
 # script.py
 from thesmuggler import smuggle
 
@@ -393,8 +430,8 @@ def generate_experiment(self, config=None):
 
 #### Enhanced logging
 
-* All instances and children of `Experiment` , `element.Element` , `page.Page` , and `section.Section` gain a `log` attribute.
-* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` , `info` , `warning` , `error` , `critical` , `exception` , `log` , and `setLevel` .
+* All instances and children of `Experiment` ,     `element.Element` ,     `page.Page` , and `section.Section` gain a `log` attribute.
+* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` ,     `info` ,     `warning` ,     `error` ,     `critical` ,     `exception` ,  `log` , and `setLevel` .
 * If you want to access the logger object directly to apply more detailed configuration, you can do so via `log.queue_logger` .
 
 See [logging documentation](https://docs.python.org/3/howto/logging.html#logging-levels) for more information on the levels and configuration.
@@ -457,6 +494,7 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 * Alfred3 can now be installed via pip:
 
 ``` 
+
 pip install alfred3
 ```
 
@@ -592,7 +630,7 @@ pip install alfred3
     - `author` : The experiment author
     - `version` : The experiment version
     - `exp_id` : The experiment ID (**IMPORTANT:** This ID is used to identify your experiment data, if you set up a local alfred experiment to save data to the mortimer database. It is not used, if you deploy your experiment as a web experiment via mortimer.)
-* `alfred.Experiment` no longer takes the arguments `expType` , `expName` and `expVersion` . Instead, these metadata are now defined in the `config.conf` , section `[metadata]` .
+* `alfred.Experiment` no longer takes the arguments `expType` ,     `expName` and `expVersion` . Instead, these metadata are now defined in the `config.conf` , section `[metadata]` .
 * To process metadata in mortimer, the following changes need to be implemented in `script.py` :
     - `def generate_experiment(config=None)` (the function gets a new parameter `config` , which defaults to `None` )
     - `exp = Experiment(config=config)` (the experiment should be initialized with the parameter `config` , defaulting to `config` , which gets handed down from the `generate_experiment` function.)
@@ -605,7 +643,7 @@ pip install alfred3
 
 #### Define navigation button text in `config.conf`
 
-* `config.conf` gets a new section `[navigation]` that lets you define `forward` , `backward` , and `finish` button texts.
+* `config.conf` gets a new section `[navigation]` that lets you define `forward` ,     `backward` , and `finish` button texts.
 
 #### New recommended `script.py` style
 
