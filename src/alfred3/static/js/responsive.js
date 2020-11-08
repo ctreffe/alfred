@@ -1,14 +1,11 @@
 // Save screen resolution, if the current page is the first page.
-$.get("/is_first_page", function (data) {
-    if (data == "True") {
-        const height = window.screen.height;
-        const width = window.screen.width;
-        const res = width.toString() + "x" + height.toString();
+$(document).ready(function () {
+    const height = window.screen.height;
+    const width = window.screen.width;
+    const res = width.toString() + "x" + height.toString();
+    $("#screen_resolution").val(res);
+});
 
-        const url = "/screen_res/" + res
-        $.post(url)
-    }
-})
 
 $(".text-element table").addClass("table table-hover")
 

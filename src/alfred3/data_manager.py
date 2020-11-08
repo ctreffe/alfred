@@ -29,7 +29,8 @@ class DataManager(object):
     def __init__(self, experiment):
         self._experiment = experiment
         self._additional_data = {}
-        self._screen_resolution = None
+        self.screen_resolution = None
+        self.javascript_active = None
 
     def add_additional_data(self, key, value):
         self._additional_data[key] = value
@@ -55,7 +56,8 @@ class DataManager(object):
         data["additional_data"] = self._additional_data
         data["alfred_version"] = self._experiment.alfred_version
         data["save_time"] = time.time()
-        data["screen_resolution"] = self._screen_resolution
+        data["screen_resolution"] = self.screen_resolution
+        data["javascript_active"] = self.javascript_active
 
         return data
 

@@ -138,6 +138,12 @@ class UserInterface:
         code["js_urls"] = page.js_urls
         code["js_code"] = page.js_code
 
+        # JS Code for a single data saving call upon a visit to the first page
+        # This is necessary in order to also save the screen resolution
+        first_page = self.experiment.page_controller.pages()[0]
+        if page is first_page:
+            code["js_code"] += [(7, importlib.resources.read_text(js, "save_first_page.js"))]
+
         return code
 
     def render(self, page_token):
