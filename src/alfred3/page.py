@@ -11,6 +11,8 @@ import string
 from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
+from pathlib import Path
+from typing import Union
 
 from future.utils import with_metaclass
 
@@ -342,6 +344,9 @@ class PageCore(ContentCore):
         data = self._experiment.data_manager.get_data()
         self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
 
+    def __str__(self):
+        return f"<{type(self).__name__} [tag='{self.tag}', uid='{self.uid}']>"
+
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
     def prepare_web_widget(self):
@@ -394,7 +399,11 @@ class CoreCompositePage(PageCore):
                 raise TypeError
             for elmnt in elements:
                 self.append(elmnt)
-        
+
+    @property
+    def element_dict(self):
+        return self._element_dict
+
     def add_element(self, element):
 
         self.log.warning("page.add_element() is deprecated. Use page.append() instead.")
@@ -413,16 +422,6 @@ class CoreCompositePage(PageCore):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
             exp_type = settings.experiment.type  # 'web' or 'qt-wk'
-
-            if exp_type == "web" and not isinstance(elmnt, WebElementInterface):
-                raise TypeError(
-                    "%s is not an instance of WebElementInterface" % type(elmnt).__name__
-                )
-
-            if isinstance(self, WebPageInterface) and not isinstance(elmnt, WebElementInterface):
-                raise TypeError(
-                    "%s is not an instance of WebElementInterface" % type(elmnt).__name__
-                )
 
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
@@ -580,8 +579,8 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         self._on_showing_widget()
 
         for elmnt in self._element_list:
-            elmnt.prepare_web_widget()
-    
+            elmnt.prepare()
+
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self._set_width()

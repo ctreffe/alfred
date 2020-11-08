@@ -1,14 +1,26 @@
 $(document).ready(function() {
 
     const element = $("#elid-{{ element }}")
+    var checks = {};
     
     {% for target, value in showif.items() %}
 
-    $("#{{ target }}").keyup(
+    // set initial check to false
+    checks["{{ target }}"] = false;
+
+    $("#{{ target }}").on("keyup change",
       function () {
         
-        if (this.value == "{{ value }}") {
-          element.removeClass("hide")
+        // perform value check
+        if (this.value.toString() == "{{ value }}") {
+          checks["{{ target }}"] = true;
+        } else {
+          checks["{{ target }}"] = false;
+        }
+
+        // toggle visibility if all checks are true 
+        if (Object.values(checks).every(Boolean)) {
+          element.removeClass("hide");
         } else if (element.is(":visible")) {
           element.addClass("hide")
         }

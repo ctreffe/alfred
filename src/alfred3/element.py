@@ -35,7 +35,7 @@ import re
 import string
 import logging
 import copy
-from abc import ABCMeta, abstractproperty
+from abc import ABC, abstractproperty
 from builtins import object, range, str
 from functools import reduce
 from uuid import uuid4
@@ -49,7 +49,7 @@ from past.utils import old_div
 
 import cmarkgfm
 
-from . import alfredlog, settings, page
+from . import alfredlog, settings
 from ._helper import alignment_converter, fontsize_converter, is_url
 from .exceptions import AlfredError
 
@@ -58,7 +58,7 @@ standard_library.install_aliases()
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 
-class Element:
+class Element(ABC):
     """Element baseclass. 
     
     Elements are derived from this class. Most of them inherit its 
@@ -67,27 +67,31 @@ class Element:
     Args:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
-            final data set.
+            final data set. If none is provided, a generic name will be
+            generated.
         font_size: Font size for text in the element. Can be 'normal' 
             (default), 'big', 'huge', or an integer giving the desired 
             size in pt.
-        alignment: Alignment of text/instructions inside the element. 
+        align: Alignment of text/instructions inside the element. 
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the 
-                page. Values can be 'left', 'center' (default), 'end',
-                or any valid value for the justify-content flexbox
-                utility [#bs_flex]_ .
+            page. Values can be 'left', 'center' (default), 'end',
+            or any valid value for the justify-content flexbox
+            utility [#bs_flex]_ .
         width: Defines the horizontal width of the element from 
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
             'wide', and 'full'. For more detailed control, you can 
             define the *element_width* attribute.
         showif: A dictionary, defining conditions that must be met
-            for the element to be shown
+            for the element to be shown. See :attr:`showif` for details.
         should_be_shown_filter_function: (...)
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
+        alignment: Alignment of text/instructions inside the element. 
+            Can be 'left' (default), 'center', 'right', or 'justify'. 
+            *Deprecated in v1.5*. Please use *align*. 
 
     Attributes:
         element_width: A list of relative width definitions. The
@@ -96,14 +100,19 @@ class Element:
             in Bootstrap 4's 12-column-grid system, i.e. 
             [xs, sm, md, lg, xl] [#bs_grid]_ .
         experiment: The alfred experiment to which this element belogs.
-        page: The element's parent page (i.e. the page on which it is
-            displayed).
         log: An instance of :class:`alfred3.logging.QueuedLoggingInterface`,
             which is a modified interface to python's logging facility
             [#log]_ . You can use it to log messages with the standard
             logging methods 'debug', 'info', 'warning', 'error', 
             'exception', and 'log'. It also offers direct access to the
             logger via ``log.queue_logger``.
+        page: The element's parent page (i.e. the page on which it is
+            displayed).
+        showif: The showif dictionary. It must be of the form
+            ``{<page_uid>: {<element_name>: <value>}}``. It can contain
+            showifs for multiple pages and for multiple elements on 
+            each page. The element will only be shown if *all* 
+            conditions are met.
     
     .. [#bs_flex] see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
     .. [#bs_grid] see https://getbootstrap.com/docs/4.0/layout/grid/
@@ -114,90 +123,77 @@ class Element:
         self,
         name: str = None,
         font_size: str = "normal",
-        alignment: str = "left",
+        align: str = "left",
         width: str = "full",
         position: str = "center",
         showif: dict = None,
         should_be_shown_filter_function=None,
         instance_level_logging: bool = False,
+        alignment: str = None,
         **kwargs,
     ):
-        if not isinstance(self, WebElementInterface):
-            raise AlfredError("Element must implement WebElementInterface.")
 
-        if name is not None:
-            if not re.match(r"^%s$" % "[-_A-Za-z0-9]*", name):
-                raise ValueError(
-                    "Element names may only contain following charakters: A-Z a-z 0-9 _ -"
-                )
-
-        self._name = name
-
-        self._page = None
-        self._enabled = True
-        self._show_corrective_hints = False
-        self._should_be_shown = True
-        self._should_be_shown_filter_function = (
-            should_be_shown_filter_function
-            if should_be_shown_filter_function is not None
-            else lambda exp: True
-        )
-
-        self._alignment = alignment
-        self._font_size = font_size
-        self.width = width
-        self._element_width = None
-        self.position = position
-        self._maximum_widget_width = None
+        # general
+        self.name = name
+        self.page = None
         self.experiment = None
 
-        self._showif = showif if showif else {}
-        self._showif_js = []
+        # display settings
+        self.align = align if alignment is None else alignment
+        self.font_size = font_size
+        self.width = width
+        self.position = position
+        self._show_corrective_hints = False
+        self._alignment = alignment if alignment is not None else align
+        self._element_width = None
+        self._maximum_widget_width = None
 
-        if kwargs != {}:
-            raise ValueError("Parameter '%s' is not supported." % list(kwargs.keys())[0])
+        # showifs and filters
+        self._enabled = True
+        self.showif = showif if showif else {}
+        self._showif_on_current_page = False
+        self._should_be_shown = True
+        if should_be_shown_filter_function is not None:
+            self._should_be_shown_filter_function = should_be_shown_filter_function
+        else:
+            self._should_be_shown_filter_function = lambda exp: True
 
-        if instance_level_logging and not self._name:
-            raise ValueError("For instance level logging, the element must have a name.")
+        # additional code
+        self.css_code = []
+        self.css_urls = []
+        self.js_code = []
+        self.js_urls = []
 
+        # logging
         self.instance_level_logging = instance_level_logging
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
+        # Catch unsupported keyword arguments
+        if kwargs != {}:
+            raise ValueError(f"Parameter '{list(kwargs.keys())[0]}' is not supported.")
 
-        self._width_conversion = {}
-        self._width_conversion["narrow"] = ["col-12", "col-sm-6", "col-md-3"]
-        self._width_conversion["medium"] = ["col-12", "col-sm-9", "col-md-6"]
-        self._width_conversion["wide"] = ["col-12", "col-md-9"]
-        self._width_conversion["full"] = ["col-12"]
-    
-    def showif(self):
-        if self._showif:
-            conditions = []
-            for page_uid, condition in self._showif.items():
-                if page_uid == self.page.uid:
-                    continue
-                d = self.experiment.get_page_data(page_uid=page_uid)
-                for target, value in condition.items():
-                    try:
-                        conditions.append(d[target] == value)
-                    except KeyError:
-                        self.log.warning(f"You defined a showif '{target} == {value}' for page with uid='{page_uid}', but {target} was not found on the page. The element was shown.")
-            return conditions
-        else:
-            return [True]
+    # getters and setter start here ------------------------------------
 
     @property
     def alignment(self):
-        return self._alignment
-    
+        """Included for backwards compatibility."""
+        return self.align
+
     @property
     def converted_width(self):
-        return self._width_conversion.get(self.width)
-    
+        if self.width == "narrow":
+            return ["col-12", "col-sm-6", "col-md-3"]
+        elif self.width == "medium":
+            return ["col-12", "col-sm-9", "col-md-6"]
+        elif self.width == "wide":
+            return ["col-12", "col-md-9"]
+        elif self.width == "full":
+            return ["col-12"]
+
     @property
     def width(self):
         return self._width
-    
+
     @width.setter
     def width(self, value):
         if value not in ["narrow", "medium", "wide", "full"] and value is not None:
@@ -207,7 +203,7 @@ class Element:
     @property
     def position(self):
         return self._position
-    
+
     @position.setter
     def position(self, value):
         if value == "left":
@@ -219,13 +215,17 @@ class Element:
 
     @property
     def font_size(self):
-        return fontsize_converter(self._font_size)
+        return self._font_size
+
+    @font_size.setter
+    def font_size(self, value):
+        self._font_size = fontsize_converter(value)
 
     @property
     def element_width(self):
         if self.width is not None:
             return " ".join(self.converted_width)
-        
+
         width = self._element_width if self._element_width is not None else ["col-12"]
         if self.experiment.config.getboolean("layout", "responsive", fallback=True):
             return " ".join(width)
@@ -246,9 +246,19 @@ class Element:
 
     @name.setter
     def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError
-        self._name = name
+        if name is None:
+            self._name = None
+
+        elif name is not None:
+            if not re.match(r"^[-_A-Za-z0-9]*$", name):
+                raise ValueError(
+                    "Element names may only contain following charakters: A-Z a-z 0-9 _ -"
+                )
+
+            if not isinstance(name, str):
+                raise TypeError
+
+            self._name = name
 
     @property
     def maximum_widget_width(self):
@@ -259,32 +269,6 @@ class Element:
         if not isinstance(maximum_widget_width, int):
             raise TypeError
         self._maximum_widget_width = maximum_widget_width
-
-    def added_to_page(self, q):
-        from . import page
-
-        if not isinstance(q, page.PageCore):
-            raise TypeError()
-
-        self._page = q
-        if self.name is None:
-            self.name = self.page.generate_element_name(self)
-
-        if self._page.experiment:
-            self.added_to_experiment(self._page.experiment)
-        
-        on_current_page = self._showif.get(self.page.uid, None)
-        if on_current_page:
-            t = jinja_env.get_template("showif.js")
-            js = t.render(showif=on_current_page, element=self.name)
-            self._showif_js.append((7, js))
-
-    def added_to_experiment(self, experiment):
-        self.experiment = experiment
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
 
     @property
     def data(self):
@@ -325,6 +309,161 @@ class Element:
     def show_corrective_hints(self, b):
         self._show_corrective_hints = bool(b)
 
+    @property
+    def should_be_shown(self):
+        """
+        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
+        Otherwise False is returned
+        """
+        cond1 = self._should_be_shown
+        cond2 = self._should_be_shown_filter_function(self.experiment)
+        cond3 = all(self._evaluate_showif())
+        return cond1 and cond2 and cond3
+
+    @should_be_shown.setter
+    def should_be_shown(self, b):
+        """
+        sets should_be_shown to b.
+
+        :type b: bool
+        """
+        if not isinstance(b, bool):
+            raise TypeError("should_be_shown must be an instance of bool")
+        self._should_be_shown = b
+
+    @property
+    def page(self):
+        return self._page
+
+    @page.setter
+    def page(self, value):
+        self._page = value
+
+    @property
+    def tree(self):
+        return self.page.tree
+
+    @property
+    def identifier(self):
+        return self.tree.replace("rootSection_", "") + "_" + self._name
+
+    @property
+    def web_thumbnail(self):
+        return None
+
+    @property
+    def template_values(self):
+        d = {}
+        d["name"] = self.name
+        d["position"] = self.position
+        d["element_width"] = self.element_width
+        d["hide"] = "hide" if self._showif_on_current_page is True else ""
+        d["align"] = f"text-{self.align}"
+        d["style"] = f"font-size: {self.font_size}pt;"
+        return d
+
+    # Private methods start here ---------------------------------------
+
+    def _evaluate_showif(self) -> List[bool]:
+        """Checks the showif conditions that refer to previous pages.
+        
+        Returns:
+            A list of booleans, indicating for each condition whether
+            it is met or not.
+        """
+
+        if self.showif:
+            conditions = []
+            for page_uid, condition in self.showif.items():
+
+                # skip current page (showifs for current pages are checked elsewhere)
+                if page_uid == self.page.uid:
+                    continue
+
+                d = self.experiment.get_page_data(page_uid=page_uid)
+                for target, value in condition.items():
+                    try:
+                        conditions.append(d[target] == value)
+                    except KeyError:
+                        msg = (
+                            f"You defined a showif '{target} == {value}' for {self} "
+                            f"on Page with uid '{page_uid}', "
+                            f"but {target} was not found on the page. "
+                            "The element will NOT be shown."
+                        )
+                        self.log.warning(msg)
+                        self.should_be_shown = False
+                        return
+            return conditions
+        else:
+            return [True]
+
+    def _activate_showif_on_current_page(self):
+        """Adds JavaScript to self for dynamic showif functionality."""
+        on_current_page = self.showif.get(self.page.uid, None)
+        if on_current_page:
+
+            # If target element is not even on the same page
+            for element_name, value in on_current_page.items():
+                if not element_name in self.page.element_dict:
+                    msg = (
+                        f"You defined a showif '{element_name} == {value}' for {self} "
+                        f"on {self.page}, "
+                        f"but {element_name} was not found on the page. "
+                        "The element will NOT be shown."
+                    )
+                    self.log.warning(msg)
+                    self.should_be_shown = False
+                    return
+
+            t = jinja_env.get_template("showif.js")
+            js = t.render(showif=on_current_page, element=self.name)
+            self.js_code.append((7, js))
+            self._showif_on_current_page = True
+
+    # Public methods start here ----------------------------------------
+
+    def added_to_experiment(self, experiment):
+        """Tells the element that it was added to an experiment. 
+        
+        The experiment is made available to the element, and the 
+        element's logging interface initializes its experiment-specific
+        logging.
+
+        Args:
+            experiment: The alfred experiment to which the element was
+                added.
+        """
+        self.experiment = experiment
+
+        queue_logger_name = self.prepare_logger_name()
+        self.log.queue_logger = logging.getLogger(queue_logger_name)
+        self.log.session_id = self.experiment.config.get("metadata", "session_id")
+        self.log.log_queued_messages()
+
+    def added_to_page(self, page):
+        """Tells the element that it was added to a page. 
+        
+        The page and the experiment are made available to the element.
+
+        Args:
+            page: The page to which the element was added.
+        """
+        from . import page as pg
+
+        if not isinstance(page, pg.PageCore):
+            raise TypeError()
+
+        self._page = page
+        if self.name is None:
+            self.name = self.page.generate_element_name(self)
+
+        if self.page.experiment:
+            self.added_to_experiment(self._page.experiment)
+
+    def set_data(self, data):
+        pass
+
     def validate_data(self):
         return True
 
@@ -341,27 +480,23 @@ class Element:
         """
         self._should_be_shown_filter_function = lambda exp: True
 
-    @property
-    def should_be_shown(self):
+    def prepare(self):
+        """Wraps *prepare_web_widget* to allow for additional, generic
+        preparations that are the same for all elements.
+        
+        This is useful, because *prepare_web_widget* is often redefined
+        in derived elements.
         """
-        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
-        Otherwise False is returned
-        """
-        cond1 = self._should_be_shown
-        cond2 = self._should_be_shown_filter_function(self.experiment)
-        cond3 = all(self.showif())
-        return cond1 and cond2 and cond3
+        self._activate_showif_on_current_page()
+        self.prepare_web_widget()
 
-    @should_be_shown.setter
-    def should_be_shown(self, b):
+    def prepare_web_widget(self):
+        """Hook for computations for preparing an element's web widget.
+        
+        This method is supposed to be overridden by derived elements if
+        necessary.
         """
-        sets should_be_shown to b.
-
-        :type b: bool
-        """
-        if not isinstance(b, bool):
-            raise TypeError("should_be_shown must be an instance of bool")
-        self._should_be_shown = b
+        pass
 
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
@@ -388,54 +523,36 @@ class Element:
 
         return ".".join(name)
 
-    @property
-    def page(self):
-        return self._page
+    # Magic methods start here -----------------------------------------
 
-    @property
-    def tree(self):
-        return self.page.tree
+    def __str__(self):
+        return f"<{type(self).__name__} [name='{self.name}']>"
 
-    @property
-    def identifier(self):
-        return self.tree.replace("rootSection_", "") + "_" + self._name
-
-
-class WebElementInterface(with_metaclass(ABCMeta, object)):
-    """
-    Abstract class **WebElementInterface** contains properties and methods allowing elements to be used and displayed
-    in experiments of type 'web'.
-    """
+    # abstract attributes start here -----------------------------------
 
     @abstractproperty
     def web_widget(self):
+        """Every child class *must* redefine the web widget.
+        
+        This is the html-code that defines the element's display on the
+        screen.
+        """
         pass
 
-    def prepare_web_widget(self):
-        pass
 
-    @property
-    def web_thumbnail(self):
-        return None
+class WebElementInterface:
+    """
+    Abstract class **WebElementInterface** contains properties and 
+    methods allowing elements to be used and displayed in experiments of
+    type 'web'.
 
-    def set_data(self, data):
-        pass
+    *Changed in v1.5*: Deprecated. It is not necessary anymore to 
+    inherit from WebElementInterface when deriving an Element. The 
+    necessary functionality is included directly in the base class 
+    Element.
+    """
 
-    @property
-    def css_code(self):
-        return []
-
-    @property
-    def css_urls(self):
-        return []
-
-    @property
-    def js_code(self):
-        return []
-
-    @property
-    def js_urls(self):
-        return []
+    pass
 
 
 class HorizontalLine(Element, WebElementInterface):
@@ -549,41 +666,41 @@ class ProgressBar(Element, WebElementInterface):
 class TextElement(Element, WebElementInterface):
     """Displays text.
 
-        You can use GitHub-flavored Markdown syntax to format your text
-        (see https://guides.github.com/features/mastering-markdown/ for
-        details).
-        Additionally, you can use raw html for advanced formatting.
+    You can use GitHub-flavored Markdown syntax for formatting [#md]_ .
+    Additionally, you can use raw html for advanced formatting.
 
-        Text can be entered directly through the `text` parameter, or
-        it can be read from a file by specifying the 'path' parameter.
-        Note that you can only use one of these options, if you specify
-        both, the element will raise an error.
+    Text can be entered directly through the `text` parameter, or
+    it can be read from a file by specifying the 'path' parameter.
+    Note that you can only use one of these options, if you specify
+    both, the element will raise an error.
 
-        .. example::
-            # Text element that is displayed as full-width on very 
-            # small screens and as half-width on small and larger 
-            # screens.
-            text = TextElement('Text display', element_width=[12, 6])
-        
-        .. example::
+    .. example::
+        # Text element with responsive width
+        text = TextElement('Text display')
+
         # Text element that is always displayed as full-width
-            text = TextElement('Text display', width='full')
+        text = TextElement('Text display', width='full')
 
-        Args:
-            text: Text to be displayed.
-            text_width: Text width in px. **Deprecated** for responsive
-                design (v1.5). Use `element_width` instead, when using
-                the responsive design.
-            text_height: Element height in px.
-            path: Filepath to a textfile (relative to the experiment 
-                directory).
-            width: Element width. Usage is the same as in 
-                :class:`Element`, but the TextElement uses its own
-                specific default, which ensures good readability in 
-                most cases on different screen sizes.
-            **element_args: Keyword arguments passed to the parent class
-                :class:`Element`.
-        """
+        # Text element with content read from file
+        text = TextElement(path='files/text.md')
+        
+    Args:
+        text: Text to be displayed.
+        text_width: Text width in px. **Deprecated** for responsive
+            design (v1.5). Use `element_width` instead, when using
+            the responsive design.
+        text_height: Element height in px.
+        path: Filepath to a textfile (relative to the experiment 
+            directory).
+        width: Element width. Usage is the same as in 
+            :class:`Element`, but the TextElement uses its own
+            specific default, which ensures good readability in 
+            most cases on different screen sizes.
+        **element_args: Keyword arguments passed to the parent class
+            :class:`Element`.
+    
+    .. [#md]: https://guides.github.com/features/mastering-markdown/
+    """
 
     def __init__(
         self,
@@ -608,6 +725,9 @@ class TextElement(Element, WebElementInterface):
         if self._text and self._path:
             raise ValueError("You can only specify one of 'text' and 'path'.")
 
+        if text_width:
+            self.log.warning("The parameter 'text_width' is deprecated. Please use 'width'.")
+
     @property
     def text(self):
         if self._path:
@@ -626,12 +746,12 @@ class TextElement(Element, WebElementInterface):
         if self._text_label:
             self._text_label.set_text(self._text)
             self._text_label.repaint()
-    
+
     @property
     def element_width(self):
         if self.width is not None:
             return " ".join(self.converted_width)
-        
+
         responsive = self.experiment.config.getboolean("layout", "responsive", fallback=True)
         if responsive:
             if self._element_width is None:
@@ -643,32 +763,15 @@ class TextElement(Element, WebElementInterface):
 
     @property
     def responsive_widget(self):
-        d = {}
-        d["name"] = self.name
-        d["position"] = self.position
-        d["element_width"] = self.element_width
+        d = self.template_values
         d["element_class"] = "text-element"
-        d["text"] = self.rendered_text
-        d["hide"] = "hide" if self._showif_js != [] else ""
-        d["align"] = f"text-{self._alignment}"
-        size = f"font-size: {fontsize_converter(self._font_size)};"
-        width = f"width: {self._text_width};" if self._text_width is not None else ""
-        height = f"height: {self._text_height};" if self._text_height is not None else ""
 
-        d["style"] = f"{size} {width} {height}"
+        d["text"] = self.rendered_text
+        width = f"width: {self._text_width}px;" if self._text_width is not None else ""
+        height = f"height: {self._text_height}px;" if self._text_height is not None else ""
+        d["style"] += f"{width} {height}"
 
         return self._template.render(d)
-
-    @property
-    def css_code(self):
-        styles = []
-        if self._text_height:
-            styles.append(f"height: {self._text_height}px;")
-        if self._font_size:
-            styles.append(f"font-size: {self.font_size}pt;")
-
-        code = f"#elid-{self.name}" + "{" + " ".join(styles) + "}"
-        return [(10, code)]
 
     @property
     def web_widget(self):
@@ -684,10 +787,6 @@ class TextElement(Element, WebElementInterface):
         )
 
         return widget
-    
-    @property
-    def js_code(self):
-        return self._showif_js
 
 
 class CodeElement(Element, WebElementInterface):
@@ -831,6 +930,8 @@ class DataElement(Element, WebElementInterface):
 
     @property
     def codebook_data_flat(self):
+        from . import page
+
         data = {}
         data["name"] = self.name
         data["tree"] = self.tree.replace("rootSection_", "")
@@ -882,9 +983,9 @@ class InputElement(Element):
 
         if default is not None:
             self._input = default
-        
-        if self._force_input and (self._showif_js or self.showif):
-            raise ValueError("Elements with 'showif's can't be 'force_input'.")
+
+        if self._force_input and (self._showif_on_current_page or self.showif):
+            raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
@@ -949,6 +1050,8 @@ class InputElement(Element):
 
     @property
     def codebook_data_flat(self):
+        from . import page
+
         data = {}
         data["name"] = self.name
         data["tree"] = self.tree.replace("rootSection_", "")
@@ -965,10 +1068,6 @@ class InputElement(Element):
     @property
     def codebook_data(self):
         return {self.identifier: self.codebook_data_flat}
-    
-    @property
-    def js_code(self):
-        return self._showif_js
 
 
 class TextEntryElement(InputElement, WebElementInterface):
@@ -1088,18 +1187,18 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         """
         )
-    
+
     @property
     def instruction_inline(self):
         if self._instruction_inline:
             return self._instruction_inline
         else:
             return self.experiment.config.getboolean("layout", "instruction_inline")
-    
+
     @instruction_inline.setter
     def instruction_inline(self, value):
         self._instruction_inline = value
-    
+
     @property
     def input_col_width(self):
         if self._input_col_width:
@@ -1112,11 +1211,11 @@ class TextEntryElement(InputElement, WebElementInterface):
                 return "col-sm-12"
         else:
             return "col-sm-12"
-    
+
     @input_col_width.setter
     def input_col_width(self, value):
         self._input_col_width = value
-    
+
     @property
     def instruction_col_width(self) -> int:
         """Returns the width of the instructions column, using 
@@ -1124,10 +1223,10 @@ class TextEntryElement(InputElement, WebElementInterface):
         """
         if not self.instruction_inline:
             return "col-sm-12"
-        
+
         else:
             return "col-sm-" + str(self._instruction_col_width)
-        
+
     @instruction_col_width.setter
     def instruction_col_width(self, value):
         if isinstance(value, int) and 1 <= value <= 12:
@@ -1140,25 +1239,23 @@ class TextEntryElement(InputElement, WebElementInterface):
             self._instruction_col_width = conversion.get(self.instruction_inline_width)
         else:
             raise ValueError("Instruction width was not set correctly.")
-    
-    
+
     @property
     def instruction_inline_width(self):
         return self._instruction_inline_width
-    
+
     @instruction_inline_width.setter
     def instruction_inline_width(self, value):
         if value not in ["narrow", "medium", "wide"] and value is not None:
             raise ValueError(f"'{value}' is no valid width value.")
         self._instruction_inline_width = value
 
-
     @property
     def responsive_widget(self):
 
         d = {}
         d["name"] = self.name
-        d["hide"] = "hide" if self._showif_js != [] else ""
+        d["hide"] = "hide" if self._showif_on_current_page is True else ""
         d["element_width"] = self.element_width
         d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         if self._input:  # using input here to cover default and debug_value simultaneously
@@ -3514,23 +3611,22 @@ class ExperimenterMessages(TableElement):
 
 
 class WebExitEnabler(Element, WebElementInterface):
-    @property
-    def js_code(self):
+    def prepare_web_widget(self):
         call = "$(document).ready(function(){glob_unbind_leaving();});"
-        return [(10, call)]
+        self.js_code += [(10, call)]
 
     @property
     def web_widget(self):
         return ""
 
 
-class Row(Element, WebElementInterface):
+class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
 
     The row will arrange your elements using Bootstrap 4's grid system
     and breakpoints, making the arrangement responsive. You can 
     customize the behavior of the row for five different screen sizes
-    (Bootstrap 4's default break points).
+    (Bootstrap 4's default break points) with the width attributes.
 
     If you don't specify breakpoints manually, the columns will default
     to equal width and wrap on breakpoints automatically.
@@ -3550,54 +3646,58 @@ class Row(Element, WebElementInterface):
         for detailed documentation of how Bootstrap's breakpoints work.
     
     .. info::
-        If you specify fewer values than the number of columns, the 
-        columns with undefined width will take up equal portions of
-        the remaining horizontal space.
-    
-    .. info::
-        If a breakpoint is not specified manually, the values from the
+        **Some information regarding the width attributes**
+        
+        - If you specify fewer values than the number of columns in the 
+        width attributes, the columns with undefined width will take up 
+        equal portions of the remaining horizontal space.
+        - If a breakpoint is not specified manually, the values from the
         next smaller breakpoint are inherited.
     
     Args:
         elements: The elements that you want to arrange in a row.
-        xs: List of column widths on screens of size 'xs' or bigger 
-            (<576px).
-        sm: List of column widths on screens of size 'sm' or bigger
-            (>=576px).
-        md: List of column widths on screens of size 'md' or bigger
-            (>=768px).
-        lg: List of column widths on screens of size 'lg' or bigger
-            (>=992px).
-        xl: List of column widths on screens of size 'xl' or bigger
-            (>=1200px).
         height: Custom row height (with unit, e.g. '100px').
-        col_position: List of column positions. Valid values are 'auto'
-            (default), 'top', 'center', and 'bottom'.
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'.
+    
+    Attributes:
+        width_xs: List of column widths on screens of size 'xs' or 
+            bigger (<576px). Widths must be defined as integers between
+            1 and 12.
+        width_sm: List of column widths on screens of size 'sm' or 
+            bigger (>=576px). Widths must be defined as integers between
+            1 and 12.
+        width_md: List of column widths on screens of size 'md' or 
+            bigger (>=768px). Widths must be defined as integers between
+            1 and 12.
+        width_lg: List of column widths on screens of size 'lg' or 
+            bigger (>=992px). Widths must be defined as integers between
+            1 and 12.
+        width_xl: List of column widths on screens of size 'xl' or 
+            bigger (>=1200px). Widths must be defined as integers between
+            1 and 12.
     """
 
     def __init__(
         self,
         *elements,
-        xs: List[int] = None,
-        sm: List[int] = None,
-        md: List[int] = None,
-        lg: List[int] = None,
-        xl: List[int] = None,
         height: str = "auto",
-        col_position: List[str] = None,
+        valign_cols: List[str] = None,
+        name: str = None,
+        showif: dict = None,
     ):
         """Constructor method."""
-        super().__init__()
+        super().__init__(name=name, showif=showif)
         self.elements = elements
 
         self.height = height
-        self.col_position = self.format_col_position(col_position)
+        self.valign_cols = self.format_valign_cols(valign_cols)
 
-        self._breaks_xs = self.format_breaks(xs, "xs")
-        self._breaks_sm = self.format_breaks(sm, "sm")
-        self._breaks_md = self.format_breaks(md, "md")
-        self._breaks_lg = self.format_breaks(lg, "lg")
-        self._breaks_xl = self.format_breaks(xl, "xl")
+        self.width_xs = None
+        self.width_sm = None
+        self.width_md = None
+        self.width_lg = None
+        self.width_xl = None
 
     def added_to_page(self, page):
         super().added_to_page(page)
@@ -3608,9 +3708,9 @@ class Row(Element, WebElementInterface):
             element.should_be_shown = False
             page += element
 
-    def format_col_position(self, col_position: List[str]):
+    def format_valign_cols(self, valign_cols: List[str]):
         try:
-            if len(col_position) > len(self.elements):
+            if len(valign_cols) > len(self.elements):
                 raise ValueError(
                     "Col position list must be of the same or smaller length as number of elements."
                 )
@@ -3620,7 +3720,7 @@ class Row(Element, WebElementInterface):
         out = []
         for i, _ in enumerate(self.elements):
             try:
-                n = col_position[i]
+                n = valign_cols[i]
             except IndexError:
                 out.append("")
                 continue
@@ -3652,30 +3752,34 @@ class Row(Element, WebElementInterface):
         out = []
         for i, element in enumerate(self.elements):
             breaks = self.col_breaks(i)
-            pos = self.col_position[i]
+            pos = self.valign_cols[i]
             html = element.responsive_widget if element is not None else ""
-            t = Template("<div class='{{ breaks }} {{ position }} col-element'>{{ html }}</div>")
-            out.append(t.render(breaks=breaks, position=pos, html=html))
+            colid = f"{self.name}_col{i+1}"
+            t = Template(
+                "<div class='{{ breaks }} {{ position }} col-element' id={{ id }}>{{ html }}</div>"
+            )
+            out.append(t.render(breaks=breaks, position=pos, html=html, id=colid))
         return out
 
     @property
     def responsive_widget(self):
+        hide = "hide" if self._showif_on_current_page is True else ""
         t = Template(
-            "<div class='row element row-element' style='height: {{ height}};'>{{ cols | safe }}</div>"
+            "<div class='row element row-element {{ hide }}' style='height: {{ height}};' id=elid-{{ name }}>{{ cols | safe }}</div>"
         )
         columns_html = "".join(self.cols)
-        return t.render(cols=columns_html, height=self.height)
+        return t.render(cols=columns_html, height=self.height, name=self.name, hide=hide)
 
     @property
     def web_widget(self):
         return self.responsive_widget
 
-    def col_breaks(self, i: int) -> str:
-        xs = self.breaks_xs[i]
-        sm = self.breaks_sm[i]
-        md = self.breaks_md[i]
-        lg = self.breaks_lg[i]
-        xl = self.breaks_xl[i]
+    def col_breaks(self, col: int) -> str:
+        xs = self.format_breaks(self.width_xs, "xs")[col]
+        sm = self.format_breaks(self.width_sm, "sm")[col]
+        md = self.format_breaks(self.width_md, "md")[col]
+        lg = self.format_breaks(self.width_lg, "lg")[col]
+        xl = self.format_breaks(self.width_xl, "xl")[col]
 
         if self.experiment.config.getboolean("layout", "responsive", fallback=True):
             breaks = [xs, sm, md, lg, xl]
@@ -3686,46 +3790,6 @@ class Row(Element, WebElementInterface):
         else:
             out = xs if xs != "" else "col"
             return out
-
-    @property
-    def breaks_xs(self):
-        return self._breaks_xs
-
-    @breaks_xs.setter
-    def breaks_xs(self, breaks: List[int]):
-        self._breaks_xs = self.format_breaks(breaks, "xs")
-
-    @property
-    def breaks_sm(self):
-        return self._breaks_sm
-
-    @breaks_sm.setter
-    def breaks_sm(self, breaks: List[int]):
-        self._breaks_sm = self.format_breaks(breaks, "sm")
-
-    @property
-    def breaks_md(self):
-        return self._breaks_md
-
-    @breaks_md.setter
-    def breaks_md(self, breaks: List[int]):
-        self._breaks_md = self.format_breaks(breaks, "md")
-
-    @property
-    def breaks_lg(self):
-        return self._breaks_lg
-
-    @breaks_lg.setter
-    def breaks_lg(self, breaks: List[int]):
-        self._breaks_lg = self.format_breaks(breaks, "lg")
-
-    @property
-    def breaks_xl(self):
-        return self._breaks_xl
-
-    @breaks_xl.setter
-    def breaks_xl(self, breaks: List[int]):
-        self._breaks_xl = self.format_breaks(breaks, "xl")
 
     def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
         """Takes a tuple of column sizes (in integers from 1 to 12) and
@@ -3769,6 +3833,12 @@ class Row(Element, WebElementInterface):
         return out
 
 
+class Stack(Row):
+    def __init__(self, *elements, **kwargs):
+        super().__init__(*elements, **kwargs)
+        self.width_xs = [12 for element in elements]
+
+
 class VerticalSpace(Element, WebElementInterface):
     """The easiest way to add vertical space to a page.
     
@@ -3791,26 +3861,53 @@ class VerticalSpace(Element, WebElementInterface):
         return self.responsive_widget
 
 
-# class Html:
+class Css(Element):
+    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+        super().__init__()
+        self.priority = priority
+        if code:
+            self.css_code = [(priority, code)]
+        if url:
+            self.css_urls = [(priority, url)]
+        self.path = Path(path) if path is not None else None
+        self.should_be_shown = False
 
-#     def __init__(self, classes: list = None):
-#         self.classes = classes if classes is not None else []
+    def prepare_web_widget(self):
+        if self.path:
+            if not self.path.is_absolute():
+                p = self.experiment.path / self.path
+            else:
+                p = self.path
 
-#     @property
-#     def class_html(self):
-#         return " ".join(self.classes)
+            code = p.read_text()
+            self.css_code += [(self.priority, code)]
+
+    @property
+    def web_widget(self):
+        return ""
 
 
-# class Row(Html):
+class JavaScript(Element):
+    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+        super().__init__()
+        self.priority = priority
+        if code:
+            self.js_code = [(priority, code)]
+        if url:
+            self.js_urls = [(priority, url)]
+        self.path = Path(path) if path is not None else None
+        self.should_be_shown = False
 
-#     template = """<div class='row'>
-#     {% for col in cols %}
+    def prepare_web_widget(self):
+        if self.path:
+            if not self.path.is_absolute():
+                p = self.experiment.path / self.path
+            else:
+                p = self.path
 
-#     </div>"""
+            code = p.read_text()
+            self.js_code += [(self.priority, code)]
 
-#     def __init__(self):
-#         self.cols = []
-
-#     def row_html(self):
-#         return
-
+    @property
+    def web_widget(self):
+        return ""
