@@ -29,13 +29,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
         - js_urls
 
 * TextElement
+    - Now supports Markdown
     - New parameters
         - path
 
 * InputElement
+
+* TextEntryElement
+    - New parameters
+        - placeholder
     - New attributes
         - instruction_col_width
         - input_col_width
+
+* Page
+    - New attributes
+        - fixed_width
+        - responsive_width
+
+* Config
+    - New Section "layout"
 
 ## v1.4
 
@@ -430,8 +443,8 @@ def generate_experiment(self, config=None):
 
 #### Enhanced logging
 
-* All instances and children of `Experiment` ,     `element.Element` ,     `page.Page` , and `section.Section` gain a `log` attribute.
-* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` ,     `info` ,     `warning` ,     `error` ,     `critical` ,     `exception` ,  `log` , and `setLevel` .
+* All instances and children of `Experiment` ,           `element.Element` ,           `page.Page` , and `section.Section` gain a `log` attribute.
+* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` ,           `info` ,           `warning` ,           `error` ,           `critical` ,           `exception` ,  `log` , and `setLevel` .
 * If you want to access the logger object directly to apply more detailed configuration, you can do so via `log.queue_logger` .
 
 See [logging documentation](https://docs.python.org/3/howto/logging.html#logging-levels) for more information on the levels and configuration.
@@ -630,7 +643,7 @@ pip install alfred3
     - `author` : The experiment author
     - `version` : The experiment version
     - `exp_id` : The experiment ID (**IMPORTANT:** This ID is used to identify your experiment data, if you set up a local alfred experiment to save data to the mortimer database. It is not used, if you deploy your experiment as a web experiment via mortimer.)
-* `alfred.Experiment` no longer takes the arguments `expType` ,     `expName` and `expVersion` . Instead, these metadata are now defined in the `config.conf` , section `[metadata]` .
+* `alfred.Experiment` no longer takes the arguments `expType` ,           `expName` and `expVersion` . Instead, these metadata are now defined in the `config.conf` , section `[metadata]` .
 * To process metadata in mortimer, the following changes need to be implemented in `script.py` :
     - `def generate_experiment(config=None)` (the function gets a new parameter `config` , which defaults to `None` )
     - `exp = Experiment(config=config)` (the experiment should be initialized with the parameter `config` , defaulting to `config` , which gets handed down from the `generate_experiment` function.)
@@ -643,7 +656,7 @@ pip install alfred3
 
 #### Define navigation button text in `config.conf`
 
-* `config.conf` gets a new section `[navigation]` that lets you define `forward` ,     `backward` , and `finish` button texts.
+* `config.conf` gets a new section `[navigation]` that lets you define `forward` ,           `backward` , and `finish` button texts.
 
 #### New recommended `script.py` style
 
