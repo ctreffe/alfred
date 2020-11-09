@@ -5,7 +5,7 @@
 }
 
 .corrective-hint {
-	color:red;
+    color: red;
 }
 
 .col-element {
@@ -23,9 +23,9 @@
     margin-bottom: 1em;
 }
 
-.hide{
+.hide {
     display: none !important;
-  }
+}
 
 .text-element {
     margin-bottom: 0;
