@@ -539,6 +539,14 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         if kwargs.get("responsive_width"):
             self.responsive_width = kwargs.get("responsive_width")
 
+        self._header_color = None
+        if kwargs.get("header_color"):
+            self.header_color = kwargs.get("header_color")
+
+        self._background_color = None
+        if kwargs.get("background_color"):
+            self.background_color = kwargs.get("background_color")
+
     @property
     def fixed_width(self):
         return self._fixed_width
@@ -554,6 +562,22 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
     @responsive_width.setter
     def responsive_width(self, value):
         self._responsive_width = value
+
+    @property
+    def header_color(self):
+        return self._header_color
+
+    @header_color.setter
+    def header_color(self, value):
+        self._header_color = value
+
+    @property
+    def background_color(self):
+        return self._background_color
+
+    @background_color.setter
+    def background_color(self, value):
+        self._background_color = value
 
     def _parse_responsive_width(self, width):
         return [x.strip() for x in width.split(",")]
@@ -584,23 +608,43 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self._set_width()
+        self._set_color()
 
     def _set_width(self):
         if self.experiment.config.getboolean("layout", "responsive"):
+
             if self.responsive_width:
                 w = self._parse_responsive_width(self.responsive_width)
-                self.css_code = self._responsive_media_query(w)
+                self += element.Css(code=self._responsive_media_query(w))
+
             elif self.experiment.config.get("layout", "responsive_width"):
                 config_width = self.experiment.config.get("layout", "responsive_width")
                 w = self._parse_responsive_width(config_width)
-                self.css_code = self._responsive_media_query(w)
+                self += element.Css(code=self._responsive_media_query(w))
+
         elif not self.fixed_width:
             w = self.experiment.config.get("layout", "fixed_width")
-            self.css_code = f".fixed-width {{ width: {w}; }}"
-            self.css_code = f".min-width {{ min-width: {w}; }}"
+            self += element.Css(code=f".fixed-width {{ width: {w}; }}")
+            self += element.Css(code=f".min-width {{ min-width: {w}; }}")
+
         else:
-            self.css_code = f".fixed-width {{ width: {self.fixed_width}; }}"
-            self.css_code = f".min-width {{ min-width: {self.fixed_width}; }}"
+            self += element.Css(code=f".fixed-width {{ width: {self.fixed_width}; }}")
+            self += element.Css(code=f".min-width {{ min-width: {self.fixed_width}; }}")
+
+    def _set_color(self):
+        if self.header_color:
+            self += element.Css(code=f".logo-bg {{background-color: {self.header_color};}}")
+
+        elif self.experiment.config.get("layout", "header_color", fallback=False):
+            c = self.experiment.config.get("layout", "header_color", fallback=False)
+            self += element.Css(code=f".logo-bg {{background-color: {c};}}")
+
+        if self.background_color:
+            self += element.Css(code=f"body {{background-color: {self.background_color};}}")
+
+        elif self.experiment.config.get("layout", "background_color", fallback=False):
+            c = self.experiment.config.get("layout", "background_color", fallback=False)
+            self += element.Css(code=f"body {{background-color: {c};}}")
 
     @property
     def web_widget(self):
