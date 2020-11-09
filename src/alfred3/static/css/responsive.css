@@ -176,7 +176,7 @@ label p {
 
 /* Code block font size */
 pre[class*="language-"] {
-    font-size: 11pt;
+    font-size: 10pt;
     margin-top: 0;
     margin-bottom: 1em;
 }
