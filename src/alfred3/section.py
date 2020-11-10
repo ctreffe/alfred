@@ -25,6 +25,7 @@ class Section(ContentCore):
         super(Section, self).__init__(**kwargs)
 
         self._page_list = []
+        self._members_dict = {}
         self._currentPageIndex = 0
         self._should_be_shown = True
 
@@ -56,7 +57,11 @@ class Section(ContentCore):
             data["subtree_data"].append(q_core.data)
 
         return data
-
+    
+    @property
+    def members(self):
+        return self._members_dict
+    
     def unlinked_data(self, encrypt):
         data = {"tag": self.tag}
         data["subtree_data"] = []
@@ -233,12 +238,24 @@ class Section(ContentCore):
             if not isinstance(item, (PageCore, Section)):
                 raise TypeError("Can only add pages and section to section.")
             self._page_list.append(item)
+            
+            try:
+                if hasattr(self, item.uid):
+                    raise ValueError((f"Uid of {item} is also an attribute of {self}." 
+                "Please choose a different uid."))
+            except KeyError:
+                pass
+            
+            self._members_dict[item.uid] = item
+            
             item.added_to_section(self)
 
             if self._experiment is not None:
                 item.added_to_experiment(self._experiment)
 
             self.generate_unset_tags_in_subtree()
+
+
 
     def generate_unset_tags_in_subtree(self):
         for i in range(0, len(self._page_list)):
