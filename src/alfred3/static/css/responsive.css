@@ -13,14 +13,14 @@
 }
 
 .element {
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-left: 1rem;
+    padding-right: 1rem;
     display: flex;
     flex-direction: row;
 }
 
 .input-element {
-    margin-bottom: 1em;
+    margin-bottom: 1rem;
 }
 
 .hide {
@@ -40,8 +40,8 @@
 }
 
 .footer-container {
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .form-rounded {
@@ -62,7 +62,7 @@
 }
 
 .logo-text {
-    padding: 1em;
+    padding: 1rem;
 }
 
 .min-width {
@@ -72,7 +72,7 @@
 .page-container {
     width: 95%;
     min-height: 65vh;
-    padding: 1em;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     background-color: white;
@@ -87,12 +87,12 @@
 
 .page-body {
     flex-grow: 1;
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .page-header {
-    margin-bottom: 1em;
+    margin-bottom: 1rem;
 }
 
 .fixed-width {
@@ -165,8 +165,8 @@ p.page-subtitle {
 blockquote {
     background: #f9f9f9;
     border-left: 10px solid #ccc;
-    margin: 1.5em 10px;
-    padding: 0.5em 10px;
+    margin: 1.5rem 10px;
+    padding: 0.5rem 10px;
     quotes: "\201C""\201D""\2018""\2019";
 }
 
@@ -178,5 +178,5 @@ label p {
 pre[class*="language-"] {
     font-size: 10pt;
     margin-top: 0;
-    margin-bottom: 1em;
+    margin-bottom: 1rem;
 }
