@@ -35,7 +35,7 @@ jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
 
 class UserInterface:
-    _css_files = ["bootstrap-4.5.3.min.css", "prism.css", "responsive.css", "layout_goe.css"]
+    _css_files = ["bootstrap-4.5.3.min.css", "prism.css", "responsive.css"]
 
     _js_files = [
         "jquery-3.5.1.min.js",
@@ -44,9 +44,6 @@ class UserInterface:
         "prism.js",
         "responsive.js",
     ]
-
-    _logo = "uni_goe_logo_white.png"
-    _alfred_logo = "alfred_logo_color.png"
 
     def __init__(self, experiment):
         self.template = jinja_env.get_template("page.html")
@@ -63,15 +60,16 @@ class UserInterface:
         self.config = {}
         self.config["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         self.config["website_title"] = self.experiment.config.get("layout", "website_title")
-        self.config["logo_url"] = self.add_logo()
         self.config["logo_text"] = self.experiment.config.get("layout", "logo_text")
         self.config["footer_text"] = self.experiment.config.get("layout", "footer_text")
 
-        with importlib.resources.path(img, self._alfred_logo) as p:
+        with importlib.resources.path(img, "alfred_logo_color.png") as p:
             self.config["alfred_logo_url"] = self.add_static_file(p, content_type="image/png")
 
         self.css_urls = []
         self.js_urls = []
+
+        self._determine_style()
 
         self._add_resources(self._js_files, "js")
         self._add_resources(self._css_files, "css")
@@ -79,27 +77,43 @@ class UserInterface:
         self.forward_enabled = True
         self.backward_enabled = True
         self.finish_enabled = True
+    
+    def _determine_style(self):
+        """Adds .css styles and logo image to the layout."""
+        style = self.experiment.config.get("layout", "style")
 
-    def add_logo(self):
-        custom_logo = self.experiment.config.get("layout", "logo")
+        if style == "base":
+            with importlib.resources.path(css, "base.css") as f:
+                url = self.add_static_file(f, content_type="text/css")
+                self.css_urls.append((10, url))
+            
+        elif style == "goe":
+            
+            with importlib.resources.path(css, "goe.css") as f:
+                url = self.add_static_file(f, content_type="text/css")
+                self.css_urls.append((10, url))
+            
+            with importlib.resources.path(img, "uni_goe_logo_white.png") as p:
+                url = self.add_static_file(p, content_type="image/png")
+                self.config["logo_url"] = url
+            
 
-        if custom_logo:
-            logo_path = Path(custom_logo).resolve()
-            if not logo_path.is_absolute():
-                logo_path = self.experiment.path / logo_path
+        elif style.endswith(".css"):
+            path = self.experiment.subpath(style)
+            url = self.add_static_file(path, content_type="text/css")
+            self.css_urls.append((10, url))
 
+            logo = self.experiment.config.get("layout", "logo")
+            logo_path = self.experiment.subpath(logo)
             if logo_path.suffix == ".png":
                 content_type = "image/png"
-            elif logo_path.suffix == ".jpg" or logo_path.suffix == ".jpeg":
+            elif logo_path.suffix in [".jpg", ".jpeg"]:
                 content_type = "image/jpeg"
-
-            return self.add_static_file(logo_path, content_type=content_type)
-
+            logo_url = self.add_static_file(logo_path, content_type=content_type)
+            self.config["logo_url"] = logo_url
+        
         else:
-            with importlib.resources.path(img, self._logo) as p:
-                url = self.add_static_file(p, content_type="image/png")
-
-            return url
+            raise ValueError("Config option 'style' in section 'layout' must be 'base', 'goe', or a valid path to a .css file.")
 
     def _add_resources(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
@@ -130,8 +144,8 @@ class UserInterface:
 
         code = {}
 
-        code["layout_css"] = self.css_urls
-        code["layout_js"] = self.js_urls
+        code["layout_css"] = sorted(self.css_urls)
+        code["layout_js"] = sorted(self.js_urls)
 
         code["css_urls"] = page.css_urls
         code["css_code"] = page.css_code
