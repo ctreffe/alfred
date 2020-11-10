@@ -17,6 +17,8 @@ def fontsize_converter(font_argument):
     with any element or page in alfred.
 
     '''
+    if font_argument is None:
+        return None
 
     if font_argument == 'normal':
         font_argument = 12
