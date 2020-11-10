@@ -365,8 +365,16 @@ class Experiment(object):
     def change_final_page(self, page):
         self.page_controller.append_item_to_finish_section(page)
 
-    def subpath(self, path):
-        return os.path.join(self.path, path)
+    def subpath(self, path: Union[str, Path]) -> Path:
+        """Returns the full path of an experiment subdirectory.
+        
+        If the given *path* is absolute, it will not be altered (but 
+        transformed to a pathlib.Path object).
+        """
+        if Path(path).is_absolute():
+            return Path(path)
+        else:
+            return Path(self.path) / path
 
     @property
     def alfred_version(self):
