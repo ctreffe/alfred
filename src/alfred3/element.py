@@ -41,6 +41,7 @@ from functools import reduce
 from uuid import uuid4
 from pathlib import Path
 from typing import Tuple, List, Union
+from dataclasses import dataclass
 
 from future import standard_library
 from future.utils import with_metaclass
@@ -1940,6 +1941,105 @@ class PasswordElement(TextEntryElement):
         data = super().codebook_data_flat
         data["password"] = self._password
         return data
+
+
+@dataclass
+class Choice:
+    label: str
+    type: str
+    id: str
+    name: str
+    checked: bool = False
+
+class ChoiceElement(InputElement):
+    element_class = "choice-element"
+
+    def __init__(self, *choice_labels, type: str, inline: bool = True, shuffle: bool = False, **kwargs):
+        super().__init__(**kwargs)
+
+        self.type = type
+        self.choices = self._define_choices(*choice_labels)
+        self.inline = inline
+        self.shuffle = shuffle
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+        if self.shuffle:
+            random.shuffle(self.choices)
+    
+    @property
+    def html(self):
+        t = jinja_env.get_template("ChoiceElement.html")
+        return t.render(choices=self.choices, inline=self.inline)
+    
+    def _define_choices(self, *choice_labels) -> list:
+        choices = []
+        for i, lab in enumerate(choice_labels, start=1):
+            choice_id = f"{self.name}_choice{i}"
+            if self.type == "radio":
+                choice_name = self.name
+            elif self.type == "checkbox":
+                choice_name = choice_id
+            choice = Choice(label = lab, type=self.type, id=choice_id, name=choice_name)
+            choices.append(choice)
+        return choices
+
+
+class SingleChoiceElement2(ChoiceElement):
+
+    element_class = "single-choice-element"
+
+    def __init__(self, *choice_labels, inline: bool = True, **kwargs):
+        super().__init__(*choice_labels, type="radio", inline=inline, **kwargs)
+
+
+class MultipleChoiceElement2(ChoiceElement):
+
+    element_class = "multiple-choice-element"
+
+    def __init__(self, *choice_labels, inline: bool = True, min: int = None, max: int = None, **kwargs):
+        super().__init__(*choice_labels, type="checkbox", inline=inline, **kwargs)
+
+        self._input = {}
+        
+        if self.default:
+            for i in self.default:
+                self.choices[i-1].checked = True
+        
+        self.min = min if min is not None else 0
+        self.max = max if max is not None else len(self.choices)
+
+        # debug
+        # min
+        # max
+        # data-validation
+    
+    def validate_data(self):
+        if not self._force_input or not self._should_be_shown:
+            return True
+        elif self.min < len(self._input) < self.max:
+            return True
+        
+        else:
+            return False
+
+    
+    @property
+    def data(self):
+        return self._input
+
+    def set_data(self, d):
+        self._input = {}
+        for choice in self.choices:
+            value = d.get(choice.name, None)
+            if value:
+                self._input[choice.name] = value
+    
+    @property
+    def html(self):
+        t = jinja_env.get_template("ChoiceElement.html")
+        return t.render(choices=self.choices, inline=self.inline)
+
 
 
 class LikertMatrix(InputElement, WebElementInterface):
