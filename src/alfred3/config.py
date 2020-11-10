@@ -7,9 +7,13 @@
 import os
 import platform
 import sys
+import importlib
+
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Union
+
+from . import files
 
 
 class ExperimentConfig(ConfigParser):
@@ -67,7 +71,6 @@ class ExperimentConfig(ConfigParser):
         self._config_objects = config_objects if config_objects is not None else []
 
         self._config_files = []
-        self._pkg_path = Path(__file__).resolve().parent
         self.expdir = Path(expdir) if expdir else None
         self._parse_alfred_config()
 
@@ -92,12 +95,11 @@ class ExperimentConfig(ConfigParser):
         """Parse all config files from different locations.
         """
 
-        default = self._pkg_path / "files" / self.global_config_name
-        with open(default, encoding="utf-8") as f:
-            self.read_file(f)
+        with importlib.resources.path(files, self.global_config_name) as f:
+            self.read(f, encoding="utf-8")
 
         self._collect_config_files()
-        self.read(self._config_files)
+        self.read(self._config_files, encoding="utf-8")
 
         for obj in self._config_objects:
             if type(obj) not in [str, dict]:
