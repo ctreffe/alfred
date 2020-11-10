@@ -30,10 +30,15 @@
     
     <div class="container-fluid d-flex justify-content-center logo-bg {% if not d.get('responsive') %} min-width {% endif %}">
         <div class="logo-content {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}">
+            {% if d.get('logo_url') %}
             <img src="{{ d.get('logo_url') }}" class="float-left logo" alt="Logo">
             <span
                 class="float-right text-right logo-text {% if d.get('responsive') %} logo-text-responsive {% endif %}  small">{{ d.get('logo_text') }}</span>
-        </div>
+            {% else %}
+            <div
+                class="text-right logo-text {% if d.get('responsive') %} logo-text-responsive {% endif %}  small">{{ d.get('logo_text') }}</div>
+            {% endif %}
+            </div>
     </div>
 
     {% block page %}
