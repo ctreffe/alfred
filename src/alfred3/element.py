@@ -3874,10 +3874,7 @@ class Css(Element):
 
     def prepare_web_widget(self):
         if self.path:
-            if not self.path.is_absolute():
-                p = self.experiment.path / self.path
-            else:
-                p = self.path
+            p = self.experiment.subpath(self.path)
 
             code = p.read_text()
             self.css_code += [(self.priority, code)]
@@ -3900,10 +3897,7 @@ class JavaScript(Element):
 
     def prepare_web_widget(self):
         if self.path:
-            if not self.path.is_absolute():
-                p = self.experiment.path / self.path
-            else:
-                p = self.path
+            p = self.experiment.subpath(self.path)
 
             code = p.read_text()
             self.js_code += [(self.priority, code)]
