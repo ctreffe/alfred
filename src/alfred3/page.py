@@ -428,7 +428,16 @@ class CoreCompositePage(PageCore):
 
             if elmnt.name in self._element_dict:
                 raise ValueError("Element name must be unique on Page.")
+            
+            try:
+                if hasattr(self, elmnt.name):
+                    raise ValueError((f"Element name '{elmnt.name}' is also an attribute of {self}." 
+                "Please choose a different name."))
+            except KeyError:
+                pass
+
             self._element_dict[elmnt.name] = element
+
 
     def generate_element_name(self, element):
         i = self._element_name_counter
@@ -440,6 +449,13 @@ class CoreCompositePage(PageCore):
     def __iadd__(self, other):
         self.append(other)
         return self
+    
+    def __getattr__(self, name):
+        """Enables element access via dot notation."""
+        try:
+            return self.element_dict[name]
+        except KeyError:
+            raise KeyError(f"No element of name '{name}' found on page {self}.")
 
     @property
     def element_list(self):
