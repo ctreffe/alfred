@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
         - css_urls
         - js_code
         - js_urls
+        - html (For deriving child classes)
+        - template_data
 
 * TextElement
     - Now supports Markdown
@@ -34,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
         - path
 
 * InputElement
+    - revamped as an even stronger base clase for input elements
 
 * TextEntryElement
     - New parameters
