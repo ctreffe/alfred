@@ -1019,7 +1019,8 @@ class DataElement(Element, WebElementInterface):
 class InputElement(Element):
     """Base class for elements that allow data input.
 
-    This class handles the logic und layouting for input elments.
+    This class handles the logic und layouting of instructions for input 
+    elements.
 
     Args:
         instruction: Instruction to be displayed with the field. Can
