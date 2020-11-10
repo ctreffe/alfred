@@ -7,31 +7,32 @@
         class="{% if responsive %} col-12 {{ instruction_width }} {% else %} col-{{ instruction_width }} {% endif %} col-form-label"
         style="{{ instruction_height}}">{{ instruction }}</label>
     <div
-        class="{% if responsive %} col-12 {{ input_width }} {% else %} col-{{ input_width }} {% endif %} input-group">
+        class="{% if responsive %} col-12 {{ input_width }} {% else %} col-{{ input_width }} {% endif %}">
 
-        {# Prefix #}
-        {% if prefix %}
-        <div class="input-group-prepend">
-            <div class="input-group-text"> {{ prefix }}</div>
-        </div>
+        
+
+        {% if html %} 
+        <!-- Inject element html directly (convenient for custom elements) -->
+        
+        {{ html | safe}} 
+
+        {% else %}
+        <!-- Element html via jinja template extension (preferred, if possible) -->
+
+        {% block input_element %}
+        {% endblock input_element %}
+        
         {% endif %}
 
-        {% block element_class %}
+        
 
-        {% endblock element_class %}
-
-        {# Suffix #}
-        {% if suffix %}
-        <div class="input-group-append">
-            <div class="input-group-text"> {{ suffix }}</div>
-        </div>
-        {% endif %}
-    </div>
+        
     {% if corrective_hint %}
     <div class="col-12 corrective-hint">
         {{ corrective_hint }}
     </div>
     {% endif %}
+    </div>
 </div>
 
 

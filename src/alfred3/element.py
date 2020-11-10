@@ -64,6 +64,50 @@ class Element(ABC):
     Elements are derived from this class. Most of them inherit its 
     arguments, attributes, and methods, unless stated otherwise.
 
+    The simplest way to subclass *Element* is by defining the 
+    *html* attribute::
+
+        class NewElement(Element):
+
+            html = "Element html goes <b>here</b>"
+    
+    For most cases, you will want some additional control over the 
+    attribute. Maybe you even want to use your own jinja template. 
+    You can achieve that by defining *html* it as a property, which 
+    returns your desired html code::
+
+        from jinja2 import Template
+
+        class NewElement(Element):
+
+            @property
+            def html(self):
+                t = Template("Element html goes <b>{{ text }}</b>")
+                return t.render(text="here")
+    
+    Both of the above methods utilise alfred's basic element html 
+    template and inject your code into it, which allows the basic layout
+    and logic to simply translate to your new element.
+
+    .. note::
+        All elements that are derived in this way receive a CSS class
+        of their class name, which can be used for css styling (i.e. a
+        new element 'ExampleElement' receives the CSS class 
+        'ExampleElement'). Further, all elements receive a html element
+        ID of the form 'elid-<name>', where <name> is replaced by the
+        element's name attribute. This can be used to style individual
+        elements via CSS.
+    
+    If you want full control over the element's html template, you can
+    redefine the *responsive_widget* property. This will overwrite the
+    basic html layouting functionality. Example::
+
+        class NewElement(Element):
+
+            @property
+            def responsive_widget(self):
+                return "This property should return your full desired code."
+
     Args:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
@@ -119,10 +163,13 @@ class Element(ABC):
     .. [#log] see https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
     """
 
+    responsive_template = jinja_env.get_template("Element.html")
+    html = None
+
     def __init__(
         self,
         name: str = None,
-        font_size: str = "normal",
+        font_size: str = None,
         align: str = "left",
         width: str = "full",
         position: str = "center",
@@ -352,14 +399,16 @@ class Element(ABC):
         return None
 
     @property
-    def template_values(self):
+    def template_data(self):
         d = {}
+        d["element_class"] = self.element_class
         d["name"] = self.name
         d["position"] = self.position
         d["element_width"] = self.element_width
         d["hide"] = "hide" if self._showif_on_current_page is True else ""
         d["align"] = f"text-{self.align}"
-        d["style"] = f"font-size: {self.font_size}pt;"
+        d["style"] = f"font-size: {self.font_size}pt;" if self.font_size else ""
+        d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         return d
 
     # Private methods start here ---------------------------------------
@@ -530,15 +579,30 @@ class Element(ABC):
 
     # abstract attributes start here -----------------------------------
 
-    @abstractproperty
+    @property
     def web_widget(self):
         """Every child class *must* redefine the web widget.
         
         This is the html-code that defines the element's display on the
         screen.
+
+        *Changed in v1.5*: No longer an abstractmethod, i.e. child 
+        classes do not have to redefine the web widget. It has no effect
+        in the new responsive layout. Define the *html* property
+        instead for your custom elements.
         """
         pass
+    
+    @property
+    def responsive_widget(self):
+        d = self.template_data
+        d["html"] = self.html
+        d["base_template"] = True
+        return self.responsive_template.render(d)
 
+    @property
+    def element_class(self):
+        return type(self).__name__
 
 class WebElementInterface:
     """
@@ -702,6 +766,8 @@ class TextElement(Element, WebElementInterface):
     .. [#md]: https://guides.github.com/features/mastering-markdown/
     """
 
+    element_class = "text-element"
+
     def __init__(
         self,
         text: str = None,
@@ -714,7 +780,6 @@ class TextElement(Element, WebElementInterface):
 
         """Constructor method."""
         super(TextElement, self).__init__(width=width, **element_args)
-        self._template = jinja_env.get_template("TextElement.html")
 
         self._text = text
         self._text_width = text_width
@@ -727,6 +792,11 @@ class TextElement(Element, WebElementInterface):
 
         if text_width:
             self.log.warning("The parameter 'text_width' is deprecated. Please use 'width'.")
+
+    @property
+    def html(self):
+        t = jinja_env.get_template("TextElement.html")
+        return t.render(self.template_data)
 
     @property
     def text(self):
@@ -762,16 +832,14 @@ class TextElement(Element, WebElementInterface):
             return "col-9"
 
     @property
-    def responsive_widget(self):
-        d = self.template_values
-        d["element_class"] = "text-element"
-
+    def template_data(self) -> dict:
+        d = super().template_data
         d["text"] = self.rendered_text
         width = f"width: {self._text_width}px;" if self._text_width is not None else ""
         height = f"height: {self._text_height}px;" if self._text_height is not None else ""
         d["style"] += f"{width} {height}"
 
-        return self._template.render(d)
+        return d
 
     @property
     def web_widget(self):
@@ -949,129 +1017,9 @@ class DataElement(Element, WebElementInterface):
 
 
 class InputElement(Element):
-    """
-    Class **InputElement** is the base class for any element allowing data input.
+    """Base class for elements that allow data input.
 
-    :param bool force_input: Sets user input to be mandatory (False as standard or True).
-    :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-
-    .. todo:: Parent class :class:`.element.Element` has method *corrective_hints()*, but not sure why this is necessary, since corrective_hints only make sense in input elements, right?
-    """
-
-    def __init__(
-        self,
-        force_input=False,
-        no_input_corrective_hint=None,
-        debug_string=None,
-        debug_value=None,
-        default=None,
-        description=None,
-        **kwargs,
-    ):
-        super(InputElement, self).__init__(**kwargs)
-        self._input = ""
-        self._force_input = force_input
-        self._no_input_corrective_hint = no_input_corrective_hint
-        self._debug_string = debug_string
-        self._debug_value = debug_value
-        self.description = description
-        self.default = default
-
-        if not self._debug_value:
-            if self._debug_string:
-                self._debug_value = self._debug_string
-
-        if default is not None:
-            self._input = default
-
-        if self._force_input and (self._showif_on_current_page or self.showif):
-            raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
-
-    def added_to_experiment(self, experiment):
-        super().added_to_experiment(experiment)
-
-        if self.experiment.config.getboolean("general", "debug"):
-            if self._debug_value:
-                self._input = self._debug_value
-            else:
-                cls_name = self.__class__.__name__
-                self._input = self.experiment.config.get("debug", cls_name, fallback=cls_name)
-
-    def validate_data(self):
-        return not self._force_input or not self._should_be_shown or bool(self._input)
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and self._input == "":
-            return [self.no_input_hint]
-        else:
-            return super(InputElement, self).corrective_hints
-
-    @property
-    def no_input_hint(self):
-        if self._no_input_corrective_hint:
-            return self._no_input_corrective_hint
-        return self.default_no_input_hint
-
-    @property
-    def default_no_input_hint(self):
-        if self._page and self._page._experiment:
-            hints = self._page._experiment.settings.hints
-            name = type(self).__name__
-            no_input_name = ("no_input%s" % name).lower()
-            if no_input_name in hints:
-                return hints[no_input_name]
-
-        self.log.error(f"Can't access default no input hint for element {self}")
-        return f"Can't access default no input hint for element {type(self).__name__}"
-
-    @property
-    def data(self):
-        return {self.name: self._input}
-
-    @property
-    def encrypted_data(self):
-        enrcypted_dict = {}
-        for k, v in self.data.items():
-            try:
-                enrcypted_dict[k] = self.experiment.encrypt(v)
-            except TypeError:
-                if isinstance(v, list):
-                    v = [self.experiment.encrypt(entry) for entry in v]
-                enrcypted_dict[k] = v
-
-        return enrcypted_dict
-
-    def set_data(self, d):
-        if self.enabled:
-            self._input = d.get(self.name, "")
-
-    @property
-    def codebook_data_flat(self):
-        from . import page
-
-        data = {}
-        data["name"] = self.name
-        data["tree"] = self.tree.replace("rootSection_", "")
-        data["identifier"] = self.identifier
-        data["page_title"] = self.page.title
-        data["element_type"] = type(self).__name__
-        data["force_input"] = self._force_input
-        data["default"] = self.default
-        data["description"] = self.description
-        data["duplicate_identifier"] = False
-        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
-        return data
-
-    @property
-    def codebook_data(self):
-        return {self.identifier: self.codebook_data_flat}
-
-
-class TextEntryElement(InputElement, WebElementInterface):
-    """Provides a text entry field.
+    This class handles the logic und layouting for input elments.
 
     Args:
         instruction: Instruction to be displayed with the field. Can
@@ -1092,21 +1040,6 @@ class TextEntryElement(InputElement, WebElementInterface):
             `instruction_col_width` instead, when using the responsive 
             design.
         instruction_height: Minimum vertical size of instruction label.
-        prefix: Prefix for the input field.
-        suffix: Suffix for the input field.
-        placeholder: Placeholder text, displayed inside the input field.
-        default: Default value.
-        alignment: Alignment of instruction text. Values can
-            be 'left' (default), 'center', 'right', and 'justify'.
-        position: Horizontal position of the full element on the 
-                page. Values can be 'left', 'center' (default), 'end',
-                or any valid value for the justify-content flexbox
-                utility (see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content).
-        width: Defines the horizontal width of the element from 
-                small screens upwards. It's always full-width on extra
-                small screens. Possible values are 'narrow', 'medium',
-                'wide', and 'full' (default). For more detailed control, 
-                you can define the *element_width* attribute.
         force_input: If `True`, users can only progress to the next page
             if they enter data into this field. **Note** that this works
             only in HeadOpenSections and SegmentedSections, not in plain
@@ -1118,6 +1051,9 @@ class TextEntryElement(InputElement, WebElementInterface):
             automatically, when the experiment is started in debug mode.
         debug_string: A deprecated version of debug_value. Please use
             debug_value.
+        default: Default value.
+        **kwargs: Further keyword arguments that are passed on to the
+            parent class :class:`Element`.
     
     Attributes:
         instruction_col_width: Width of the instruction area, using
@@ -1128,65 +1064,61 @@ class TextEntryElement(InputElement, WebElementInterface):
             between 1 and 12 here to fine-tune the input area width.
     """
 
+    responsive_template = jinja_env.get_template("InputElement.html")
+    html = None
+
     def __init__(
         self,
-        instruction="",
+        instruction: str = None,
         instruction_inline: bool = None,
         instruction_inline_width: str = "medium",
         instruction_width: int = None,
         instruction_height: int = None,
-        prefix: str = None,
-        suffix: str = None,
-        placeholder: str = "",
-        no_input_corrective_hint: str = None,
+        
+        force_input: bool=False,
+        no_input_corrective_hint: str=None,
+        debug_string: str=None,
+        debug_value=None,
+        default=None,
+        description: str=None,
         **kwargs,
     ):
-        """Constructor method."""
-        super(TextEntryElement, self).__init__(
-            no_input_corrective_hint=no_input_corrective_hint, **kwargs
-        )
-
+        super(InputElement, self).__init__(**kwargs)
+        self.description = description
+        
+        self._instruction = instruction
         self.instruction_inline = instruction_inline
         self.instruction_inline_width = instruction_inline_width
         self._instruction_width = instruction_width
         self._instruction_height = instruction_height
-        self._instruction = cmarkgfm.github_flavored_markdown_to_html(instruction)
-        self._prefix = prefix
-        self._suffix = suffix
-        self._placeholder = placeholder
 
         self.instruction_col_width = None
         self.input_col_width = None
 
-        self.responsive_template = jinja_env.get_template("TextEntryElement.html")
+        self._input = ""
+        self._force_input = force_input
+        self._no_input_corrective_hint = no_input_corrective_hint
+        self._debug_string = debug_string
+        self._debug_value = debug_value
+        self.default = default
 
-        self._template = Template(
-            """
-        <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
-        <tr><td valign="bottom"><table class="{{ alignment }}"><tr><td style="padding-right: 5px;{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td>
-        <td valign="bottom">
-        {% if prefix or suffix %}
-            <div class="{% if prefix %}input-prepend {% endif %}{% if suffix %}input-append {% endif %}" style="margin-bottom: 0px;">
-        {% endif %}
-        {% if prefix %}
-            <span class="add-on">{{prefix}}</span>
-        {% endif %}
-        <input class="text-input" type="text" style="font-size: {{ fontsize }}pt; margin-bottom: 0px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %} />
-        {% if suffix %}
-            <span class="add-on">{{suffix}}</span>
-        {% endif %}
-        {% if prefix or suffix %}
-            </div>
-        {% endif %}
+        if not self._debug_value:
+            if self._debug_string:
+                self._debug_value = self._debug_string
 
-        </td></tr></table></td></tr>
-        {% if corrective_hint %}
-            <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
-        {% endif %}
-        </table></div>
+        if default is not None:
+            self._input = default
 
-        """
-        )
+        if self._force_input and (self._showif_on_current_page or self.showif):
+            raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+    
+    @property
+    def instruction(self):
+        return self._instruction
+
+    @property
+    def rendered_instruction(self):
+        return cmarkgfm.github_flavored_markdown_to_html(self.instruction)
 
     @property
     def instruction_inline(self):
@@ -1251,29 +1183,206 @@ class TextEntryElement(InputElement, WebElementInterface):
         self._instruction_inline_width = value
 
     @property
-    def responsive_widget(self):
-
-        d = {}
-        d["name"] = self.name
-        d["hide"] = "hide" if self._showif_on_current_page is True else ""
-        d["element_width"] = self.element_width
-        d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
+    def template_data(self) -> dict:
+        d = super().template_data
         if self._input:  # using input here to cover default and debug_value simultaneously
             d["default"] = self._input
+        
+        d["instruction"] = self.rendered_instruction
         d["instruction_width"] = self.instruction_col_width
         d["instruction_height"] = f"height: {self._instruction_height};"
         d["input_width"] = self.input_col_width
+        
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
+        
+        return d
 
-        d["placeholder"] = self._placeholder
-        d["instruction"] = self._instruction
-        d["align"] = f"text-{self._alignment}"
-        d["position"] = self.position
-        d["prefix"] = self._prefix
-        d["suffix"] = self._suffix
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
 
+        if self.experiment.config.getboolean("general", "debug"):
+            if self._debug_value:
+                self._input = self._debug_value
+            else:
+                cls_name = self.__class__.__name__
+                self._input = self.experiment.config.get("debug", cls_name, fallback=cls_name)
+
+    def validate_data(self):
+        return not self._force_input or not self._should_be_shown or bool(self._input)
+
+    @property
+    def corrective_hints(self):
+        if not self.show_corrective_hints:
+            return []
+        if self._force_input and self._input == "":
+            return [self.no_input_hint]
+        else:
+            return super(InputElement, self).corrective_hints
+
+    @property
+    def no_input_hint(self):
+        if self._no_input_corrective_hint:
+            return self._no_input_corrective_hint
+        return self.default_no_input_hint
+
+    @property
+    def default_no_input_hint(self):
+        if self._page and self._page._experiment:
+            hints = self._page._experiment.settings.hints
+            name = type(self).__name__
+            no_input_name = ("no_input%s" % name).lower()
+            if no_input_name in hints:
+                return hints[no_input_name]
+
+        self.log.error(f"Can't access default no input hint for element {self}")
+        return f"Can't access default no input hint for element {type(self).__name__}"
+
+    @property
+    def data(self):
+        return {self.name: self._input}
+
+    @property
+    def encrypted_data(self):
+        """Returns the element's data with encrypted values."""
+        enrcypted_dict = {}
+        for k, v in self.data.items():
+            try:
+                enrcypted_dict[k] = self.experiment.encrypt(v)
+            except TypeError:
+                if isinstance(v, list):
+                    v = [self.experiment.encrypt(entry) for entry in v]
+                enrcypted_dict[k] = v
+
+        return enrcypted_dict
+
+    def set_data(self, d):
+        if self.enabled:
+            self._input = d.get(self.name, "")
+
+    @property
+    def codebook_data_flat(self):
+        from . import page
+
+        data = {}
+        data["name"] = self.name
+        data["instruction"] = self.instruction
+        data["tree"] = self.tree.replace("rootSection_", "")
+        data["identifier"] = self.identifier
+        data["page_title"] = self.page.title
+        data["element_type"] = type(self).__name__
+        data["force_input"] = self._force_input
+        data["default"] = self.default
+        data["description"] = self.description
+        data["duplicate_identifier"] = False
+        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
+        return data
+
+    @property
+    def codebook_data(self):
+        return {self.identifier: self.codebook_data_flat}
+    
+    @property
+    def element_class(self):
+        pass
+
+    @property
+    def responsive_widget(self):
+        d = self.template_data
+        d["html"] = self.html
+        d["base_template"] = False
         return self.responsive_template.render(d)
+
+class TextEntryElement(InputElement, WebElementInterface):
+    """Provides a text entry field.
+
+    Args:
+        instruction: Instruction to be displayed with the field. Can
+            contain GitHub flavored Markdown and html.
+        prefix: Prefix for the input field.
+        suffix: Suffix for the input field.
+        placeholder: Placeholder text, displayed inside the input field.
+        default: Default value.
+        **kwargs: Further keyword arguments that are passed on to the
+            parent class :class:`InputElement`.
+        
+    """
+
+    element_class = "text-entry-element"
+
+    def __init__(
+        self,
+        instruction: str = None,
+        prefix: str = None,
+        suffix: str = None,
+        placeholder: str = None,
+        **kwargs,
+    ):
+        """Constructor method."""
+        super(TextEntryElement, self).__init__(instruction=instruction, **kwargs
+        )
+
+        self._prefix = prefix
+        self._suffix = suffix
+        self._placeholder = placeholder if placeholder is not None else ""
+
+        self.instruction_col_width = None
+        self.input_col_width = None
+
+
+        self._template = Template(
+            """
+        <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
+        <tr><td valign="bottom"><table class="{{ alignment }}"><tr><td style="padding-right: 5px;{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td>
+        <td valign="bottom">
+        {% if prefix or suffix %}
+            <div class="{% if prefix %}input-prepend {% endif %}{% if suffix %}input-append {% endif %}" style="margin-bottom: 0px;">
+        {% endif %}
+        {% if prefix %}
+            <span class="add-on">{{prefix}}</span>
+        {% endif %}
+        <input class="text-input" type="text" style="font-size: {{ fontsize }}pt; margin-bottom: 0px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %} />
+        {% if suffix %}
+            <span class="add-on">{{suffix}}</span>
+        {% endif %}
+        {% if prefix or suffix %}
+            </div>
+        {% endif %}
+
+        </td></tr></table></td></tr>
+        {% if corrective_hint %}
+            <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
+        {% endif %}
+        </table></div>
+
+        """
+        )
+    
+    @property
+    def prefix(self):
+        return self._prefix
+    
+    @property
+    def suffix(self):
+        return self._suffix
+    
+    @property
+    def placeholder(self):
+        return self._placeholder
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["placeholder"] = self.placeholder
+        d["prefix"] = self.prefix
+        d["suffix"] = self.suffix
+        return d
+
+    @property
+    def html(self):
+        t = jinja_env.get_template("TextEntryElement.html")
+        d = self.template_data
+        return t.render(d)
 
     @property
     def web_widget(self):
@@ -1304,14 +1413,6 @@ class TextEntryElement(InputElement, WebElementInterface):
             return False
 
         return True
-
-    def set_data(self, d):
-        """
-        .. todo:: No data can be set when using qt interface (compare web interface functionality). Is this a problem?
-        .. update (20.02.2019) removed qt depencies
-        """
-        if self.enabled:
-            super(TextEntryElement, self).set_data(d)
 
     @property
     def codebook_data_flat(self):

@@ -1,7 +1,20 @@
-{% extends 'InputElement.html' %}
+<div class="input-group">
+{# Prefix #}
+{% if prefix %}
+<div class="input-group-prepend">
+    <div class="input-group-text"> {{ prefix }}</div>
+</div>
+{% endif %}
 
-{% block element_class %}
 {# Main Input #}
-<input type="text" class="form-control input-element input-field" id="{{ name }}" placeholder="{{ placeholder }}"
-    name="{{ name }}" {% if default %} value="{{ default }}" {% endif %}">
-{% endblock element_class %}
+<input type="text" class="form-control input-field" id="{{ name }}" placeholder="{{ placeholder }}"
+    name="{{ name }}" {% if default %} value="{{ default }}" {% endif %}>
+
+{# Suffix #}
+{% if suffix %}
+<div class="input-group-append">
+    <div class="input-group-text"> {{ suffix }}</div>
+</div>
+{% endif %}
+
+</div>

@@ -1,6 +1,18 @@
-<div class="row element d-flex justify-content-{{ position }} {{ hide }}" id="elid-{{ name }}" style="{{ style }}">
-    <div class="{{ element_width }} {{ element_class }} {{ align }}">
+<div class="row element d-flex justify-content-{{ position }} {{ hide }} {{ element_class }}" id="elid-{{ name }}" style="{{ style }}">
+    <div class="{{ element_width }} {{ align }}">
+
+        
+        {% if base_template and html %} 
+        <!-- Inject element html directly (convenient for custom elements) -->
+        
+        {{ html | safe}} 
+
+        {% else %}
+        <!-- Element html via jinja template extension (preferred, if possible) -->
+
         {% block element %}
         {% endblock element %}
+        
+        {% endif %}
     </div>
 </div>
