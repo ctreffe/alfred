@@ -1978,8 +1978,10 @@ class ChoiceElement(InputElement, ABC):
         self.choices = self.define_choices()
         if self.shuffle:
             random.shuffle(self.choices)
-        
-        self.css_code += [(7, f"#choice-button-group-{self.name} {{width: {self.button_group_width};}}")]
+
+        self.css_code += [
+            (7, f"#choice-button-group-{self.name} {{width: {self.button_group_width};}}")
+        ]
 
     @property
     def html(self):
@@ -1990,7 +1992,6 @@ class ChoiceElement(InputElement, ABC):
     def define_choices(self) -> list:
         pass
 
-    
 
 class SingleChoiceElement2(ChoiceElement):
 
@@ -2021,7 +2022,12 @@ class SingleChoiceButtons(SingleChoiceElement2):
     @property
     def html(self):
         t = jinja_env.get_template("ChoiceButtons.html")
-        return t.render(choices=self.choices, inline=self.inline, name=self.name, button_style=self.button_style)
+        return t.render(
+            choices=self.choices,
+            inline=self.inline,
+            name=self.name,
+            button_style=self.button_style,
+        )
 
 
 class MultipleChoiceElement2(ChoiceElement):
@@ -2330,9 +2336,18 @@ class Stack(Row):
 class SingleChoiceRow(Row):
 
     element_class = "single-choice-row"
+    RowChoiceElement = SingleChoiceButtons
 
     def __init__(
-        self, *choices, leftlab: str = None, rightlab: str = None, instruction: str = None, name: str = None, valign_cols: List[str] = None, inline: bool = True,
+        self,
+        *choices,
+        leftlab: str = None,
+        rightlab: str = None,
+        instruction: str = None,
+        name: str = None,
+        valign_cols: List[str] = None,
+        inline: bool = True,
+        choice_args: dict = None,
     ):
         super().__init__(name=name, valign_cols=valign_cols)
         self.row_instruction = TextElement(text=instruction, width="full", align="center")
@@ -2345,11 +2360,11 @@ class SingleChoiceRow(Row):
         self.rightlab = rightlab
 
         # initialize buttons
-        self.choice_buttons = SingleChoiceButtons(*choices, inline=self.inline)
+        self.choice_buttons = self.RowChoiceElement(*choices, inline=self.inline, **choice_args)
 
         # fill elements
         self.elements = [self.leftlab, self.choice_buttons, self.rightlab]
-        
+
         # default for vertical placement
         if not valign_cols:
             self._valign_cols = ["center" for el in self.elements]
@@ -2363,11 +2378,11 @@ class SingleChoiceRow(Row):
             self.width_sm = [9, 3]
         else:
             self.width_sm = [12]
-    
+
     @property
     def elements(self):
         return self._elements
-    
+
     @elements.setter
     def elements(self, value: list):
         self._elements = [x for x in value if x is not None]
@@ -2375,25 +2390,25 @@ class SingleChoiceRow(Row):
     @property
     def leftlab(self):
         return self._leftlab
-        
+
     @leftlab.setter
     def leftlab(self, value):
         if value is not None:
             self._leftlab = TextElement(text=value, width="full", align="right")
         else:
             self._leftlab = None
-    
+
     @property
     def rightlab(self):
         return self._rightlab
-        
+
     @rightlab.setter
     def rightlab(self, value):
         if value is not None:
             self._rightlab = TextElement(text=value, width="full", align="left")
         else:
             self._rightlab = None
-    
+
     @property
     def responsive_widget(self):
         w = super().responsive_widget
@@ -2417,12 +2432,16 @@ class SingleChoiceRow(Row):
     def prepare_web_widget(self):
         super().prepare_web_widget()
 
-        css = f"#leftlab_{self.name} > p, #rightlab_{self.name} > p {{margin-top: 1rem;}}" # fix label display 
+        css = f"#leftlab_{self.name} > p, #rightlab_{self.name} > p {{margin-top: 1rem;}}"  # fix label display
         self.css_code += [(7, css)]
-        self.css_code += [(7, f"#elid-{self.row_instruction.name} {{margin-bottom: -1.2rem;}}")] # fix instruction display
-        
+        self.css_code += [
+            (7, f"#elid-{self.row_instruction.name} {{margin-bottom: -1.2rem;}}")
+        ]  # fix instruction display
+
         if self.button_min_width:
-            self.css_code += [(7, f".choice-button {{min-width: {self.button_min_width};}}")] # set button width
+            self.css_code += [
+                (7, f".choice-button {{min-width: {self.button_min_width};}}")
+            ]  # set button width
 
 
 class LikertMatrix(InputElement, WebElementInterface):
