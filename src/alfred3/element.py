@@ -593,7 +593,7 @@ class Element(ABC):
         instead for your custom elements.
         """
         pass
-    
+
     @property
     def responsive_widget(self):
         d = self.template_data
@@ -604,6 +604,7 @@ class Element(ABC):
     @property
     def element_class(self):
         return type(self).__name__
+
 
 class WebElementInterface:
     """
