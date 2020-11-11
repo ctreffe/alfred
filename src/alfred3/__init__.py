@@ -290,6 +290,10 @@ class Experiment(object):
         self.log.info("Experiment.finish() called. Session is finishing.")
         self._finished = True
         self._page_controller.change_to_finished_section()
+        if self.config.getboolean("general", "debug"):
+            if self.config.getboolean("debug", "disable_saving"):
+                return
+        
         self.save_data()
 
         if self.config.getboolean("general", "transform_data_to_csv"):

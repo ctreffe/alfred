@@ -207,6 +207,10 @@ class SavingAgent(ABC):
                     initially, but succeed with at least one fallback
                     saving agent.
         """
+        if self._experiment.config.getboolean("general", "debug"):
+            if self._experiment.config.getboolean("debug", "disable_saving"):
+                self.log.debug(f"[DEBUG mode]: Saving disabled. 'save_data' was called on {self}.")
+                return (True, "success")
 
         self._lock.acquire()
 
