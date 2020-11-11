@@ -782,7 +782,7 @@ class TextElement(Element, WebElementInterface):
         """Constructor method."""
         super(TextElement, self).__init__(width=width, **element_args)
 
-        self._text = text
+        self._text = text if text is not None else ""
         self._text_width = text_width
         self._text_height = text_height
         self._text_label = None
@@ -1068,6 +1068,7 @@ class InputElement(Element):
 
     responsive_template = jinja_env.get_template("InputElement.html")
     html = None
+    can_display_corrective_hints_in_line = True
 
     def __init__(
         self,
@@ -1076,19 +1077,16 @@ class InputElement(Element):
         instruction_inline_width: str = "medium",
         instruction_width: int = None,
         instruction_height: int = None,
-        
-        force_input: bool=False,
-        no_input_corrective_hint: str=None,
-        debug_string: str=None,
-        debug_value=None,
+        force_input: bool = False,
+        no_input_corrective_hint: str = None,
         default=None,
-        description: str=None,
+        description: str = None,
         **kwargs,
     ):
         super(InputElement, self).__init__(**kwargs)
         self.description = description
-        
-        self._instruction = instruction
+
+        self._instruction = instruction if instruction else ""
         self.instruction_inline = instruction_inline
         self.instruction_inline_width = instruction_inline_width
         self._instruction_width = instruction_width
@@ -1100,20 +1098,39 @@ class InputElement(Element):
         self._input = ""
         self._force_input = force_input
         self._no_input_corrective_hint = no_input_corrective_hint
-        self._debug_string = debug_string
-        self._debug_value = debug_value
-        self.default = default
-
-        if not self._debug_value:
-            if self._debug_string:
-                self._debug_value = self._debug_string
+        self._default = default
 
         if default is not None:
             self._input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
-    
+
+    @property
+    def debug_value(self):
+        name = f"{type(self).__name__}_default"
+        return self.experiment.config.get("debug", name, fallback=None)
+
+    @property
+    def debug_enabled(self) -> bool:
+        if self.experiment.config.getboolean("general", "debug"):
+            if self.experiment.config.getboolean("debug", "set_default_values"):
+                return True
+        return False
+
+    @property
+    def default(self):
+        if self._default:
+            return self._default
+        elif self.debug_enabled:
+            return self.debug_value
+        else:
+            return None
+
+    @property
+    def force_input(self):
+        return self._force_input
+
     @property
     def instruction(self):
         return self._instruction
@@ -1187,28 +1204,19 @@ class InputElement(Element):
     @property
     def template_data(self) -> dict:
         d = super().template_data
-        if self._input:  # using input here to cover default and debug_value simultaneously
-            d["default"] = self._input
-        
+        d["default"] = self.default
+
         d["instruction"] = self.rendered_instruction
         d["instruction_width"] = self.instruction_col_width
-        d["instruction_height"] = f"height: {self._instruction_height};"
+        d["instruction_style"] = (
+            f"height: {self._instruction_height};" if self._instruction_height else ""
+        )
         d["input_width"] = self.input_col_width
-        
+
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
-        
+
         return d
-
-    def added_to_experiment(self, experiment):
-        super().added_to_experiment(experiment)
-
-        if self.experiment.config.getboolean("general", "debug"):
-            if self._debug_value:
-                self._input = self._debug_value
-            else:
-                cls_name = self.__class__.__name__
-                self._input = self.experiment.config.get("debug", cls_name, fallback=cls_name)
 
     def validate_data(self):
         return not self._force_input or not self._should_be_shown or bool(self._input)
@@ -1217,7 +1225,7 @@ class InputElement(Element):
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-        if self._force_input and self._input == "":
+        if self._force_input and not self._input:
             return [self.no_input_hint]
         else:
             return super(InputElement, self).corrective_hints
@@ -1230,19 +1238,20 @@ class InputElement(Element):
 
     @property
     def default_no_input_hint(self):
-        if self._page and self._page._experiment:
-            hints = self._page._experiment.settings.hints
-            name = type(self).__name__
-            no_input_name = ("no_input%s" % name).lower()
-            if no_input_name in hints:
-                return hints[no_input_name]
+        name = f"no_input{type(self).__name__}"
+        return self.experiment.config.get("hints", name, fallback="You need to enter something.")
 
-        self.log.error(f"Can't access default no input hint for element {self}")
-        return f"Can't access default no input hint for element {type(self).__name__}"
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
 
     @property
     def data(self):
-        return {self.name: self._input}
+        return {self.name: self.input}
 
     @property
     def encrypted_data(self):
@@ -1283,7 +1292,7 @@ class InputElement(Element):
     @property
     def codebook_data(self):
         return {self.identifier: self.codebook_data_flat}
-    
+
     @property
     def element_class(self):
         pass
@@ -1294,6 +1303,7 @@ class InputElement(Element):
         d["html"] = self.html
         d["base_template"] = False
         return self.responsive_template.render(d)
+
 
 class TextEntryElement(InputElement, WebElementInterface):
     """Provides a text entry field.
@@ -1321,8 +1331,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         **kwargs,
     ):
         """Constructor method."""
-        super(TextEntryElement, self).__init__(instruction=instruction, **kwargs
-        )
+        super(TextEntryElement, self).__init__(instruction=instruction, **kwargs)
 
         self._prefix = prefix
         self._suffix = suffix
@@ -1330,7 +1339,6 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         self.instruction_col_width = None
         self.input_col_width = None
-
 
         self._template = Template(
             """
@@ -1359,19 +1367,19 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         """
         )
-    
+
     @property
     def prefix(self):
         return self._prefix
-    
+
     @property
     def suffix(self):
         return self._suffix
-    
+
     @property
     def placeholder(self):
         return self._placeholder
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -1403,10 +1411,6 @@ class TextEntryElement(InputElement, WebElementInterface):
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
         return self._template.render(d)
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return True
 
     def validate_data(self):
         super(TextEntryElement, self).validate_data()
