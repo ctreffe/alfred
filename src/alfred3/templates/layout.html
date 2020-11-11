@@ -16,11 +16,11 @@
     <link rel="stylesheet" href="{{ url }}">
     {% endfor %}
 
-    {% for _, css in code.get("css_code") %}
     <style type="text/css">
+    {% for _, css in code.get("css_code") %}
         {{ css }}
-    </style>
     {% endfor %}
+    </style>
 
     <title>{{ d.get('website_title') }}</title>
 </head>
