@@ -1049,10 +1049,6 @@ class InputElement(Element):
         description: An additional description of the element. This will
             show up in the additional alfred-generated codebook. It has
             no effect on the display of the experiment.
-        debug_value: A value that will be inserted for the element 
-            automatically, when the experiment is started in debug mode.
-        debug_string: A deprecated version of debug_value. Please use
-            debug_value.
         default: Default value.
         **kwargs: Further keyword arguments that are passed on to the
             parent class :class:`Element`.
