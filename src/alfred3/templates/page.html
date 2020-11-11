@@ -46,6 +46,7 @@
         <div class="page-body" id="page-body">
 
             {% for element in element_list %}
+
             {% if element.responsive_widget and element.should_be_shown %}
             {{ element.responsive_widget | safe }}
             {% elif element.web_widget and element.should_be_shown %}
@@ -62,7 +63,7 @@
 
             <!-- Hidden fields -->
             <input type="hidden" name="page_token" value="{{ d.get('page_token') }}">
-            <input type="hidden" name="screen_resolution" , id="screen_resolution">
+            <input type="hidden" name="screen_resolution" id="screen_resolution">
         </div>
 
         <!-- navigation area-->
