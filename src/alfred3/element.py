@@ -2355,12 +2355,12 @@ class SingleChoiceRow(Row):
         self.button_group_width = "100%"
         self.button_min_width = None
         self.inline = inline
-
+        self.choice_args = choice_args if choice_args else {}
         self.leftlab = leftlab
         self.rightlab = rightlab
 
         # initialize buttons
-        self.choice_buttons = self.RowChoiceElement(*choices, inline=self.inline, **choice_args)
+        self.choice_buttons = self.RowChoiceElement(*choices, inline=self.inline, **self.choice_args)
 
         # fill elements
         self.elements = [self.leftlab, self.choice_buttons, self.rightlab]
