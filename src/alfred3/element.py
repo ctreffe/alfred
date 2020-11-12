@@ -1960,28 +1960,22 @@ class Choice:
 
 class ChoiceElement(InputElement, ABC):
     element_class = "choice-element"
+    type = None
 
     def __init__(
-        self, *choice_labels, type: str, inline: bool = True, shuffle: bool = False, **kwargs
+        self, *choice_labels, inline: bool = True, shuffle: bool = False, **kwargs
     ):
         super().__init__(**kwargs)
 
-        self.type = type
         self.choice_labels = choice_labels
         self.inline = inline
         self.shuffle = shuffle
-        self.button_group_width = "100%"
-        self.button_style = "secondary"
 
     def prepare_web_widget(self):
         super().prepare_web_widget()
         self.choices = self.define_choices()
         if self.shuffle:
             random.shuffle(self.choices)
-
-        self.css_code += [
-            (7, f"#choice-button-group-{self.name} {{width: {self.button_group_width};}}")
-        ]
 
     @property
     def html(self):
@@ -1996,9 +1990,10 @@ class ChoiceElement(InputElement, ABC):
 class SingleChoiceElement2(ChoiceElement):
 
     element_class = "single-choice-element"
+    type = "radio"
 
     def __init__(self, *choice_labels, inline: bool = True, align: str = "center", **kwargs):
-        super().__init__(*choice_labels, type="radio", inline=inline, align=align, **kwargs)
+        super().__init__(*choice_labels, inline=inline, align=align, **kwargs)
 
     def define_choices(self):
         choices = []
@@ -2019,6 +2014,10 @@ class SingleChoiceElement2(ChoiceElement):
 
 
 class SingleChoiceButtons(SingleChoiceElement2):
+
+    button_group_width = "100%"
+    button_style = "secondary"
+
     @property
     def html(self):
         t = jinja_env.get_template("ChoiceButtons.html")
@@ -2360,7 +2359,9 @@ class SingleChoiceRow(Row):
         self.rightlab = rightlab
 
         # initialize buttons
-        self.choice_buttons = self.RowChoiceElement(*choices, inline=self.inline, **self.choice_args)
+        self.choice_buttons = self.RowChoiceElement(
+            *choices, inline=self.inline, **self.choice_args
+        )
 
         # fill elements
         self.elements = [self.leftlab, self.choice_buttons, self.rightlab]
@@ -2395,6 +2396,7 @@ class SingleChoiceRow(Row):
     def leftlab(self, value):
         if value is not None:
             self._leftlab = TextElement(text=value, width="full", align="right")
+            self._leftlab.element_class += " choice-button-label-left"
         else:
             self._leftlab = None
 
@@ -2406,6 +2408,7 @@ class SingleChoiceRow(Row):
     def rightlab(self, value):
         if value is not None:
             self._rightlab = TextElement(text=value, width="full", align="left")
+            self._rightlab.element_class += " choice-button-label-right"
         else:
             self._rightlab = None
 
@@ -2431,12 +2434,6 @@ class SingleChoiceRow(Row):
 
     def prepare_web_widget(self):
         super().prepare_web_widget()
-
-        css = f"#leftlab_{self.name} > p, #rightlab_{self.name} > p {{margin-top: 1rem;}}"  # fix label display
-        self.css_code += [(7, css)]
-        self.css_code += [
-            (7, f"#elid-{self.row_instruction.name} {{margin-bottom: -1.2rem;}}")
-        ]  # fix instruction display
 
         if self.button_min_width:
             self.css_code += [

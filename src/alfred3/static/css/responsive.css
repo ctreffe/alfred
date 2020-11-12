@@ -12,6 +12,14 @@
     padding: 0;
 }
 
+.choice-button-group {
+    width: 100%;
+}
+
+.choice-button-label-left, .choice-button-label-right  p {
+    margin-top: 1rem;
+}
+
 .element {
     padding-left: 1rem;
     padding-right: 1rem;
@@ -93,6 +101,11 @@
 
 .page-header {
     margin-bottom: 1rem;
+}
+
+/* Important for correct display of choice rows */
+.row-instruction {
+    margin-bottom: -1.2rem;
 }
 
 .fixed-width {
