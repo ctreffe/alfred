@@ -3,11 +3,13 @@
 {% block element %}
 
 <div class="row input-element">
+    {% if instruction %}
     <label for="{{ name }}"
-        class="{% if responsive %} col-12 {{ instruction_width }} {% else %} col-{{ instruction_width }} {% endif %} col-form-label {{ instruction_class }}"
+        class="{% if responsive %} col-12 {{ instruction_width }} {% else %} {{ instruction_width }} {% endif %} col-form-label {{ instruction_class }}"
         style="{{ instruction_style}}">{{ instruction }}</label>
+    {% endif %}
     <div
-        class="{% if responsive %} col-12 {{ input_width }} {% else %} col-{{ input_width }} {% endif %} {{ input_col_class }}">
+        class="{% if responsive %} col-12 {{ input_width }} {% else %} {{ input_width }} {% endif %} {{ input_col_class }}">
 
 
 

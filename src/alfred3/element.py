@@ -2281,7 +2281,8 @@ class Row(Element):
             else:
                 return " ".join(breaks)
         else:
-            out = xs if xs != "" else "col"
+            breaks = self.format_breaks(self.width_sm, "xs")[col]
+            out = breaks if breaks != "" else "col"
             return out
 
     def format_breaks(self, breaks: List[int], bp: str) -> List[str]:

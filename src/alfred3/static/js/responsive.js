@@ -35,3 +35,29 @@ $(document).ready(function () {
     $(window).bind('beforeunload', beforeunload);
     $('#form').submit(glob_unbind_leaving);
 });
+
+// Responsive support for choice elements (switch to vertical layout on XS screens)
+const responsive_choices = function () {
+    if (window.screen.width < 576) {
+
+        $(".choice-button-group.btn-group").addClass("btn-group-vertical changed");
+        $(".choice-button-group.btn-group").removeClass("btn-group");
+        $(".form-check-inline").addClass("changed");
+        $(".form-check-inline").removeClass("form-check-inline");
+        
+    } else {
+        $(".choice-button-group.changed").addClass("btn-group");
+        $(".choice-button-group.changed").removeClass("btn-group-vertical changed");
+
+        $(".form-check.changed").addClass("form-check-inline");
+        $(".form-check.changed").removeClass("changed")
+    };
+}
+
+$(window).resize(function () {
+    responsive_choices();
+})
+
+$(document).ready(function() {
+    responsive_choices();
+})

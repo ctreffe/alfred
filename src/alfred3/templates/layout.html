@@ -25,7 +25,7 @@
     <title>{{ d.get('website_title') }}</title>
 </head>
 
-<body class="line-numbers">
+<body class="line-numbers{% if d.get('responsive') %} responsive{% endif %}">
 
     
     <div class="container-fluid d-flex justify-content-center logo-bg {% if not d.get('responsive') %} min-width {% endif %}">
