@@ -66,7 +66,7 @@ class Element(ABC):
     arguments, attributes, and methods, unless stated otherwise.
 
     The simplest way to subclass *Element* is by defining the 
-    *html* attribute::
+    *inner_html* attribute::
 
         class NewElement(Element):
 
@@ -74,21 +74,35 @@ class Element(ABC):
     
     For most cases, you will want some additional control over the 
     attribute. Maybe you even want to use your own jinja template. 
-    You can achieve that by defining *html* it as a property, which 
+    You can achieve that by defining *inner_html* as a property, which 
     returns your desired html code::
 
-        from jinja2 import Template
+        import jinja2
 
         class NewElement(Element):
 
             @property
             def inner_html(self):
-                t = Template("Element html goes <b>{{ text }}</b>")
+                t = jinja2.Template("Element html goes <b>{{ text }}</b>")
                 return t.render(text="here")
     
     Both of the above methods utilise alfred's basic element html 
     template and inject your code into it, which allows the basic layout
-    and logic to simply translate to your new element.
+    and logic to simply translate to your new element. If your new
+    Element has its own *__init__* constructor method, you can pass
+    specific arguments or all available arguments on to the Element 
+    base class::
+
+        # define new argument 'myarg' and save it as an attribute
+        # set a new default for argument width and pass it on to the Element base class
+        # allow all other valid keyword arguments for the Element base class and pass them on ('**kwargs')
+        
+        class NewElement(Element):
+
+            def __init__(self, myarg: str = "test", width: str = "narrow", **kwargs):
+                super().__init__(width=width, **kwargs)
+                self.myarg = myarg
+        
 
     .. note::
         All elements that are derived in this way receive a CSS class
@@ -165,7 +179,6 @@ class Element(ABC):
     """
 
     responsive_template = jinja_env.get_template("Element.html")
-    inner_html = None
 
     def __init__(
         self,
@@ -580,6 +593,10 @@ class Element(ABC):
 
     # abstract attributes start here -----------------------------------
 
+    @abstractproperty
+    def inner_html(self):
+        pass
+    
     @property
     def web_widget(self):
         """Every child class *must* redefine the web widget.
