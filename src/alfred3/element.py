@@ -82,7 +82,7 @@ class Element(ABC):
         class NewElement(Element):
 
             @property
-            def html(self):
+            def inner_html(self):
                 t = Template("Element html goes <b>{{ text }}</b>")
                 return t.render(text="here")
     
@@ -165,7 +165,7 @@ class Element(ABC):
     """
 
     responsive_template = jinja_env.get_template("Element.html")
-    html = None
+    inner_html = None
 
     def __init__(
         self,
@@ -175,8 +175,8 @@ class Element(ABC):
         width: str = "full",
         position: str = "center",
         showif: dict = None,
-        should_be_shown_filter_function=None,
         instance_level_logging: bool = False,
+        should_be_shown_filter_function=None, # wahrscheinlich deprecated
         alignment: str = None,
         **kwargs,
     ):
@@ -588,16 +588,15 @@ class Element(ABC):
         screen.
 
         *Changed in v1.5*: No longer an abstractmethod, i.e. child 
-        classes do not have to redefine the web widget. It has no effect
-        in the new responsive layout. Define the *html* property
-        instead for your custom elements.
+        classes do not have to redefine the web widget. By default, it
+        just returns the responsive widget now.
         """
-        pass
+        return self.responsive_widget
 
     @property
     def responsive_widget(self):
         d = self.template_data
-        d["html"] = self.html
+        d["html"] = self.inner_html
         d["base_template"] = True
         return self.responsive_template.render(d)
 
@@ -763,7 +762,9 @@ class TextElement(Element, WebElementInterface):
             specific default, which ensures good readability in 
             most cases on different screen sizes.
         **element_args: Keyword arguments passed to the parent class
-            :class:`Element`.
+            :class:`Element`. Accepted keyword arguments are: name, 
+            font_size, align, width, position, showif, 
+            instance_level_logging.
     
     .. [#md]: https://guides.github.com/features/mastering-markdown/
     """
@@ -796,7 +797,7 @@ class TextElement(Element, WebElementInterface):
             self.log.warning("The parameter 'text_width' is deprecated. Please use 'width'.")
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("TextElement.html")
         return t.render(self.template_data)
 
@@ -1064,7 +1065,7 @@ class InputElement(Element):
     """
 
     responsive_template = jinja_env.get_template("InputElement.html")
-    html = None
+    inner_html = None
     can_display_corrective_hints_in_line = True
 
     def __init__(
@@ -1297,7 +1298,7 @@ class InputElement(Element):
     @property
     def responsive_widget(self):
         d = self.template_data
-        d["html"] = self.html
+        d["html"] = self.inner_html
         d["base_template"] = False
         return self.responsive_template.render(d)
 
@@ -1386,7 +1387,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         return d
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("TextEntryElement.html")
         d = self.template_data
         return t.render(d)
@@ -1978,7 +1979,7 @@ class ChoiceElement(InputElement, ABC):
             random.shuffle(self.choices)
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("ChoiceElement.html")
         return t.render(choices=self.choices, inline=self.inline, name=self.name)
 
@@ -2019,7 +2020,7 @@ class SingleChoiceButtons(SingleChoiceElement2):
     button_style = "secondary"
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("ChoiceButtons.html")
         return t.render(
             choices=self.choices,
@@ -2107,7 +2108,7 @@ class MultipleChoiceElement2(ChoiceElement):
                 self._input[choice.name] = False
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("ChoiceElement.html")
         return t.render(choices=self.choices, inline=self.inline)
 
