@@ -5,7 +5,8 @@
 }
 
 .corrective-hint {
-    color: red;
+    color: #E23636;
+    padding: 0.5rem;
 }
 
 .col-element {
