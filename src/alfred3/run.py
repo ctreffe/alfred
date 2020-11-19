@@ -123,7 +123,12 @@ class ExperimentRunner:
         logger.addHandler(file_handler)
         logger.addHandler(stream_handler)
 
-        logger.setLevel(alfredlog.parse_level(config.get("log", "level")))
+        lvl = config.get("log", "level")
+        if config.getboolean("general", "debug"):
+            if config.getboolean("debug", "log_level_override"):
+                lvl = config.get("debug", "log_level")
+
+        logger.setLevel(alfredlog.parse_level(lvl))
 
         base_logger = logging.getLogger("alfred3")
         base_logger.addHandler(logging.NullHandler())

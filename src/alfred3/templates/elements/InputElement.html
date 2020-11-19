@@ -3,35 +3,38 @@
 {% block element %}
 
 <div class="row input-element">
+    {% if instruction %}
     <label for="{{ name }}"
-        class="{% if responsive %} col-12 {{ instruction_width }} {% else %} col-{{ instruction_width }} {% endif %} col-form-label"
-        style="{{ instruction_height}}">{{ instruction }}</label>
+        class="{% if responsive %} col-12 {{ instruction_width }} {% else %} {{ instruction_width }} {% endif %} col-form-label {{ instruction_class }}"
+        style="{{ instruction_style}}">{{ instruction }}</label>
+    {% endif %}
     <div
-        class="{% if responsive %} col-12 {{ input_width }} {% else %} col-{{ input_width }} {% endif %}">
+        class="{% if responsive %} col-12 {{ input_width }} {% else %} {{ input_width }} {% endif %} {{ input_col_class }}">
 
-        
 
-        {% if html %} 
+
+        {% if html %}
         <!-- Inject element html directly (convenient for custom elements) -->
-        
-        {{ html | safe}} 
+
+        {{ html | safe}}
 
         {% else %}
         <!-- Element html via jinja template extension (preferred, if possible) -->
 
         {% block input_element %}
         {% endblock input_element %}
-        
+
         {% endif %}
 
-        
 
-        
-    {% if corrective_hint %}
-    <div class="col-12 corrective-hint">
-        {{ corrective_hint }}
-    </div>
-    {% endif %}
+
+
+        {% if corrective_hint %}
+        <div class="col-12 corrective-hint">
+            {{ corrective_hint }}
+        </div>
+        {% endif %}
+
     </div>
 </div>
 

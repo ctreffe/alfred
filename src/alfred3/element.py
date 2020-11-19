@@ -35,7 +35,7 @@ import re
 import string
 import logging
 import copy
-from abc import ABC, abstractproperty
+from abc import ABC, abstractproperty, abstractmethod
 from builtins import object, range, str
 from functools import reduce
 from uuid import uuid4
@@ -82,7 +82,7 @@ class Element(ABC):
         class NewElement(Element):
 
             @property
-            def html(self):
+            def inner_html(self):
                 t = Template("Element html goes <b>{{ text }}</b>")
                 return t.render(text="here")
     
@@ -165,7 +165,7 @@ class Element(ABC):
     """
 
     responsive_template = jinja_env.get_template("Element.html")
-    html = None
+    inner_html = None
 
     def __init__(
         self,
@@ -175,8 +175,8 @@ class Element(ABC):
         width: str = "full",
         position: str = "center",
         showif: dict = None,
-        should_be_shown_filter_function=None,
         instance_level_logging: bool = False,
+        should_be_shown_filter_function=None, # wahrscheinlich deprecated
         alignment: str = None,
         **kwargs,
     ):
@@ -588,22 +588,22 @@ class Element(ABC):
         screen.
 
         *Changed in v1.5*: No longer an abstractmethod, i.e. child 
-        classes do not have to redefine the web widget. It has no effect
-        in the new responsive layout. Define the *html* property
-        instead for your custom elements.
+        classes do not have to redefine the web widget. By default, it
+        just returns the responsive widget now.
         """
-        pass
-    
+        return self.responsive_widget
+
     @property
     def responsive_widget(self):
         d = self.template_data
-        d["html"] = self.html
+        d["html"] = self.inner_html
         d["base_template"] = True
         return self.responsive_template.render(d)
 
     @property
     def element_class(self):
         return type(self).__name__
+
 
 class WebElementInterface:
     """
@@ -762,7 +762,9 @@ class TextElement(Element, WebElementInterface):
             specific default, which ensures good readability in 
             most cases on different screen sizes.
         **element_args: Keyword arguments passed to the parent class
-            :class:`Element`.
+            :class:`Element`. Accepted keyword arguments are: name, 
+            font_size, align, width, position, showif, 
+            instance_level_logging.
     
     .. [#md]: https://guides.github.com/features/mastering-markdown/
     """
@@ -782,7 +784,7 @@ class TextElement(Element, WebElementInterface):
         """Constructor method."""
         super(TextElement, self).__init__(width=width, **element_args)
 
-        self._text = text
+        self._text = text if text is not None else ""
         self._text_width = text_width
         self._text_height = text_height
         self._text_label = None
@@ -795,7 +797,7 @@ class TextElement(Element, WebElementInterface):
             self.log.warning("The parameter 'text_width' is deprecated. Please use 'width'.")
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("TextElement.html")
         return t.render(self.template_data)
 
@@ -1049,10 +1051,6 @@ class InputElement(Element):
         description: An additional description of the element. This will
             show up in the additional alfred-generated codebook. It has
             no effect on the display of the experiment.
-        debug_value: A value that will be inserted for the element 
-            automatically, when the experiment is started in debug mode.
-        debug_string: A deprecated version of debug_value. Please use
-            debug_value.
         default: Default value.
         **kwargs: Further keyword arguments that are passed on to the
             parent class :class:`Element`.
@@ -1067,7 +1065,8 @@ class InputElement(Element):
     """
 
     responsive_template = jinja_env.get_template("InputElement.html")
-    html = None
+    inner_html = None
+    can_display_corrective_hints_in_line = True
 
     def __init__(
         self,
@@ -1076,19 +1075,16 @@ class InputElement(Element):
         instruction_inline_width: str = "medium",
         instruction_width: int = None,
         instruction_height: int = None,
-        
-        force_input: bool=False,
-        no_input_corrective_hint: str=None,
-        debug_string: str=None,
-        debug_value=None,
+        force_input: bool = False,
+        no_input_corrective_hint: str = None,
         default=None,
-        description: str=None,
+        description: str = None,
         **kwargs,
     ):
         super(InputElement, self).__init__(**kwargs)
         self.description = description
-        
-        self._instruction = instruction
+
+        self._instruction = instruction if instruction else ""
         self.instruction_inline = instruction_inline
         self.instruction_inline_width = instruction_inline_width
         self._instruction_width = instruction_width
@@ -1100,20 +1096,39 @@ class InputElement(Element):
         self._input = ""
         self._force_input = force_input
         self._no_input_corrective_hint = no_input_corrective_hint
-        self._debug_string = debug_string
-        self._debug_value = debug_value
-        self.default = default
-
-        if not self._debug_value:
-            if self._debug_string:
-                self._debug_value = self._debug_string
+        self._default = default
 
         if default is not None:
             self._input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
-    
+
+    @property
+    def debug_value(self):
+        name = f"{type(self).__name__}_default"
+        return self.experiment.config.get("debug", name, fallback=None)
+
+    @property
+    def debug_enabled(self) -> bool:
+        if self.experiment.config.getboolean("general", "debug"):
+            if self.experiment.config.getboolean("debug", "set_default_values"):
+                return True
+        return False
+
+    @property
+    def default(self):
+        if self._default:
+            return self._default
+        elif self.debug_enabled:
+            return self.debug_value
+        else:
+            return None
+
+    @property
+    def force_input(self):
+        return self._force_input
+
     @property
     def instruction(self):
         return self._instruction
@@ -1187,28 +1202,19 @@ class InputElement(Element):
     @property
     def template_data(self) -> dict:
         d = super().template_data
-        if self._input:  # using input here to cover default and debug_value simultaneously
-            d["default"] = self._input
-        
+        d["default"] = self.default
+
         d["instruction"] = self.rendered_instruction
         d["instruction_width"] = self.instruction_col_width
-        d["instruction_height"] = f"height: {self._instruction_height};"
+        d["instruction_style"] = (
+            f"height: {self._instruction_height};" if self._instruction_height else ""
+        )
         d["input_width"] = self.input_col_width
-        
+
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
-        
+
         return d
-
-    def added_to_experiment(self, experiment):
-        super().added_to_experiment(experiment)
-
-        if self.experiment.config.getboolean("general", "debug"):
-            if self._debug_value:
-                self._input = self._debug_value
-            else:
-                cls_name = self.__class__.__name__
-                self._input = self.experiment.config.get("debug", cls_name, fallback=cls_name)
 
     def validate_data(self):
         return not self._force_input or not self._should_be_shown or bool(self._input)
@@ -1217,7 +1223,7 @@ class InputElement(Element):
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-        if self._force_input and self._input == "":
+        if self._force_input and not self._input:
             return [self.no_input_hint]
         else:
             return super(InputElement, self).corrective_hints
@@ -1230,19 +1236,20 @@ class InputElement(Element):
 
     @property
     def default_no_input_hint(self):
-        if self._page and self._page._experiment:
-            hints = self._page._experiment.settings.hints
-            name = type(self).__name__
-            no_input_name = ("no_input%s" % name).lower()
-            if no_input_name in hints:
-                return hints[no_input_name]
+        name = f"no_input{type(self).__name__}"
+        return self.experiment.config.get("hints", name, fallback="You need to enter something.")
 
-        self.log.error(f"Can't access default no input hint for element {self}")
-        return f"Can't access default no input hint for element {type(self).__name__}"
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
 
     @property
     def data(self):
-        return {self.name: self._input}
+        return {self.name: self.input}
 
     @property
     def encrypted_data(self):
@@ -1283,7 +1290,7 @@ class InputElement(Element):
     @property
     def codebook_data(self):
         return {self.identifier: self.codebook_data_flat}
-    
+
     @property
     def element_class(self):
         pass
@@ -1291,9 +1298,10 @@ class InputElement(Element):
     @property
     def responsive_widget(self):
         d = self.template_data
-        d["html"] = self.html
+        d["html"] = self.inner_html
         d["base_template"] = False
         return self.responsive_template.render(d)
+
 
 class TextEntryElement(InputElement, WebElementInterface):
     """Provides a text entry field.
@@ -1321,8 +1329,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         **kwargs,
     ):
         """Constructor method."""
-        super(TextEntryElement, self).__init__(instruction=instruction, **kwargs
-        )
+        super(TextEntryElement, self).__init__(instruction=instruction, **kwargs)
 
         self._prefix = prefix
         self._suffix = suffix
@@ -1330,7 +1337,6 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         self.instruction_col_width = None
         self.input_col_width = None
-
 
         self._template = Template(
             """
@@ -1359,19 +1365,19 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         """
         )
-    
+
     @property
     def prefix(self):
         return self._prefix
-    
+
     @property
     def suffix(self):
         return self._suffix
-    
+
     @property
     def placeholder(self):
         return self._placeholder
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -1381,7 +1387,7 @@ class TextEntryElement(InputElement, WebElementInterface):
         return d
 
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("TextEntryElement.html")
         d = self.template_data
         return t.render(d)
@@ -1403,10 +1409,6 @@ class TextEntryElement(InputElement, WebElementInterface):
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
         return self._template.render(d)
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return True
 
     def validate_data(self):
         super(TextEntryElement, self).validate_data()
@@ -1945,85 +1947,153 @@ class PasswordElement(TextEntryElement):
 
 @dataclass
 class Choice:
-    label: str
-    type: str
-    id: str
-    name: str
+    """Dataclass for managing choices."""
+
+    label: str = None
+    label_id: str = None
+    id: str = None
+    name: str = None
+    value: str = None
+    type: str = "radio"
     checked: bool = False
+    css_class: str = None
 
-class ChoiceElement(InputElement):
+
+class ChoiceElement(InputElement, ABC):
     element_class = "choice-element"
+    type = None
 
-    def __init__(self, *choice_labels, type: str, inline: bool = True, shuffle: bool = False, **kwargs):
+    def __init__(
+        self, *choice_labels, inline: bool = True, shuffle: bool = False, **kwargs
+    ):
         super().__init__(**kwargs)
 
-        self.type = type
-        self.choices = self._define_choices(*choice_labels)
+        self.choice_labels = choice_labels
         self.inline = inline
         self.shuffle = shuffle
-    
+
     def prepare_web_widget(self):
         super().prepare_web_widget()
+        self.choices = self.define_choices()
         if self.shuffle:
             random.shuffle(self.choices)
-    
+
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("ChoiceElement.html")
-        return t.render(choices=self.choices, inline=self.inline)
-    
-    def _define_choices(self, *choice_labels) -> list:
-        choices = []
-        for i, lab in enumerate(choice_labels, start=1):
-            choice_id = f"{self.name}_choice{i}"
-            if self.type == "radio":
-                choice_name = self.name
-            elif self.type == "checkbox":
-                choice_name = choice_id
-            choice = Choice(label = lab, type=self.type, id=choice_id, name=choice_name)
-            choices.append(choice)
-        return choices
+        return t.render(choices=self.choices, inline=self.inline, name=self.name)
+
+    @abstractmethod
+    def define_choices(self) -> list:
+        pass
 
 
 class SingleChoiceElement2(ChoiceElement):
 
     element_class = "single-choice-element"
+    type = "radio"
 
-    def __init__(self, *choice_labels, inline: bool = True, **kwargs):
-        super().__init__(*choice_labels, type="radio", inline=inline, **kwargs)
+    def __init__(self, *choice_labels, inline: bool = True, align: str = "center", **kwargs):
+        super().__init__(*choice_labels, inline=inline, align=align, **kwargs)
+
+    def define_choices(self):
+        choices = []
+        for i, label in enumerate(self.choice_labels, start=1):
+            choice = Choice()
+
+            choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            choice.type = "radio"
+            choice.value = label
+            choice.name = self.name
+            choice.id = f"{self.name}_choice{i}"
+            choice.label_id = f"{choice.id}-lab"
+            choice.checked = True if (self.default == label) else False
+            choice.css_class = f"choice-button choice-button-{self.name}"
+
+            choices.append(choice)
+        return choices
+
+
+class SingleChoiceButtons(SingleChoiceElement2):
+
+    button_group_width = "100%"
+    button_style = "secondary"
+
+    @property
+    def inner_html(self):
+        t = jinja_env.get_template("ChoiceButtons.html")
+        return t.render(
+            choices=self.choices,
+            inline=self.inline,
+            name=self.name,
+            button_style=self.button_style,
+        )
 
 
 class MultipleChoiceElement2(ChoiceElement):
 
     element_class = "multiple-choice-element"
 
-    def __init__(self, *choice_labels, inline: bool = True, min: int = None, max: int = None, **kwargs):
-        super().__init__(*choice_labels, type="checkbox", inline=inline, **kwargs)
+    def __init__(
+        self,
+        *choice_labels,
+        inline: bool = True,
+        min: int = None,
+        max: int = None,
+        select_hint: str = None,
+        align: str = "center",
+        **kwargs,
+    ):
+        super().__init__(*choice_labels, type="checkbox", inline=inline, align=align, **kwargs)
 
         self._input = {}
-        
+
+        self.min = min if min is not None else 0
+        self.max = max if max is not None else len(self.choice_labels)
+
+        self._select_hint = select_hint
+
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+
         if self.default:
             for i in self.default:
-                self.choices[i-1].checked = True
-        
-        self.min = min if min is not None else 0
-        self.max = max if max is not None else len(self.choices)
+                self.choices[i - 1].checked = True
 
-        # debug
-        # min
-        # max
-        # data-validation
-    
+        elif self.debug_enabled:
+            for i in range(self.max):
+                self.choices[i].checked = True
+
+    @property
+    def select_hint(self):
+        if self._select_hint:
+            return self._select_hint
+        else:
+            hint = string.Template(
+                self.experiment.config.get("hints", "select_MultipleChoiceElement")
+            )
+            return hint.substitute(min=self.min, max=self.max)
+
+    @property
+    def corrective_hints(self):
+
+        if not self.show_corrective_hints:
+            return []
+
+        elif self._force_input and not self._input:
+            return [self.no_input_hint]
+
+        elif not self.validate_data():
+            return [self.select_hint]
+
     def validate_data(self):
         if not self._force_input or not self._should_be_shown:
             return True
-        elif self.min < len(self._input) < self.max:
+        elif self.min <= len(self._input) <= self.max:
             return True
-        
         else:
             return False
 
-    
     @property
     def data(self):
         return self._input
@@ -2033,13 +2103,344 @@ class MultipleChoiceElement2(ChoiceElement):
         for choice in self.choices:
             value = d.get(choice.name, None)
             if value:
-                self._input[choice.name] = value
-    
+                self._input[choice.name] = True
+            else:
+                self._input[choice.name] = False
+
     @property
-    def html(self):
+    def inner_html(self):
         t = jinja_env.get_template("ChoiceElement.html")
         return t.render(choices=self.choices, inline=self.inline)
 
+
+class Row(Element):
+    """Allows you to arrange up to 12 elements in a row.
+
+    The row will arrange your elements using Bootstrap 4's grid system
+    and breakpoints, making the arrangement responsive. You can 
+    customize the behavior of the row for five different screen sizes
+    (Bootstrap 4's default break points) with the width attributes.
+
+    If you don't specify breakpoints manually, the columns will default
+    to equal width and wrap on breakpoints automatically.
+
+    .. info::
+        In Bootstrap's grid, the horizontal space is divided into 12
+        equally wide units. You can define the horizontal width of a
+        column by assigning it a number of those units. A column of 
+        width 12 will take up all available horizontal space, other 
+        columns will be placed below such a full-width column.
+
+        You can define the column width for each of five breakpoints
+        separately. The definition will be valid for screens of the
+        respective size up to the next breakpoint.
+
+        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
+        for detailed documentation of how Bootstrap's breakpoints work.
+    
+    .. info::
+        **Some information regarding the width attributes**
+        
+        - If you specify fewer values than the number of columns in the 
+        width attributes, the columns with undefined width will take up 
+        equal portions of the remaining horizontal space.
+        - If a breakpoint is not specified manually, the values from the
+        next smaller breakpoint are inherited.
+    
+    Args:
+        elements: The elements that you want to arrange in a row.
+        height: Custom row height (with unit, e.g. '100px').
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'.
+    
+    Attributes:
+        width_xs: List of column widths on screens of size 'xs' or 
+            bigger (<576px). Widths must be defined as integers between
+            1 and 12.
+        width_sm: List of column widths on screens of size 'sm' or 
+            bigger (>=576px). Widths must be defined as integers between
+            1 and 12.
+        width_md: List of column widths on screens of size 'md' or 
+            bigger (>=768px). Widths must be defined as integers between
+            1 and 12.
+        width_lg: List of column widths on screens of size 'lg' or 
+            bigger (>=992px). Widths must be defined as integers between
+            1 and 12.
+        width_xl: List of column widths on screens of size 'xl' or 
+            bigger (>=1200px). Widths must be defined as integers between
+            1 and 12.
+    """
+
+    def __init__(
+        self,
+        *elements,
+        height: str = "auto",
+        valign_cols: List[str] = None,
+        name: str = None,
+        showif: dict = None,
+    ):
+        """Constructor method."""
+        super().__init__(name=name, showif=showif)
+        self.elements = elements
+
+        self.height = height
+        self._valign_cols = valign_cols
+
+        self.width_xs = None
+        self.width_sm = None
+        self.width_md = None
+        self.width_lg = None
+        self.width_xl = None
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for element in self.elements:
+            if element is None:
+                continue
+            element.should_be_shown = False
+            page += element
+
+    @property
+    def valign_cols(self):
+        try:
+            if len(self._valign_cols) > len(self.elements):
+                raise ValueError(
+                    "Col position list must be of the same or smaller length as number of elements."
+                )
+        except TypeError:
+            pass
+
+        out = []
+        for i, _ in enumerate(self.elements):
+            try:
+                n = self._valign_cols[i]
+            except IndexError:
+                out.append("")
+                continue
+            except TypeError:
+                out.append("")
+                continue
+
+            if not isinstance(n, str):
+                raise TypeError("Col position must be of type str.")
+
+            if n == "auto":
+                out.append("")
+            elif n == "top":
+                out.append("align-self-start")
+            elif n == "center":
+                out.append("align-self-center")
+            elif n == "bottom":
+                out.append("align-self-end")
+            else:
+                raise ValueError(
+                    "Col position allowed values are 'auto', 'top', 'center', and 'bottom'."
+                )
+
+        return out
+
+    @property
+    def cols(self) -> list:
+        """Returns a list of html code for all columns."""
+        out = []
+        for i, element in enumerate(self.elements):
+            breaks = self.col_breaks(i)
+            pos = self.valign_cols[i]
+            html = element.responsive_widget if element is not None else ""
+            colid = f"{self.name}_col{i+1}"
+            t = Template(
+                "<div class='{{ breaks }} {{ position }} col-element' id={{ id }}>{{ html }}</div>"
+            )
+            out.append(t.render(breaks=breaks, position=pos, html=html, id=colid))
+        return out
+
+    @property
+    def responsive_widget(self):
+        hide = "hide" if self._showif_on_current_page is True else ""
+        t = Template(
+            "<div class='row element row-element {{ hide }}' style='height: {{ height}};' id=elid-{{ name }}>{{ cols | safe }}</div>"
+        )
+        columns_html = "".join(self.cols)
+        return t.render(cols=columns_html, height=self.height, name=self.name, hide=hide)
+
+    @property
+    def web_widget(self):
+        return self.responsive_widget
+
+    def col_breaks(self, col: int) -> str:
+        xs = self.format_breaks(self.width_xs, "xs")[col]
+        sm = self.format_breaks(self.width_sm, "sm")[col]
+        md = self.format_breaks(self.width_md, "md")[col]
+        lg = self.format_breaks(self.width_lg, "lg")[col]
+        xl = self.format_breaks(self.width_xl, "xl")[col]
+
+        if self.experiment.config.getboolean("layout", "responsive", fallback=True):
+            breaks = [xs, sm, md, lg, xl]
+            if breaks == ["", "", "", "", ""]:
+                return "col-sm"
+            else:
+                return " ".join(breaks)
+        else:
+            breaks = self.format_breaks(self.width_sm, "xs")[col]
+            out = breaks if breaks != "" else "col"
+            return out
+
+    def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
+        """Takes a tuple of column sizes (in integers from 1 to 12) and
+        returns a corresponding list of formatted Bootstrap column 
+        classes.
+
+        Args:
+            breaks: List of integers, indicating the breakpoints.
+            bp: Specifies the relevant bootstrap breakpoint. (xs, sm,
+                md, lg, or xl).
+        """
+        try:
+            if len(breaks) > len(self.elements):
+                raise ValueError(
+                    "Break list must be of the same or smaller length as number of elements."
+                )
+        except TypeError:
+            pass
+
+        out = []
+        for i, _ in enumerate(self.elements):
+            try:
+                n = breaks[i]
+            except IndexError:
+                out.append("")
+                continue
+            except TypeError:
+                out.append("")
+                continue
+
+            if not isinstance(n, int):
+                raise TypeError("Break values must be of type integer.")
+            if not n >= 1 and n <= 12:
+                raise ValueError("Break values must be between 1 and 12.")
+
+            if bp == "xs":
+                out.append(f"col-{n}")
+            else:
+                out.append(f"col-{bp}-{n}")
+
+        return out
+
+
+class Stack(Row):
+    def __init__(self, *elements, **kwargs):
+        super().__init__(*elements, **kwargs)
+        self.width_xs = [12 for element in elements]
+
+
+class SingleChoiceRow(Row):
+
+    element_class = "single-choice-row"
+    RowChoiceElement = SingleChoiceButtons
+
+    def __init__(
+        self,
+        *choices,
+        leftlab: str = None,
+        rightlab: str = None,
+        instruction: str = None,
+        name: str = None,
+        valign_cols: List[str] = None,
+        inline: bool = True,
+        choice_args: dict = None,
+    ):
+        super().__init__(name=name, valign_cols=valign_cols)
+        self.row_instruction = TextElement(text=instruction, width="full", align="center")
+        self.row_instruction.element_class += " row-instruction"
+        self.button_group_width = "100%"
+        self.button_min_width = None
+        self.inline = inline
+        self.choice_args = choice_args if choice_args else {}
+        self.leftlab = leftlab
+        self.rightlab = rightlab
+
+        # initialize buttons
+        self.choice_buttons = self.RowChoiceElement(
+            *choices, inline=self.inline, **self.choice_args
+        )
+
+        # fill elements
+        self.elements = [self.leftlab, self.choice_buttons, self.rightlab]
+
+        # default for vertical placement
+        if not valign_cols:
+            self._valign_cols = ["center" for el in self.elements]
+
+        # default for width
+        if self.leftlab and self.rightlab:
+            self.width_sm = [2, 8, 2]
+        elif self.leftlab:
+            self.width_sm = [3, 9]
+        elif self.rightlab:
+            self.width_sm = [9, 3]
+        else:
+            self.width_sm = [12]
+
+    @property
+    def elements(self):
+        return self._elements
+
+    @elements.setter
+    def elements(self, value: list):
+        self._elements = [x for x in value if x is not None]
+
+    @property
+    def leftlab(self):
+        return self._leftlab
+
+    @leftlab.setter
+    def leftlab(self, value):
+        if value is not None:
+            self._leftlab = TextElement(text=value, width="full", align="right")
+            self._leftlab.element_class += " choice-button-label-left"
+        else:
+            self._leftlab = None
+
+    @property
+    def rightlab(self):
+        return self._rightlab
+
+    @rightlab.setter
+    def rightlab(self, value):
+        if value is not None:
+            self._rightlab = TextElement(text=value, width="full", align="left")
+            self._rightlab.element_class += " choice-button-label-right"
+        else:
+            self._rightlab = None
+
+    @property
+    def responsive_widget(self):
+        w = super().responsive_widget
+        instr = self.row_instruction.responsive_widget
+        return instr + w
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+        try:
+            self.leftlab.name = f"leftlab_{self.name}"
+        except AttributeError:
+            pass
+        try:
+            self.rightlab.name = f"rightlab_{self.name}"
+        except AttributeError:
+            pass
+
+        page += self.row_instruction
+        self.row_instruction.should_be_shown = False
+
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+
+        if self.button_min_width:
+            self.css_code += [
+                (7, f".choice-button {{min-width: {self.button_min_width};}}")
+            ]  # set button width
 
 
 class LikertMatrix(InputElement, WebElementInterface):
@@ -3820,225 +4221,6 @@ class WebExitEnabler(Element, WebElementInterface):
     @property
     def web_widget(self):
         return ""
-
-
-class Row(Element):
-    """Allows you to arrange up to 12 elements in a row.
-
-    The row will arrange your elements using Bootstrap 4's grid system
-    and breakpoints, making the arrangement responsive. You can 
-    customize the behavior of the row for five different screen sizes
-    (Bootstrap 4's default break points) with the width attributes.
-
-    If you don't specify breakpoints manually, the columns will default
-    to equal width and wrap on breakpoints automatically.
-
-    .. info::
-        In Bootstrap's grid, the horizontal space is divided into 12
-        equally wide units. You can define the horizontal width of a
-        column by assigning it a number of those units. A column of 
-        width 12 will take up all available horizontal space, other 
-        columns will be placed below such a full-width column.
-
-        You can define the column width for each of five breakpoints
-        separately. The definition will be valid for screens of the
-        respective size up to the next breakpoint.
-
-        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
-        for detailed documentation of how Bootstrap's breakpoints work.
-    
-    .. info::
-        **Some information regarding the width attributes**
-        
-        - If you specify fewer values than the number of columns in the 
-        width attributes, the columns with undefined width will take up 
-        equal portions of the remaining horizontal space.
-        - If a breakpoint is not specified manually, the values from the
-        next smaller breakpoint are inherited.
-    
-    Args:
-        elements: The elements that you want to arrange in a row.
-        height: Custom row height (with unit, e.g. '100px').
-        valign_cols: List of vertical column alignments. Valid values 
-            are 'auto' (default), 'top', 'center', and 'bottom'.
-    
-    Attributes:
-        width_xs: List of column widths on screens of size 'xs' or 
-            bigger (<576px). Widths must be defined as integers between
-            1 and 12.
-        width_sm: List of column widths on screens of size 'sm' or 
-            bigger (>=576px). Widths must be defined as integers between
-            1 and 12.
-        width_md: List of column widths on screens of size 'md' or 
-            bigger (>=768px). Widths must be defined as integers between
-            1 and 12.
-        width_lg: List of column widths on screens of size 'lg' or 
-            bigger (>=992px). Widths must be defined as integers between
-            1 and 12.
-        width_xl: List of column widths on screens of size 'xl' or 
-            bigger (>=1200px). Widths must be defined as integers between
-            1 and 12.
-    """
-
-    def __init__(
-        self,
-        *elements,
-        height: str = "auto",
-        valign_cols: List[str] = None,
-        name: str = None,
-        showif: dict = None,
-    ):
-        """Constructor method."""
-        super().__init__(name=name, showif=showif)
-        self.elements = elements
-
-        self.height = height
-        self.valign_cols = self.format_valign_cols(valign_cols)
-
-        self.width_xs = None
-        self.width_sm = None
-        self.width_md = None
-        self.width_lg = None
-        self.width_xl = None
-
-    def added_to_page(self, page):
-        super().added_to_page(page)
-
-        for element in self.elements:
-            if element is None:
-                continue
-            element.should_be_shown = False
-            page += element
-
-    def format_valign_cols(self, valign_cols: List[str]):
-        try:
-            if len(valign_cols) > len(self.elements):
-                raise ValueError(
-                    "Col position list must be of the same or smaller length as number of elements."
-                )
-        except TypeError:
-            pass
-
-        out = []
-        for i, _ in enumerate(self.elements):
-            try:
-                n = valign_cols[i]
-            except IndexError:
-                out.append("")
-                continue
-            except TypeError:
-                out.append("")
-                continue
-
-            if not isinstance(n, str):
-                raise TypeError("Col position must be of type str.")
-
-            if n == "auto":
-                out.append("")
-            elif n == "top":
-                out.append("align-self-start")
-            elif n == "center":
-                out.append("align-self-center")
-            elif n == "bottom":
-                out.append("align-self-end")
-            else:
-                raise ValueError(
-                    "Col position allowed values are 'auto', 'top', 'center', and 'bottom'."
-                )
-
-        return out
-
-    @property
-    def cols(self) -> list:
-        """Returns a list of html code for all columns."""
-        out = []
-        for i, element in enumerate(self.elements):
-            breaks = self.col_breaks(i)
-            pos = self.valign_cols[i]
-            html = element.responsive_widget if element is not None else ""
-            colid = f"{self.name}_col{i+1}"
-            t = Template(
-                "<div class='{{ breaks }} {{ position }} col-element' id={{ id }}>{{ html }}</div>"
-            )
-            out.append(t.render(breaks=breaks, position=pos, html=html, id=colid))
-        return out
-
-    @property
-    def responsive_widget(self):
-        hide = "hide" if self._showif_on_current_page is True else ""
-        t = Template(
-            "<div class='row element row-element {{ hide }}' style='height: {{ height}};' id=elid-{{ name }}>{{ cols | safe }}</div>"
-        )
-        columns_html = "".join(self.cols)
-        return t.render(cols=columns_html, height=self.height, name=self.name, hide=hide)
-
-    @property
-    def web_widget(self):
-        return self.responsive_widget
-
-    def col_breaks(self, col: int) -> str:
-        xs = self.format_breaks(self.width_xs, "xs")[col]
-        sm = self.format_breaks(self.width_sm, "sm")[col]
-        md = self.format_breaks(self.width_md, "md")[col]
-        lg = self.format_breaks(self.width_lg, "lg")[col]
-        xl = self.format_breaks(self.width_xl, "xl")[col]
-
-        if self.experiment.config.getboolean("layout", "responsive", fallback=True):
-            breaks = [xs, sm, md, lg, xl]
-            if breaks == ["", "", "", "", ""]:
-                return "col-sm"
-            else:
-                return " ".join(breaks)
-        else:
-            out = xs if xs != "" else "col"
-            return out
-
-    def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
-        """Takes a tuple of column sizes (in integers from 1 to 12) and
-        returns a corresponding list of formatted Bootstrap column 
-        classes.
-
-        Args:
-            breaks: List of integers, indicating the breakpoints.
-            bp: Specifies the relevant bootstrap breakpoint. (xs, sm,
-                md, lg, or xl).
-        """
-        try:
-            if len(breaks) > len(self.elements):
-                raise ValueError(
-                    "Break list must be of the same or smaller length as number of elements."
-                )
-        except TypeError:
-            pass
-
-        out = []
-        for i, _ in enumerate(self.elements):
-            try:
-                n = breaks[i]
-            except IndexError:
-                out.append("")
-                continue
-            except TypeError:
-                out.append("")
-                continue
-
-            if not isinstance(n, int):
-                raise TypeError("Break values must be of type integer.")
-            if not n >= 1 and n <= 12:
-                raise ValueError("Break values must be between 1 and 12.")
-
-            if bp == "xs":
-                out.append(f"col-{n}")
-            else:
-                out.append(f"col-{bp}-{n}")
-
-        return out
-
-
-class Stack(Row):
-    def __init__(self, *elements, **kwargs):
-        super().__init__(*elements, **kwargs)
-        self.width_xs = [12 for element in elements]
 
 
 class VerticalSpace(Element, WebElementInterface):

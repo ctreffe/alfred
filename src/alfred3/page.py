@@ -436,7 +436,7 @@ class CoreCompositePage(PageCore):
             except KeyError:
                 pass
 
-            self._element_dict[elmnt.name] = element
+            self._element_dict[elmnt.name] = elmnt
 
 
     def generate_element_name(self, element):
