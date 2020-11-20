@@ -26,7 +26,8 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
 }
 
 .corrective-hint {
-    color: red;
+    color: #E23636;
+    padding: 0.5rem;
 }
 
 .col-element {
