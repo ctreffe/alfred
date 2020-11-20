@@ -139,6 +139,9 @@ class Element(object):
             raise TypeError()
 
         self._page = q
+        if self.name is None:
+            self.name = self.page.generate_element_name(self)
+
         if self._page.experiment:
             self.added_to_experiment(self._page.experiment)
 

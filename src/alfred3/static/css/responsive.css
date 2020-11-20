@@ -30,17 +30,11 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     padding: 0.5rem;
 }
 
-.col-element {
-    padding: 0;
-}
-
 .choice-button-group, .choice-button-bar {
     width: 100%;
 }
 
 .element {
-    padding-left: 1rem;
-    padding-right: 1rem;
     display: flex;
     flex-direction: row;
 }
@@ -48,6 +42,19 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
 .element.single-choice-element {
     padding-left: 0;
     padding-right: 0;
+}
+
+.input-element>label.leftlab, .input-element>label.rightlab {
+    margin-bottom: 0;
+    /* align-self: center; */
+}
+
+.input-element>label.leftlab>.label-element, .input-element>label.leftlab>.label-element>div {
+    padding-right: 0;
+}
+
+.input-element>label.rightlab>.label-element, .input-element>label.rightlab>.label-element>div {
+    padding-left: 0;
 }
 
 .input-element {

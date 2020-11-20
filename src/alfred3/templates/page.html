@@ -47,11 +47,10 @@
 
             {% for element in element_list %}
 
-            {% if element.responsive_widget and element.should_be_shown %}
-            {{ element.responsive_widget | safe }}
-            {% elif element.web_widget and element.should_be_shown %}
+            {% if element.web_widget and element.should_be_shown %}
             {{ element.web_widget | safe }}
             {% endif %}
+            
             {% endfor %}
 
             <!-- Status Text -->

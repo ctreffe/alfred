@@ -1,0 +1,9 @@
+<div class="row element row-element {{ hide }}" id="elid-{{ name }}">
+    {% for col in columns  %}
+
+    <div class="{{ col.breaks }} {{ col.vertical_position }} col-element" id="{{ col.id }}">
+        {{ col.element.web_widget }}
+    </div>
+        
+    {% endfor %}
+</div>

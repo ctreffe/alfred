@@ -8,7 +8,7 @@
 
 {# Main Input #}
 <input type="text" class="form-control input-field" id="{{ name }}" placeholder="{{ placeholder }}"
-    name="{{ name }}" {% if default %} value="{{ default }}" {% endif %}>
+    name="{{ name }}" {% if default %} value="{{ default }}" {% endif %} {% if disabled %}disabled{% endif %}>
 
 {# Suffix #}
 {% if suffix %}

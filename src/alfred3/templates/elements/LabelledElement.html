@@ -1,0 +1,53 @@
+<!-- this row is the general widget container -->
+<div class="row element input-element d-flex justify-content-{{ position }} {{ hide }} {{ element_class }} {{ align }}"
+    id="elid-{{ name }}">
+    
+    <!-- this column is used to control the overall width of the widget -->
+    <div class="{{ element_width }}">
+
+        <!-- this row contains the components of an input element (i.e. labels and input fields) -->
+        <div class="row input-element">
+            
+            <!-- if there is a toplab, it is rendered here -->
+            {% if toplab %}
+            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %}
+            <label class="{{ input_breaks }} toplab" for="{{ name }}">
+                {{ toplab.web_widget }}
+            </label>
+            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %}
+            {% endif %}
+            
+            <!-- if there is a left label, it is rendered here -->
+            {% if leftlab %}
+            <label class="{{ leftlab.col_breaks }} {{ leftlab.vertical_alignment }} leftlab" for="{{ name }}">
+                {{ leftlab.web_widget }}
+            </label>
+            {% endif %}
+
+            <!-- this is where the actual input field gets rendered -->
+            <div class="{{ input_breaks }} {{ input_valign }}">
+                {% if html %} <!-- Inject element html directly (convenient for custom elements) -->
+                {{ html | safe}}
+                {% else %} <!-- Element html via jinja template extension -->
+                {% block input_element %}
+                {% endblock input_element %}
+                {% endif %}
+            </div>
+
+            <!-- if there is a right label, it is rendered here -->
+            {% if rightlab %}
+            <label class="{{ rightlab.col_breaks }} {{ leftlab.vertical_alignment }} rightlab" for="{{ name }}">
+                {{ rightlab.web_widget }}
+            </label>
+            {% endif %}
+
+        </div>
+
+        {% if corrective_hint %}
+        <div class="col-12 corrective-hint">
+            {{ corrective_hint }}
+        </div>
+        {% endif %}
+
+    </div>
+</div>

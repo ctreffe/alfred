@@ -1,8 +1,8 @@
 
-<div class="btn-group{% if not inline %}-vertical{% endif %} btn-group-toggle flex-wrap {{ button_group_class }}" data-toggle="buttons" id="choice-button-group-{{ name }}">
+<div class="btn-group{% if vertical %}-vertical{% endif %} btn-group-toggle flex-wrap {{ button_group_class }}" data-toggle="buttons" id="choice-button-group-{{ name }}">
     {% for choice in choices %}
     <label class="btn btn{% if button_outline %}-outline{% endif %}-{{ button_style }} {% if choice.checked %}active{% endif %} {{ choice.css_class }}" id="{{ choice.label_id }}">
-      <input type="{{ choice.type }}" name="{{ choice.name }}" id="{{ choice.id }}" value="{{ choice.value }}" autocomplete="off" {% if choice.checked %}checked{% endif %}>{{ choice.label }}
+      <input type="{{ choice.type }}" name="{{ choice.name }}" id="{{ choice.id }}" value="{{ choice.value }}" autocomplete="off" {% if choice.checked %}checked{% endif %} {% if disabled %}disabled{% endif %}>{{ choice.label }}
     </label>
     {% endfor %}
   </div>
