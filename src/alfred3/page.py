@@ -444,7 +444,7 @@ class CoreCompositePage(PageCore):
         c = element.__class__.__name__
         self._element_name_counter += 1
 
-        return f"{i}_{c}"
+        return f"{c}_{i}"
 
     def __iadd__(self, other):
         self.append(other)
