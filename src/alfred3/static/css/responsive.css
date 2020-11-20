@@ -4,6 +4,27 @@
     height: 30px;
 }
 
+/* make button group separate */
+div.btn-group.choice-button-group>label.btn.choice-button:not(:last-child) {
+    margin-right: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
+    margin-left: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.btn-group-vertical.choice-button-group>label.btn.choice-button:not(:last-child) {
+    margin-bottom: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.btn-group-vertical.choice-button-group>label.btn.choice-button:not(:first-child) {
+    margin-top: 0.25rem;
+    border-radius: 0.25rem;
+}
+
 .corrective-hint {
     color: red;
 }
@@ -12,7 +33,7 @@
     padding: 0;
 }
 
-.choice-button-group {
+.choice-button-group, .choice-button-bar {
     width: 100%;
 }
 
@@ -44,9 +65,6 @@
     border-radius: 1rem;
 }
 
-.row-element {
-    /* margin: auto; */
-}
 
 .footer-container {
     margin-top: 1rem;
