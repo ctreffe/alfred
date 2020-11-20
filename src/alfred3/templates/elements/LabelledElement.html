@@ -41,6 +41,15 @@
             </label>
             {% endif %}
 
+            <!-- if there is a bottom, it is rendered here -->
+            {% if bottomlab %}
+            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %}
+            <label class="{{ input_breaks }} bottomlab" for="{{ name }}">
+                {{ bottomlab.web_widget }}
+            </label>
+            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %}
+            {% endif %}
+
         </div>
 
         {% if corrective_hint %}

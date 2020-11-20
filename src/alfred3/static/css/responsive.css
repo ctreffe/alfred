@@ -25,6 +25,11 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     border-radius: 0.25rem;
 }
 
+.bottomlab {
+    margin-bottom: 0;
+    margin-top: 0.25rem;
+}
+
 .corrective-hint {
     color: #E23636;
     padding: 0.5rem;

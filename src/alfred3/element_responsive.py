@@ -1094,7 +1094,7 @@ class LabelledElement(Element):
     base_template = jinja_env.get_template("LabelledElement.html")
     element_class = "labelled-element"
 
-    def __init__(self, toplab: str = None, leftlab: str = None, rightlab: str = None, **kwargs):
+    def __init__(self, toplab: str = None, leftlab: str = None, rightlab: str = None, bottomlab: str = None, **kwargs):
         """Constructor method."""
         super().__init__(**kwargs)
         # default for width
@@ -1120,7 +1120,15 @@ class LabelledElement(Element):
         self.toplab = toplab
         self.leftlab = leftlab
         self.rightlab = rightlab
+        self.bottomlab = bottomlab
 
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
+            if getattr(self, lab):
+                getattr(self, lab).name = f"{self.name}-{lab}"
+        
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self.layout.responsive = self.experiment.config.getboolean("layout", "responsive")
@@ -1133,6 +1141,9 @@ class LabelledElement(Element):
         
         if self.rightlab:
             self.rightlab.added_to_experiment(experiment)
+        
+        if self.bottomlab:
+            self.bottomlab.added_to_experiment(experiment)
 
     @property
     def toplab(self):
@@ -1141,9 +1152,20 @@ class LabelledElement(Element):
     @toplab.setter
     def toplab(self, value: str):
         if value is not None:
-            self._toplab = Label(text=value, align="center", name=f"{self.name}-toplab")
+            self._toplab = Label(text=value, align="center")
         else:
             self._toplab = None
+    
+    @property
+    def bottomlab(self):
+        return self._bottomlab
+    
+    @bottomlab.setter
+    def bottomlab(self, value: str):
+        if value is not None:
+            self._bottomlab = Label(text=value, align="center")
+        else:
+            self._bottomlab = None
 
     @property
     def leftlab(self):
@@ -1152,7 +1174,7 @@ class LabelledElement(Element):
     @leftlab.setter
     def leftlab(self, value: str):
         if value is not None:
-            self._leftlab = Label(text=value, align="right", layout=self.layout, layout_col=0, name=f"{self.name}-leftlab")
+            self._leftlab = Label(text=value, align="right", layout=self.layout, layout_col=0)
         else:
             self._leftlab = None
     
@@ -1163,7 +1185,7 @@ class LabelledElement(Element):
     @rightlab.setter
     def rightlab(self, value: str):
         if value is not None:
-            self._rightlab = Label(text=value, align="left", layout=self.layout, layout_col=-1, name=f"{self.name}-rightlab")
+            self._rightlab = Label(text=value, align="left", layout=self.layout, layout_col=-1)
         else:
             self._rightlab = None
     
@@ -1173,6 +1195,7 @@ class LabelledElement(Element):
         d["toplab"] = self.toplab
         d["leftlab"] = self.leftlab
         d["rightlab"] = self.rightlab
+        d["bottomlab"] = self.bottomlab
         d["input_breaks"] = self.layout.col_breaks(col=self.input_col)
         d["input_valign"] = self.layout.valign_cols[self.input_col]
         return d
@@ -1412,7 +1435,6 @@ class TextEntryElement(InputElement):
     @property
     def codebook_data_flat(self):
         data = super().codebook_data_flat
-        data["instruction"] = self._instruction
         data["prefix"] = self._prefix
         data["suffix"] = self._suffix
         data["placeholder"] = self._placeholder
