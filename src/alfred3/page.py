@@ -220,7 +220,7 @@ class PageCore(ContentCore):
         this code only once, when submitting the data from a page. After
         a page is closed, there can be no more changes to subject input.
         This is the most important difference of :meth:`on_close` from
-        :meth:`on_first_hide`.
+        :meth:`on_first_hide` and :meth`on_each_hide`.
 
         *New in v1.4*
         """
@@ -620,10 +620,7 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         self._on_showing_widget()
 
         for elmnt in self._element_list:
-            try:
-                elmnt.prepare()
-            except AttributeError:
-                pass
+            elmnt.prepare()
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)

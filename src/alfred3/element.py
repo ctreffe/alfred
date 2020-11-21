@@ -280,6 +280,9 @@ class WebElementInterface(with_metaclass(ABCMeta, object)):
     def web_widget(self):
         pass
 
+    def prepare(self):
+        self.prepare_web_widget()
+
     def prepare_web_widget(self):
         pass
 
