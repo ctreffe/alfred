@@ -304,10 +304,10 @@ class Element(ABC):
         self._should_be_shown = True
 
         # additional code
-        self.css_code = []
-        self.css_urls = []
-        self.js_code = []
-        self.js_urls = []
+        self._css_code = []
+        self._css_urls = []
+        self._js_code = []
+        self._js_urls = []
 
         # logging
         self.instance_level_logging = instance_level_logging
@@ -486,21 +486,21 @@ class Element(ABC):
     def identifier(self):
         return self.tree.replace("rootSection_", "") + "_" + self._name
 
-    # @property
-    # def css_code(self):
-    #     return self._css_code
+    @property
+    def css_code(self):
+        return self._css_code
     
-    # @property
-    # def css_urls(self):
-    #     return self._css_urls
+    @property
+    def css_urls(self):
+        return self._css_urls
     
-    # @property
-    # def js_code(self):
-    #     return self._js_code
+    @property
+    def js_code(self):
+        return self._js_code
     
-    # @property
-    # def js_urls(self):
-    #     return self._js_urls
+    @property
+    def js_urls(self):
+        return self._js_urls
 
     @property
     def web_thumbnail(self):
@@ -770,12 +770,14 @@ class Row(Element):
         valign_cols: List[str] = None,
         name: str = None,
         showif: dict = None,
+        elements_full_width: bool = True,
     ):
         """Constructor method."""
         super().__init__(name=name, showif=showif)
         self.elements = elements
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
         self.height = height
+        self.elements_full_width = elements_full_width
 
     def added_to_page(self, page):
         super().added_to_page(page)
@@ -785,6 +787,9 @@ class Row(Element):
                 continue
             element.should_be_shown = False
             page += element
+
+            if self.elements_full_width:
+                element.width = "full"
 
     @property
     def css_code(self):
@@ -860,20 +865,28 @@ class Style(Element):
     def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
         super().__init__()
         self.priority = priority
-        if code:
-            self.css_code = [(priority, code)]
-        if url:
-            self.css_urls = [(priority, url)]
+        self.code = code
+        self.url = url
+        
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-    def prepare_web_widget(self):
+        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
+            raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
+    
+    @property
+    def css_code(self):
         if self.path:
             p = self.experiment.subpath(self.path)
 
             code = p.read_text()
-            self.css_code += [(self.priority, code)]
-
+            return [(self.priority, code)]
+        else:
+            return [(self.priority, self.code)]
+    
+    @property
+    def css_urls(self):
+        return [(self.priority, self.url)]
 
 class JavaScript(Element):
     """Adds JavaScript to a page.
@@ -888,19 +901,28 @@ class JavaScript(Element):
     def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
         super().__init__()
         self.priority = priority
-        if code:
-            self.js_code = [(priority, code)]
-        if url:
-            self.js_urls = [(priority, url)]
+        self.code = code
+        self.url = url
+        
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-    def prepare_web_widget(self):
+        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
+            raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
+    
+    @property
+    def js_code(self):
         if self.path:
             p = self.experiment.subpath(self.path)
 
             code = p.read_text()
-            self.js_code += [(self.priority, code)]
+            return [(self.priority, code)]
+        else:
+            return [(self.priority, self.code)]
+    
+    @property
+    def js_urls(self):
+        return [(self.priority, self.url)]
 
 
 class WebExitEnabler(JavaScript):
@@ -1023,8 +1045,8 @@ class Label(TextElement):
 
     element_class = "label-element"
 
-    def __init__(self, text, layout: RowLayout = None, layout_col: int = None, **kwargs):
-        super().__init__(text=text, **kwargs)
+    def __init__(self, text, layout: RowLayout = None, layout_col: int = None, width="full", **kwargs):
+        super().__init__(text=text, width=width, **kwargs)
         self.layout = layout
         self.layout_col = layout_col
 
