@@ -167,12 +167,16 @@ p.page-subtitle {
 
 @media (max-width: 576px) {
 
-    .responsive .choice-button-label-right > div {
-        text-align: left;
+    .input-element>label.rightlab>.label-element, .input-element>label.rightlab>.label-element>div {
+        padding-left: 0.5rem;
     }
 
-    .responsive .choice-button-label-left > div {
-        text-align: left;
+    .responsive .rightlab > div {
+        text-align: left!important;
+    }
+
+    .responsive .leftlab > div {
+        text-align: left!important;
     }
 
     .responsive .single-choice-element > div {

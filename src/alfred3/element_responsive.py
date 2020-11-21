@@ -304,10 +304,10 @@ class Element(ABC):
         self._should_be_shown = True
 
         # additional code
-        self._css_code = []
-        self._css_urls = []
-        self._js_code = []
-        self._js_urls = []
+        self.css_code = []
+        self.css_urls = []
+        self.js_code = []
+        self.js_urls = []
 
         # logging
         self.instance_level_logging = instance_level_logging
@@ -486,21 +486,21 @@ class Element(ABC):
     def identifier(self):
         return self.tree.replace("rootSection_", "") + "_" + self._name
 
-    @property
-    def css_code(self):
-        return self._css_code
+    # @property
+    # def css_code(self):
+    #     return self._css_code
     
-    @property
-    def css_urls(self):
-        return self._css_urls
+    # @property
+    # def css_urls(self):
+    #     return self._css_urls
     
-    @property
-    def js_code(self):
-        return self._js_code
+    # @property
+    # def js_code(self):
+    #     return self._js_code
     
-    @property
-    def js_urls(self):
-        return self._js_urls
+    # @property
+    # def js_urls(self):
+    #     return self._js_urls
 
     @property
     def web_thumbnail(self):
@@ -1454,6 +1454,7 @@ class Choice:
     type: str = "radio"
     checked: bool = False
     css_class: str = None
+    style: str = None
 
 
 class ChoiceElement(InputElement, ABC):
@@ -1515,18 +1516,23 @@ class SingleChoiceElement(ChoiceElement):
 
 class SingleChoiceButtons(SingleChoiceElement):
     """
-    Attributes:
+    Keyword Arguments:
         button_width: Can be used to manually define the width of 
             buttons. If you supply a single string, the same width will
             be applied to all buttons in the element. You can also supply
             a list of specific widths for each individual button. You 
             must specify a unit, e.g. '140px'. Defaults to "auto".
         button_style: Can be used for quick color-styling, using 
-            Bootstraps default color keywords: primary, secondary (default),
-            success, info, warning, danger, light, dark
-        button_outline: A boolean switch to toggle button display as 
-            outlined or filled buttons. Defaults to *True*, i.e. outlined
-            buttons.
+            Bootstraps default color keywords: btn-primary, btn-secondary,
+            btn-success, btn-info, btn-warning, btn-danger, btn-light, 
+            btn-dark. You can also use the "outline" variant to get 
+            outlined buttons (eg. "btn-outline-secondary"). If you 
+            specify a single string, this style is applied to all 
+            buttons in the element. If you supply a list, you can define
+            individual styles for each button. If you supply a list that
+            is shorter than the list of labels, the last style
+            will be repeated for remaining buttons. Advanced user can
+            supply their own CSS classes for button-styling.
         button_toolbar: A boolean switch to toggle whether buttons should
             be layoutet as a connected toolbar (*True*), or as separate
             neighbouring buttons (*False*, default).
@@ -1538,18 +1544,65 @@ class SingleChoiceButtons(SingleChoiceElement):
     element_class: str = "single-choice-buttons"
     element_template = jinja_env.get_template("ChoiceButtons.html")
 
-    button_width: Union[list, str] = "auto"
-    button_style: str = "secondary"
-    button_outline: bool = True
     button_toolbar: bool = False
-    button_round_corners: bool = False
     button_group_class: str = "choice-button-group"
+
+    def __init__(self, *choice_labels, button_width: Union[str, list] = "auto", button_style: Union[str, list] = "btn-outline-secondary", button_round_corners: bool = False, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
+        self.button_width = button_width
+        self.button_style = button_style
+        self.button_round_corners = button_round_corners
+
+    def define_choices(self):
+        choices = []
+        for i, label in enumerate(self.choice_labels, start=1):
+            choice = Choice()
+
+            choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            choice.type = "radio"
+            choice.value = label
+            choice.name = self.name
+            choice.id = f"{self.name}_choice{i}"
+            choice.label_id = f"{choice.id}-lab"
+            choice.checked = True if (self.default == label) else False
+            choice.css_class = f"choice-button choice-button-{self.name}"
+            choice.style = self.button_style[i-1]
+
+            choices.append(choice)
+        return choices
+    
+    @property
+    def button_style(self):
+        return self._button_style
+    
+    @button_style.setter
+    def button_style(self, value):
+
+        # create list of fitting length, if only string is provided
+        if isinstance(value, str):
+            self._button_style = [value for x in self.choice_labels]
+
+        # take styles-list if the length fits
+        elif isinstance(value, list) and len(value) == len(self.choice_labels):
+            self._button_style = value
+        
+        # repeat last value, if styles-list is shorter than labels-list
+        elif isinstance(value, list) and len(value) < len(self.choice_labels):
+            self._button_style = []
+            for i, _ in enumerate(self.choice_labels):
+                try:
+                    self._button_style.append(value[i])
+                except IndexError:
+                    self._button_style.append(value[-1])
+        
+        elif isinstance(value, list) and len(value) > len(self.choice_labels):
+            raise ValueError("List of button styles cannot be longer than list of button labels.")
+
 
     @property
     def template_data(self):
         d = super().template_data
         d["button_style"] = self.button_style
-        d["button_outline"] = self.button_outline
         d["button_group_class"] = self.button_group_class
         return d
 
@@ -1559,7 +1612,7 @@ class SingleChoiceButtons(SingleChoiceElement):
         if isinstance(self.button_width, str):
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
             css += f".btn.choice-button {{width: {self.button_width};}}"
-            self._css_code += [(7, css)]
+            self.css_code += [(7, css)]
 
         elif isinstance(self.button_width, list):
             if not len(self.button_width) == len(self.choices):
@@ -1568,18 +1621,18 @@ class SingleChoiceButtons(SingleChoiceElement):
                 )
 
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
-            self._css_code += [(7, css)]
+            self.css_code += [(7, css)]
 
             for w, c in zip(self.button_width, self.choices):
                 css = f"#{c.label_id} {{width: {w};}}"
-                self._css_code += [(7, css)]
+                self.css_code += [(7, css)]
 
     def _round_corners(self):
         """Adds css for rounded buttons."""
 
         spec = "border-radius: 1rem;"
         css = f"div#choice-button-group-{ self.name }.btn-group>label.btn.choice-button {{{spec}}}"
-        self._css_code += [(7, css)]
+        self.css_code += [(7, css)]
 
     def _toolbar(self):
         """Adds css for toolbar display instead of separate buttons."""
@@ -1593,7 +1646,7 @@ class SingleChoiceButtons(SingleChoiceElement):
             spec += f"border-top-{m}-radius: 0; "
             spec += f"border-bottom-{m}-radius: 0;"
             css = f"div#choice-button-group-{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
-            self._css_code += [(7, css)]
+            self.css_code += [(7, css)]
 
     def prepare_web_widget(self):
         super().prepare_web_widget()
