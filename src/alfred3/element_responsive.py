@@ -28,13 +28,14 @@ from ._helper import is_url
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
+
 class RowLayout:
     """ 
     Args:
         responsive: Boolean, indicating whether breakpoints should
                     be responsive, or not.
     """
-    
+
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
         self.ncols = ncols
         self._valign_cols = valign_cols
@@ -65,8 +66,8 @@ class RowLayout:
                 return "col-sm"
             else:
                 return " ".join(breaks)
-        else: # set breaks to a fixed value
-            breaks = self.format_breaks(self.width_sm, "xs")[col] # this is ONE value
+        else:  # set breaks to a fixed value
+            breaks = self.format_breaks(self.width_sm, "xs")[col]  # this is ONE value
             out = breaks if breaks != "" else "col"
             return out
 
@@ -143,10 +144,11 @@ class RowLayout:
                 )
 
         return out
-    
+
     @valign_cols.setter
     def valign_cols(self, value: List[str]):
         self._valign_cols = value
+
 
 class Element(ABC):
     """Element baseclass. 
@@ -489,15 +491,15 @@ class Element(ABC):
     @property
     def css_code(self):
         return self._css_code
-    
+
     @property
     def css_urls(self):
         return self._css_urls
-    
+
     @property
     def js_code(self):
         return self._js_code
-    
+
     @property
     def js_urls(self):
         return self._js_urls
@@ -744,6 +746,8 @@ class Row(Element):
         height: Custom row height (with unit, e.g. '100px').
         valign_cols: List of vertical column alignments. Valid values 
             are 'auto' (default), 'top', 'center', and 'bottom'.
+        elements_full_width: A switch, telling the row whether you wish
+            it to resize all elements in it to full-width (default: True).
     
     Attributes:
         width_xs: List of column widths on screens of size 'xs' or 
@@ -821,7 +825,7 @@ class Row(Element):
         d["name"] = self.name
         t = jinja_env.get_template("Row.html")
         return t.render(d)
-        
+
 
 class Stack(Row):
     def __init__(self, *elements, **kwargs):
@@ -867,13 +871,13 @@ class Style(Element):
         self.priority = priority
         self.code = code
         self.url = url
-        
+
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
         if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
             raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
-    
+
     @property
     def css_code(self):
         if self.path:
@@ -883,10 +887,11 @@ class Style(Element):
             return [(self.priority, code)]
         else:
             return [(self.priority, self.code)]
-    
+
     @property
     def css_urls(self):
         return [(self.priority, self.url)]
+
 
 class JavaScript(Element):
     """Adds JavaScript to a page.
@@ -903,13 +908,13 @@ class JavaScript(Element):
         self.priority = priority
         self.code = code
         self.url = url
-        
+
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
         if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
             raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
-    
+
     @property
     def js_code(self):
         if self.path:
@@ -919,7 +924,7 @@ class JavaScript(Element):
             return [(self.priority, code)]
         else:
             return [(self.priority, self.code)]
-    
+
     @property
     def js_urls(self):
         return [(self.priority, self.url)]
@@ -979,11 +984,7 @@ class TextElement(Element):
     element_template = jinja_env.get_template("TextElement.html")
 
     def __init__(
-        self,
-        text: str = None,
-        path: Union[Path, str] = None,
-        width: str = None,
-        **element_args,
+        self, text: str = None, path: Union[Path, str] = None, width: str = None, **element_args,
     ):
 
         """Constructor method."""
@@ -995,7 +996,7 @@ class TextElement(Element):
 
         if self._text and self._path:
             raise ValueError("You can only specify one of 'text' and 'path'.")
-    
+
     @property
     def text(self):
         if self._path:
@@ -1045,7 +1046,9 @@ class Label(TextElement):
 
     element_class = "label-element"
 
-    def __init__(self, text, layout: RowLayout = None, layout_col: int = None, width="full", **kwargs):
+    def __init__(
+        self, text, layout: RowLayout = None, layout_col: int = None, width="full", **kwargs
+    ):
         super().__init__(text=text, width=width, **kwargs)
         self.layout = layout
         self.layout_col = layout_col
@@ -1053,12 +1056,12 @@ class Label(TextElement):
     @property
     def col_breaks(self):
         return self.layout.col_breaks(self.layout_col)
-    
+
     @property
     def vertical_alignment(self):
         return self.layout.valign_cols[self.layout_col]
 
-    
+
 class DataElement(Element):
     def __init__(self, variable, description=None, **kwargs):
         """
@@ -1113,30 +1116,46 @@ class DataElement(Element):
 
 class LabelledElement(Element):
     """An intermediate Element with support for labels."""
+
     base_template = jinja_env.get_template("LabelledElement.html")
     element_class = "labelled-element"
 
-    def __init__(self, toplab: str = None, leftlab: str = None, rightlab: str = None, bottomlab: str = None, **kwargs):
+    def __init__(
+        self,
+        toplab: str = None,
+        leftlab: str = None,
+        rightlab: str = None,
+        bottomlab: str = None,
+        **kwargs,
+    ):
         """Constructor method."""
         super().__init__(**kwargs)
         # default for width
         if leftlab and rightlab:
-            self.input_col = 1 # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = (
+                1  # for accessing the right col in layout.col_breaks for the input field
+            )
             self.layout = RowLayout(ncols=3)
             self.layout.width_sm = [2, 8, 2]
         elif leftlab:
-            self.input_col = 1 # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = (
+                1  # for accessing the right col in layout.col_breaks for the input field
+            )
             self.layout = RowLayout(ncols=2)
             self.layout.width_sm = [3, 9]
         elif rightlab:
-            self.input_col = 0 # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = (
+                0  # for accessing the right col in layout.col_breaks for the input field
+            )
             self.layout = RowLayout(ncols=2)
             self.layout.width_sm = [9, 3]
         else:
-            self.input_col = 0 # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = (
+                0  # for accessing the right col in layout.col_breaks for the input field
+            )
             self.layout = RowLayout(ncols=1)
             self.layout.width_sm = [12]
-        
+
         self.layout.valign_cols = ["center" for el in range(self.layout.ncols)]
 
         self.toplab = toplab
@@ -1150,38 +1169,38 @@ class LabelledElement(Element):
         for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
             if getattr(self, lab):
                 getattr(self, lab).name = f"{self.name}-{lab}"
-        
+
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self.layout.responsive = self.experiment.config.getboolean("layout", "responsive")
 
         if self.toplab:
             self.toplab.added_to_experiment(experiment)
-        
+
         if self.leftlab:
             self.leftlab.added_to_experiment(experiment)
-        
+
         if self.rightlab:
             self.rightlab.added_to_experiment(experiment)
-        
+
         if self.bottomlab:
             self.bottomlab.added_to_experiment(experiment)
 
     @property
     def toplab(self):
         return self._toplab
-    
+
     @toplab.setter
     def toplab(self, value: str):
         if value is not None:
             self._toplab = Label(text=value, align="center")
         else:
             self._toplab = None
-    
+
     @property
     def bottomlab(self):
         return self._bottomlab
-    
+
     @bottomlab.setter
     def bottomlab(self, value: str):
         if value is not None:
@@ -1192,25 +1211,25 @@ class LabelledElement(Element):
     @property
     def leftlab(self):
         return self._leftlab
-    
+
     @leftlab.setter
     def leftlab(self, value: str):
         if value is not None:
             self._leftlab = Label(text=value, align="right", layout=self.layout, layout_col=0)
         else:
             self._leftlab = None
-    
+
     @property
     def rightlab(self):
         return self._rightlab
-    
+
     @rightlab.setter
     def rightlab(self, value: str):
         if value is not None:
             self._rightlab = Label(text=value, align="left", layout=self.layout, layout_col=-1)
         else:
             self._rightlab = None
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -1259,6 +1278,7 @@ class InputElement(LabelledElement):
     """
 
     can_display_corrective_hints_in_line = True
+    disabled = False
 
     def __init__(
         self,
@@ -1277,7 +1297,9 @@ class InputElement(LabelledElement):
         self._force_input = force_input
         self._no_input_corrective_hint = no_input_corrective_hint
         self._default = default
-        self.disabled = disabled
+        
+        if disabled:
+            self.disabled = disabled
 
         if default is not None:
             self._input = default
@@ -1380,6 +1402,10 @@ class InputElement(LabelledElement):
 
         data = {}
         data["name"] = self.name
+        data["label_top"] = self.toplab.text if self.toplab is not None else ""
+        data["label_left"] = self.leftlab.text if self.leftlab is not None else ""
+        data["label_right"] = self.rightlab.text if self.rightlab is not None else ""
+        data["label_bottom"] = self.bottomlab.text if self.bottomlab is not None else ""
         data["tree"] = self.tree.replace("rootSection_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
@@ -1394,6 +1420,7 @@ class InputElement(LabelledElement):
     @property
     def codebook_data(self):
         return {self.identifier: self.codebook_data_flat}
+
 
 class TextEntryElement(InputElement):
     """Provides a text entry field.
@@ -1457,9 +1484,9 @@ class TextEntryElement(InputElement):
     @property
     def codebook_data_flat(self):
         data = super().codebook_data_flat
-        data["prefix"] = self._prefix
-        data["suffix"] = self._suffix
-        data["placeholder"] = self._placeholder
+        data["prefix"] = self.prefix
+        data["suffix"] = self.suffix
+        data["placeholder"] = self.placeholder
 
         return data
 
@@ -1476,7 +1503,6 @@ class Choice:
     type: str = "radio"
     checked: bool = False
     css_class: str = None
-    style: str = None
 
 
 class ChoiceElement(InputElement, ABC):
@@ -1484,21 +1510,27 @@ class ChoiceElement(InputElement, ABC):
     element_template = jinja_env.get_template("ChoiceElement.html")
     type = None
 
-    def __init__(self, *choice_labels, vertical: bool = False, shuffle: bool = False, align: str="center", **kwargs):
+    def __init__(
+        self,
+        *choice_labels,
+        vertical: bool = False,
+        shuffle: bool = False,
+        align: str = "center",
+        **kwargs,
+    ):
         super().__init__(align=align, **kwargs)
 
         self.choice_labels = choice_labels
         self.vertical = vertical
         self.shuffle = shuffle
 
-
     def added_to_page(self, page):
         super().added_to_page(page)
-        
+
         self.choices = self.define_choices()
         if self.shuffle:
             random.shuffle(self.choices)
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -1525,7 +1557,7 @@ class SingleChoiceElement(ChoiceElement):
 
             choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "radio"
-            choice.value = label
+            choice.value = i
             choice.name = self.name
             choice.id = f"{self.name}_choice{i}"
             choice.label_id = f"{choice.id}-lab"
@@ -1534,6 +1566,15 @@ class SingleChoiceElement(ChoiceElement):
 
             choices.append(choice)
         return choices
+
+    @property
+    def codebook_data_flat(self):
+        # import pdb; pdb.set_trace()
+        d = super().codebook_data_flat
+
+        choices = {f"choice{i+1}": lab for i, lab in enumerate(self.choice_labels)}
+        d.update(choices)
+        return d
 
 
 class SingleChoiceButtons(SingleChoiceElement):
@@ -1569,34 +1610,23 @@ class SingleChoiceButtons(SingleChoiceElement):
     button_toolbar: bool = False
     button_group_class: str = "choice-button-group"
 
-    def __init__(self, *choice_labels, button_width: Union[str, list] = "auto", button_style: Union[str, list] = "btn-outline-secondary", button_round_corners: bool = False, **kwargs):
+    def __init__(
+        self,
+        *choice_labels,
+        button_width: Union[str, list] = "auto",
+        button_style: Union[str, list] = "btn-outline-secondary",
+        button_corners: str = "normal",
+        **kwargs,
+    ):
         super().__init__(*choice_labels, **kwargs)
         self.button_width = button_width
         self.button_style = button_style
-        self.button_round_corners = button_round_corners
+        self.button_round_corners = True if button_corners == "round" else False
 
-    def define_choices(self):
-        choices = []
-        for i, label in enumerate(self.choice_labels, start=1):
-            choice = Choice()
-
-            choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
-            choice.type = "radio"
-            choice.value = label
-            choice.name = self.name
-            choice.id = f"{self.name}_choice{i}"
-            choice.label_id = f"{choice.id}-lab"
-            choice.checked = True if (self.default == label) else False
-            choice.css_class = f"choice-button choice-button-{self.name}"
-            choice.style = self.button_style[i-1]
-
-            choices.append(choice)
-        return choices
-    
     @property
     def button_style(self):
         return self._button_style
-    
+
     @button_style.setter
     def button_style(self, value):
 
@@ -1607,7 +1637,7 @@ class SingleChoiceButtons(SingleChoiceElement):
         # take styles-list if the length fits
         elif isinstance(value, list) and len(value) == len(self.choice_labels):
             self._button_style = value
-        
+
         # repeat last value, if styles-list is shorter than labels-list
         elif isinstance(value, list) and len(value) < len(self.choice_labels):
             self._button_style = []
@@ -1616,10 +1646,9 @@ class SingleChoiceButtons(SingleChoiceElement):
                     self._button_style.append(value[i])
                 except IndexError:
                     self._button_style.append(value[-1])
-        
+
         elif isinstance(value, list) and len(value) > len(self.choice_labels):
             raise ValueError("List of button styles cannot be longer than list of button labels.")
-
 
     @property
     def template_data(self):
@@ -1634,7 +1663,7 @@ class SingleChoiceButtons(SingleChoiceElement):
         if isinstance(self.button_width, str):
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
             css += f".btn.choice-button {{width: {self.button_width};}}"
-            self.css_code += [(7, css)]
+            self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, list):
             if not len(self.button_width) == len(self.choices):
@@ -1643,18 +1672,18 @@ class SingleChoiceButtons(SingleChoiceElement):
                 )
 
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
-            self.css_code += [(7, css)]
+            self._css_code += [(7, css)]
 
             for w, c in zip(self.button_width, self.choices):
                 css = f"#{c.label_id} {{width: {w};}}"
-                self.css_code += [(7, css)]
+                self._css_code += [(7, css)]
 
     def _round_corners(self):
         """Adds css for rounded buttons."""
 
         spec = "border-radius: 1rem;"
         css = f"div#choice-button-group-{ self.name }.btn-group>label.btn.choice-button {{{spec}}}"
-        self.css_code += [(7, css)]
+        self._css_code += [(7, css)]
 
     def _toolbar(self):
         """Adds css for toolbar display instead of separate buttons."""
@@ -1668,7 +1697,7 @@ class SingleChoiceButtons(SingleChoiceElement):
             spec += f"border-top-{m}-radius: 0; "
             spec += f"border-bottom-{m}-radius: 0;"
             css = f"div#choice-button-group-{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
-            self.css_code += [(7, css)]
+            self._css_code += [(7, css)]
 
     def prepare_web_widget(self):
         super().prepare_web_widget()
@@ -1686,7 +1715,7 @@ class SingleChoiceButtons(SingleChoiceElement):
 class SingleChoiceBar(SingleChoiceButtons):
     element_class = "single-choice-bar"
     button_group_class = "choice-button-bar"  # this leads to display as connected buttons
-
+    button_toolbar = True
 
 class MultipleChoiceElement(ChoiceElement):
 
@@ -1694,12 +1723,7 @@ class MultipleChoiceElement(ChoiceElement):
     type = "checkbox"
 
     def __init__(
-        self,
-        *choice_labels,
-        min: int = None,
-        max: int = None,
-        select_hint: str = None,
-        **kwargs,
+        self, *choice_labels, min: int = None, max: int = None, select_hint: str = None, **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
 
@@ -1778,6 +1802,26 @@ class MultipleChoiceElement(ChoiceElement):
 class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
     element_class = "multiple-choice-buttons"
 
+
 class MultipleChoiceBar(MultipleChoiceButtons):
-    element_class = "multiple-chocie-bar"
+    element_class = "multiple-choice-bar"
     button_group_class = "choice-button-bar"
+    button_toolbar = True
+
+class ButtonChoiceLabels(SingleChoiceButtons):
+
+    element_class = "button-choice-labels"
+    disabled = True
+
+    @property
+    def data(self):
+        return {}
+
+class BarChoiceLabels(SingleChoiceBar):
+
+    element_class = "bar-choice-labels"
+    disabled = True
+
+    @property
+    def data(self):
+        return {}
