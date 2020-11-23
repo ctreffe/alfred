@@ -50,7 +50,7 @@
             {% if element.web_widget and element.should_be_shown %}
             {{ element.web_widget | safe }}
             {% endif %}
-            
+
             {% endfor %}
 
             <!-- Status Text -->
@@ -63,6 +63,7 @@
             <!-- Hidden fields -->
             <input type="hidden" name="page_token" value="{{ d.get('page_token') }}">
             <input type="hidden" name="screen_resolution" id="screen_resolution">
+            <input type="hidden" id="alt-submit">
         </div>
 
         <!-- navigation area-->
