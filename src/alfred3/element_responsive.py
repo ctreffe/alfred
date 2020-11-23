@@ -1679,8 +1679,6 @@ class ChoiceElement(InputElement, ABC):
 
     def prepare_web_widget(self):
         self.choices = self.define_choices()
-        if self.shuffle:
-            random.shuffle(self.choices)
 
     @property
     def template_data(self):
