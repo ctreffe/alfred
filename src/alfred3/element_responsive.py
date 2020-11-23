@@ -1922,3 +1922,41 @@ class BarChoiceLabels(SingleChoiceBar):
     @property
     def data(self):
         return {}
+
+class ImageElement(Element):
+    element_class = "image-element"
+    element_template = jinja_env.get_template("ImageElement.html")
+
+    def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
+        super().__init__(**kwargs)
+
+        self.path = path
+        if url is not None and not is_url(url):
+            raise ValueError("Supplied value is not a valid url.")
+        else:
+            self.url = url
+
+        if path and url:
+            raise ValueError("You can only specify one of 'path' and 'url'.")
+
+        self.src = None
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        if self.path:
+            p = self.experiment.subpath(self.path)
+            url = self.experiment.user_interface_controller.add_static_file(p)
+            self.src = url
+        else:
+            self.src = self.url
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["src"] = self.src
+        return d
+
+    def __str__(self):
+        src = self.path if self.path is not None else self.url
+        return f"ImageElement(src: '{src}'; name: '{self.name}')"
+
