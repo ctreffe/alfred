@@ -1047,9 +1047,6 @@ class TextElement(Element):
     @text.setter
     def text(self, text):
         self._text = text
-        if self._text_label:
-            self._text_label.set_text(self._text)
-            self._text_label.repaint()
 
     @property
     def element_width(self):
