@@ -10,11 +10,11 @@
             
             <!-- if there is a toplab, it is rendered here -->
             {% if toplab %}
-            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %}
+            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             <label class="{{ input_breaks }} toplab" for="{{ name }}">
                 {{ toplab.web_widget }}
             </label>
-            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %}
+            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             {% endif %}
             
             <!-- if there is a left label, it is rendered here -->
@@ -25,29 +25,40 @@
             {% endif %}
 
             <!-- this is where the actual input field gets rendered -->
-            <div class="{{ input_breaks }} {{ input_valign }}">
-                {% if html %} <!-- Inject element html directly (convenient for custom elements) -->
+            <div class="{{ input_breaks }} {{ input_valign }} {% if prexif or suffix %}input-group{% endif %}">
+                
+                {# Prefix #}
+                {% if prefix %}
+                <div class="input-group-prepend">
+                    <div class="input-group-text"> {{ prefix }}</div>
+                </div>
+                {% endif %}
+
+                <!-- This is where the element HTML is injected -->
                 {{ html | safe}}
-                {% else %} <!-- Element html via jinja template extension -->
-                {% block input_element %}
-                {% endblock input_element %}
+
+                {# Suffix #}
+                {% if suffix %}
+                <div class="input-group-append">
+                    <div class="input-group-text"> {{ suffix }}</div>
+                </div>
                 {% endif %}
             </div>
 
             <!-- if there is a right label, it is rendered here -->
             {% if rightlab %}
-            <label class="{{ rightlab.col_breaks }} {{ leftlab.vertical_alignment }} rightlab" for="{{ name }}">
+            <label class="{{ rightlab.col_breaks }} {{ rightlab.vertical_alignment }} rightlab" for="{{ name }}">
                 {{ rightlab.web_widget }}
             </label>
             {% endif %}
 
             <!-- if there is a bottom, it is rendered here -->
             {% if bottomlab %}
-            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %}
+            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             <label class="{{ input_breaks }} bottomlab" for="{{ name }}">
                 {{ bottomlab.web_widget }}
             </label>
-            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %}
+            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             {% endif %}
 
         </div>

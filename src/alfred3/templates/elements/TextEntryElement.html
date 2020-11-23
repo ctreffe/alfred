@@ -1,20 +1,2 @@
-<div class="input-group">
-{# Prefix #}
-{% if prefix %}
-<div class="input-group-prepend">
-    <div class="input-group-text"> {{ prefix }}</div>
-</div>
-{% endif %}
-
-{# Main Input #}
-<input type="text" class="form-control input-field" id="{{ name }}" placeholder="{{ placeholder }}"
-    name="{{ name }}" {% if default %} value="{{ default }}" {% endif %} {% if disabled %}disabled{% endif %}>
-
-{# Suffix #}
-{% if suffix %}
-<div class="input-group-append">
-    <div class="input-group-text"> {{ suffix }}</div>
-</div>
-{% endif %}
-
-</div>
+<input type="text" class="form-control input-field {{ align }}" id="{{ name }}" placeholder="{{ placeholder }}"
+    name="{{ name }}" {% if input %} value="{{ input }}" {% elif default %} value="{{ default }}" {% endif %} {% if disabled %}disabled{% endif %} style="{{ height }} {{ fontsize }}">

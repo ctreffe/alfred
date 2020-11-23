@@ -1112,12 +1112,10 @@ class Label(TextElement):
 
     element_class = "label-element"
 
-    def __init__(
-        self, text, layout: RowLayout = None, layout_col: int = None, width="full", **kwargs
-    ):
+    def __init__(self, text, width="full", **kwargs):
         super().__init__(text=text, width=width, **kwargs)
-        self.layout = layout
-        self.layout_col = layout_col
+        self.layout: RowLayout = None
+        self.layout_col: int = None
 
     @property
     def col_breaks(self):
@@ -1179,6 +1177,9 @@ class DataElement(Element):
     def codebook_data(self):
         return {self.identifier: self.codebook_data_flat}
 
+    def __str__(self):
+        return f"{type(self).__name__}(value: '{self.variable}'; name: '{self.name}')"
+
 
 class LabelledElement(Element):
     """An intermediate Element with support for labels."""
@@ -1198,27 +1199,23 @@ class LabelledElement(Element):
         super().__init__(**kwargs)
         # default for width
         if leftlab and rightlab:
-            self.input_col = (
-                1  # for accessing the right col in layout.col_breaks for the input field
-            )
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 1
             self.layout = RowLayout(ncols=3)
             self.layout.width_sm = [2, 8, 2]
         elif leftlab:
-            self.input_col = (
-                1  # for accessing the right col in layout.col_breaks for the input field
-            )
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 1
             self.layout = RowLayout(ncols=2)
             self.layout.width_sm = [3, 9]
         elif rightlab:
-            self.input_col = (
-                0  # for accessing the right col in layout.col_breaks for the input field
-            )
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 0
             self.layout = RowLayout(ncols=2)
             self.layout.width_sm = [9, 3]
         else:
-            self.input_col = (
-                0  # for accessing the right col in layout.col_breaks for the input field
-            )
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 0
             self.layout = RowLayout(ncols=1)
             self.layout.width_sm = [12]
 
@@ -1258,7 +1255,9 @@ class LabelledElement(Element):
 
     @toplab.setter
     def toplab(self, value: str):
-        if value is not None:
+        if isinstance(value, Label):
+            self._toplab = value
+        elif isinstance(value, str):
             self._toplab = Label(text=value, align="center")
         else:
             self._toplab = None
@@ -1269,7 +1268,9 @@ class LabelledElement(Element):
 
     @bottomlab.setter
     def bottomlab(self, value: str):
-        if value is not None:
+        if isinstance(value, Label):
+            self._bottomlab = value
+        elif isinstance(value, str):
             self._bottomlab = Label(text=value, align="center")
         else:
             self._bottomlab = None
@@ -1280,8 +1281,14 @@ class LabelledElement(Element):
 
     @leftlab.setter
     def leftlab(self, value: str):
-        if value is not None:
-            self._leftlab = Label(text=value, align="right", layout=self.layout, layout_col=0)
+        if isinstance(value, Label):
+            self._leftlab = value
+            self._leftlab.layout = self.layout
+            self._leftlab.layout_col = 0
+        elif isinstance(value, str):
+            self._leftlab = Label(text=value, align="right")
+            self._leftlab.layout = self.layout
+            self._leftlab.layout_col = 0
         else:
             self._leftlab = None
 
@@ -1291,10 +1298,34 @@ class LabelledElement(Element):
 
     @rightlab.setter
     def rightlab(self, value: str):
-        if value is not None:
-            self._rightlab = Label(text=value, align="left", layout=self.layout, layout_col=-1)
+        if isinstance(value, Label):
+            self._rightlab = value
+            self._rightlab.layout = self.layout
+            self._rightlab.layout_col = self.input_col +1
+        elif isinstance(value, str):
+            self._rightlab = Label(text=value, align="left")
+            self._rightlab.layout = self.layout
+            self._rightlab.layout_col = self.input_col +1
         else:
             self._rightlab = None
+
+    @property
+    def labels(self) -> str:
+        labels = []
+        if self.toplab:
+            labels.append(f"top: '{self.toplab.text}'")
+        if self.leftlab:
+            labels.append(f"left: '{self.leftlab.text}'")
+        if self.rightlab:
+            labels.append(f"right: '{self.rightlab.text}'")
+        if self.bottomlab:
+            labels.append(f"bottom: '{self.bottomlab.text}'")
+
+        if labels:
+            return ", ".join(labels)
+
+    def __str__(self):
+        return f"{type(self).__name__}(labels: {self.labels}; name: {self.name})"
 
     @property
     def template_data(self):
@@ -1363,7 +1394,7 @@ class InputElement(LabelledElement):
         self._force_input = force_input
         self._no_input_corrective_hint = no_input_corrective_hint
         self._default = default
-        
+
         if disabled:
             self.disabled = disabled
 
