@@ -82,6 +82,10 @@ class PageCore(ContentCore):
         data = super(PageCore, self).data
         data.update(self._data)
         return data
+    
+    @property
+    def has_been_shown(self) -> bool:
+        return self._has_been_shown
 
     def _on_showing_widget(self):
         """

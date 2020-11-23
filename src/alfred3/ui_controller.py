@@ -202,12 +202,16 @@ class UserInterface:
                 )  # level to bootstrap
             d["messages"] = messages
         
-        # progress
+        # progress bar
         n_el = len(self.experiment.page_controller.all_input_elements)
         n_pg = len(self.experiment.page_controller.all_pages)
         i_el = self.experiment.page_controller.filled_input_elements
         i_pg = self.experiment.page_controller.completed_pages
-        d["progress"] = ((i_el + i_pg) / (n_el + n_pg))*100
+        exact_progress = ((i_el + i_pg) / (n_el + n_pg))*100
+        if not self.experiment.finished:
+            d["progress"] = min(exact_progress, 95)
+        else:
+            d["progress"] = 100
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
 
         return self.template.render(d=d, element_list=page.element_list, code=code)

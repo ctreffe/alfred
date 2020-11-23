@@ -144,8 +144,8 @@ class PageController(object):
         """Number of filled input elements up to the current page."""
         counter = 0
         for page in self.all_pages:
-            if page is self.current_page:
-                break
+            if not page.has_been_shown:
+                continue
             counter += len(page.input_elements)
         return counter
     
@@ -153,8 +153,8 @@ class PageController(object):
     def completed_pages(self)-> int:
         counter = 0
         for page in self.all_pages:
-            if page is self.current_page:
-                break
+            if not page.has_been_shown:
+                continue
             counter += 1
         return counter
     
