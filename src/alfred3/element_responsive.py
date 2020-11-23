@@ -1704,7 +1704,10 @@ class SingleChoiceElement(ChoiceElement):
         for i, label in enumerate(self.choice_labels, start=1):
             choice = Choice()
 
-            choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            if isinstance(label, Element):
+                choice.label = label.web_widget
+            else:
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "radio"
             choice.value = i
             choice.name = self.name
