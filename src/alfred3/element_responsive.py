@@ -1030,20 +1030,18 @@ class TextElement(Element):
     ):
 
         """Constructor method."""
-        super(TextElement, self).__init__(width=width, **element_args)
+        super().__init__(width=width, **element_args)
 
         self._text = text if text is not None else ""
-        self._text_label = None
-        self._path = path
+        self.path = path
 
-        if self._text and self._path:
+        if self._text and self.path:
             raise ValueError("You can only specify one of 'text' and 'path'.")
 
     @property
     def text(self):
-        if self._path:
-            p = Path(self.experiment.path) / self._path
-            return p.read_text()
+        if self.path:
+            return self.experiment.subpath(self.path).read_text()
         else:
             return self._text
 
