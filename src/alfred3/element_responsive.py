@@ -1780,12 +1780,17 @@ class SingleChoiceElement(ChoiceElement):
 
 class SingleChoiceButtons(SingleChoiceElement):
     """
+
+    "align" parameter has no effect in labels.
+
     Keyword Arguments:
         button_width: Can be used to manually define the width of 
             buttons. If you supply a single string, the same width will
-            be applied to all buttons in the element. You can also supply
-            a list of specific widths for each individual button. You 
-            must specify a unit, e.g. '140px'. Defaults to "auto".
+            be applied to all buttons in the element. If you supply
+            "auto", button width will be determined automatically. You 
+            can also supply a list of specific widths for each 
+            individual button. You must specify a unit, e.g. '140px'. 
+            Defaults to "equal".
         button_style: Can be used for quick color-styling, using 
             Bootstraps default color keywords: btn-primary, btn-secondary,
             btn-success, btn-info, btn-warning, btn-danger, btn-light, 
@@ -1815,8 +1820,8 @@ class SingleChoiceButtons(SingleChoiceElement):
     def __init__(
         self,
         *choice_labels,
-        button_width: Union[str, list] = "auto",
-        button_style: Union[str, list] = "btn-outline-secondary",
+        button_width: Union[str, list] = "equal",
+        button_style: Union[str, list] = "btn-outline-dark",
         button_corners: str = None,
         **kwargs,
     ):
@@ -1824,7 +1829,7 @@ class SingleChoiceButtons(SingleChoiceElement):
         self.button_width = button_width
         self.button_style = button_style
         if button_corners is not None and button_corners == "normal":
-            self.button_round_corners =  False
+            self.button_round_corners = False
 
     @property
     def button_style(self):
@@ -2019,6 +2024,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     element_class = "multiple-choice-bar"
     button_group_class = "choice-button-bar"
     button_toolbar = True
+    button_round_corners = False
 
 
 class ButtonLabels(SingleChoiceButtons):
