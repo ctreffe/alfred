@@ -1761,8 +1761,8 @@ class SingleChoiceElement(ChoiceElement):
                 choice.checked = True if int(self.input) == i else False
                 # import pdb; pdb.set_trace()
             elif self.default:
-                choice.checked = True if (self.default == label) else False
-            
+                choice.checked = True if (self.default == i) else False
+
             choice.css_class = f"choice-button choice-button-{self.name}"
 
             choices.append(choice)
@@ -1927,21 +1927,33 @@ class SingleChoiceBar(SingleChoiceButtons):
 
 
 class MultipleChoiceElement(ChoiceElement):
+    """ 
+
+    Defining 'min', 'max' implies force_input.
+    """
 
     element_class = "multiple-choice-element"
     type = "checkbox"
 
     def __init__(
-        self, *choice_labels, min: int = None, max: int = None, select_hint: str = None, **kwargs,
+        self, *choice_labels, min: int = None, max: int = None, select_hint: str = None, default: list = None, **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
 
         self._input = {}
 
+        if min is not None or max is not None:
+            self.force_input = True
+
         self.min = min if min is not None else 0
         self.max = max if max is not None else len(self.choice_labels)
 
         self._select_hint = select_hint
+
+        if default is not None and not isinstance(default, list):
+            raise ValueError("Default for MultipleChoiceElement must be a list of integers, indicating the default choices.")
+        else:
+            self.default = default
 
     @property
     def select_hint(self):
@@ -1966,9 +1978,9 @@ class MultipleChoiceElement(ChoiceElement):
             return [self.select_hint]
 
     def validate_data(self):
-        if not self._force_input or not self._should_be_shown:
+        if not self.force_input or not self._should_be_shown:
             return True
-        elif self.min <= len(self._input) <= self.max:
+        elif self.min <= sum(list(self.input.values())) <= self.max:
             return True
         else:
             return False
@@ -2009,7 +2021,7 @@ class MultipleChoiceElement(ChoiceElement):
             elif self.input:
                 choice.checked = True if self.input[choice.name] is True else False
             elif self.default:
-                choice.checked = True if (self.default[i - 1] == i) else False
+                choice.checked = True if i in self.default else False
 
             choices.append(choice)
         return choices
