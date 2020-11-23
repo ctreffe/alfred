@@ -1167,36 +1167,35 @@ class Label(TextElement):
 
 
 class DataElement(Element):
-    def __init__(self, variable, description=None, **kwargs):
-        """
-        **DataElement** returns no widget, but can save a variable of any type into experiment data.
+    """DataElement can be used to save data without any display.
 
-        :param str variable: Variable to be stored into experiment data.
-        """
+    Example::
+
+        DataElement(value="test", name="mydata")
+    
+    Args:
+        value: The value that you want to save.
+    """
+
+    def __init__(self, value: Union[str, int, float], description: str = None, **kwargs):
+        """Constructor method."""
+
+        if kwargs.pop("variable", False):
+            raise ValueError("'variable' is not a valid parameter. Use 'value' instead.")
+
         super(DataElement, self).__init__(**kwargs)
-        self._variable = variable
+        self.value = value
         self.description = description
-
-    @property
-    def variable(self):
-        return self._variable
-
-    @variable.setter
-    def variable(self, variable):
-        self._variable = variable
-
-    @property
-    def web_widget(self):
-        return ""
+        self.should_be_shown = False
 
     @property
     def data(self):
-        return {self.name: self._variable}
+        return {self.name: self.value}
 
     @property
     def encrypted_data(self):
-        encrypted_variable = self.experiment.encrypt(self._variable)
-        return {self.name: encrypted_variable}
+        encrypted_value = self.experiment.encrypt(self.value)
+        return {self.name: encrypted_value}
 
     @property
     def codebook_data_flat(self):
@@ -1218,7 +1217,7 @@ class DataElement(Element):
         return {self.identifier: self.codebook_data_flat}
 
     def __str__(self):
-        return f"{type(self).__name__}(value: '{self.variable}'; name: '{self.name}')"
+        return f"{type(self).__name__}(value: '{self.value}'; name: '{self.name}')"
 
 
 class LabelledElement(Element):
