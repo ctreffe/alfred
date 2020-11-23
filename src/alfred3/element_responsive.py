@@ -325,7 +325,7 @@ class Element(ABC):
 
     base_template = jinja_env.get_template("Element.html")
     element_template = None
-    can_display_corrective_hints_in_line = True
+    can_display_corrective_hints_in_line = False
 
     def __init__(
         self,
