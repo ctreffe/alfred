@@ -36,10 +36,6 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     margin-bottom: 0.5rem;
 }
 
-.btn.choice-button {
-    width: min-content;
-}
-
 .single-choice-buttons, .multiple-choice-buttons, .single-choice-bar, .multiple-choice-bar, .button-choice-labels, .bar-choice-labels {
     /* balancing the margins */
     margin-bottom: -0.5rem;
