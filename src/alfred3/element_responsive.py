@@ -1665,9 +1665,19 @@ class ChoiceElement(InputElement, ABC):
         self.vertical = vertical
         self.shuffle = shuffle
 
+        if self.shuffle:
+            random.shuffle(self.choice_labels)
+
     def added_to_page(self, page):
         super().added_to_page(page)
 
+        for label in self.choice_labels:
+            if isinstance(label, Element):
+                label.added_to_page(page)
+                label.should_be_shown = False
+                label.width = "full"  # in case of TextElement, b/c its default is a special width
+
+    def prepare_web_widget(self):
         self.choices = self.define_choices()
         if self.shuffle:
             random.shuffle(self.choices)
