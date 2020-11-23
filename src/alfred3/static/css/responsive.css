@@ -122,7 +122,7 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
 }
 
 .logo-bg {
-    height: 60px;
+    height: 65px;
 }
 
 .logo {
@@ -203,9 +203,6 @@ p.page-subtitle {
     height: 10px;
 }
 
-/* .logo-bg {
-    padding-top: 15px;
-} */
 
 /* BREAKPOINTS */
 
