@@ -1924,6 +1924,7 @@ class SingleChoiceBar(SingleChoiceButtons):
     element_class = "single-choice-bar"
     button_group_class = "choice-button-bar"  # this leads to display as connected buttons
     button_toolbar = True
+    button_round_corners = True
 
 
 class MultipleChoiceElement(ChoiceElement):
