@@ -693,7 +693,10 @@ class Element(ABC):
     # Magic methods start here -----------------------------------------
 
     def __str__(self):
-        return f"<{type(self).__name__} [name='{self.name}']>"
+        return f"{type(self).__name__}(name: '{self.name}')"
+
+    def __repr__(self):
+        return self.__str__()
 
     # abstract attributes start here -----------------------------------
 
