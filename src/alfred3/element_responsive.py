@@ -1879,6 +1879,7 @@ class SingleChoiceBar(SingleChoiceButtons):
     button_group_class = "choice-button-bar"  # this leads to display as connected buttons
     button_toolbar = True
 
+
 class MultipleChoiceElement(ChoiceElement):
 
     element_class = "multiple-choice-element"
@@ -1965,6 +1966,7 @@ class MultipleChoiceElement(ChoiceElement):
 
 class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
     element_class = "multiple-choice-buttons"
+    button_round_corners = False
 
 
 class MultipleChoiceBar(MultipleChoiceButtons):
@@ -1972,7 +1974,8 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     button_group_class = "choice-button-bar"
     button_toolbar = True
 
-class ButtonChoiceLabels(SingleChoiceButtons):
+
+class ButtonLabels(SingleChoiceButtons):
 
     element_class = "button-choice-labels"
     disabled = True
@@ -1981,7 +1984,8 @@ class ButtonChoiceLabels(SingleChoiceButtons):
     def data(self):
         return {}
 
-class BarChoiceLabels(SingleChoiceBar):
+
+class BarLabels(SingleChoiceBar):
 
     element_class = "bar-choice-labels"
     disabled = True
@@ -1989,6 +1993,7 @@ class BarChoiceLabels(SingleChoiceBar):
     @property
     def data(self):
         return {}
+
 
 class ImageElement(Element):
     element_class = "image-element"
