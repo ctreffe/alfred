@@ -21,7 +21,7 @@ from . import element_responsive as relm
 from . import saving_agent
 from ._core import ContentCore
 from ._helper import _DictObj
-from .element import Element, ExperimenterMessages, TextElement, WebElementInterface
+from .element import Element, ExperimenterMessages, TextElement, WebElementInterface, InputElement
 from .exceptions import AlfredError
 
 
@@ -461,6 +461,11 @@ class CoreCompositePage(PageCore):
     @property
     def element_list(self):
         return self._element_list
+    
+    @property
+    def input_elements(self) -> list:
+        """Returns a list of the page's input elements."""
+        return [el for el in self.element_list if isinstance(el, (relm.InputElement, InputElement))]
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
