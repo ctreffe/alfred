@@ -1221,7 +1221,16 @@ class DataElement(Element):
 
 
 class LabelledElement(Element):
-    """An intermediate Element with support for labels."""
+    """An intermediate Element class which provides support for labels.
+    
+    Args:
+        toplab, leftlab, rightlab, bottomlab: Strings or instances of
+            :class:`Label`, which will be used to label the element.
+        layout: A list of integers, specifying the allocation of 
+            horizontal space between leftlab, main element widget and
+            rightlab. Uses Bootstraps 12-column-grid, i.e. you can
+            choose integers between 1 and 12.
+    """
 
     base_template = jinja_env.get_template("LabelledElement.html")
     element_class = "labelled-element"
@@ -1232,6 +1241,7 @@ class LabelledElement(Element):
         leftlab: str = None,
         rightlab: str = None,
         bottomlab: str = None,
+        layout: List[int] = None,
         **kwargs,
     ):
         """Constructor method."""
@@ -1241,17 +1251,17 @@ class LabelledElement(Element):
             # for accessing the right col in layout.col_breaks for the input field
             self.input_col = 1
             self.layout = RowLayout(ncols=3)
-            self.layout.width_sm = [2, 8, 2]
+            self.layout.width_sm = layout if layout is not None else [2, 8, 2]
         elif leftlab:
             # for accessing the right col in layout.col_breaks for the input field
             self.input_col = 1
             self.layout = RowLayout(ncols=2)
-            self.layout.width_sm = [3, 9]
+            self.layout.width_sm = layout if layout is not None else [3, 9]
         elif rightlab:
             # for accessing the right col in layout.col_breaks for the input field
             self.input_col = 0
             self.layout = RowLayout(ncols=2)
-            self.layout.width_sm = [9, 3]
+            self.layout.width_sm = layout if layout is not None else [9, 3]
         else:
             # for accessing the right col in layout.col_breaks for the input field
             self.input_col = 0
@@ -1290,6 +1300,7 @@ class LabelledElement(Element):
 
     @property
     def toplab(self):
+        """Label above of the main element widget."""
         return self._toplab
 
     @toplab.setter
@@ -1303,6 +1314,7 @@ class LabelledElement(Element):
 
     @property
     def bottomlab(self):
+        """Label below of the main element widget."""
         return self._bottomlab
 
     @bottomlab.setter
@@ -1313,8 +1325,10 @@ class LabelledElement(Element):
             self._bottomlab = Label(text=value, align="center")
         else:
             self._bottomlab = None
+
     @property
     def leftlab(self):
+        """Label to the left of the main element widget."""
         return self._leftlab
 
     @leftlab.setter
@@ -1332,6 +1346,7 @@ class LabelledElement(Element):
 
     @property
     def rightlab(self):
+        """Label to the right of the main element widget."""
         return self._rightlab
 
     @rightlab.setter
@@ -1339,16 +1354,18 @@ class LabelledElement(Element):
         if isinstance(value, Label):
             self._rightlab = value
             self._rightlab.layout = self.layout
-            self._rightlab.layout_col = self.input_col +1
+            self._rightlab.layout_col = self.input_col + 1
         elif isinstance(value, str):
             self._rightlab = Label(text=value, align="left")
             self._rightlab.layout = self.layout
-            self._rightlab.layout_col = self.input_col +1
+            self._rightlab.layout_col = self.input_col + 1
         else:
             self._rightlab = None
 
     @property
     def labels(self) -> str:
+        """Returns the labels in a single, nicely formatted string."""
+
         labels = []
         if self.toplab:
             labels.append(f"top: '{self.toplab.text}'")
