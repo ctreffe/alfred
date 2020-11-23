@@ -350,7 +350,7 @@ class PageCore(ContentCore):
         self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
 
     def __str__(self):
-        return f"<{type(self).__name__} [tag='{self.tag}', uid='{self.uid}']>"
+        return f"{type(self).__name__}(tag='{self.tag}', uid='{self.uid}')"
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
