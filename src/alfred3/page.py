@@ -476,7 +476,10 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).close_page()
 
         for elmnt in self._element_list:
-            elmnt.enabled = False
+            if isinstance(elmnt, relm.InputElement):
+                elmnt.disabled = True
+            elif isinstance(elmnt, Element):
+                elmnt.enabled = False
 
     @property
     def data(self):

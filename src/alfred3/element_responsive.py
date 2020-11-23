@@ -471,26 +471,6 @@ class Element(ABC):
         return {}
 
     @property
-    def enabled(self):
-        """
-        Property **enabled** describes a general property of all (input) elements. Only if set to True, element can be edited.
-
-        :param bool enabled: Property setter variable.
-        """
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, enabled):
-        if not isinstance(enabled, bool):
-            raise TypeError
-
-        self._enabled = enabled
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return False
-
-    @property
     def corrective_hints(self):
         return []
 
@@ -1274,7 +1254,6 @@ class LabelledElement(Element):
             self._bottomlab = Label(text=value, align="center")
         else:
             self._bottomlab = None
-
     @property
     def leftlab(self):
         return self._leftlab
@@ -1433,6 +1412,7 @@ class InputElement(LabelledElement):
     def template_data(self) -> dict:
         d = super().template_data
         d["default"] = self.default
+        d["input"] = self.input
         d["disabled"] = self.disabled
 
         if self.corrective_hints:
@@ -1490,7 +1470,7 @@ class InputElement(LabelledElement):
         return enrcypted_dict
 
     def set_data(self, d):
-        if self.enabled:
+        if not self.disabled:
             self._input = d.get(self.name, "")
 
     @property
@@ -1658,7 +1638,15 @@ class SingleChoiceElement(ChoiceElement):
             choice.name = self.name
             choice.id = f"{self.name}_choice{i}"
             choice.label_id = f"{choice.id}-lab"
-            choice.checked = True if (self.default == label) else False
+
+            if self.debug_enabled:
+                choice.checked = True if i == 1 else False
+            elif self.input:
+                choice.checked = True if int(self.input) == i else False
+                # import pdb; pdb.set_trace()
+            elif self.default:
+                choice.checked = True if (self.default == label) else False
+            
             choice.css_class = f"choice-button choice-button-{self.name}"
 
             choices.append(choice)
@@ -1889,6 +1877,8 @@ class MultipleChoiceElement(ChoiceElement):
 
             if self.debug_enabled:
                 choice.checked = True if i <= self.max else False
+            elif self.input:
+                choice.checked = True if self.input[choice.name] is True else False
             elif self.default:
                 choice.checked = True if (self.default[i - 1] == i) else False
 
