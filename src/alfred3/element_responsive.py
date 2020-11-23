@@ -993,8 +993,13 @@ class WebExitEnabler(JavaScript):
 class TextElement(Element):
     """Displays text.
 
-    You can use GitHub-flavored Markdown syntax for formatting [#md]_ .
-    Additionally, you can use raw html for advanced formatting.
+    You can use GitHub-flavored Markdown syntax [#md]_ and common emoji 
+    shortcodes [#emoji]_ . Additionally, you can use raw html for 
+    advanced formatting.
+
+    Example::
+
+        TextElement("**This is boldfaced** text. :blush:")
 
     Text can be entered directly through the `text` parameter, or
     it can be read from a file by specifying the 'path' parameter.
@@ -1028,11 +1033,17 @@ class TextElement(Element):
             font_size, align, width, position, showif, 
             instance_level_logging.
     
+    Attributes:
+        emojize: If True (default), emoji shortcodes in the text will
+            be converted to unicode.
+
     .. [#md]: https://guides.github.com/features/mastering-markdown/
+    .. [#emoji]: Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
 
     element_class = "text-element"
     element_template = jinja_env.get_template("TextElement.html")
+    emojize = True
 
     def __init__(
         self, text: str = None, path: Union[Path, str] = None, width: str = None, **element_args,
@@ -1057,7 +1068,11 @@ class TextElement(Element):
             return self._text
 
     def render_text(self):
-        return cmarkgfm.github_flavored_markdown_to_html(self.text)
+        if self.emojize:
+            text = emojize(self.text, use_aliases=True)
+        else:
+            text = self.text
+        return cmarkgfm.github_flavored_markdown_to_html(text)
 
     @text.setter
     def text(self, text):
