@@ -1479,10 +1479,21 @@ class InputElement(LabelledElement):
             return self.debug_value
         else:
             return None
+    
+    @default.setter
+    def default(self, value):
+        self._default = value
 
     @property
     def force_input(self):
         return self._force_input
+    
+    @force_input.setter
+    def force_input(self, value: bool):
+        if not isinstance(value, bool):
+            raise ValueError("Force input must be a boolean value.")
+
+        self._force_input = value
 
     @property
     def template_data(self) -> dict:
