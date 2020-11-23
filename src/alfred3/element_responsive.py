@@ -1863,14 +1863,36 @@ class SingleChoiceButtons(SingleChoiceElement):
         d = super().template_data
         d["button_style"] = self.button_style
         d["button_group_class"] = self.button_group_class
+        d["align_raw"] = self._convert_alignment()
         return d
 
     def _button_width(self):
         """Add css for button width."""
 
-        if isinstance(self.button_width, str):
+        if self.button_width == "equal":
+            if not self.vertical:
+                # set button width to small value, because they will grow to fit the group
+                css = f".btn.choice-button-{self.name} {{width: 10px;}} " 
+            else:
+                css = []
+            # full-width buttons on small screens
+            css += (
+                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
+            )
+            self._css_code += [(7, css)]
+
+        elif isinstance(self.button_width, str):
+            # the group needs to be switched to growing with its member buttons
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
-            css += f".btn.choice-button {{width: {self.button_width};}}"
+            # and return to 100% with on small screens
+            css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}} "
+            
+            # now the width of the individual button has an effect
+            css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
+            # and it, too returns to full width on small screens
+            css += (
+                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
+            )
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, list):
@@ -1879,11 +1901,16 @@ class SingleChoiceButtons(SingleChoiceElement):
                     "Length of list 'button_width' must equal length of list 'choices'."
                 )
 
+            # the group needs to be switched to growing with its member buttons
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
+            # and return to 100% with on small screens
+            css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}}"
             self._css_code += [(7, css)]
 
+            # set width for each individual button
             for w, c in zip(self.button_width, self.choices):
-                css = f"#{c.label_id} {{width: {w};}}"
+                css = f"#{c.label_id} {{width: {w};}} "
+                css += f"@media (max-width: 576px) {{#{c.label_id} {{width: 100%!important;}}}} "
                 self._css_code += [(7, css)]
 
     def _round_corners(self):
@@ -1906,6 +1933,17 @@ class SingleChoiceButtons(SingleChoiceElement):
             spec += f"border-bottom-{m}-radius: 0;"
             css = f"div#choice-button-group-{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
             self._css_code += [(7, css)]
+
+    def _convert_alignment(self):
+        if self.vertical:
+            if self.align == "center":
+                return "align-self-center"
+            elif self.align == "left":
+                return "align-self-start"
+            elif self.align == "right":
+                return "align-self-end"
+        else:
+            return None
 
     def prepare_web_widget(self):
         super().prepare_web_widget()
@@ -1948,7 +1986,6 @@ class MultipleChoiceElement(ChoiceElement):
 
         self.min = min if min is not None else 0
         self.max = max if max is not None else len(self.choice_labels)
-
         self._select_hint = select_hint
 
         if default is not None and not isinstance(default, list):
