@@ -213,6 +213,7 @@ class UserInterface:
         else:
             d["progress"] = 100
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
+        d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
 
         return self.template.render(d=d, element_list=page.element_list, code=code)
 

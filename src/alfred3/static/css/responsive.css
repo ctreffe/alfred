@@ -187,6 +187,26 @@ p.page-subtitle {
     margin-bottom: 0;
 }
 
+.progress {
+    height: 10px;
+}
+
+.fixed-progress {
+    position: fixed;
+    width: 100%;
+    border-radius: 0;
+    height: 10px;
+    z-index: 1000;
+}
+
+.progress-bar-space {
+    height: 10px;
+}
+
+/* .logo-bg {
+    padding-top: 15px;
+} */
+
 /* BREAKPOINTS */
 
 /* Extra small devices (portrait phones, less than 576px) */
