@@ -1732,7 +1732,7 @@ class SingleChoiceElement(ChoiceElement):
         # import pdb; pdb.set_trace()
         d = super().codebook_data_flat
 
-        choices = {f"choice{i+1}": lab for i, lab in enumerate(self.choice_labels)}
+        choices = {f"choice{i+1}": str(lab) for i, lab in enumerate(self.choice_labels)}
         d.update(choices)
         return d
 
