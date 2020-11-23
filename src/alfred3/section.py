@@ -44,8 +44,27 @@ class Section(ContentCore):
         return self._page_list
 
     @property
-    def only_pages(self):
+    def only_pages(self) -> list:
+        """List of all pages directly in this section. 
+        
+        .. warning::
+            Does not list pages in subsections. To get pages from 
+            subsections aswell, use `all_pages`.
+        
+        """
         return [member for member in self.page_list if isinstance(member, PageCore)]
+    
+    @property
+    def all_pages(self) -> list:
+        """List of all pages in this section and all its subsections."""
+        out = []
+        for member in self.page_list:
+            if isinstance(member, Section):
+                out += member.all_pages
+            elif isinstance(member, PageCore):
+                out.append(member)
+        return out
+
 
     @property
     def data(self):
