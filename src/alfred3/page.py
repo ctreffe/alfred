@@ -866,6 +866,13 @@ class HeadOpenSectionCantClose(CompositePage):
         )
 
 
+class BlankPage(Page):
+    """A normal page, but all navigation buttons are removed."""
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self += relm.Style("#page-navigation {display: none;}")
+
 ####################
 # Page Mixins
 ####################

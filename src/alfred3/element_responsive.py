@@ -924,6 +924,13 @@ class Style(Element):
         return [(self.priority, self.url)]
 
 
+class HideNavigation(Style):
+
+    def __init__(self):
+        super().__init__()
+        self.code = "#page-navigation {display: none;}"
+
+
 class JavaScript(Element):
     """Adds JavaScript to a page.
     
@@ -1993,6 +2000,18 @@ class BarLabels(SingleChoiceBar):
     @property
     def data(self):
         return {}
+
+
+class SubmittingButtons(SingleChoiceButtons):
+    element_class = "submitting-buttons"
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        t = jinja_env.get_template("submittingbuttons.js")
+        js = t.render(name=self.name)
+
+        page += JavaScript(code=js)
 
 
 class ImageElement(Element):
