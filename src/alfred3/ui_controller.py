@@ -35,13 +35,14 @@ jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
 
 class UserInterface:
-    _css_files = ["bootstrap-4.5.3.min.css", "prism.css", "responsive.css"]
+    _css_files = ["bootstrap-4.5.3.min.css", "prism.css", "font-awesome-icons.css", "responsive.css"]
 
     _js_files = [
         "jquery-3.5.1.min.js",
         "popper.min.js",
         "bootstrap-4.5.3.min.js",
         "prism.js",
+        "font-awesome-icons.js",
         "responsive.js",
     ]
 
