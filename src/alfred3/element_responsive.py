@@ -1609,6 +1609,21 @@ class TextEntryElement(InputElement):
         return data
 
 
+class TextAreaElement(TextEntryElement):
+    element_class = "text-area-element"
+    element_template = jinja_env.get_template("TextAreaElement.html")
+
+    def __init__(self, toplab: str = None, nrows: int = 5, **kwargs):
+        super().__init__(toplab=toplab, **kwargs)
+        self.area_nrows = nrows
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["area_nrows"] = self.area_nrows
+        return d
+
+
 @dataclass
 class Choice:
     """Dataclass for managing choices."""
