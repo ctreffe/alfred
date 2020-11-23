@@ -1095,6 +1095,10 @@ class TextElement(Element):
         return f"{type(self).__name__}(text: '{text}'; name: '{self.name}')"
 
 
+class Hline(Element):
+    element_class = "hline-element"
+    inner_html = "<hr>"
+
 class CodeElement(TextElement):
     """A convenience element for displaying highlighted code.
 
