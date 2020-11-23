@@ -20,6 +20,7 @@ from jinja2 import Template
 from past.utils import old_div
 
 import cmarkgfm
+from emoji import emojize
 
 from . import alfredlog
 from ._helper import alignment_converter
@@ -27,6 +28,56 @@ from ._helper import fontsize_converter
 from ._helper import is_url
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
+
+
+def icon(name: str, ml: int = 0, mr: int = 0) -> str:
+    """Returns HTML code for displaying font-awesome icons.
+    
+    These icons can be used in all places where HTML code is rendered,
+    i.e. TextElements, and all labels of elements.
+
+
+    Example::
+        
+        TextElement(f"Camera Icon: {icon('camera')}")
+
+    If you need more control, you can simply use the HTML code directly
+    and apply classes and styles as you wish::
+        
+        TextElement("<i class='fas fa-camera'></i>")
+    
+    Args:
+        name: The icon name, as shown on https://fontawesome.com/icons?d=gallery&m=free
+        ml: Margin to the left, can be an integer from 0 to 5.
+        mr: Margin to the right, can be an integer from 0 to 5.
+
+    """
+    return f"<i class='fas fa-{name} ml-{ml} mr-{mr}'></i>"
+
+
+def emoji(text: str) -> str:
+    """Returns a unicode representation of emojis, based on shortcodes.
+    
+    The emoji printing can be used in all TextElements and Element labels.
+    Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
+
+    Example::
+        
+        TextElement(f"Joy emoji: {emoji(':joy:')}")
+
+    You can also print unicode emojis directly without the help of this
+    function, using the "CLDR Short Name" as defined on the official
+    unicode website [#unicode]_ ::
+
+        TextElement("Joy emoji: \\N{face with tears of joy}")
+
+    Args:
+        text: Text, containing emoji shortcodes.
+    
+    .. [#unicode] http://www.unicode.org/emoji/charts/full-emoji-list.html
+
+    """
+    return emojize(text, use_aliases=True)
 
 
 class RowLayout:
