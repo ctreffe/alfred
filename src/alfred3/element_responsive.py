@@ -285,6 +285,8 @@ class Element(ABC):
             small screens. Possible values are 'narrow', 'medium',
             'wide', and 'full'. For more detailed control, you can 
             define the *element_width* attribute.
+        height: Vertical height. Supply a string with a unit, e.g.
+            "80px".
         showif: A dictionary, defining conditions that must be met
             for the element to be shown. See :attr:`showif` for details.
         should_be_shown_filter_function: (...)
@@ -327,9 +329,10 @@ class Element(ABC):
     def __init__(
         self,
         name: str = None,
-        font_size: str = None,
+        font_size: Union[str, int] = None,
         align: str = "left",
         width: str = "full",
+        height: str = None,
         position: str = "center",
         showif: dict = None,
         instance_level_logging: bool = False,
@@ -345,6 +348,7 @@ class Element(ABC):
         self.align = align
         self.font_size = font_size
         self.width = width
+        self.height = height
         self.position = position
         self._show_corrective_hints = False
         self._element_width = None
@@ -538,7 +542,9 @@ class Element(ABC):
         d["element_width"] = self.element_width
         d["hide"] = "hide" if self._showif_on_current_page is True else ""
         d["align"] = f"text-{self.align}"
-        d["style"] = f"font-size: {self.font_size}pt;" if self.font_size else ""
+        d["align_raw"] = self.align
+        d["fontsize"] = f"font-size: {self.font_size}pt;" if self.font_size is not None else ""
+        d["height"] = f"height: {self.height};" if self.height is not None else ""
         d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         return d
 
