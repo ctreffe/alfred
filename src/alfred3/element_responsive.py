@@ -1071,6 +1071,13 @@ class TextElement(Element):
 
         return d
 
+    def __str__(self):
+        if len(self.text) <= 10:
+            text = self.text
+        else:
+            text = self.text[0:10] + "..."
+
+        return f"{type(self).__name__}(text: '{text}'; name: '{self.name}')"
 
 class Label(TextElement):
     """A child of TextElement, serving mainly as label for other 
