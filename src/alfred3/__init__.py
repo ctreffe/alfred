@@ -366,6 +366,18 @@ class Experiment(object):
         for item in items:
             self.page_controller.append(item)
 
+    @property
+    def final_page(self):
+        return self.page_controller.final_page
+    
+    @final_page.setter
+    def final_page(self, value):
+        if not isinstance(value, page.PageCore):
+            raise ValueError("Not a valid page.")
+
+        self.page_controller.final_page = value
+
+    
     def change_final_page(self, page):
         self.page_controller.append_item_to_finish_section(page)
 

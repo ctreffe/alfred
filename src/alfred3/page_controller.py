@@ -10,7 +10,7 @@ from builtins import object
 from ._core import Direction
 
 from .section import Section
-from .page import CompositePage, WebCompositePage, PageCore
+from .page import CompositePage, Page, PageCore
 from .element import TextElement, WebExitEnabler, InputElement
 from . import alfredlog
 from . import element_responsive as relm
@@ -24,23 +24,28 @@ class PageController(object):
 
     def __init__(self, experiment):
         self._experiment = experiment
+        loggername = self.prepare_logger_name()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
 
         self._rootSection = Section(tag="rootSection")
         self._rootSection.added_to_experiment(experiment)
 
-        self._finishedSection = Section(tag="finishedSection", title="Experiment beendet")
+        self._finishedSection = Section(tag="finishedSection")
 
-        final_page = WebCompositePage(tag="finalPage", title="Experiment beendet")
-        final_page += TextElement("Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.")
-        final_page += WebExitEnabler()
-        self._finishedSection += final_page
+        final_page = Page(tag="finalPage", title="Experiment beendet")
+        if self._experiment.config.getboolean("layout", "responsive"):
+            final_page += relm.TextElement("Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme.", align="center")
+            final_page += relm.WebExitEnabler()
+        else:
+            final_page += TextElement("Das Experiment ist nun beendet. Vielen Dank für die Teilnahme.")
+            final_page += WebExitEnabler()
+        
+        self.final_page = final_page
 
         self._finishedSection.added_to_experiment(experiment)
 
         self._finished = False
         self._finishedPageAdded = False
-        loggername = self.prepare_logger_name()
-        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
 
     def __getattr__(self, name):
         """
@@ -114,6 +119,21 @@ class PageController(object):
             "PageController.change_to_finished_group() is deprecated. Use PageController.change_to_finished_section() instead."
         )
         self.change_to_finished_section()
+    
+    @property
+    def final_page(self):
+        return self._final_page
+    
+    @final_page.setter
+    def final_page(self, value):
+        """Replaces the current final page with the given page."""
+        if not isinstance(value, PageCore):
+            raise ValueError("Not a valid page.")
+        
+        self._final_page = value
+        self._finishedSection._page_list = []
+        self._finishedSection += value
+        self.log.info(f"Final page set to: {value}.")
 
     @property
     def all_pages(self) -> list:
