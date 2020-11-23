@@ -454,16 +454,6 @@ class Element(ABC):
             self._name = name
 
     @property
-    def maximum_widget_width(self):
-        return self._maximum_widget_width
-
-    @maximum_widget_width.setter
-    def maximum_widget_width(self, maximum_widget_width):
-        if not isinstance(maximum_widget_width, int):
-            raise TypeError
-        self._maximum_widget_width = maximum_widget_width
-
-    @property
     def data(self):
         """
         Property **data** contains a dictionary with input data of element.
