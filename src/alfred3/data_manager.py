@@ -298,7 +298,7 @@ class CodeBookExporter:
         outfile = Path(out_dir) / csv_name
 
         try:
-            with open(in_file, "r") as f:
+            with open(in_file, "r", encoding="utf-8") as f:
                 doc = json.load(f)
         except json.decoder.JSONDecodeError:
             self.reset()
