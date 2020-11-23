@@ -155,7 +155,7 @@ class UserInterface:
 
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution
-        first_page = self.experiment.page_controller.pages()[0]
+        first_page = self.experiment.page_controller.all_pages[0]
         if page is first_page:
             code["js_code"] += [(7, importlib.resources.read_text(js, "save_first_page.js"))]
 
@@ -201,6 +201,14 @@ class UserInterface:
                     "" if message.level == "warning" else "alert-" + message.level
                 )  # level to bootstrap
             d["messages"] = messages
+        
+        # progress
+        n_el = len(self.experiment.page_controller.all_input_elements)
+        n_pg = len(self.experiment.page_controller.all_pages)
+        i_el = self.experiment.page_controller.filled_input_elements
+        i_pg = self.experiment.page_controller.completed_pages
+        d["progress"] = ((i_el + i_pg) / (n_el + n_pg))*100
+        d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
 
         return self.template.render(d=d, element_list=page.element_list, code=code)
 

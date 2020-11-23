@@ -41,6 +41,13 @@
             </div>
     </div>
 
+    {% if d.get('show_progress') %}
+    <div class="progress">
+        <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ d.get('progress') }}%;"
+            aria-valuenow="{{ d.get('progress') }}" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    {% endif %}
+    
     {% block page %}
     {% endblock page %}
 

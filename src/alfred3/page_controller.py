@@ -11,8 +11,9 @@ from ._core import Direction
 
 from .section import Section
 from .page import CompositePage, WebCompositePage, PageCore
-from .element import TextElement, WebExitEnabler
+from .element import TextElement, WebExitEnabler, InputElement
 from . import alfredlog
+from . import element_responsive as relm
 
 
 class PageController(object):
@@ -114,15 +115,49 @@ class PageController(object):
         )
         self.change_to_finished_section()
 
-    def pages(self):
+    @property
+    def all_pages(self) -> list:
+        """List of all pages in the experiment."""
         out = []
         for member in self.page_list:
             if isinstance(member, Section):
-                out += member.only_pages
+                out += member.all_pages
             elif isinstance(member, PageCore):
                 out.append(member)
         return out
-
+    
+    @property
+    def all_elements(self) -> list:
+        """List of all elements in the experiment."""
+        out = []
+        for page in self.all_pages:
+            out += page.element_list
+        return out
+    
+    @property
+    def all_input_elements(self) -> list:
+        """List of all input elements in the experiment."""
+        return [el for el in self.all_elements if isinstance(el, (InputElement, relm.InputElement))]
+    
+    @property
+    def filled_input_elements(self) -> int:
+        """Number of filled input elements up to the current page."""
+        counter = 0
+        for page in self.all_pages:
+            if page is self.current_page:
+                break
+            counter += len(page.input_elements)
+        return counter
+    
+    @property
+    def completed_pages(self)-> int:
+        counter = 0
+        for page in self.all_pages:
+            if page is self.current_page:
+                break
+            counter += 1
+        return counter
+    
     def prepare_logger_name(self) -> str:
         """Returns a logger name for use in *self.log.queue_logger*.
 
