@@ -389,8 +389,8 @@ class LocalSavingAgent(SavingAgent):
     def _save(self, data: dict):
         """Write data to file."""
         self._check_directory()
-        with open(self.file, "w") as outfile:
-            json.dump(data, outfile, indent=4, sort_keys=True)
+        with open(self.file, "w", encoding="utf-8") as outfile:
+            json.dump(data, outfile, indent=4, sort_keys=True, ensure_ascii=False)
 
     @property
     def file(self):
@@ -1018,9 +1018,8 @@ class CodebookMixin:
 
 class CodebookLocalSavingAgent(AutoLocalSavingAgent, CodebookMixin):
     def _save(self, data: dict):
-
         try:
-            with open(self.file, "r") as f:
+            with open(self.file, "r", encoding="utf-8") as f:
                 existing_data = json.load(f)
 
             _, updated_codebook = self._identify_duplicates_and_update(
