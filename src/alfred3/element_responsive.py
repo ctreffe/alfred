@@ -1688,6 +1688,7 @@ class ChoiceElement(InputElement, ABC):
     element_class = "choice-element"
     element_template = jinja_env.get_template("ChoiceElement.html")
     type = None
+    emojize: bool = True
 
     def __init__(
         self,
@@ -1745,6 +1746,8 @@ class SingleChoiceElement(ChoiceElement):
             if isinstance(label, Element):
                 choice.label = label.web_widget
             else:
+                if self.emojize:
+                    label = emojize(str(label), use_aliases=True)
                 choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "radio"
             choice.value = i
@@ -1983,7 +1986,12 @@ class MultipleChoiceElement(ChoiceElement):
         for i, label in enumerate(self.choice_labels, start=1):
             choice = Choice()
 
-            choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            if isinstance(label, Element):
+                choice.label = label.web_widget
+            else:
+                if self.emojize:
+                    label = emojize(str(label), use_aliases=True)
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "checkbox"
             choice.value = label
             choice.id = f"choice{i}-{self.name}"
