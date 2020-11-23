@@ -1769,19 +1769,21 @@ class SingleChoiceButtons(SingleChoiceElement):
 
     button_toolbar: bool = False
     button_group_class: str = "choice-button-group"
+    button_round_corners = True
 
     def __init__(
         self,
         *choice_labels,
         button_width: Union[str, list] = "auto",
         button_style: Union[str, list] = "btn-outline-secondary",
-        button_corners: str = "normal",
+        button_corners: str = None,
         **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
         self.button_width = button_width
         self.button_style = button_style
-        self.button_round_corners = True if button_corners == "round" else False
+        if button_corners is not None and button_corners == "normal":
+            self.button_round_corners =  False
 
     @property
     def button_style(self):
