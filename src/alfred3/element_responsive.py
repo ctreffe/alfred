@@ -1079,6 +1079,53 @@ class TextElement(Element):
 
         return f"{type(self).__name__}(text: '{text}'; name: '{self.name}')"
 
+
+class CodeElement(TextElement):
+    """A convenience element for displaying highlighted code.
+
+    Args:
+        lang: The programming language to highlight [#lang]_ . Defaults 
+            to 'auto', which tries to auto-detect the right language. 
+    
+    .. [#lang] see https://prismjs.com/index.html#supported-languages
+        for an overview of possible language codes. Note though that 
+        we may not support all possible languages.
+    """
+
+    element_class = "code-element"
+
+    def __init__(
+        self,
+        text: str = None,
+        path: Union[Path, str] = None,
+        lang: str = "auto",
+        width: str = "full",
+        **element_args,
+    ):
+
+        """Constructor method."""
+        super().__init__(text=text, path=path, width=width, **element_args)
+        self.lang = lang if lang is not None else ""
+
+    @property
+    def text(self):
+        if self.path:
+            text = self.experiment.subpath(self.path).read_text()
+
+            code = f"```{self.lang}\n{text}\n```"
+            return code
+        else:
+            code = f"```{self.lang}\n{self._text}\n```"
+            return code
+
+    def __str__(self):
+        text = self.text.replace(f"```{self.lang}", "").replace("\n", "").replace("\r", "")
+        if len(self.text) > 10:
+            text = text[0:10] + " ..."
+
+        return f"{type(self).__name__}(text: '{text}'; lang: '{self.lang}'; name: '{self.name}')"
+
+
 class Label(TextElement):
     """A child of TextElement, serving mainly as label for other 
     elements.
