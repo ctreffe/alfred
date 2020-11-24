@@ -187,20 +187,26 @@ p.page-subtitle {
     margin-bottom: 0;
 }
 
-.progress {
-    height: 10px;
+.progress-container {
+    margin-top: -1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-bottom: .5rem;
 }
 
-.fixed-progress {
-    position: fixed;
-    width: 100%;
-    border-radius: 0;
-    height: 10px;
+.progress-sticky {
+    position: sticky;
+    top: 0;
     z-index: 1000;
 }
 
-.progress-bar-space {
+.progress {
     height: 10px;
+    border-radius: 0;
+}
+
+.progress-text {
+    font-size: 8pt;
 }
 
 
