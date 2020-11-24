@@ -1398,19 +1398,19 @@ class LabelledElement(Element):
 
         labels = []
         if self.toplab:
-            labels.append(f"top: '{self.toplab.text}'")
+            labels.append(f"toplab: '{self.toplab.text}'")
         if self.leftlab:
-            labels.append(f"left: '{self.leftlab.text}'")
+            labels.append(f"leftlab: '{self.leftlab.text}'")
         if self.rightlab:
-            labels.append(f"right: '{self.rightlab.text}'")
+            labels.append(f"rightlab: '{self.rightlab.text}'")
         if self.bottomlab:
-            labels.append(f"bottom: '{self.bottomlab.text}'")
+            labels.append(f"bottomlab: '{self.bottomlab.text}'")
 
         if labels:
             return ", ".join(labels)
 
     def __str__(self):
-        return f"{type(self).__name__}(labels: {self.labels}; name: {self.name})"
+        return f"{type(self).__name__}({self.labels}; name: '{self.name}')"
 
     @property
     def template_data(self):
