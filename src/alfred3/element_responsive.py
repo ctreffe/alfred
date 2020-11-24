@@ -579,8 +579,7 @@ class Element(ABC):
                             "The element will NOT be shown."
                         )
                         self.log.warning(msg)
-                        self.should_be_shown = False
-                        return
+                        return [False]
             return conditions
         else:
             return [True]
@@ -728,7 +727,6 @@ class Element(ABC):
     @property
     def element_class(self):
         return type(self).__name__
-
 
 
 class Row(Element):
@@ -1399,19 +1397,19 @@ class LabelledElement(Element):
 
         labels = []
         if self.toplab:
-            labels.append(f"top: '{self.toplab.text}'")
+            labels.append(f"toplab: '{self.toplab.text}'")
         if self.leftlab:
-            labels.append(f"left: '{self.leftlab.text}'")
+            labels.append(f"leftlab: '{self.leftlab.text}'")
         if self.rightlab:
-            labels.append(f"right: '{self.rightlab.text}'")
+            labels.append(f"rightlab: '{self.rightlab.text}'")
         if self.bottomlab:
-            labels.append(f"bottom: '{self.bottomlab.text}'")
+            labels.append(f"bottomlab: '{self.bottomlab.text}'")
 
         if labels:
             return ", ".join(labels)
 
     def __str__(self):
-        return f"{type(self).__name__}(labels: {self.labels}; name: {self.name})"
+        return f"{type(self).__name__}({self.labels}; name: '{self.name}')"
 
     @property
     def template_data(self):
@@ -1801,11 +1799,14 @@ class SingleChoiceElement(ChoiceElement):
 
     @property
     def codebook_data_flat(self):
-        # import pdb; pdb.set_trace()
         d = super().codebook_data_flat
 
-        choices = {f"choice{i+1}": str(lab) for i, lab in enumerate(self.choice_labels)}
-        d.update(choices)
+        for i, lab in enumerate(self.choice_labels, start=1):
+            try:
+                d.update({f"choice{i}": lab.text}) # if there is a text attribute, we use it.
+            except AttributeError:
+                d.update({f"choice{i}": str(lab)}) # otherwise __str__
+
         return d
 
 
@@ -2079,7 +2080,7 @@ class MultipleChoiceElement(ChoiceElement):
                     label = emojize(str(label), use_aliases=True)
                 choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "checkbox"
-            choice.value = label
+            choice.value = i
             choice.id = f"choice{i}-{self.name}"
             choice.name = choice.id
             choice.label_id = f"{choice.id}-lab"

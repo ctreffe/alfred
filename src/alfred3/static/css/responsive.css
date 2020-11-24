@@ -32,10 +32,6 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     border-radius: 0.25rem;
 }
 
-.btn-group .label-element {
-    margin-bottom: 0.5rem;
-}
-
 .single-choice-buttons, .multiple-choice-buttons, .single-choice-bar, .multiple-choice-bar, .button-choice-labels, .bar-choice-labels {
     /* balancing the margins */
     margin-bottom: -0.5rem;
@@ -49,11 +45,6 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
 .bottomlab {
     margin-bottom: 0;
     margin-top: 0.25rem;
-}
-
-.corrective-hint {
-    color: #E23636;
-    padding: 0.5rem;
 }
 
 .choice-button-group, .choice-button-bar {
@@ -187,20 +178,26 @@ p.page-subtitle {
     margin-bottom: 0;
 }
 
-.progress {
-    height: 10px;
+.progress-container {
+    margin-top: -1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-bottom: .5rem;
 }
 
-.fixed-progress {
-    position: fixed;
-    width: 100%;
-    border-radius: 0;
-    height: 10px;
+.progress-sticky {
+    position: sticky;
+    top: 0;
     z-index: 1000;
 }
 
-.progress-bar-space {
+.progress {
     height: 10px;
+    border-radius: 0;
+}
+
+.progress-text {
+    font-size: 8pt;
 }
 
 

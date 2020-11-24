@@ -1,8 +1,22 @@
 {% extends "layout.html" %}
 
 {% block page %}
+
+
 <div class="container-fluid page-container {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}"
-    id="page-container">
+id="page-container">
+
+<div class="progress-container {% if d.get('fix_progress_top') %}progress-sticky{% endif %}" id="progress-container">
+
+    {% if d.get('show_progress') %}
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ d.get('progress') }}%;"
+                aria-valuenow="{{ d.get('progress') }}" aria-valuemin="0" aria-valuemax="100">
+                <!-- <span class="progress-text">{{ d.get('progress') }}%</span> -->
+            </div>
+        </div>
+        {% endif %}
+</div>
 
     <!-- Experimenter Messages -->
     {% if d.get('messages') %}
