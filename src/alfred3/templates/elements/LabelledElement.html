@@ -61,13 +61,16 @@
             {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             {% endif %}
 
+            {% if corrective_hint %}
+            <div class="col-12 corrective-hint" id="{{ name }}-corrective-hint">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> <i class="fas fa-arrow-alt-circle-up"></i> {{ corrective_hint }}
+                </div>
+            </div>
+            {% endif %}
+
         </div>
 
-        {% if corrective_hint %}
-        <div class="col-12 corrective-hint">
-            {{ corrective_hint }}
-        </div>
-        {% endif %}
 
     </div>
 </div>

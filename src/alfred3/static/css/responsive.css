@@ -51,11 +51,6 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     margin-top: 0.25rem;
 }
 
-.corrective-hint {
-    color: #E23636;
-    padding: 0.5rem;
-}
-
 .choice-button-group, .choice-button-bar {
     width: 100%;
 }
