@@ -213,25 +213,3 @@ def save():
 
     return ""
 
-
-# @app.route("/screen_res/<resolution>", methods=["POST", "GET"])
-# def screen_res(resolution):
-#     script.experiment.data_manager._screen_resolution = resolution
-#     current_page = script.experiment.page_controller.current_page
-#     first_page = script.experiment.page_controller.pages()[0]
-
-#     if current_page is first_page:
-#         current_page.save_data()
-
-#     return ""
-
-
-# @app.route("/is_first_page", methods=["GET"])
-# def is_first_page():
-#     current_page = script.experiment.page_controller.current_page
-#     first_page = script.experiment.page_controller.pages()[0]
-
-#     if current_page is first_page:
-#         return "True"
-#     else:
-#         return "False"
