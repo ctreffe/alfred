@@ -271,6 +271,7 @@ class PageCore(ContentCore):
         self._is_closed = True
         self.save_data()
 
+    @property
     def allow_closing(self):
         return True
 
@@ -286,6 +287,10 @@ class PageCore(ContentCore):
         return []
 
     def allow_leaving(self, direction):
+        if not self.allow_closing:
+            self.show_corrective_hints = True
+            return False
+
         if (
             "first_show_time" in self._data
             and time.time() - self._data["first_show_time"] < self._minimum_display_time
