@@ -209,7 +209,7 @@ def save():
     if request.method == "POST":
         data = request.values.to_dict()
         script.experiment.page_controller.current_page.set_data(data)
-        script.experiment.save_data()
+        script.experiment.page_controller.current_page.save_data()
 
     return ""
 

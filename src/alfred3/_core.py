@@ -186,6 +186,11 @@ class ContentCore(object):
 
     def added_to_section(self, group):
         self._parent_group = group
+        self._section = group
+    
+    @property
+    def section(self):
+        return self._section
 
     @property
     def parent(self):

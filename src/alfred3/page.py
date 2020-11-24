@@ -164,7 +164,10 @@ class PageCore(ContentCore):
         self.on_each_hide()
 
         self._has_been_hidden = True
-        self.save_data()
+        
+        from . import section
+        if not isinstance(self.section, (section.HeadOpenSection, section.SegmentedSection)):
+            self.save_data()
 
     def on_hiding_widget(self):
         """**DEPRECATED**: Hook for code that is meant to be executed 

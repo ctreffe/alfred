@@ -340,7 +340,8 @@ class Experiment(object):
             )
             self.log.info(f"Exported experiment data to '{str(data_dir)}'")
 
-        if self.config.getboolean(_LSA_U, "use"):
+        any_unlinked_page = any([isinstance(pg, page.UnlinkedDataPage) for pg in self.page_controller.all_pages])
+        if self.config.getboolean(_LSA_U, "use") and any_unlinked_page:
             lsa_name = self.config.get(_LSA_U, "name")
             lsa_dir = self.sac_unlinked.agents[lsa_name].directory
             unlinked_exporter = ExpDataExporter()
