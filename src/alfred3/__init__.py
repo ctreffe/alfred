@@ -380,6 +380,9 @@ class Experiment(object):
 
     
     def change_final_page(self, page):
+        msg = "'change_final_page' is deprecated. Please use the setter for 'final_page'."
+        DeprecationWarning(msg)
+        self.log.warning(msg)
         self.page_controller.append_item_to_finish_section(page)
 
     def subpath(self, path: Union[str, Path]) -> Path:
