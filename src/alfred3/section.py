@@ -518,9 +518,11 @@ class HeadOpenSection(Section):
 
         if isinstance(self._core_page_at_index, PageCore):
             HeadOpenSection._set_show_corrective_hints(self._core_page_at_index, True)
-            return self._core_page_at_index.allow_closing and super(
-                HeadOpenSection, self
-            ).allow_leaving(direction)
+            
+            page_allows_closing = self._core_page_at_index.allow_closing
+            member_allows_leaving = super(HeadOpenSection, self).allow_leaving(direction)
+            return page_allows_closing and member_allows_leaving
+
         else:  # currentCorePage is Group
             if not self._core_page_at_index.can_move_forward:
                 HeadOpenSection._set_show_corrective_hints(self._core_page_at_index, True)
