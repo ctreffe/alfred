@@ -579,8 +579,7 @@ class Element(ABC):
                             "The element will NOT be shown."
                         )
                         self.log.warning(msg)
-                        self.should_be_shown = False
-                        return
+                        return [False]
             return conditions
         else:
             return [True]
