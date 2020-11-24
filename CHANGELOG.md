@@ -7,12 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+- new way to change final page
+
+
 * New classes
     - JavaScript
     - Css
     - VerticalSpace
     - Row
     - Stack
+
 
 * Element
     - New parameters
