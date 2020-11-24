@@ -27,15 +27,6 @@
 
 <body class="line-numbers{% if d.get('responsive') %} responsive{% endif %}">
 
-    {% if d.get('show_progress') %}
-    <div class="progress {% if d.get('fix_progress_top') %}fixed-progress{% endif %}">
-        <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ d.get('progress') }}%;"
-            aria-valuenow="{{ d.get('progress') }}" aria-valuemin="0" aria-valuemax="100">
-        </div>
-    </div>
-    {% if d.get('fix_progress_top') %}<div class="progress-bar-space"></div>{% endif %}
-    {% endif %}
-
     
     <div class="container-fluid d-flex justify-content-center logo-bg {% if not d.get('responsive') %} min-width {% endif %}">
         <div class="logo-content {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}">
