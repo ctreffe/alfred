@@ -2080,7 +2080,7 @@ class MultipleChoiceElement(ChoiceElement):
                     label = emojize(str(label), use_aliases=True)
                 choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "checkbox"
-            choice.value = label
+            choice.value = i
             choice.id = f"choice{i}-{self.name}"
             choice.name = choice.id
             choice.label_id = f"{choice.id}-lab"
