@@ -58,7 +58,7 @@ def icon(name: str, ml: int = 0, mr: int = 0) -> str:
 def emoji(text: str) -> str:
     """Returns a unicode representation of emojis, based on shortcodes.
     
-    The emoji printing can be used in all TextElements and Element labels.
+    Emoji printing can be used in all TextElements and Element labels.
     Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
 
     Example::
@@ -730,13 +730,6 @@ class Element(ABC):
         return type(self).__name__
 
 
-@dataclass
-class Column:
-    breaks: str
-    vertical_position: str
-    element: Element
-    id: str
-
 
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
@@ -744,7 +737,8 @@ class Row(Element):
     The row will arrange your elements using Bootstrap 4's grid system
     and breakpoints, making the arrangement responsive. You can 
     customize the behavior of the row for five different screen sizes
-    (Bootstrap 4's default break points) with the width attributes.
+    (Bootstrap 4's default break points) with the width attributes of
+    its layout attribute.
 
     If you don't specify breakpoints manually, the columns will default
     to equal width and wrap on breakpoints automatically.
@@ -798,9 +792,17 @@ class Row(Element):
             1 and 12.
     """
 
+    @dataclass
+    class InternalCol:
+        """Just a little helper for handling columns."""
+        breaks: str
+        vertical_position: str
+        element: Element
+        id: str
+
     def __init__(
         self,
-        *elements,
+        *elements: Element,
         height: str = "auto",
         valign_cols: List[str] = None,
         name: str = None,
@@ -839,7 +841,7 @@ class Row(Element):
         """Returns a list of columns."""
         out = []
         for i, element in enumerate(self.elements):
-            col = Column(
+            col = self.InternalCol(
                 breaks=self.layout.col_breaks(col=i),
                 vertical_position=self.layout.valign_cols[i],
                 element=element,
@@ -859,7 +861,36 @@ class Row(Element):
 
 
 class Stack(Row):
-    def __init__(self, *elements, **kwargs):
+    """Stacks multiple elements on top of each other.
+    
+    Stacks are intended for use in Rows. They allow you to flexibly 
+    arrange elements in a grid.
+
+    Here is an example, that will display two stacked elements next to
+    one other element::
+        from alfred3 import element_responsive as el
+        
+        el1 = el.TextElement("text")
+        el2 = el.TextEntryElement(toplab="lab")
+        el3 = el.TextElement("long text")
+
+        row = el.Row(el.Stack(el1, el2), el3)
+
+    The Arrangement will look like this::
+
+        |=========|========|
+        |   el1   |        |
+        |=========|  el3   |
+        |   el2   |        |
+        |=========|========|
+    
+    Args:
+        *elements: The elements to stack.
+        **kwargs: Keyword arguments that are passend on to the parent 
+            class :class:`Row`.
+    """
+    def __init__(self, *elements: Element, **kwargs):
+        """Constructor method."""
         super().__init__(*elements, **kwargs)
         self.layout.width_xs = [12 for element in elements]
 
@@ -1966,7 +1997,7 @@ class SingleChoiceBar(SingleChoiceButtons):
 
 
 class MultipleChoiceElement(ChoiceElement):
-    """ 
+    """Checkboxes, allowing users to select multiple options.
 
     Defining 'min', 'max' implies force_input.
     """
@@ -2066,11 +2097,18 @@ class MultipleChoiceElement(ChoiceElement):
 
 
 class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
+    """Buttons, working as a MultipleChoiceElement.
+    """
+    
     element_class = "multiple-choice-buttons"
     button_round_corners = False
 
 
 class MultipleChoiceBar(MultipleChoiceButtons):
+    """MultipleChoiceButtons, which are displayed as a toolbar instead
+    of separate buttons.
+    """
+
     element_class = "multiple-choice-bar"
     button_group_class = "choice-button-bar"
     button_toolbar = True
@@ -2078,6 +2116,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
 
 
 class ButtonLabels(SingleChoiceButtons):
+    """Disabled buttons. Example usecase might be additional labelling."""
 
     element_class = "button-choice-labels"
     disabled = True
@@ -2088,6 +2127,9 @@ class ButtonLabels(SingleChoiceButtons):
 
 
 class BarLabels(SingleChoiceBar):
+    """Disabled Button-Toolbar. Example usecase might be additional 
+    labelling.
+    """
 
     element_class = "bar-choice-labels"
     disabled = True
@@ -2098,6 +2140,9 @@ class BarLabels(SingleChoiceBar):
 
 
 class SubmittingButtons(SingleChoiceButtons):
+    """SingleChoiceButtons that trigger submission of the current page 
+    on click.
+    """
     element_class = "submitting-buttons"
 
     def added_to_page(self, page):
