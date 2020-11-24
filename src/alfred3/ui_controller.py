@@ -209,7 +209,7 @@ class UserInterface:
         i_pg = self.experiment.page_controller.completed_pages
         exact_progress = ((i_el + i_pg) / (n_el + n_pg))*100
         if not self.experiment.finished:
-            d["progress"] = min(exact_progress, 95)
+            d["progress"] = min(round(exact_progress, 1), 95)
         else:
             d["progress"] = 100
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
@@ -218,7 +218,7 @@ class UserInterface:
         return self.template.render(d=d, element_list=page.element_list, code=code)
 
     def render_html(self, page_token):
-        """Alia for render, provided for compatibility."""
+        """Alias for render, provided for compatibility."""
         return self.render(page_token=page_token)
 
     @property
@@ -254,11 +254,14 @@ class UserInterface:
 
         identifier = uuid4().hex
 
-        if self.experiment and self.experiment.config.getboolean("general", "debug"):
-            if not hasattr(self, "sf_counter"):
-                self.sf_counter = 0
-            self.sf_counter += 1
-            identifier = str(self.sf_counter)
+        # the code below causes alfred to fail to detect changes in
+        # static files when debug mode is activated
+
+        # if self.experiment and self.experiment.config.getboolean("general", "debug"):
+        #     if not hasattr(self, "sf_counter"):
+        #         self.sf_counter = 0
+        #     self.sf_counter += 1
+        #     identifier = str(self.sf_counter)
 
         self._static_files[identifier] = (path, content_type)
 
@@ -534,11 +537,14 @@ class WebUserInterfaceController(UserInterfaceController):
 
         identifier = uuid4().hex
 
-        if self._experiment.config.getboolean("general", "debug"):
-            if not hasattr(self, "sf_counter"):
-                self.sf_counter = 0
-            self.sf_counter += 1
-            identifier = str(self.sf_counter)
+        # the code below causes alfred to fail to detect changes in
+        # static files when debug mode is activated
+
+        # if self._experiment.config.getboolean("general", "debug"):
+        #     if not hasattr(self, "sf_counter"):
+        #         self.sf_counter = 0
+        #     self.sf_counter += 1
+        #     identifier = str(self.sf_counter)
 
         while identifier in self._static_files_dict:
             identifier = uuid4().hex
