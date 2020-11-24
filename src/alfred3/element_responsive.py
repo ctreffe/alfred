@@ -2190,3 +2190,52 @@ class ImageElement(Element):
         src = self.path if self.path is not None else self.url
         return f"ImageElement(src: '{src}'; name: '{self.name}')"
 
+class AlertElement(TextElement):
+    """
+    Provides contextual feedback messages for typical user actions with the handful of available and flexible
+    alert messages.
+
+    Args:
+        category: Affects the appearance of alerts.
+                For the BaseWebLayout, values can be: "info", "error", "success" and "warning".
+                For a layout, based on bootstrap-4.5.3.min.css, values can be: "info", "success", "warning", "primary",
+                "secondory", "dark", "light", "danger".
+        dismiss: Boolean parameter. If "True", AlertElement can be dismissed by a click. If "False", AlertElement is
+                not dismissible. Default = "False"
+        .. todo:: Predefine category-options
+        """
+
+    def __init__(
+            self,
+            text: str = None,
+            position: str = None,
+            element_width: List[int] = None,
+            category: str = "info",
+            dismiss: bool = False,
+    ):
+        super(AlertElement, self).__init__(
+            text=text,
+            position=position,
+            element_width=element_width,
+        )
+        self._responsive_template = jinja_env.get_template("AlertElement.html")
+
+        # new attributes
+        self.category = category
+        self.dismiss = dismiss
+
+    @property
+    def responsive_widget(self):
+        d = {}
+        d["element_class"] = "alert"
+        d["category"] = self.category
+        d["role"] = "alert"
+        d["text"] = self.rendered_text
+        d["dismiss"] = self.dismiss
+        d["element_width"] = self.element_width
+
+        return self._responsive_template.render(d)
+
+    @property
+    def web_widget(self):
+        return self.responsive_widget
