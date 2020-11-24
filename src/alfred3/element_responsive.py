@@ -729,7 +729,6 @@ class Element(ABC):
         return type(self).__name__
 
 
-
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
 
@@ -1800,11 +1799,14 @@ class SingleChoiceElement(ChoiceElement):
 
     @property
     def codebook_data_flat(self):
-        # import pdb; pdb.set_trace()
         d = super().codebook_data_flat
 
-        choices = {f"choice{i+1}": str(lab) for i, lab in enumerate(self.choice_labels)}
-        d.update(choices)
+        for i, lab in enumerate(self.choice_labels, start=1):
+            try:
+                d.update({f"choice{i}": lab.text}) # if there is a text attribute, we use it.
+            except AttributeError:
+                d.update({f"choice{i}": str(lab)}) # otherwise __str__
+
         return d
 
 
