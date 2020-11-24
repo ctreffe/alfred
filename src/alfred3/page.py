@@ -745,6 +745,10 @@ class Page(WebCompositePage):
     pass
 
 
+class WidePage(Page):
+    responsive_width = "85, 75, 75, 70"
+
+
 class PagePlaceholder(PageCore, WebPageInterface):
     def __init__(self, ext_data={}, **kwargs):
         super(PagePlaceholder, self).__init__(**kwargs)
