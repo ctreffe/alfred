@@ -11,6 +11,7 @@ import logging
 from abc import ABC, abstractproperty, abstractmethod
 from pathlib import Path
 from typing import List
+from typing import Tuple
 from typing import Union
 from dataclasses import dataclass
 
@@ -56,10 +57,12 @@ def icon(name: str, ml: int = 0, mr: int = 0) -> str:
 
 
 def emoji(text: str) -> str:
-    """Returns a unicode representation of emojis, based on shortcodes.
+    """Returns a new string in which emoji shortcodes in the input 
+    string are replaced with their unicode representation.
     
     Emoji printing can be used in all TextElements and Element labels.
-    Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
+    An overview of shortcodes can be found here: 
+    https://www.webfx.com/tools/emoji-cheat-sheet/
 
     Example::
         
@@ -81,10 +84,33 @@ def emoji(text: str) -> str:
 
 
 class RowLayout:
-    """ 
+    """Provides layouting functionality for responsive horizontal 
+    positioning of elements.
+
     Args:
+        ncols: Number of columns to arrange in a row.
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'.
         responsive: Boolean, indicating whether breakpoints should
-                    be responsive, or not.
+            be responsive, or not.
+
+    Attributes:
+        width_xs: List of column widths on screens of size 'xs' or 
+            bigger (<576px). Widths must be defined as integers between
+            1 and 12.
+        width_sm: List of column widths on screens of size 'sm' or 
+            bigger (>=576px). Widths must be defined as integers between
+            1 and 12.
+        width_md: List of column widths on screens of size 'md' or 
+            bigger (>=768px). Widths must be defined as integers between
+            1 and 12.
+        width_lg: List of column widths on screens of size 'lg' or 
+            bigger (>=992px). Widths must be defined as integers between
+            1 and 12.
+        width_xl: List of column widths on screens of size 'xl' or 
+            bigger (>=1200px). Widths must be defined as integers between
+            1 and 12.
+
     """
 
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
@@ -162,6 +188,9 @@ class RowLayout:
 
     @property
     def valign_cols(self) -> List[str]:
+        """List of vertical column alignments. Valid values are 'auto' 
+        (default), 'top', 'center', and 'bottom'."""
+
         try:
             if len(self._valign_cols) > self.ncols:
                 raise ValueError(
@@ -202,10 +231,7 @@ class RowLayout:
 
 
 class Element(ABC):
-    """Element baseclass. 
-    
-    Elements are derived from this class. Most of them inherit its 
-    arguments, attributes, and methods, unless stated otherwise.
+    """Element baseclass. All elements are derived from this class.
 
     The simplest way to subclass *Element* is by defining the 
     *inner_html* attribute::
@@ -293,9 +319,6 @@ class Element(ABC):
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
-        alignment: Alignment of text/instructions inside the element. 
-            Can be 'left' (default), 'center', 'right', or 'justify'. 
-            *Deprecated in v1.5*. Please use *align*. 
 
     Attributes:
         element_width: A list of relative width definitions. The
@@ -323,9 +346,9 @@ class Element(ABC):
     .. [#log] see https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
     """
 
-    base_template = jinja_env.get_template("Element.html")
-    element_template = None
-    can_display_corrective_hints_in_line = False
+    base_template: Template = jinja_env.get_template("Element.html")
+    element_template: Template = None
+    can_display_corrective_hints_in_line: bool = False
 
     def __init__(
         self,
@@ -478,10 +501,10 @@ class Element(ABC):
         self._show_corrective_hints = bool(b)
 
     @property
-    def should_be_shown(self):
-        """
-        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
-        Otherwise False is returned
+    def should_be_shown(self) -> bool:
+        """Boolean, indicating whether the element is meant to be shown.
+        
+        Evaluates all *showif* conditions and can be set manually.
         """
         cond1 = self._should_be_shown
         cond2 = all(self._evaluate_showif())
@@ -500,6 +523,7 @@ class Element(ABC):
 
     @property
     def page(self):
+        """The page to which the element belongs."""
         return self._page
 
     @page.setter
@@ -508,26 +532,41 @@ class Element(ABC):
 
     @property
     def tree(self):
+        """A string, giving the exact position of the element's page in 
+        the experiment. The tree is composed of the tags of all sections
+        and the page, separated by underscores. Example for the Page
+        with tag 'hello_world' in section 'main'::
+        
+            rootSection_main_hello_world
+        
+        """
         return self.page.tree
 
     @property
     def identifier(self):
+
         return self.tree.replace("rootSection_", "") + "_" + self._name
 
     @property
-    def css_code(self):
+    def css_code(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and CSS code."""
         return self._css_code
 
     @property
     def css_urls(self):
+        """A list of tuples, which contain a priority and urls pointing 
+        to CSS code."""
         return self._css_urls
 
     @property
-    def js_code(self):
+    def js_code(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and Javascript."""
         return self._js_code
 
     @property
-    def js_urls(self):
+    def js_urls(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and urls pointing
+        to JavaScript."""
         return self._js_urls
 
     @property
@@ -678,25 +717,39 @@ class Element(ABC):
     # abstract attributes start here -----------------------------------
 
     @property
-    def inner_html(self):
+    def inner_html(self) -> str:
+        """Renders :attr:`~alfred3.element_responsive.Element.element_template`
+        with :attr:`~alfred3.element_responsive.Element.template_data`
+        and returns the resulting html.
+
+        If no `element_template` is defined, `None` is returned.
+        """
         if self.element_template is not None:
             return self.element_template.render(self.template_data)
         else:
             return None
 
     @property
-    def web_widget(self):
-        """Every child class *must* redefine the web widget.
-        
-        This is the html-code that defines the element's display on the
+    def web_widget(self) -> str:
+        """Returns the full html-code for the element's display on the
         screen.
+
+        This is done by rendering the 
+        :attr:`~alfred3.element_responsive.Element.base_template` with
+        the :attr:`~alfred3.element_responsive.Element.template_data` 
+        and injecting the :attr:`~alfred3.element_responsive.Element.inner_html`
+        into it.
+
         """
         d = self.template_data
         d["html"] = self.inner_html
         return self.base_template.render(d)
 
     @property
-    def element_class(self):
+    def element_class(self) -> str:
+        """Returns the name of the element's class. Used, e.g. as
+        CSS class name in the base element template.
+        """
         return type(self).__name__
 
 
@@ -723,8 +776,22 @@ class Element(ABC):
         
         """
         self._js_code.append((priority, code))
+
+@dataclass
+class _RowCol:
+    """Just a little helper for handling columns inside a Row.
+    
+    :meta private:
+    """
+    breaks: str
+    vertical_position: str
+    element: Element
+    id: str
+
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
+
+    .. versionadded:: 1.5
 
     The row will arrange your elements using Bootstrap 4's grid system
     and breakpoints, making the arrangement responsive. You can 
@@ -732,10 +799,11 @@ class Row(Element):
     (Bootstrap 4's default break points) with the width attributes of
     its layout attribute.
 
-    If you don't specify breakpoints manually, the columns will default
-    to equal width and wrap on breakpoints automatically.
+    If you don't specify breakpoints manually via the *layout* attribute, 
+    the columns will default to equal width and wrap on breakpoints 
+    automatically.
 
-    .. info::
+    .. note::
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
         column by assigning it a number of those units. A column of 
@@ -749,14 +817,14 @@ class Row(Element):
         See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
         for detailed documentation of how Bootstrap's breakpoints work.
     
-    .. info::
+    .. note::
         **Some information regarding the width attributes**
         
-        - If you specify fewer values than the number of columns in the 
-        width attributes, the columns with undefined width will take up 
-        equal portions of the remaining horizontal space.
-        - If a breakpoint is not specified manually, the values from the
-        next smaller breakpoint are inherited.
+        * If you specify fewer values than the number of columns in the 
+          width attributes, the columns with undefined width will take up 
+          equal portions of the remaining horizontal space.
+        * If a breakpoint is not specified manually, the values from the
+          next smaller breakpoint are inherited.
     
     Args:
         elements: The elements that you want to arrange in a row.
@@ -765,32 +833,15 @@ class Row(Element):
             are 'auto' (default), 'top', 'center', and 'bottom'.
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
+            This switch exists, because some elements might default to
+            a smaller width, but when using them in a Row, you usually
+            want them to span the full width of their column.
     
-    Attributes:
-        width_xs: List of column widths on screens of size 'xs' or 
-            bigger (<576px). Widths must be defined as integers between
-            1 and 12.
-        width_sm: List of column widths on screens of size 'sm' or 
-            bigger (>=576px). Widths must be defined as integers between
-            1 and 12.
-        width_md: List of column widths on screens of size 'md' or 
-            bigger (>=768px). Widths must be defined as integers between
-            1 and 12.
-        width_lg: List of column widths on screens of size 'lg' or 
-            bigger (>=992px). Widths must be defined as integers between
-            1 and 12.
-        width_xl: List of column widths on screens of size 'xl' or 
-            bigger (>=1200px). Widths must be defined as integers between
-            1 and 12.
     """
 
-    @dataclass
-    class InternalCol:
-        """Just a little helper for handling columns."""
-        breaks: str
-        vertical_position: str
-        element: Element
-        id: str
+    element_template = jinja_env.get_template("Row.html")
+
+    
 
     def __init__(
         self,
@@ -804,7 +855,11 @@ class Row(Element):
         """Constructor method."""
         super().__init__(name=name, showif=showif)
         self.elements = elements
+
+        #: An instance of :class:`~alfred3.element_responsive.RowLayout`, used for layouting.
+        #: You can use this attribute to finetune column widths.
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
+        
         self.height = height
         self.elements_full_width = elements_full_width
 
@@ -821,19 +876,11 @@ class Row(Element):
                 element.width = "full"
 
     @property
-    def css_code(self):
-        if not self.height == "auto":
-            css = f"#elid-{self.name} {{height: {self.height};}}"
-            return [(10, css)]
-        else:
-            return []
-
-    @property
     def cols(self) -> list:
         """Returns a list of columns."""
         out = []
         for i, element in enumerate(self.elements):
-            col = self.InternalCol(
+            col = _RowCol(
                 breaks=self.layout.col_breaks(col=i),
                 vertical_position=self.layout.valign_cols[i],
                 element=element,
@@ -843,13 +890,11 @@ class Row(Element):
         return out
 
     @property
-    def web_widget(self):
-        d = {}
-        d["hide"] = "hide" if self._showif_on_current_page is True else ""
+    def template_data(self):
+        d = super().template_data
         d["columns"] = self.cols
         d["name"] = self.name
-        t = jinja_env.get_template("Row.html")
-        return t.render(d)
+        return d
 
 
 class Stack(Row):
@@ -860,6 +905,7 @@ class Stack(Row):
 
     Here is an example, that will display two stacked elements next to
     one other element::
+
         from alfred3 import element_responsive as el
         
         el1 = el.TextElement("text")
@@ -880,6 +926,7 @@ class Stack(Row):
         *elements: The elements to stack.
         **kwargs: Keyword arguments that are passend on to the parent 
             class :class:`Row`.
+
     """
     def __init__(self, *elements: Element, **kwargs):
         """Constructor method."""
@@ -1016,7 +1063,8 @@ class TextElement(Element):
     Note that you can only use one of these options, if you specify
     both, the element will raise an error.
 
-    .. example::
+    Example::
+
         # Text element with responsive width
         text = TextElement('Text display')
 
@@ -1047,8 +1095,8 @@ class TextElement(Element):
         emojize: If True (default), emoji shortcodes in the text will
             be converted to unicode.
 
-    .. [#md]: https://guides.github.com/features/mastering-markdown/
-    .. [#emoji]: Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
+    .. [#md] https://guides.github.com/features/mastering-markdown/
+    .. [#emoji] Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
 
     element_class = "text-element"
