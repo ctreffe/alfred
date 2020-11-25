@@ -621,11 +621,7 @@ class Element(ABC):
                 added.
         """
         self.experiment = experiment
-
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
+        self.log.add_queue_logger(self, __name__)
 
     def added_to_page(self, page):
         """Tells the element that it was added to a page. 
@@ -670,31 +666,6 @@ class Element(ABC):
         necessary.
         """
         pass
-
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~Element.instance_level_logging` is set to *True*.
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        if self.instance_level_logging and self._name:
-            name.append(self._name)
-
-        return ".".join(name)
 
     # Magic methods start here -----------------------------------------
 
