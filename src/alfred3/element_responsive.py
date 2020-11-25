@@ -134,9 +134,7 @@ class RowLayout:
         """
         try:
             if len(breaks) > self.ncols:
-                raise ValueError(
-                    "Break list must be of the same or smaller length as number of elements."
-                )
+                raise ValueError("Break list length must be <= number of elements.")
         except TypeError:
             pass
 
@@ -162,19 +160,17 @@ class RowLayout:
 
     @property
     def valign_cols(self) -> List[str]:
-        try:
-            if len(self._valign_cols) > self.ncols:
-                raise ValueError(
-                    "Col position list must be of the same or smaller length as number of elements."
-                )
-        except TypeError:
-            pass
+        if self._valign_cols is None:
+            return ["align-self-center"]
+
+        if len(self._valign_cols) > self.ncols:
+            raise ValueError("List length must be <= as number of elements.")
 
         out = []
         for i in range(self.ncols):
             try:
                 n = self._valign_cols[i]
-            except (IndexError, TypeError):
+            except IndexError:
                 out.append("align-self-center")
                 continue
 
@@ -190,9 +186,7 @@ class RowLayout:
             elif n == "bottom":
                 out.append("align-self-end")
             else:
-                raise ValueError(
-                    "Col position allowed values are 'auto', 'top', 'center', and 'bottom'."
-                )
+                raise ValueError("Valign allowed values: 'auto', 'top', 'center', and 'bottom'.")
 
         return out
 
@@ -793,6 +787,7 @@ class Row(Element):
     @dataclass
     class InternalCol:
         """Just a little helper for handling columns."""
+
         breaks: str
         vertical_position: str
         element: Element
@@ -887,6 +882,7 @@ class Stack(Row):
         **kwargs: Keyword arguments that are passend on to the parent 
             class :class:`Row`.
     """
+
     def __init__(self, *elements: Element, **kwargs):
         """Constructor method."""
         super().__init__(*elements, **kwargs)
@@ -954,7 +950,6 @@ class Style(Element):
 
 
 class HideNavigation(Style):
-
     def __init__(self):
         super().__init__()
         self.code = "#page-navigation {display: none;}"
@@ -1127,6 +1122,7 @@ class TextElement(Element):
 class Hline(Element):
     element_class = "hline-element"
     inner_html = "<hr>"
+
 
 class CodeElement(TextElement):
     """A convenience element for displaying highlighted code.
@@ -1508,7 +1504,7 @@ class InputElement(LabelledElement):
             return self.debug_value
         else:
             return None
-    
+
     @default.setter
     def default(self, value):
         self._default = value
@@ -1516,7 +1512,7 @@ class InputElement(LabelledElement):
     @property
     def force_input(self):
         return self._force_input
-    
+
     @force_input.setter
     def force_input(self, value: bool):
         if not isinstance(value, bool):
@@ -1904,7 +1900,7 @@ class SingleChoiceButtons(SingleChoiceElement):
         if self.button_width == "equal":
             if not self.vertical:
                 # set button width to small value, because they will grow to fit the group
-                css = f".btn.choice-button-{self.name} {{width: 10px;}} " 
+                css = f".btn.choice-button-{self.name} {{width: 10px;}} "
             else:
                 css = []
             # full-width buttons on small screens
@@ -1918,7 +1914,7 @@ class SingleChoiceButtons(SingleChoiceElement):
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
             # and return to 100% with on small screens
             css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}} "
-            
+
             # now the width of the individual button has an effect
             css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
             # and it, too returns to full width on small screens
@@ -2007,7 +2003,13 @@ class MultipleChoiceElement(ChoiceElement):
     type = "checkbox"
 
     def __init__(
-        self, *choice_labels, min: int = None, max: int = None, select_hint: str = None, default: list = None, **kwargs,
+        self,
+        *choice_labels,
+        min: int = None,
+        max: int = None,
+        select_hint: str = None,
+        default: list = None,
+        **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
 
@@ -2021,7 +2023,9 @@ class MultipleChoiceElement(ChoiceElement):
         self._select_hint = select_hint
 
         if default is not None and not isinstance(default, list):
-            raise ValueError("Default for MultipleChoiceElement must be a list of integers, indicating the default choices.")
+            raise ValueError(
+                "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
+            )
         else:
             self.default = default
 
