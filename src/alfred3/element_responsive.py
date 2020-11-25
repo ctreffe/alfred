@@ -700,6 +700,29 @@ class Element(ABC):
         return type(self).__name__
 
 
+    def add_css(self, code: str, priority: int = 10):
+        """Adds CSS to the element.
+        
+        Args:
+            code: Css code
+            priority: Can be used to influence the order in which code
+                is added to the page. Sorting is ascending, i.e. the 
+                lowest numbers appear closest to the top of the page.
+        
+        """
+        self._css_code.append((priority, code))
+    
+    def add_js(self, code: str, priority: int = 10):
+        """Adds Javascript to the element.
+        
+        Args:
+            code: Css code
+            priority: Can be used to influence the order in which code
+                is added to the page. Sorting is ascending, i.e. the 
+                lowest numbers appear closest to the top of the page.
+        
+        """
+        self._js_code.append((priority, code))
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
 
