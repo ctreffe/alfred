@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 """Provides element classes for adding content to pages.
 
+.. versionadded:: 1.5
+
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 import random
@@ -35,16 +37,6 @@ def icon(name: str, ml: int = 0, mr: int = 0) -> str:
     
     These icons can be used in all places where HTML code is rendered,
     i.e. TextElements, and all labels of elements.
-
-
-    Example::
-        
-        TextElement(f"Camera Icon: {icon('camera')}")
-
-    If you need more control, you can simply use the HTML code directly
-    and apply classes and styles as you wish::
-        
-        TextElement("<i class='fas fa-camera'></i>")
     
     Args:
         name: The icon name, as shown on https://fontawesome.com/icons?d=gallery&m=free
@@ -61,27 +53,17 @@ def emoji(text: str) -> str:
     Emoji printing can be used in all TextElements and Element labels.
     Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
 
-    Example::
-        
-        TextElement(f"Joy emoji: {emoji(':joy:')}")
-
-    You can also print unicode emojis directly without the help of this
-    function, using the "CLDR Short Name" as defined on the official
-    unicode website [#unicode]_ ::
-
-        TextElement("Joy emoji: \\N{face with tears of joy}")
-
     Args:
         text: Text, containing emoji shortcodes.
     
-    .. [#unicode] http://www.unicode.org/emoji/charts/full-emoji-list.html
-
     """
     return emojize(text, use_aliases=True)
 
 
 class RowLayout:
-    """ 
+    """Manages the layout of
+
+
     Args:
         responsive: Boolean, indicating whether breakpoints should
                     be responsive, or not.
