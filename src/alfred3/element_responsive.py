@@ -2207,19 +2207,8 @@ class AlertElement(TextElement):
     element_class = "alert"
     element_template = jinja_env.get_template("AlertElement.html")
 
-    def __init__(
-            self,
-            text: str = None,
-            position: str = None,
-            category: str = "info",
-            dismiss: bool = False,
-    ):
-        super(AlertElement, self).__init__(
-            text=text,
-            position=position,
-        )
-
-        # new attributes
+    def __init__(self, category:str = "info", dismiss:bool = False, **element_args):
+        super(AlertElement, self).__init__(**element_args)
         self.category = category
         self.dismiss = dismiss
 
