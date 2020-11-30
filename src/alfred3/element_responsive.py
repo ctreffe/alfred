@@ -2202,9 +2202,9 @@ class AlertElement(TextElement):
                 "secondory", "dark", "light", "danger".
         dismiss: Boolean parameter. If "True", AlertElement can be dismissed by a click. If "False", AlertElement is
                 not dismissible. Default = "False"
-        .. todo:: Predefine category-options
+        .. todo:: Predefine category-options, add codebook record
         """
-    element_class = "alert"
+    element_class = "alert-element"
     element_template = jinja_env.get_template("AlertElement.html")
 
     def __init__(self, category:str = "info", dismiss:bool = False, **element_args):
@@ -2218,5 +2218,92 @@ class AlertElement(TextElement):
         d["category"] = self.category
         d["role"] = "alert"
         d["dismiss"] = self.dismiss
+
+        return d
+
+
+class RegEntryElement(TextEntryElement):
+    element_class="regentry-element"
+    element_template = jinja_env.get_template("TextEntryElement.html")
+    def __init__(self,toplab: str = None, reg_ex: Union[str, int] = ".*", no_input_corrective_hint:str = None,
+        match_hint:str =None,**kwargs,):
+        """
+        **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
+        on the left side of the line edit field.
+
+        :param str name: Name of TextAreaElement and stored input variable.
+        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
+        :param str reg_ex: Regular expression to match with user input.
+        :param str alignment: Alignment of TextAreaElement in widget container ('left' as standard, 'center', 'right').
+        :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
+        """
+
+        super(RegEntryElement, self).__init__(
+            no_input_corrective_hint=no_input_corrective_hint,
+            toplab=toplab,
+            **kwargs,
+        )
+
+        self._input = ""
+        self._reg_ex = reg_ex
+        self._match_hint = match_hint
+
+    def validate_data(self):
+        super(RegEntryElement, self).validate_data()
+
+        if not self._should_be_shown:
+            return True
+
+        if not self._force_input and self._input == "":
+            return True
+
+        if re.match(r"^%s$" % self._reg_ex, str(self._input)):
+            return True
+
+        return False
+
+    @property
+    def match_hint(self):
+        if self._match_hint is not None:
+            return self._match_hint
+        if (
+            self._page
+            and self._page._experiment
+            and "corrective_regentry" in self._page._experiment.settings.hints
+        ):
+            return self._page._experiment.settings.hints["corrective_regentry"]
+
+        msg = f"Can't access match_hint for  {type(self).__name__}"
+        self.log.error(msg)
+        return msg
+
+    @property
+    def corrective_hints(self):
+        if not self.show_corrective_hints:
+            return []
+        elif re.match(r"^%s$" % self._reg_ex, self._input):
+            return []
+        elif self._input == "" and not self._force_input:
+            return []
+        elif self._input == "" and self._force_input:
+            return [self.no_input_hint]
+        else:
+            return [self.match_hint]
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+        data["reg_ex_pattern"] = self._reg_ex
+        return data
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["toplab"] = self.toplab
+        d["input"] = self.input
+        if self.corrective_hints:
+            d["corrective_hint"] = self.corrective_hints[0]
 
         return d
