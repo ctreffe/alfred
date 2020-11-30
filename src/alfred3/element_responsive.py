@@ -2225,7 +2225,7 @@ class AlertElement(TextElement):
 class RegEntryElement(TextEntryElement):
     element_class="regentry-element"
     element_template = jinja_env.get_template("TextEntryElement.html")
-    def __init__(self,toplab: str = None, reg_ex: Union[str, int] = ".*", no_input_corrective_hint:str = None,
+    def __init__(self, toplab: str = None, reg_ex: Union[str, int] = ".*", no_input_corrective_hint:str = None,
         match_hint:str =None,**kwargs,):
         """
         **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
@@ -2307,3 +2307,172 @@ class RegEntryElement(TextEntryElement):
             d["corrective_hint"] = self.corrective_hints[0]
 
         return d
+
+class NumberEntryElement(RegEntryElement):
+    element_class = "number-entry-element"
+    element_template = jinja_env.get_template("TextEntryElement.html")
+    def __init__(
+        self,
+        toplab: str = None,
+        decimals: int = 0,
+        min: float = None,
+        max: float = None,
+        no_input_corrective_hint: str = None,
+        match_hint: str = None,
+        **kwargs,
+    ):
+        """
+        **NumberEntryElement*** displays a line edit, which only accepts numerical input. Instruction is shown
+        on the left side of the line edit field.
+
+        :param str name: Name of NumberEntryElement and stored input variable.
+        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
+        :param int decimals: Accepted number of decimals (0 as standard).
+        :param float min: Minimum accepted entry value.
+        :param float max: Maximum accepted entry value.
+        :param int spacing: Minimum horizontal size of instruction label (can be used for layouting purposes).
+        :param str alignment: Alignment of NumberEntryElement in widget container ('left' as standard, 'center', 'right').
+        :param str/int font: Fontsize used in NumberEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
+        :param bool force_input: Sets user input to be mandatory (False as standard or True).
+        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
+
+        """
+        super(NumberEntryElement, self).__init__(
+            toplab=toplab,
+            no_input_corrective_hint=no_input_corrective_hint,
+            match_hint=match_hint,
+            **kwargs,
+        )
+
+        self._validator = None
+        self._decimals = decimals
+        self._min = min
+        self._max = max
+        self._input = ""
+
+
+    def validate_data(self):
+        """
+        """
+        super(NumberEntryElement, self).validate_data()
+
+        if not self._should_be_shown:
+            return True
+
+        if not self._force_input and self._input == "":
+            return True
+
+        try:
+            f = float(self._input)
+        except Exception:
+            return False
+
+        if self._min is not None:
+            if not self._min <= f:
+                return False
+
+        if self._max is not None:
+            if not f <= self._max:
+                return False
+
+        re_str = (
+            r"^[+-]?\d+$"
+            if self._decimals == 0
+            else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
+        )
+        if re.match(re_str, str(self._input)):
+            return True
+
+        return False
+
+    @property
+    def data(self):
+        if 0 < self._decimals:
+            try:
+                temp_input = float(self._input)
+            except Exception:
+                temp_input = ""
+        else:
+            try:
+                temp_input = int(self._input)
+            except Exception:
+                temp_input = ""
+
+        if self.validate_data() and temp_input != "":
+            return {self.name: temp_input}
+        else:
+            return {self.name: ""}
+
+   # def set_data(self, d):
+
+    #    if self.enabled:
+     #       val = d.get(self.name, "")
+      #      if not isinstance(val, str):
+       #         val = str(val)
+        #    val = val.replace(",", ".")
+         #   super(NumberEntryElement, self).set_data({self.name: val})
+
+    @property
+    def match_hint(self):
+        if self._match_hint is not None:
+            return self._match_hint
+
+        if (
+            self._page
+            and self._page._experiment
+            and "corrective_numberentry" in self._page._experiment.settings.hints
+        ):
+            return self._page._experiment.settings.hints["corrective_numberentry"]
+        self.log.error(f"Can't access match_hint for {type(self).__name__}")
+        return f"Can't access match_hint for {type(self).__name__}"
+
+    @property
+    def corrective_hints(self):
+        if not self.show_corrective_hints:
+            return []
+
+        elif self._input == "" and not self._force_input:
+            return []
+
+        elif self._force_input and self._input == "":
+            return [self.no_input_hint]
+        else:
+            re_str = (
+                r"^[+-]?\d+$"
+                if self._decimals == 0
+                else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
+            )
+            if (
+                not re.match(re_str, str(self._input))
+                or (self._min is not None and not self._min <= float(self._input))
+                or (self._max is not None and not float(self._input) <= self._max)
+            ):
+
+                hint = self.match_hint
+
+                if 0 < self._decimals:
+                    hint = hint + " (Bis zu %s Nachkommastellen" % (self._decimals)
+                else:
+                    hint = hint + " (Keine Nachkommastellen"
+
+                if self._min is not None and self._max is not None:
+                    hint = hint + ", Min = %s, Max = %s)" % (self._min, self._max)
+                elif self._min is not None:
+                    hint = hint + ", Min = %s)" % self._min
+                elif self._max is not None:
+                    hint = hint + ", Max = %s)" % self._max
+                else:
+                    hint = hint + ")"
+                return [hint]
+
+            return []
+
+    @property
+    def codebook_data_flat(self):
+        data = super().codebook_data_flat
+
+        data["decimals"] = self._decimals
+        data["min"] = self._min
+        data["max"] = self._max
+
+        return data
