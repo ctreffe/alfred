@@ -2204,38 +2204,30 @@ class AlertElement(TextElement):
                 not dismissible. Default = "False"
         .. todo:: Predefine category-options
         """
+    element_class = "alert"
+    element_template = jinja_env.get_template("AlertElement.html")
 
     def __init__(
             self,
             text: str = None,
             position: str = None,
-            element_width: List[int] = None,
             category: str = "info",
             dismiss: bool = False,
     ):
         super(AlertElement, self).__init__(
             text=text,
             position=position,
-            element_width=element_width,
         )
-        self._responsive_template = jinja_env.get_template("AlertElement.html")
 
         # new attributes
         self.category = category
         self.dismiss = dismiss
 
     @property
-    def responsive_widget(self):
-        d = {}
-        d["element_class"] = "alert"
+    def template_data(self):
+        d = super().template_data
         d["category"] = self.category
         d["role"] = "alert"
-        d["text"] = self.rendered_text
         d["dismiss"] = self.dismiss
-        d["element_width"] = self.element_width
 
-        return self._responsive_template.render(d)
-
-    @property
-    def web_widget(self):
-        return self.responsive_widget
+        return d
