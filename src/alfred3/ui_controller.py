@@ -52,7 +52,7 @@ class UserInterface:
     ]
 
     def __init__(self, experiment):
-        self.template = jinja_env.get_template("page.html")
+        self.template = jinja_env.get_template("page.html.j2")
 
         self.experiment = experiment
         self.log = QueuedLoggingInterface(base_logger=__name__)

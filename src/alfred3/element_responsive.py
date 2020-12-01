@@ -235,7 +235,7 @@ class Element(ABC):
     
     """
 
-    base_template: Template = jinja_env.get_template("Element.html")
+    base_template: Template = jinja_env.get_template("Element.html.j2")
     element_template: Template = None
     can_display_corrective_hints_in_line: bool = False
 
@@ -728,7 +728,7 @@ class Row(Element):
     
     """
 
-    element_template = jinja_env.get_template("Row.html")
+    element_template = jinja_env.get_template("Row.html.j2")
 
     def __init__(
         self,
@@ -987,7 +987,7 @@ class TextElement(Element):
     """
 
     element_class = "text-element"
-    element_template = jinja_env.get_template("TextElement.html")
+    element_template = jinja_env.get_template("TextElement.html.j2")
     emojize = True
 
     def __init__(
@@ -1191,7 +1191,7 @@ class LabelledElement(Element):
             choose integers between 1 and 12.
     """
 
-    base_template = jinja_env.get_template("LabelledElement.html")
+    base_template = jinja_env.get_template("LabelledElement.html.j2")
     element_class = "labelled-element"
 
     def __init__(
@@ -1559,7 +1559,7 @@ class TextEntryElement(InputElement):
     """
 
     element_class = "text-entry-element"
-    element_template = jinja_env.get_template("TextEntryElement.html")
+    element_template = jinja_env.get_template("TextEntryElement.html.j2")
 
     def __init__(
         self,
@@ -1616,7 +1616,7 @@ class TextEntryElement(InputElement):
 
 class TextAreaElement(TextEntryElement):
     element_class = "text-area-element"
-    element_template = jinja_env.get_template("TextAreaElement.html")
+    element_template = jinja_env.get_template("TextAreaElement.html.j2")
 
     def __init__(self, toplab: str = None, nrows: int = 5, **kwargs):
         super().__init__(toplab=toplab, **kwargs)
@@ -1645,7 +1645,7 @@ class Choice:
 
 class ChoiceElement(InputElement, ABC):
     element_class = "choice-element"
-    element_template = jinja_env.get_template("ChoiceElement.html")
+    element_template = jinja_env.get_template("ChoiceElement.html.j2")
     type = None
     emojize: bool = True
 
@@ -1774,7 +1774,7 @@ class SingleChoiceButtons(SingleChoiceElement):
     """
 
     element_class: str = "single-choice-buttons"
-    element_template = jinja_env.get_template("ChoiceButtons.html")
+    element_template = jinja_env.get_template("ChoiceButtons.html.j2")
 
     button_toolbar: bool = False
     button_group_class: str = "choice-button-group"
@@ -2098,7 +2098,7 @@ class SubmittingButtons(SingleChoiceButtons):
 
 class SelectOneElement(SingleChoiceElement):
     element_class = "select-one-element"
-    element_template = jinja_env.get_template("SelectElement.html")
+    element_template = jinja_env.get_template("SelectElement.html.j2")
     type = "select_one"
 
     def __init__(self, *choice_labels, size: int = None, **kwargs):
@@ -2114,7 +2114,7 @@ class SelectOneElement(SingleChoiceElement):
 
 class SelectMultipleElement(MultipleChoiceElement):
     element_class = "select-multiple-element"
-    element_template = jinja_env.get_template("SelectElement.html")
+    element_template = jinja_env.get_template("SelectElement.html.j2")
     type = "select_multiple"
 
     def __init__(self, *choice_labels, size: int = None, **kwargs):
@@ -2130,7 +2130,7 @@ class SelectMultipleElement(MultipleChoiceElement):
 
 class ImageElement(Element):
     element_class = "image-element"
-    element_template = jinja_env.get_template("ImageElement.html")
+    element_template = jinja_env.get_template("ImageElement.html.j2")
 
     def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
         super().__init__(**kwargs)
@@ -2196,7 +2196,7 @@ class MatPlotElement(Element):
 
     """
     element_class = "matplot-element"
-    element_template = jinja_env.get_template("ImageElement.html")
+    element_template = jinja_env.get_template("ImageElement.html.j2")
 
     def __init__(self, fig, align: str = "center", **kwargs):
         super().__init__(align=align, **kwargs)
