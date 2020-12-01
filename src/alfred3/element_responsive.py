@@ -25,6 +25,7 @@ from jinja2 import Template
 from past.utils import old_div
 
 import cmarkgfm
+from emoji import emojize
 
 from . import alfredlog
 from ._helper import alignment_converter
