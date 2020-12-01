@@ -32,6 +32,10 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     border-radius: 0.25rem;
 }
 
+.corrective-hint {
+    margin-top: 1rem;
+}
+
 .single-choice-buttons, .multiple-choice-buttons, .single-choice-bar, .multiple-choice-bar, .button-choice-labels, .bar-choice-labels {
     /* balancing the margins */
     margin-bottom: -0.5rem;
