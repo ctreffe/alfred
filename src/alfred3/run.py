@@ -180,7 +180,7 @@ class ExperimentRunner:
         if open_browser:
             self.start_browser_thread()
         self.print_startup_message()
-        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=debug)
+        self.app.run(port=self.port, threaded=False, use_reloader=False, debug=debug)
 
 
 @click.command()
