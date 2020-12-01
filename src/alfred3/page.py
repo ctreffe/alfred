@@ -527,7 +527,7 @@ class CoreCompositePage(PageCore):
         return [item for sublist in list_of_lists for item in sublist]
 
     def set_data(self, dictionary):
-        screen_resolution = dictionary.pop("screen_resolution")
+        screen_resolution = dictionary.pop("screen_resolution", None)
         if screen_resolution:
             self.experiment.data_manager.screen_resolution = screen_resolution
         javascript_active = dictionary.pop("javascript_active", None)
