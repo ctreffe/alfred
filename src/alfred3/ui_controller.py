@@ -275,11 +275,7 @@ class UserInterface:
         return url
 
     def get_dynamic_file(self, identifier):
-        file_obj, content_type = self._dynamic_files[identifier]
-        file_obj.seek(0)
-        strIO = StringIO(file_obj.read())
-        strIO.seek(0)
-        return strIO, content_type
+        return self._dynamic_files[identifier]
 
     def add_dynamic_file(self, file_obj, content_type=None):
         identifier = uuid4().hex
