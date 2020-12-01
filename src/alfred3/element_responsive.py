@@ -1711,6 +1711,7 @@ class ChoiceElement(InputElement, ABC):
         d = super().template_data
         d["choices"] = self.choices
         d["vertical"] = self.vertical
+        d["type"] = self.type
         return d
 
     @abstractmethod
@@ -2121,6 +2122,36 @@ class SubmittingButtons(SingleChoiceButtons):
         js = t.render(name=self.name)
 
         page += JavaScript(code=js)
+
+
+class SelectOneElement(SingleChoiceElement):
+    element_template = jinja_env.get_template("SelectElement.html")
+    type = "select_one"
+
+    def __init__(self, *choice_labels, size: int = None, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
+        self.size = size
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["size"] = self.size
+        return d
+
+
+class SelectMultipleElement(MultipleChoiceElement):
+    element_template = jinja_env.get_template("SelectElement.html")
+    type = "select_multiple"
+
+    def __init__(self, *choice_labels, size: int = None, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
+        self.size = size
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["size"] = self.size
+        return d
 
 
 class ImageElement(Element):
