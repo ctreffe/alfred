@@ -2051,7 +2051,7 @@ class MultipleChoiceElement(ChoiceElement):
                 choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "checkbox"
             choice.value = i
-            choice.id = f"choice{i}-{self.name}"
+            choice.id = f"{self.name}_choice{i}"
             choice.name = choice.id
             choice.label_id = f"{choice.id}-lab"
             choice.css_class = f"choice-button choice-button-{self.name}"
