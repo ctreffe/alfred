@@ -5,6 +5,7 @@
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
+
 import random
 import re
 import string
@@ -24,7 +25,6 @@ from jinja2 import Template
 from past.utils import old_div
 
 import cmarkgfm
-from emoji import emojize
 
 from . import alfredlog
 from ._helper import alignment_converter
@@ -32,37 +32,6 @@ from ._helper import fontsize_converter
 from ._helper import is_url
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
-
-
-def icon(name: str, ml: int = 0, mr: int = 0) -> str:
-    """Returns HTML code for displaying font-awesome icons.
-    
-    These icons can be used in all places where HTML code is rendered,
-    i.e. TextElements, and all labels of elements.
-    
-    Args:
-        name: The icon name, as shown on https://fontawesome.com/icons?d=gallery&m=free
-        ml: Margin to the left, can be an integer from 0 to 5.
-        mr: Margin to the right, can be an integer from 0 to 5.
-
-    """
-    return f"<i class='fas fa-{name} ml-{ml} mr-{mr}'></i>"
-
-
-def emoji(text: str) -> str:
-    """Returns a new string in which emoji shortcodes in the input 
-    string are replaced with their unicode representation.
-    
-    Emoji printing can be used in all TextElements and Element labels.
-    An overview of shortcodes can be found here: 
-    https://www.webfx.com/tools/emoji-cheat-sheet/
-
-    Args:
-        text: Text, containing emoji shortcodes.
-    
-    """
-    return emojize(text, use_aliases=True)
-
 
 class RowLayout:
     """Provides layouting functionality for responsive horizontal 
@@ -95,6 +64,7 @@ class RowLayout:
     """
 
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
+        """Constructor"""
         self.ncols = ncols
         self._valign_cols = valign_cols
         self.responsive = responsive
@@ -222,8 +192,8 @@ class Element(ABC):
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the 
             page. Values can be 'left', 'center' (default), 'end',
-            or any valid value for the justify-content flexbox
-            utility [#bs_flex]_ .
+            or any valid value for the justify-content `flexbox
+            utility`_.
         width: Defines the horizontal width of the element from 
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
@@ -233,7 +203,6 @@ class Element(ABC):
             "80px".
         showif: A dictionary, defining conditions that must be met
             for the element to be shown. See :attr:`showif` for details.
-        should_be_shown_filter_function: (...)
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
@@ -242,12 +211,12 @@ class Element(ABC):
         element_width: A list of relative width definitions. The
             list can contain up to 5 width definitions, given as
             integers from 1 to 12. They refer to the five breakbpoints 
-            in Bootstrap 4's 12-column-grid system, i.e. 
-            [xs, sm, md, lg, xl] [#bs_grid]_ .
+            in `Bootstrap 4's 12-column-grid system`_, i.e. 
+            [xs, sm, md, lg, xl]  .
         experiment: The alfred experiment to which this element belogs.
         log: An instance of :class:`alfred3.logging.QueuedLoggingInterface`,
-            which is a modified interface to python's logging facility
-            [#log]_ . You can use it to log messages with the standard
+            which is a modified interface to python's `logging facility`_. 
+            You can use it to log messages with the standard
             logging methods 'debug', 'info', 'warning', 'error', 
             'exception', and 'log'. It also offers direct access to the
             logger via ``log.queue_logger``.
@@ -259,9 +228,10 @@ class Element(ABC):
             each page. The element will only be shown if *all* 
             conditions are met.
     
-    .. [#bs_flex] see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
-    .. [#bs_grid] see https://getbootstrap.com/docs/4.0/layout/grid/
-    .. [#log] see https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+    .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
+    .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
+    .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+    
     """
 
     base_template: Template = jinja_env.get_template("Element.html")
@@ -2126,6 +2096,7 @@ class SubmittingButtons(SingleChoiceButtons):
 
 
 class SelectOneElement(SingleChoiceElement):
+    element_class = "select-one-element"
     element_template = jinja_env.get_template("SelectElement.html")
     type = "select_one"
 
@@ -2141,6 +2112,7 @@ class SelectOneElement(SingleChoiceElement):
 
 
 class SelectMultipleElement(MultipleChoiceElement):
+    element_class = "select-multiple-element"
     element_template = jinja_env.get_template("SelectElement.html")
     type = "select_multiple"
 
@@ -2222,7 +2194,7 @@ class MatPlotElement(Element):
         align: Alignment of the figure.
 
     """
-
+    element_class = "matplot-element"
     element_template = jinja_env.get_template("ImageElement.html")
 
     def __init__(self, fig, align: str = "center", **kwargs):
