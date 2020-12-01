@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 """Provides element classes for adding content to pages.
 
+.. versionadded:: 1.5
+
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 import random
@@ -36,16 +38,6 @@ def icon(name: str, ml: int = 0, mr: int = 0) -> str:
     
     These icons can be used in all places where HTML code is rendered,
     i.e. TextElements, and all labels of elements.
-
-
-    Example::
-        
-        TextElement(f"Camera Icon: {icon('camera')}")
-
-    If you need more control, you can simply use the HTML code directly
-    and apply classes and styles as you wish::
-        
-        TextElement("<i class='fas fa-camera'></i>")
     
     Args:
         name: The icon name, as shown on https://fontawesome.com/icons?d=gallery&m=free
@@ -64,21 +56,9 @@ def emoji(text: str) -> str:
     An overview of shortcodes can be found here: 
     https://www.webfx.com/tools/emoji-cheat-sheet/
 
-    Example::
-        
-        TextElement(f"Joy emoji: {emoji(':joy:')}")
-
-    You can also print unicode emojis directly without the help of this
-    function, using the "CLDR Short Name" as defined on the official
-    unicode website [#unicode]_ ::
-
-        TextElement("Joy emoji: \\N{face with tears of joy}")
-
     Args:
         text: Text, containing emoji shortcodes.
     
-    .. [#unicode] http://www.unicode.org/emoji/charts/full-emoji-list.html
-
     """
     return emojize(text, use_aliases=True)
 
@@ -160,9 +140,7 @@ class RowLayout:
         """
         try:
             if len(breaks) > self.ncols:
-                raise ValueError(
-                    "Break list must be of the same or smaller length as number of elements."
-                )
+                raise ValueError("Break list length must be <= number of elements.")
         except TypeError:
             pass
 
@@ -203,7 +181,7 @@ class RowLayout:
         for i in range(self.ncols):
             try:
                 n = self._valign_cols[i]
-            except (IndexError, TypeError):
+            except IndexError:
                 out.append("align-self-center")
                 continue
 
@@ -219,9 +197,7 @@ class RowLayout:
             elif n == "bottom":
                 out.append("align-self-end")
             else:
-                raise ValueError(
-                    "Col position allowed values are 'auto', 'top', 'center', and 'bottom'."
-                )
+                raise ValueError("Valign allowed values: 'auto', 'top', 'center', and 'bottom'.")
 
         return out
 
@@ -782,8 +758,6 @@ class Row(Element):
 
     element_template = jinja_env.get_template("Row.html")
 
-    
-
     def __init__(
         self,
         *elements: Element,
@@ -869,6 +843,7 @@ class Stack(Row):
             class :class:`Row`.
 
     """
+
     def __init__(self, *elements: Element, **kwargs):
         """Constructor method."""
         super().__init__(*elements, **kwargs)
@@ -936,7 +911,6 @@ class Style(Element):
 
 
 class HideNavigation(Style):
-
     def __init__(self):
         super().__init__()
         self.code = "#page-navigation {display: none;}"
@@ -1110,6 +1084,7 @@ class TextElement(Element):
 class Hline(Element):
     element_class = "hline-element"
     inner_html = "<hr>"
+
 
 class CodeElement(TextElement):
     """A convenience element for displaying highlighted code.
@@ -1491,7 +1466,7 @@ class InputElement(LabelledElement):
             return self.debug_value
         else:
             return None
-    
+
     @default.setter
     def default(self, value):
         self._default = value
@@ -1499,7 +1474,7 @@ class InputElement(LabelledElement):
     @property
     def force_input(self):
         return self._force_input
-    
+
     @force_input.setter
     def force_input(self, value: bool):
         if not isinstance(value, bool):
@@ -1887,7 +1862,7 @@ class SingleChoiceButtons(SingleChoiceElement):
         if self.button_width == "equal":
             if not self.vertical:
                 # set button width to small value, because they will grow to fit the group
-                css = f".btn.choice-button-{self.name} {{width: 10px;}} " 
+                css = f".btn.choice-button-{self.name} {{width: 10px;}} "
             else:
                 css = []
             # full-width buttons on small screens
@@ -1901,7 +1876,7 @@ class SingleChoiceButtons(SingleChoiceElement):
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
             # and return to 100% with on small screens
             css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}} "
-            
+
             # now the width of the individual button has an effect
             css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
             # and it, too returns to full width on small screens
@@ -1990,7 +1965,13 @@ class MultipleChoiceElement(ChoiceElement):
     type = "checkbox"
 
     def __init__(
-        self, *choice_labels, min: int = None, max: int = None, select_hint: str = None, default: list = None, **kwargs,
+        self,
+        *choice_labels,
+        min: int = None,
+        max: int = None,
+        select_hint: str = None,
+        default: list = None,
+        **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
 
@@ -2004,7 +1985,9 @@ class MultipleChoiceElement(ChoiceElement):
         self._select_hint = select_hint
 
         if default is not None and not isinstance(default, list):
-            raise ValueError("Default for MultipleChoiceElement must be a list of integers, indicating the default choices.")
+            raise ValueError(
+                "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
+            )
         else:
             self.default = default
 
