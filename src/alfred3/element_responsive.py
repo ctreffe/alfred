@@ -9,6 +9,7 @@ import random
 import re
 import string
 import logging
+import io
 
 from abc import ABC, abstractproperty, abstractmethod
 from pathlib import Path
@@ -2190,4 +2191,57 @@ class ImageElement(Element):
     def __str__(self):
         src = self.path if self.path is not None else self.url
         return f"ImageElement(src: '{src}'; name: '{self.name}')"
+
+
+class MatPlotElement(Element):
+    """Displays a :class:`matplotlib.figure.Figure` object.
+    
+    Can be used for static and dynamic plotting.
+
+    .. note::
+        When plotting in alfred, you need to use the Object-oriented 
+        matplotlib API
+        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
+
+    Example plot (note that in general, the page would need to be added 
+    to an experiment instance at some point to be displayed)::
+        
+        from matplotlib.figure import Figure
+        from alfred3.page import Page
+        import alfred3.element_responsive as el
+
+        fig = Figure()
+        ax = fig.add_subplot()
+        ax.plot(range(10))
+
+        pg = Page()
+        pg += el.MatPlotElement(fig=fig)
+
+    Args:
+        fig (matplotlib.figure.Figure): The figure to display.
+        align: Alignment of the figure.
+
+    """
+
+    element_template = jinja_env.get_template("ImageElement.html")
+
+    def __init__(self, fig, align: str = "center", **kwargs):
+        super().__init__(align=align, **kwargs)
+        self.fig = fig
+        self.src = None
+
+    def prepare_web_widget(self):
+        out = io.BytesIO()
+        self.fig.savefig(out, format="svg")
+        out.seek(0)
+        self.src = self.experiment.user_interface_controller.add_dynamic_file(out, content_type="image/svg+xml")
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["src"] = self.src
+        return d
+    
+    def __str__(self):
+        return f"MatPlotElement(name: '{self.name}')"
 
