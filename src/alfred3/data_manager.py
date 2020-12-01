@@ -36,6 +36,10 @@ class DataManager(object):
         self.javascript_active = None
         self.log.add_queue_logger(self, __name__)
 
+    @property
+    def experiment(self):
+        return self._experiment
+
     def add_additional_data(self, key, value):
         self._additional_data[key] = value
 
