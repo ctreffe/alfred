@@ -1970,7 +1970,7 @@ class MultipleChoiceElement(ChoiceElement):
         min: int = None,
         max: int = None,
         select_hint: str = None,
-        default: list = None,
+        default: Union[int, List[int]] = None,
         **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
@@ -1984,7 +1984,9 @@ class MultipleChoiceElement(ChoiceElement):
         self.max = max if max is not None else len(self.choice_labels)
         self._select_hint = select_hint
 
-        if default is not None and not isinstance(default, list):
+        if isinstance(default, int):
+            self.default = [default]
+        elif default is not None and not isinstance(default, list):
             raise ValueError(
                 "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
             )
