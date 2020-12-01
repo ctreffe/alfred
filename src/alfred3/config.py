@@ -102,13 +102,8 @@ class ExperimentConfig(ConfigParser):
         self.read(self._config_files, encoding="utf-8")
 
         for obj in self._config_objects:
-            if type(obj) not in [str, dict]:
-                raise TypeError(
-                    (
-                        "The argument config_objects must be a list, containing only "
-                        + "strings and/or dictionaries."
-                    )
-                )
+            if not isinstance(obj, (str, dict)):
+                raise TypeError("Config objects must be list of strings or dictionaries.")
 
             try:
                 self.read_dict(obj)
@@ -129,6 +124,7 @@ class ExperimentConfig(ConfigParser):
         
         Returns:
             dict: A dictionary representation of the parser instance.
+        
         """
 
         return {section_name: dict(self[section_name]) for section_name in self.sections()}
