@@ -233,65 +233,6 @@ class RowLayout:
 class Element(ABC):
     """Element baseclass. All elements are derived from this class.
 
-    The simplest way to subclass *Element* is by defining the 
-    *inner_html* attribute::
-
-        class NewElement(Element):
-
-            inner_html = "Element html goes <b>here</b>"
-    
-    For most cases, you will want some additional control over the 
-    attribute. Maybe you even want to use your own jinja template. 
-    You can achieve that by defining *inner_html* as a property, which 
-    returns your desired html code::
-
-        import jinja2
-
-        class NewElement(Element):
-
-            @property
-            def inner_html(self):
-                t = jinja2.Template("Element html goes <b>{{ text }}</b>")
-                return t.render(text="here")
-    
-    Both of the above methods utilise alfred's basic element html 
-    template and inject your code into it, which allows the basic layout
-    and logic to simply translate to your new element. If your new
-    Element has its own *__init__* constructor method, you can pass
-    specific arguments or all available arguments on to the Element 
-    base class::
-
-        # define new argument 'myarg' and save it as an attribute
-        # set a new default for argument width and pass it on to the 
-        # Element base class allow all other valid keyword arguments for 
-        # the Element base class and pass them on ('**kwargs')
-        
-        class NewElement(Element):
-
-            def __init__(self, myarg: str = "test", width: str = "narrow", **kwargs):
-                super().__init__(width=width, **kwargs)
-                self.myarg = myarg
-        
-
-    .. note::
-        All elements that are derived in this way receive a CSS class
-        of their class name, which can be used for css styling (i.e. a
-        new element 'ExampleElement' receives the CSS class 
-        'ExampleElement'). Further, all elements receive a html element
-        ID of the form 'elid-<name>', where <name> is replaced by the
-        element's name attribute. This can be used to style individual
-        elements via CSS.
-    
-    If you want full control over the element's html template, you can
-    redefine the *web_widget* property. This will overwrite the
-    basic html layouting functionality. Example::
-
-        class NewElement(Element):
-
-            @property
-            def web_widget(self):
-                return "This property should return your full desired code."
-
     Args:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
