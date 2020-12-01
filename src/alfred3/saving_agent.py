@@ -80,7 +80,7 @@ _thread = threading.Thread(target=_save_looper, name="DataSaver")
 """Thread for executing the :func:`_save_looper` in the background."""
 
 _thread.daemon = True
-"""The significance of this flag is that the entire Python program exits 
+"""The entire Python program exits 
 when only daemon threads are left. (From threading documentation)"""
 
 _thread.start()

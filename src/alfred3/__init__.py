@@ -297,7 +297,7 @@ class Experiment(object):
         self.save_data()
 
         if self.config.getboolean("general", "transform_data_to_csv"):
-            export_to_csv = threading.Thread(target=self._export_data_to_csv)
+            export_to_csv = threading.Thread(target=self._export_data_to_csv, name="export")
             export_to_csv.start()
 
     def save_data(self):

@@ -245,7 +245,7 @@ class QueuedLoggingInterface:
 
         if self._level:
             self.queue_logger.setLevel(self._level)
-        threading.Thread(target=self._unpack_worker).start()
+        threading.Thread(target=self._unpack_worker, name="alfredlog").start()
 
     def setLevel(self, level: str):
         """Sets a level for the queue logger. Since the level will be
