@@ -530,7 +530,7 @@ class Element(ABC):
                     self.should_be_shown = False
                     return
 
-            t = jinja_env.get_template("showif.js")
+            t = jinja_env.get_template("showif.js.j2")
             js = t.render(showif=on_current_page, element=self.name)
             self.js_code.append((7, js))
             self._showif_on_current_page = True
@@ -2090,7 +2090,7 @@ class SubmittingButtons(SingleChoiceButtons):
     def added_to_page(self, page):
         super().added_to_page(page)
 
-        t = jinja_env.get_template("submittingbuttons.js")
+        t = jinja_env.get_template("submittingbuttons.js.j2")
         js = t.render(name=self.name)
 
         page += JavaScript(code=js)
