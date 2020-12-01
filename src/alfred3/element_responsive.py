@@ -1719,7 +1719,6 @@ class SingleChoiceElement(ChoiceElement):
                 choice.checked = True if i == 1 else False
             elif self.input:
                 choice.checked = True if int(self.input) == i else False
-                # import pdb; pdb.set_trace()
             elif self.default:
                 choice.checked = True if (self.default == i) else False
 
@@ -2101,8 +2100,8 @@ class SelectOneElement(SingleChoiceElement):
     element_template = jinja_env.get_template("SelectElement.html.j2")
     type = "select_one"
 
-    def __init__(self, *choice_labels, size: int = None, **kwargs):
-        super().__init__(*choice_labels, **kwargs)
+    def __init__(self, *choice_labels, toplab: str = None, size: int = None, default: int = 1, **kwargs):
+        super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
         self.size = size
     
     @property
@@ -2117,8 +2116,8 @@ class SelectMultipleElement(MultipleChoiceElement):
     element_template = jinja_env.get_template("SelectElement.html.j2")
     type = "select_multiple"
 
-    def __init__(self, *choice_labels, size: int = None, **kwargs):
-        super().__init__(*choice_labels, **kwargs)
+    def __init__(self, *choice_labels, toplab: str = None, size: int = None, **kwargs):
+        super().__init__(*choice_labels, toplab=toplab, **kwargs)
         self.size = size
     
     @property
@@ -2126,6 +2125,18 @@ class SelectMultipleElement(MultipleChoiceElement):
         d = super().template_data
         d["size"] = self.size
         return d
+    
+    def set_data(self, d):
+        self._input = {}
+        name_map = {str(choice.value): choice.name for choice in self.choices}
+        val = d.get(self.name, None)
+        val_name = name_map[val]
+        
+        for choice in self.choices:
+            if choice.name == val_name:
+                self._input[choice.name] = True
+            else:
+                self._input[choice.name] = False
 
 
 class ImageElement(Element):
