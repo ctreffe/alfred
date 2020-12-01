@@ -19,6 +19,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from .exceptions import AlfredError
 from .config import ExperimentSecrets
+from .alfredlog import QueuedLoggingInterface
 
 
 class DataManager(object):
@@ -26,11 +27,14 @@ class DataManager(object):
     UNLINKED_DATA = "unlinked"
     CODEBOOK_DATA = "codebook"
 
+    log = QueuedLoggingInterface(base_logger=__name__)
+
     def __init__(self, experiment):
         self._experiment = experiment
         self._additional_data = {}
         self.screen_resolution = None
         self.javascript_active = None
+        self.log.add_queue_logger(self, __name__)
 
     def add_additional_data(self, key, value):
         self._additional_data[key] = value
