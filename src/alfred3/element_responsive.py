@@ -176,7 +176,7 @@ class RowLayout:
             layout1 = RowLayout(ncols=3, valign_cols=["bottom"])
 
             # the first column will be aligned top
-            # the 2nd and 3rd columns will be align bottom
+            # the 2nd and 3rd columns will be aligned bottom
             # (specified after initialization)
             layout2 = RowLayout(ncols=3)
             layout2.valign_cols = ["top", "bottom"]
