@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="{{ url }}">
     {% endfor %}
 
+    <style type="text/css">
+    {% for _, css in code.get("layout_css_code") %}
+        {{ css }}
+    {% endfor %}
+    </style>
+
     {% for _, url in code.get("css_urls") %}
     <link rel="stylesheet" href="{{ url }}">
     {% endfor %}
@@ -25,10 +31,10 @@
     <title>{{ d.get('website_title') }}</title>
 </head>
 
-<body class="line-numbers{% if d.get('responsive') %} responsive{% endif %}">
+<body class="line-numbers{% if d.get('responsive') %} responsive{% endif %}" id="main-body">
 
     
-    <div class="container-fluid d-flex justify-content-center logo-bg {% if not d.get('responsive') %} min-width {% endif %}">
+    <div class="container-fluid d-flex justify-content-center logo-bg {% if not d.get('responsive') %} min-width {% endif %}" id="logo-container">
         <div class="logo-content {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}">
             {% if d.get('logo_url') %}
             <img src="{{ d.get('logo_url') }}" class="float-left logo" alt="Logo">
@@ -46,7 +52,7 @@
     {% block page %}
     {% endblock page %}
 
-    <div class="footer-container d-flex justify-content-center {% if not d.get('responsive') %} min-width {% endif %}">
+    <div class="footer-container d-flex justify-content-center {% if not d.get('responsive') %} min-width {% endif %}" id="footer-container">
             <div class="footer text-center small muted mt-1">
                 {% if d.get('footer_text') %}
                 <p class="footer-text mt-1">{{ d.get('footer_text') }}</p>
@@ -61,6 +67,12 @@
         <!-- Javascript -->
         {% for _, url in code.get("layout_js") %}
         <script type="text/javascript" src="{{ url }}"></script>
+        {% endfor %}
+
+        {% for _, js in code.get("layout_js_code") %}
+        <script type="text/javascript">
+            {{ js }}
+        </script>
         {% endfor %}
 
         {% for _, url in code.get("js_urls") %}
