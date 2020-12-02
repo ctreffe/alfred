@@ -31,11 +31,36 @@ class DataManager(object):
         self._additional_data = {}
         self.screen_resolution = None
         self.javascript_active = None
+    
+    @property
+    def additional_data(self) -> dict:
+        """A dictionary that can be used to store data manually and make
+        it available throughout an experiment. Data stored here will be 
+        saved to the experiment data.
+        """
+        return self._additional_data
 
     def add_additional_data(self, key, value):
+        """Method for adding data to the additional data dictionary.
+
+        .. deprecated:: 1.5
+           Use the property
+           :attr:`~alfred3.data_manager.DataManager.additional_data`
+           directly instead.
+
+        """
+
         self._additional_data[key] = value
 
     def get_additional_data_by_key(self, key):
+        """Method for retrieving data from the additional data dictionary.
+
+        .. deprecated:: 1.5
+           Use the property
+           :attr:`~alfred3.data_manager.DataManager.additional_data`
+           directly instead.
+
+        """
         return self._additional_data[key]
 
     def get_data(self):
