@@ -128,7 +128,7 @@ class BaseWebLayout(Layout):
         super(BaseWebLayout, self).__init__()
         self._style_urls = []
         self._js_urls = []
-        self._template = jinja_env.get_template("base_layout.html")
+        self._template = jinja_env.get_template("base_layout.html.j2")
 
     def activate(self, experiment, ui_controller):
         super(BaseWebLayout, self).activate(experiment, ui_controller)
@@ -291,7 +291,7 @@ class GoeWebLayout(Layout):
         super(GoeWebLayout, self).__init__()
         self._style_urls = []
         self._js_urls = []
-        self._template = jinja_env.get_template("goe_layout.html")
+        self._template = jinja_env.get_template("goe_layout.html.j2")
 
     def activate(self, experiment, ui_controller):
         super(GoeWebLayout, self).activate(experiment, ui_controller)

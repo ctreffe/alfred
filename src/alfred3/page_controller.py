@@ -21,11 +21,12 @@ class PageController(object):
     | PageController stellt die obersten Fragengruppen des Experiments (*rootSection* und *finishedSection*)
     | bereit und ermöglicht den Zugriff auf auf deren Methoden und Attribute.
     """
+    instance_level_logging = False
 
     def __init__(self, experiment):
         self._experiment = experiment
-        loggername = self.prepare_logger_name()
-        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        self.log.add_queue_logger(self, __name__)
 
         self._rootSection = Section(tag="rootSection")
         self._rootSection.added_to_experiment(experiment)
@@ -80,6 +81,10 @@ class PageController(object):
         except AttributeError as e:
             raise e
             # raise AttributeError("'%s' has no Attribute '%s'" % (self.__class__.__name__, name))
+
+    @property
+    def experiment(self):
+        return self._experiment
 
     def append_item_to_finish_section(self, item):
         """
@@ -178,21 +183,3 @@ class PageController(object):
             counter += 1
         return counter
     
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self._experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)

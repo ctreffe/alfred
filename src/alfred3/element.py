@@ -3033,7 +3033,7 @@ class WebVideoElement(Element, WebElementInterface):
 
     def prepare_web_widget(self):
         # load template
-        self._template = jinja_env.get_template("WebVideoElement.html")
+        self._template = jinja_env.get_template("WebVideoElement.html.j2")
 
         # prepare attributes
         self.prepare_attributes()

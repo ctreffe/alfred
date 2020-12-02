@@ -16,7 +16,7 @@ from typing import Union
 
 from future.utils import with_metaclass
 
-from . import element, settings, alfredlog
+from . import element, alfredlog
 from . import element_responsive as relm
 from . import saving_agent
 from ._core import ContentCore
@@ -30,8 +30,6 @@ class PageCore(ContentCore):
         self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
-        if settings.debugmode and settings.debug.disable_minimum_display_time:
-            self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
         self._data = {}
@@ -56,11 +54,20 @@ class PageCore(ContentCore):
 
         super(PageCore, self).added_to_experiment(experiment)
 
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
+        self.log.add_queue_logger(self, __name__)
 
+        if self.experiment.config.getboolean("general", "debug"):
+            if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
+                self._minimum_display_time = 0
+
+    @property
+    def minimum_display_time_msg(self):
+        msg = self._minimum_display_time_msg
+        if msg is not None:
+            return msg
+        else:
+            return self.experiment.config.get("messages", "minimum_display_time")
+    
     @property
     def show_thumbnail(self):
         return True
@@ -295,44 +302,12 @@ class PageCore(ContentCore):
             "first_show_time" in self._data
             and time.time() - self._data["first_show_time"] < self._minimum_display_time
         ):
-            try:
-                msg = (
-                    self._minimum_display_time_msg
-                    if self._minimum_display_time_msg
-                    else self._experiment.settings.messages.minimum_display_time
-                )
-            except Exception:
-                msg = "Can't access minimum display time message"
+            msg = self.minimum_display_time_msg
             self._experiment.message_manager.post_message(
                 msg.replace("${mdt}", str(self._minimum_display_time))
             )
             return False
         return True
-
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~PageCore.instance_level_logging` is set to *True*.
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        if self.instance_level_logging:
-            name.append(self._uid)
-
-        return ".".join(name)
 
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current experiment data.
@@ -433,8 +408,6 @@ class CoreCompositePage(PageCore):
         for elmnt in elements:
             if not isinstance(elmnt, (Element, relm.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
-
-            exp_type = settings.experiment.type  # 'web' or 'qt-wk'
 
             self._element_list.append(elmnt)
             elmnt.added_to_page(self)
@@ -554,7 +527,7 @@ class CoreCompositePage(PageCore):
         return [item for sublist in list_of_lists for item in sublist]
 
     def set_data(self, dictionary):
-        screen_resolution = dictionary.pop("screen_resolution")
+        screen_resolution = dictionary.pop("screen_resolution", None)
         if screen_resolution:
             self.experiment.data_manager.screen_resolution = screen_resolution
         javascript_active = dictionary.pop("javascript_active", None)
@@ -906,12 +879,14 @@ class WebTimeoutMixin(object):
         self._end_link = "unset"
         self._run_timeout = True
         self._timeout = timeout
-        if settings.debugmode and settings.debug.reduce_countdown:
-            self._timeout = int(settings.debug.reduced_countdown_time)
 
     def added_to_experiment(self, experiment):
         super(WebTimeoutMixin, self).added_to_experiment(experiment)
         self._end_link = self._experiment.user_interface_controller.add_callable(self.callback)
+
+        if self._experiment.config.getboolean("general", "debug"):
+            if self._experiment.config.getboolean("debug", "reduce_countdown"):
+                self._timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
 
     def callback(self, *args, **kwargs):
         self._run_timeout = False

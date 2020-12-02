@@ -80,7 +80,7 @@ _thread = threading.Thread(target=_save_looper, name="DataSaver")
 """Thread for executing the :func:`_save_looper` in the background."""
 
 _thread.daemon = True
-"""The significance of this flag is that the entire Python program exits 
+"""The entire Python program exits 
 when only daemon threads are left. (From threading documentation)"""
 
 _thread.start()
@@ -117,6 +117,8 @@ class SavingAgent(ABC):
         use: Set to false, if this saving agent should not be used.
     """
 
+    instance_level_logging = False
+
     def __init__(
         self, activation_level: int = 10, experiment=None, name: str = None, encrypt: bool = False
     ):
@@ -128,11 +130,9 @@ class SavingAgent(ABC):
             raise SavingAgentException(
                 "Saving Agents must be initialized with experiment instance."
             )
-
-        self.log = self._init_log()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
         self.name = name
-
         if name is None or name == "auto" or name == "":
             self.name = (
                 type(self).__name__ + "_" + time.strftime("%Y-%m-%d_t%H%M%S") + "_" + uuid4().hex
@@ -147,6 +147,7 @@ class SavingAgent(ABC):
                 )
             )
 
+        self.log.add_queue_logger(self, __name__)
         self._lock = threading.Lock()
         self._latest_save_time = None
         self._fallback_agents = []
@@ -156,6 +157,10 @@ class SavingAgent(ABC):
             raise ValueError(
                 f"Encryption was turned on for {self}, but the experiment does not have an encryption key. Turn encryption off in the saving agent configuration, or provide an encryption key in secrets.conf."
             )
+
+    @property
+    def experiment(self):
+        return self._experiment
 
     def append_fallback(self, *args):
         """Appends saving agents to the list of fallback saving agents. 
@@ -271,33 +276,6 @@ class SavingAgent(ABC):
         by all children of :class:`SavingAgent`.
         """
         pass
-
-    def _init_log(self):
-        loggername = self._prepare_logger_name()
-        log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
-        log.session_id = self._experiment.config.get("metadata", "session_id")
-
-        return log
-
-    def _prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self._experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)
-
 
 class LocalSavingAgent(SavingAgent):
     """A SavingAgent that writes data to a .json file on the disk.
@@ -753,13 +731,20 @@ class SavingAgentController:
         experiment: An alfred experiment.
     """
 
+    instance_level_logging = False
+
     def __init__(self, experiment):
         """Constructor method."""
 
         self._agents = {}
         self._failure_agents = {}
         self._experiment = experiment
-        self.log = self._init_log()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        self.log.add_queue_logger(self, __name__)
+    
+    @property
+    def experiment(self):
+        return self._experiment
 
     def append(self, saving_agent: SavingAgent):
         """Appends a saving agent to the controller."""
@@ -918,32 +903,6 @@ class SavingAgentController:
         data["save_time"] = time.time()
 
         self.save_with_all_agents(data=data, level=level, sync=sync)
-
-    def _init_log(self):
-        loggername = self._prepare_logger_name()
-        log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
-        log.session_id = self._experiment.config.get("metadata", "session_id")
-
-        return log
-
-    def _prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self._experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)
 
 
 class CodebookMixin:

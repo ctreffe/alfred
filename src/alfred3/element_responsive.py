@@ -5,14 +5,17 @@
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
+
 import random
 import re
 import string
 import logging
+import io
 
 from abc import ABC, abstractproperty, abstractmethod
 from pathlib import Path
 from typing import List
+from typing import Tuple
 from typing import Union
 from dataclasses import dataclass
 
@@ -31,45 +34,38 @@ from ._helper import is_url
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
-
-def icon(name: str, ml: int = 0, mr: int = 0) -> str:
-    """Returns HTML code for displaying font-awesome icons.
-    
-    These icons can be used in all places where HTML code is rendered,
-    i.e. TextElements, and all labels of elements.
-    
-    Args:
-        name: The icon name, as shown on https://fontawesome.com/icons?d=gallery&m=free
-        ml: Margin to the left, can be an integer from 0 to 5.
-        mr: Margin to the right, can be an integer from 0 to 5.
-
-    """
-    return f"<i class='fas fa-{name} ml-{ml} mr-{mr}'></i>"
-
-
-def emoji(text: str) -> str:
-    """Returns a unicode representation of emojis, based on shortcodes.
-    
-    Emoji printing can be used in all TextElements and Element labels.
-    Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
-
-    Args:
-        text: Text, containing emoji shortcodes.
-    
-    """
-    return emojize(text, use_aliases=True)
-
-
 class RowLayout:
-    """Manages the layout of
-
+    """Provides layouting functionality for responsive horizontal 
+    positioning of elements.
 
     Args:
+        ncols: Number of columns to arrange in a row.
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'.
         responsive: Boolean, indicating whether breakpoints should
-                    be responsive, or not.
+            be responsive, or not.
+
+    Attributes:
+        width_xs: List of column widths on screens of size 'xs' or 
+            bigger (<576px). Widths must be defined as integers between
+            1 and 12.
+        width_sm: List of column widths on screens of size 'sm' or 
+            bigger (>=576px). Widths must be defined as integers between
+            1 and 12.
+        width_md: List of column widths on screens of size 'md' or 
+            bigger (>=768px). Widths must be defined as integers between
+            1 and 12.
+        width_lg: List of column widths on screens of size 'lg' or 
+            bigger (>=992px). Widths must be defined as integers between
+            1 and 12.
+        width_xl: List of column widths on screens of size 'xl' or 
+            bigger (>=1200px). Widths must be defined as integers between
+            1 and 12.
+
     """
 
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
+        """Constructor"""
         self.ncols = ncols
         self._valign_cols = valign_cols
         self.responsive = responsive
@@ -142,11 +138,16 @@ class RowLayout:
 
     @property
     def valign_cols(self) -> List[str]:
-        if self._valign_cols is None:
-            return ["align-self-center"]
+        """List of vertical column alignments. Valid values are 'auto' 
+        (default), 'top', 'center', and 'bottom'."""
 
-        if len(self._valign_cols) > self.ncols:
-            raise ValueError("List length must be <= as number of elements.")
+        try:
+            if len(self._valign_cols) > self.ncols:
+                raise ValueError(
+                    "Col position list must be of the same or smaller length as number of elements."
+                )
+        except TypeError:
+            pass
 
         out = []
         for i in range(self.ncols):
@@ -178,69 +179,7 @@ class RowLayout:
 
 
 class Element(ABC):
-    """Element baseclass. 
-    
-    Elements are derived from this class. Most of them inherit its 
-    arguments, attributes, and methods, unless stated otherwise.
-
-    The simplest way to subclass *Element* is by defining the 
-    *inner_html* attribute::
-
-        class NewElement(Element):
-
-            inner_html = "Element html goes <b>here</b>"
-    
-    For most cases, you will want some additional control over the 
-    attribute. Maybe you even want to use your own jinja template. 
-    You can achieve that by defining *inner_html* as a property, which 
-    returns your desired html code::
-
-        import jinja2
-
-        class NewElement(Element):
-
-            @property
-            def inner_html(self):
-                t = jinja2.Template("Element html goes <b>{{ text }}</b>")
-                return t.render(text="here")
-    
-    Both of the above methods utilise alfred's basic element html 
-    template and inject your code into it, which allows the basic layout
-    and logic to simply translate to your new element. If your new
-    Element has its own *__init__* constructor method, you can pass
-    specific arguments or all available arguments on to the Element 
-    base class::
-
-        # define new argument 'myarg' and save it as an attribute
-        # set a new default for argument width and pass it on to the 
-        # Element base class allow all other valid keyword arguments for 
-        # the Element base class and pass them on ('**kwargs')
-        
-        class NewElement(Element):
-
-            def __init__(self, myarg: str = "test", width: str = "narrow", **kwargs):
-                super().__init__(width=width, **kwargs)
-                self.myarg = myarg
-        
-
-    .. note::
-        All elements that are derived in this way receive a CSS class
-        of their class name, which can be used for css styling (i.e. a
-        new element 'ExampleElement' receives the CSS class 
-        'ExampleElement'). Further, all elements receive a html element
-        ID of the form 'elid-<name>', where <name> is replaced by the
-        element's name attribute. This can be used to style individual
-        elements via CSS.
-    
-    If you want full control over the element's html template, you can
-    redefine the *web_widget* property. This will overwrite the
-    basic html layouting functionality. Example::
-
-        class NewElement(Element):
-
-            @property
-            def web_widget(self):
-                return "This property should return your full desired code."
+    """Element baseclass. All elements are derived from this class.
 
     Args:
         name: Name of the element. This should be a unique identifier.
@@ -254,8 +193,8 @@ class Element(ABC):
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the 
             page. Values can be 'left', 'center' (default), 'end',
-            or any valid value for the justify-content flexbox
-            utility [#bs_flex]_ .
+            or any valid value for the justify-content `flexbox
+            utility`_.
         width: Defines the horizontal width of the element from 
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
@@ -265,24 +204,20 @@ class Element(ABC):
             "80px".
         showif: A dictionary, defining conditions that must be met
             for the element to be shown. See :attr:`showif` for details.
-        should_be_shown_filter_function: (...)
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
-        alignment: Alignment of text/instructions inside the element. 
-            Can be 'left' (default), 'center', 'right', or 'justify'. 
-            *Deprecated in v1.5*. Please use *align*. 
 
     Attributes:
         element_width: A list of relative width definitions. The
             list can contain up to 5 width definitions, given as
             integers from 1 to 12. They refer to the five breakbpoints 
-            in Bootstrap 4's 12-column-grid system, i.e. 
-            [xs, sm, md, lg, xl] [#bs_grid]_ .
+            in `Bootstrap 4's 12-column-grid system`_, i.e. 
+            [xs, sm, md, lg, xl]  .
         experiment: The alfred experiment to which this element belogs.
         log: An instance of :class:`alfred3.logging.QueuedLoggingInterface`,
-            which is a modified interface to python's logging facility
-            [#log]_ . You can use it to log messages with the standard
+            which is a modified interface to python's `logging facility`_. 
+            You can use it to log messages with the standard
             logging methods 'debug', 'info', 'warning', 'error', 
             'exception', and 'log'. It also offers direct access to the
             logger via ``log.queue_logger``.
@@ -294,14 +229,15 @@ class Element(ABC):
             each page. The element will only be shown if *all* 
             conditions are met.
     
-    .. [#bs_flex] see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
-    .. [#bs_grid] see https://getbootstrap.com/docs/4.0/layout/grid/
-    .. [#log] see https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+    .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
+    .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
+    .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+    
     """
 
-    base_template = jinja_env.get_template("Element.html")
-    element_template = None
-    can_display_corrective_hints_in_line = False
+    base_template: Template = jinja_env.get_template("Element.html.j2")
+    element_template: Template = None
+    can_display_corrective_hints_in_line: bool = False
 
     def __init__(
         self,
@@ -454,10 +390,10 @@ class Element(ABC):
         self._show_corrective_hints = bool(b)
 
     @property
-    def should_be_shown(self):
-        """
-        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
-        Otherwise False is returned
+    def should_be_shown(self) -> bool:
+        """Boolean, indicating whether the element is meant to be shown.
+        
+        Evaluates all *showif* conditions and can be set manually.
         """
         cond1 = self._should_be_shown
         cond2 = all(self._evaluate_showif())
@@ -476,6 +412,7 @@ class Element(ABC):
 
     @property
     def page(self):
+        """The page to which the element belongs."""
         return self._page
 
     @page.setter
@@ -484,26 +421,41 @@ class Element(ABC):
 
     @property
     def tree(self):
+        """A string, giving the exact position of the element's page in 
+        the experiment. The tree is composed of the tags of all sections
+        and the page, separated by underscores. Example for the Page
+        with tag 'hello_world' in section 'main'::
+        
+            rootSection_main_hello_world
+        
+        """
         return self.page.tree
 
     @property
     def identifier(self):
+
         return self.tree.replace("rootSection_", "") + "_" + self._name
 
     @property
-    def css_code(self):
+    def css_code(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and CSS code."""
         return self._css_code
 
     @property
     def css_urls(self):
+        """A list of tuples, which contain a priority and urls pointing 
+        to CSS code."""
         return self._css_urls
 
     @property
-    def js_code(self):
+    def js_code(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and Javascript."""
         return self._js_code
 
     @property
-    def js_urls(self):
+    def js_urls(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and urls pointing
+        to JavaScript."""
         return self._js_urls
 
     @property
@@ -578,7 +530,7 @@ class Element(ABC):
                     self.should_be_shown = False
                     return
 
-            t = jinja_env.get_template("showif.js")
+            t = jinja_env.get_template("showif.js.j2")
             js = t.render(showif=on_current_page, element=self.name)
             self.js_code.append((7, js))
             self._showif_on_current_page = True
@@ -597,11 +549,7 @@ class Element(ABC):
                 added.
         """
         self.experiment = experiment
-
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
+        self.log.add_queue_logger(self, __name__)
 
     def added_to_page(self, page):
         """Tells the element that it was added to a page. 
@@ -647,31 +595,6 @@ class Element(ABC):
         """
         pass
 
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~Element.instance_level_logging` is set to *True*.
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        if self.instance_level_logging and self._name:
-            name.append(self._name)
-
-        return ".".join(name)
-
     # Magic methods start here -----------------------------------------
 
     def __str__(self):
@@ -683,30 +606,81 @@ class Element(ABC):
     # abstract attributes start here -----------------------------------
 
     @property
-    def inner_html(self):
+    def inner_html(self) -> str:
+        """Renders :attr:`~alfred3.element_responsive.Element.element_template`
+        with :attr:`~alfred3.element_responsive.Element.template_data`
+        and returns the resulting html.
+
+        If no `element_template` is defined, `None` is returned.
+        """
         if self.element_template is not None:
             return self.element_template.render(self.template_data)
         else:
             return None
 
     @property
-    def web_widget(self):
-        """Every child class *must* redefine the web widget.
-        
-        This is the html-code that defines the element's display on the
+    def web_widget(self) -> str:
+        """Returns the full html-code for the element's display on the
         screen.
+
+        This is done by rendering the 
+        :attr:`~alfred3.element_responsive.Element.base_template` with
+        the :attr:`~alfred3.element_responsive.Element.template_data` 
+        and injecting the :attr:`~alfred3.element_responsive.Element.inner_html`
+        into it.
+
         """
         d = self.template_data
         d["html"] = self.inner_html
         return self.base_template.render(d)
 
     @property
-    def element_class(self):
+    def element_class(self) -> str:
+        """Returns the name of the element's class. Used, e.g. as
+        CSS class name in the base element template.
+        """
         return type(self).__name__
 
 
+    def add_css(self, code: str, priority: int = 10):
+        """Adds CSS to the element.
+        
+        Args:
+            code: Css code
+            priority: Can be used to influence the order in which code
+                is added to the page. Sorting is ascending, i.e. the 
+                lowest numbers appear closest to the top of the page.
+        
+        """
+        self._css_code.append((priority, code))
+    
+    def add_js(self, code: str, priority: int = 10):
+        """Adds Javascript to the element.
+        
+        Args:
+            code: Css code
+            priority: Can be used to influence the order in which code
+                is added to the page. Sorting is ascending, i.e. the 
+                lowest numbers appear closest to the top of the page.
+        
+        """
+        self._js_code.append((priority, code))
+
+@dataclass
+class _RowCol:
+    """Just a little helper for handling columns inside a Row.
+    
+    :meta private:
+    """
+    breaks: str
+    vertical_position: str
+    element: Element
+    id: str
+
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
+
+    .. versionadded:: 1.5
 
     The row will arrange your elements using Bootstrap 4's grid system
     and breakpoints, making the arrangement responsive. You can 
@@ -714,10 +688,11 @@ class Row(Element):
     (Bootstrap 4's default break points) with the width attributes of
     its layout attribute.
 
-    If you don't specify breakpoints manually, the columns will default
-    to equal width and wrap on breakpoints automatically.
+    If you don't specify breakpoints manually via the *layout* attribute, 
+    the columns will default to equal width and wrap on breakpoints 
+    automatically.
 
-    .. info::
+    .. note::
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
         column by assigning it a number of those units. A column of 
@@ -731,14 +706,14 @@ class Row(Element):
         See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
         for detailed documentation of how Bootstrap's breakpoints work.
     
-    .. info::
+    .. note::
         **Some information regarding the width attributes**
         
-        - If you specify fewer values than the number of columns in the 
-        width attributes, the columns with undefined width will take up 
-        equal portions of the remaining horizontal space.
-        - If a breakpoint is not specified manually, the values from the
-        next smaller breakpoint are inherited.
+        * If you specify fewer values than the number of columns in the 
+          width attributes, the columns with undefined width will take up 
+          equal portions of the remaining horizontal space.
+        * If a breakpoint is not specified manually, the values from the
+          next smaller breakpoint are inherited.
     
     Args:
         elements: The elements that you want to arrange in a row.
@@ -747,33 +722,13 @@ class Row(Element):
             are 'auto' (default), 'top', 'center', and 'bottom'.
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
+            This switch exists, because some elements might default to
+            a smaller width, but when using them in a Row, you usually
+            want them to span the full width of their column.
     
-    Attributes:
-        width_xs: List of column widths on screens of size 'xs' or 
-            bigger (<576px). Widths must be defined as integers between
-            1 and 12.
-        width_sm: List of column widths on screens of size 'sm' or 
-            bigger (>=576px). Widths must be defined as integers between
-            1 and 12.
-        width_md: List of column widths on screens of size 'md' or 
-            bigger (>=768px). Widths must be defined as integers between
-            1 and 12.
-        width_lg: List of column widths on screens of size 'lg' or 
-            bigger (>=992px). Widths must be defined as integers between
-            1 and 12.
-        width_xl: List of column widths on screens of size 'xl' or 
-            bigger (>=1200px). Widths must be defined as integers between
-            1 and 12.
     """
 
-    @dataclass
-    class InternalCol:
-        """Just a little helper for handling columns."""
-
-        breaks: str
-        vertical_position: str
-        element: Element
-        id: str
+    element_template = jinja_env.get_template("Row.html.j2")
 
     def __init__(
         self,
@@ -787,7 +742,11 @@ class Row(Element):
         """Constructor method."""
         super().__init__(name=name, showif=showif)
         self.elements = elements
+
+        #: An instance of :class:`~alfred3.element_responsive.RowLayout`, used for layouting.
+        #: You can use this attribute to finetune column widths.
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
+        
         self.height = height
         self.elements_full_width = elements_full_width
 
@@ -804,19 +763,11 @@ class Row(Element):
                 element.width = "full"
 
     @property
-    def css_code(self):
-        if not self.height == "auto":
-            css = f"#elid-{self.name} {{height: {self.height};}}"
-            return [(10, css)]
-        else:
-            return []
-
-    @property
     def cols(self) -> list:
         """Returns a list of columns."""
         out = []
         for i, element in enumerate(self.elements):
-            col = self.InternalCol(
+            col = _RowCol(
                 breaks=self.layout.col_breaks(col=i),
                 vertical_position=self.layout.valign_cols[i],
                 element=element,
@@ -826,13 +777,11 @@ class Row(Element):
         return out
 
     @property
-    def web_widget(self):
-        d = {}
-        d["hide"] = "hide" if self._showif_on_current_page is True else ""
+    def template_data(self):
+        d = super().template_data
         d["columns"] = self.cols
         d["name"] = self.name
-        t = jinja_env.get_template("Row.html")
-        return t.render(d)
+        return d
 
 
 class Stack(Row):
@@ -843,6 +792,7 @@ class Stack(Row):
 
     Here is an example, that will display two stacked elements next to
     one other element::
+
         from alfred3 import element_responsive as el
         
         el1 = el.TextElement("text")
@@ -863,6 +813,7 @@ class Stack(Row):
         *elements: The elements to stack.
         **kwargs: Keyword arguments that are passend on to the parent 
             class :class:`Row`.
+
     """
 
     def __init__(self, *elements: Element, **kwargs):
@@ -999,7 +950,8 @@ class TextElement(Element):
     Note that you can only use one of these options, if you specify
     both, the element will raise an error.
 
-    .. example::
+    Example::
+
         # Text element with responsive width
         text = TextElement('Text display')
 
@@ -1030,12 +982,12 @@ class TextElement(Element):
         emojize: If True (default), emoji shortcodes in the text will
             be converted to unicode.
 
-    .. [#md]: https://guides.github.com/features/mastering-markdown/
-    .. [#emoji]: Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
+    .. [#md] https://guides.github.com/features/mastering-markdown/
+    .. [#emoji] Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
 
     element_class = "text-element"
-    element_template = jinja_env.get_template("TextElement.html")
+    element_template = jinja_env.get_template("TextElement.html.j2")
     emojize = True
 
     def __init__(
@@ -1239,7 +1191,7 @@ class LabelledElement(Element):
             choose integers between 1 and 12.
     """
 
-    base_template = jinja_env.get_template("LabelledElement.html")
+    base_template = jinja_env.get_template("LabelledElement.html.j2")
     element_class = "labelled-element"
 
     def __init__(
@@ -1607,7 +1559,7 @@ class TextEntryElement(InputElement):
     """
 
     element_class = "text-entry-element"
-    element_template = jinja_env.get_template("TextEntryElement.html")
+    element_template = jinja_env.get_template("TextEntryElement.html.j2")
 
     def __init__(
         self,
@@ -1664,7 +1616,7 @@ class TextEntryElement(InputElement):
 
 class TextAreaElement(TextEntryElement):
     element_class = "text-area-element"
-    element_template = jinja_env.get_template("TextAreaElement.html")
+    element_template = jinja_env.get_template("TextAreaElement.html.j2")
 
     def __init__(self, toplab: str = None, nrows: int = 5, **kwargs):
         super().__init__(toplab=toplab, **kwargs)
@@ -1693,7 +1645,7 @@ class Choice:
 
 class ChoiceElement(InputElement, ABC):
     element_class = "choice-element"
-    element_template = jinja_env.get_template("ChoiceElement.html")
+    element_template = jinja_env.get_template("ChoiceElement.html.j2")
     type = None
     emojize: bool = True
 
@@ -1731,6 +1683,7 @@ class ChoiceElement(InputElement, ABC):
         d = super().template_data
         d["choices"] = self.choices
         d["vertical"] = self.vertical
+        d["type"] = self.type
         return d
 
     @abstractmethod
@@ -1766,7 +1719,6 @@ class SingleChoiceElement(ChoiceElement):
                 choice.checked = True if i == 1 else False
             elif self.input:
                 choice.checked = True if int(self.input) == i else False
-                # import pdb; pdb.set_trace()
             elif self.default:
                 choice.checked = True if (self.default == i) else False
 
@@ -1821,7 +1773,7 @@ class SingleChoiceButtons(SingleChoiceElement):
     """
 
     element_class: str = "single-choice-buttons"
-    element_template = jinja_env.get_template("ChoiceButtons.html")
+    element_template = jinja_env.get_template("ChoiceButtons.html.j2")
 
     button_toolbar: bool = False
     button_group_class: str = "choice-button-group"
@@ -1990,7 +1942,7 @@ class MultipleChoiceElement(ChoiceElement):
         min: int = None,
         max: int = None,
         select_hint: str = None,
-        default: list = None,
+        default: Union[int, List[int]] = None,
         **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
@@ -2004,7 +1956,9 @@ class MultipleChoiceElement(ChoiceElement):
         self.max = max if max is not None else len(self.choice_labels)
         self._select_hint = select_hint
 
-        if default is not None and not isinstance(default, list):
+        if isinstance(default, int):
+            self.default = [default]
+        elif default is not None and not isinstance(default, list):
             raise ValueError(
                 "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
             )
@@ -2067,7 +2021,7 @@ class MultipleChoiceElement(ChoiceElement):
                 choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
             choice.type = "checkbox"
             choice.value = i
-            choice.id = f"choice{i}-{self.name}"
+            choice.id = f"{self.name}_choice{i}"
             choice.name = choice.id
             choice.label_id = f"{choice.id}-lab"
             choice.css_class = f"choice-button choice-button-{self.name}"
@@ -2135,15 +2089,59 @@ class SubmittingButtons(SingleChoiceButtons):
     def added_to_page(self, page):
         super().added_to_page(page)
 
-        t = jinja_env.get_template("submittingbuttons.js")
+        t = jinja_env.get_template("submittingbuttons.js.j2")
         js = t.render(name=self.name)
 
         page += JavaScript(code=js)
 
 
+class SelectOneElement(SingleChoiceElement):
+    element_class = "select-one-element"
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+    type = "select_one"
+
+    def __init__(self, *choice_labels, toplab: str = None, size: int = None, default: int = 1, **kwargs):
+        super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
+        self.size = size
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["size"] = self.size
+        return d
+
+
+class SelectMultipleElement(MultipleChoiceElement):
+    element_class = "select-multiple-element"
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+    type = "select_multiple"
+
+    def __init__(self, *choice_labels, toplab: str = None, size: int = None, **kwargs):
+        super().__init__(*choice_labels, toplab=toplab, **kwargs)
+        self.size = size
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["size"] = self.size
+        return d
+    
+    def set_data(self, d):
+        self._input = {}
+        name_map = {str(choice.value): choice.name for choice in self.choices}
+        val = d.get(self.name, None)
+        val_name = name_map[val]
+        
+        for choice in self.choices:
+            if choice.name == val_name:
+                self._input[choice.name] = True
+            else:
+                self._input[choice.name] = False
+
+
 class ImageElement(Element):
     element_class = "image-element"
-    element_template = jinja_env.get_template("ImageElement.html")
+    element_template = jinja_env.get_template("ImageElement.html.j2")
 
     def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
         super().__init__(**kwargs)
@@ -2177,4 +2175,57 @@ class ImageElement(Element):
     def __str__(self):
         src = self.path if self.path is not None else self.url
         return f"ImageElement(src: '{src}'; name: '{self.name}')"
+
+
+class MatPlotElement(Element):
+    """Displays a :class:`matplotlib.figure.Figure` object.
+    
+    Can be used for static and dynamic plotting.
+
+    .. note::
+        When plotting in alfred, you need to use the Object-oriented 
+        matplotlib API
+        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
+
+    Example plot (note that in general, the page would need to be added 
+    to an experiment instance at some point to be displayed)::
+        
+        from matplotlib.figure import Figure
+        from alfred3.page import Page
+        import alfred3.element_responsive as el
+
+        fig = Figure()
+        ax = fig.add_subplot()
+        ax.plot(range(10))
+
+        pg = Page()
+        pg += el.MatPlotElement(fig=fig)
+
+    Args:
+        fig (matplotlib.figure.Figure): The figure to display.
+        align: Alignment of the figure.
+
+    """
+    element_class = "matplot-element"
+    element_template = jinja_env.get_template("ImageElement.html.j2")
+
+    def __init__(self, fig, align: str = "center", **kwargs):
+        super().__init__(align=align, **kwargs)
+        self.fig = fig
+        self.src = None
+
+    def prepare_web_widget(self):
+        out = io.BytesIO()
+        self.fig.savefig(out, format="svg")
+        out.seek(0)
+        self.src = self.experiment.user_interface_controller.add_dynamic_file(out, content_type="image/svg+xml")
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["src"] = self.src
+        return d
+    
+    def __str__(self):
+        return f"MatPlotElement(name: '{self.name}')"
 

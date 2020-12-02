@@ -142,3 +142,4 @@ src/tests/manualtesting.py
 .vscode/
 tests/manual/
 alfred_venv/
+docs/

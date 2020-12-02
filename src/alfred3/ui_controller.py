@@ -35,7 +35,12 @@ jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
 
 class UserInterface:
-    _css_files = ["bootstrap-4.5.3.min.css", "prism.css", "font-awesome-icons.css", "responsive.css"]
+    _css_files = [
+        "bootstrap-4.5.3.min.css",
+        "prism.css",
+        "font-awesome-icons.css",
+        "responsive.css",
+    ]
 
     _js_files = [
         "jquery-3.5.1.min.js",
@@ -47,12 +52,12 @@ class UserInterface:
     ]
 
     def __init__(self, experiment):
-        self.template = jinja_env.get_template("page.html")
+        self.template = jinja_env.get_template("page.html.j2")
 
         self.experiment = experiment
-        self.log = QueuedLoggingInterface(
-            base_logger=__name__, queue_logger=self.prepare_logger_name()
-        )
+        self.log = QueuedLoggingInterface(base_logger=__name__)
+        self.log.add_queue_logger(self, __name__)
+
         self._basepath = self.experiment.config.get("webserver", "basepath")
         self._static_files = {}
         self._dynamic_files = {}
@@ -87,7 +92,7 @@ class UserInterface:
         self.forward_enabled = True
         self.backward_enabled = True
         self.finish_enabled = True
-    
+
     def _determine_style(self):
         """Adds .css styles and logo image to the layout."""
         style = self.experiment.config.get("layout", "style")
@@ -96,17 +101,16 @@ class UserInterface:
             with importlib.resources.path(css, "base.css") as f:
                 url = self.add_static_file(f, content_type="text/css")
                 self.css_urls.append((10, url))
-            
+
         elif style == "goe":
-            
+
             with importlib.resources.path(css, "goe.css") as f:
                 url = self.add_static_file(f, content_type="text/css")
                 self.css_urls.append((10, url))
-            
+
             with importlib.resources.path(img, "uni_goe_logo_white.png") as p:
                 url = self.add_static_file(p, content_type="image/png")
                 self.config["logo_url"] = url
-            
 
         elif style.endswith(".css"):
             path = self.experiment.subpath(style)
@@ -121,9 +125,11 @@ class UserInterface:
                 content_type = "image/jpeg"
             logo_url = self.add_static_file(logo_path, content_type=content_type)
             self.config["logo_url"] = logo_url
-        
+
         else:
-            raise ValueError("Config option 'style' in section 'layout' must be 'base', 'goe', or a valid path to a .css file.")
+            raise ValueError(
+                "Config option 'style' in section 'layout' must be 'base', 'goe', or a valid path to a .css file."
+            )
 
     def _add_resource_links(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
@@ -224,13 +230,13 @@ class UserInterface:
                     "" if message.level == "warning" else "alert-" + message.level
                 )  # level to bootstrap
             d["messages"] = messages
-        
+
         # progress bar
         n_el = len(self.experiment.page_controller.all_input_elements)
         n_pg = len(self.experiment.page_controller.all_pages)
         i_el = self.experiment.page_controller.filled_input_elements
         i_pg = self.experiment.page_controller.completed_pages
-        exact_progress = ((i_el + i_pg) / (n_el + n_pg))*100
+        exact_progress = ((i_el + i_pg) / (n_el + n_pg)) * 100
         if not self.experiment.finished:
             d["progress"] = min(round(exact_progress, 1), 95)
         else:
@@ -295,11 +301,7 @@ class UserInterface:
         return url
 
     def get_dynamic_file(self, identifier):
-        file_obj, content_type = self._dynamic_files[identifier]
-        file_obj.seek(0)
-        strIO = StringIO(file_obj.read())
-        strIO.seek(0)
-        return strIO, content_type
+        return self._dynamic_files[identifier]
 
     def add_dynamic_file(self, file_obj, content_type=None):
         identifier = uuid4().hex
@@ -341,28 +343,6 @@ class UserInterface:
 
     def start(self):
         self.experiment.page_controller.enter()
-
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~Section.instance_level_logging` is set to *True*.
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)
 
 
 class UserInterfaceController(with_metaclass(ABCMeta, object)):

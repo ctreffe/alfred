@@ -168,7 +168,7 @@ def experiment():
             resp.cache_control.no_cache = True
             return resp
     except Exception:
-        script.log.exception("")
+        script.log.exception("Exception during experiment execution.")
         abort(500)
 
 

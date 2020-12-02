@@ -15,10 +15,15 @@ import random
 from pathlib import Path
 from builtins import object
 from typing import Union
+from typing import List
+from typing import Dict
+from typing import Iterator
 from cryptography.fernet import Fernet, InvalidToken
 
 from .exceptions import AlfredError
 from .config import ExperimentSecrets
+from .saving_agent import AutoMongoClient
+from .alfredlog import QueuedLoggingInterface
 
 
 class DataManager(object):
@@ -26,11 +31,14 @@ class DataManager(object):
     UNLINKED_DATA = "unlinked"
     CODEBOOK_DATA = "codebook"
 
+    log = QueuedLoggingInterface(base_logger=__name__)
+
     def __init__(self, experiment):
         self._experiment = experiment
         self._additional_data = {}
         self.screen_resolution = None
         self.javascript_active = None
+        self.log.add_queue_logger(self, __name__)
     
     @property
     def additional_data(self) -> dict:
@@ -39,6 +47,10 @@ class DataManager(object):
         saved to the experiment data.
         """
         return self._additional_data
+
+    @property
+    def experiment(self):
+        return self._experiment
 
     def add_additional_data(self, key, value):
         """Method for adding data to the additional data dictionary.
@@ -134,6 +146,151 @@ class DataManager(object):
                 raise AlfredError("did not find uuid in tree")
 
         return worker(data, uid)
+
+    def get_full_exp_data(
+        self, source: str = "mongodb", out="dict"
+    ) -> Union[List[dict], List[list]]:
+        """Collects and returns the full experiment data.
+
+        .. versionadded:: 1.5
+
+        Args:
+            source: Specifies the source from which to collect the data.
+                Can be 'mongodb' or 'local'. 'mongodb' leads to data being 
+                collected from the main MongoDB used to save experiment
+                data. 'local' leads to data being collected from the
+                experiment directory.
+            out: Specifies the output format. Can be 'dict' or 'list'.
+                In case of 'dict', the function returns a list of 
+                flattened dictionaries, where each dictionary contains 
+                data from one experiment session.
+                In case of 'list', the function returns a list of lists.
+                The first entry in this list contains the variable names. 
+                The subsequent entries each contain the values of one 
+                session.
+        
+        Returns:
+            A list with all available experiment data, either as a list
+            of dictionaries or a list of lists, depending on the value 
+            of `out`.
+            
+        """
+        if not out in ["dict", "list"]:
+            raise ValueError("Parameter 'out' must be 'list' or 'dict'.")
+
+        if not source in ["mongodb", "local"]:
+            raise ValueError("Parameter 'source' must be 'mongodb' or 'local'.")
+
+        exporter = ExpDataExporter()
+        exp = self.experiment
+
+        if source == "mongodb":
+            cursor = self.iterate_mongo_data(
+                exp_id=exp.exp_id, data_type=self.EXP_DATA, secrets=exp.secrets
+            )
+        elif source == "local":
+            path = exp.config.get("local_saving_agent", "path")
+            path = exp.subpath(path)
+            cursor = self.iterate_local_data(data_type=self.EXP_DATA, directory=path)
+
+        for doc in cursor:
+            exporter.process_one(doc)
+
+        if out == "dict":
+            return exporter.list_of_docs
+        elif out == "list":
+            return exporter.list_of_lists
+
+    @staticmethod
+    def iterate_mongo_data(
+        exp_id: str, data_type: str, secrets: ExperimentSecrets, exp_version: str = None
+    ) -> Iterator[dict]:
+        """Returns a MongoDB cursor, iterating over the experiment
+        data in the database.
+
+        .. versionadded:: 1.5
+
+        Usage::
+            cursor = data_manager.collect_mongo_data(data_type="exp_dat")
+            for doc in cursor:
+                ...
+
+        Args:
+            exp_id: Experiment id
+            data_type: The type of data to be collected. Can be 
+                'exp_data', 'codebook', or 'unlinked'.
+            secrets: Experiment secrets configuration object. This is
+                used to extract information for database access.
+            exp_version: If specified, data will only be queried for
+                this specific version.
+        """
+        if data_type != "exp_data":
+            section_name = f"mongo_saving_agent_{data_type}"
+        else:
+            section_name = "mongo_saving_agent"
+
+        section = secrets.combine_sections("mongo_saving_agent", section_name)
+        dbname = section["database"]
+        colname = section["collection"]
+
+        client = AutoMongoClient(section)
+        db = client[dbname][colname]
+        query = {"exp_id": exp_id, "type": data_type}
+
+        if exp_version is not None:
+            query["exp_version"] = exp_version
+
+        return db.find(query)
+
+    @classmethod
+    def iterate_local_data(
+        cls, data_type: str, directory: Union[str, Path], exp_version: str = None,
+    ) -> Iterator[dict]:
+        """Generator function, iterating over experiment data .json files
+        in the specified directory.
+
+        .. versionadded:: 1.5
+
+        Usage::
+            cursor = data_manager.collect_local_data(data_type="exp_data")
+            for doc in cursor:
+                ...
+
+        Args:
+            data_type: The type of data to be collected. Can be 
+                'exp_data', 'codebook', or 'unlinked'.
+            exp_version: If specified, data will only be queried for
+                this specific version.
+            directory: The directory in which to look for data.
+        """
+        path = Path(directory).resolve()
+        if not path.is_absolute():
+            raise ValueError("directory must be absolute")
+
+        if not path.exists():
+            cls.log.warning(f"{path} is not a directory.")
+            return
+
+        for fp in path.iterdir():
+            if not fp.suffix == ".json":
+                continue
+
+            try:
+                with open(fp, "r") as f:
+                    doc = json.load(f)
+            except json.decoder.JSONDecodeError:
+                cls.log.warning(f"Skipped file '{fp}' (not valid .json).")
+                continue
+            except IsADirectoryError:
+                cls.log.debug(f"Skipped '{fp}' (not a directory).")
+                continue
+
+            doctype = doc.get("type")
+
+            if data_type != doctype:
+                continue
+
+            yield doc
 
 
 def find_unique_name(directory, filename, exp_version=None, index: int = 1):

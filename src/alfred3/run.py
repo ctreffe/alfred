@@ -169,7 +169,7 @@ class ExperimentRunner:
 
     def start_browser_thread(self):
         # start browser in a thread (needed for windows)
-        browser = threading.Thread(target=self._open_browser)
+        browser = threading.Thread(target=self._open_browser, name="browser")
         browser.start()
 
     def auto_run(self, open_browser: bool = True, debug=False):
@@ -180,7 +180,7 @@ class ExperimentRunner:
         if open_browser:
             self.start_browser_thread()
         self.print_startup_message()
-        self.app.run(port=self.port, threaded=True, use_reloader=False, debug=debug)
+        self.app.run(port=self.port, threaded=False, use_reloader=False, debug=debug)
 
 
 @click.command()
