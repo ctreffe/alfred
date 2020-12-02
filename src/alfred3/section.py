@@ -84,11 +84,9 @@ class Section(ContentCore):
     def unlinked_data(self, encrypt):
         data = {"tag": self.tag}
         data["subtree_data"] = []
-        for q_core in self._page_list:
-            try:
-                data["subtree_data"].append(q_core.unlinked_data(encrypt=encrypt))
-            except AttributeError:
-                pass
+        for member in self._page_list:
+            if isinstance(member, UnlinkedDataPage):
+                data["subtree_data"].append(member.unlinked_data(encrypt=encrypt))
 
         return data
 
