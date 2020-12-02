@@ -55,7 +55,7 @@ class RowLayout:
         layout.width_sm = [2, 8, 2] 
 
     You can define widths for five breakpoints individually, allowing
-    for fine-grained control.
+    for fine-grained control (see attributes).
 
     Args:
         ncols: Number of columns to arrange in a row.
@@ -225,7 +225,8 @@ class Element(ABC):
         font_size: Font size for text in the element. Can be 'normal' 
             (default), 'big', 'huge', or an integer giving the desired 
             size in pt.
-        align: Alignment of text/instructions inside the element. 
+        align: Alignment of text in the element. Does not usually apply
+            to labels (see :class:`.LabelledElement` for more).
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the 
             page. Values can be 'left', 'center' (default), 'end',
@@ -249,14 +250,28 @@ class Element(ABC):
             list can contain up to 5 width definitions, given as
             integers from 1 to 12. They refer to the five breakbpoints 
             in `Bootstrap 4's 12-column-grid system`_, i.e. 
-            [xs, sm, md, lg, xl]  .
+            [xs, sm, md, lg, xl].
+
+            If there is no width defined for a certain screen size,
+            the next smaller entry is used. For example, the following
+            definition will lead to full width on extra small screens
+            and 8/12 widths on all larger widths::
+
+                element = Element()
+                element.element_width = [12, 8]
+
+            To make an element full-width on extra small and small 
+            screens and half-width on medium, large and extra large 
+            screens, follow this example::
+
+                element = Element()
+                element.element_width = [12, 12, 6]
+
         experiment: The alfred experiment to which this element belogs.
-        log: An instance of :class:`alfred3.logging.QueuedLoggingInterface`,
-            which is a modified interface to python's `logging facility`_. 
-            You can use it to log messages with the standard
-            logging methods 'debug', 'info', 'warning', 'error', 
-            'exception', and 'log'. It also offers direct access to the
-            logger via ``log.queue_logger``.
+        log: A :class:`~.QueuedLoggingInterface`, you can use it to log 
+            messages with the standard logging methods 'debug', 'info', 
+            'warning', 'error', 'exception', and 'log'. It also offers 
+            direct access to the logger via :attr:`.log.queue_logger.`.
         page: The element's parent page (i.e. the page on which it is
             displayed).
         showif: The showif dictionary. It must be of the form
