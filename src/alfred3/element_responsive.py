@@ -33,10 +33,29 @@ from ._helper import fontsize_converter
 from ._helper import is_url
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
+"""jinja2.Environment, giving access to included jinja-templates."""
 
 class RowLayout:
     """Provides layouting functionality for responsive horizontal 
     positioning of elements.
+
+    Default behavior is to have equal-width columns with an automatic
+    breakpoint on extra small screens (i.e. all columns get the bootstrap
+    class 'col-sm' by default).
+    
+    The layout's width attributes can be accessed an changed to customize
+    appearance. In this example, we change the width of the columns on
+    screens of "small" and bigger width, so that we have narrow columns
+    to the right and left (each taking up 2/12 of the available space), 
+    and one wide column (taking up 8/12 of the space) in the middle. On
+    "extra small" screens, the columns will be stacked vertically and 
+    each take up the full width::
+        
+        layout = RowLayout(ncols=3) # 3 columns of equal width
+        layout.width_sm = [2, 8, 2] 
+
+    You can define widths for five breakpoints individually, allowing
+    for fine-grained control.
 
     Args:
         ncols: Number of columns to arrange in a row.
@@ -46,6 +65,9 @@ class RowLayout:
             be responsive, or not.
 
     Attributes:
+        ncols: Number of columns
+        responsive: Indicates whether breakpoints should be responsive, 
+            or not.
         width_xs: List of column widths on screens of size 'xs' or 
             bigger (<576px). Widths must be defined as integers between
             1 and 12.
@@ -65,16 +87,16 @@ class RowLayout:
     """
 
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
-        """Constructor"""
-        self.ncols = ncols
+        """Constructor method."""
+        self.ncols: int = ncols
         self._valign_cols = valign_cols
-        self.responsive = responsive
+        self.responsive: bool = responsive
 
-        self.width_xs = None
-        self.width_sm = None
-        self.width_md = None
-        self.width_lg = None
-        self.width_xl = None
+        self.width_xs: List[int] = None
+        self.width_sm: List[int] = None
+        self.width_md: List[int] = None
+        self.width_lg: List[int] = None
+        self.width_xl: List[int] = None
 
     def col_breaks(self, col: int) -> str:
         """Returns the column breakpoints for a specific column as 
@@ -101,7 +123,7 @@ class RowLayout:
             return out
 
     def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
-        """Takes a tuple of column sizes (in integers from 1 to 12) and
+        """Takes a list of column sizes (in integers from 1 to 12) and
         returns a corresponding list of formatted Bootstrap column 
         classes.
 
@@ -138,16 +160,28 @@ class RowLayout:
 
     @property
     def valign_cols(self) -> List[str]:
-        """List of vertical column alignments. Valid values are 'auto' 
-        (default), 'top', 'center', and 'bottom'."""
+        """List[str]: Vertical column alignments. 
+        
+        Valid values are 'auto' (default), 'top', 'center', and 'bottom'.
+        Can be specified upon initalization or modified as instance
+        attribute.
 
-        try:
-            if len(self._valign_cols) > self.ncols:
-                raise ValueError(
-                    "Col position list must be of the same or smaller length as number of elements."
-                )
-        except TypeError:
-            pass
+        Each element of the list refers to one column. If it contains
+        fewer elements than the number of columns, the last entry of
+        the list will be used as value for the unreferenced columns::
+
+            # all columns of this layout will be aligned to the bottom
+            # of the row
+            # (specified upon initialization)
+            layout1 = RowLayout(ncols=3, valign_cols=["bottom"])
+
+            # the first column will be aligned top
+            # the 2nd and 3rd columns will be align bottom
+            # (specified after initialization)
+            layout2 = RowLayout(ncols=3)
+            layout2.valign_cols = ["top", "bottom"]
+
+        """
 
         out = []
         for i in range(self.ncols):
@@ -175,6 +209,8 @@ class RowLayout:
 
     @valign_cols.setter
     def valign_cols(self, value: List[str]):
+        if len(value) > self.ncols:
+            raise ValueError("Col position list length must be <= number of elements.")
         self._valign_cols = value
 
 
@@ -641,7 +677,6 @@ class Element(ABC):
         """
         return type(self).__name__
 
-
     def add_css(self, code: str, priority: int = 10):
         """Adds CSS to the element.
         
@@ -653,7 +688,7 @@ class Element(ABC):
         
         """
         self._css_code.append((priority, code))
-    
+
     def add_js(self, code: str, priority: int = 10):
         """Adds Javascript to the element.
         
@@ -666,16 +701,19 @@ class Element(ABC):
         """
         self._js_code.append((priority, code))
 
+
 @dataclass
 class _RowCol:
     """Just a little helper for handling columns inside a Row.
     
     :meta private:
     """
+
     breaks: str
     vertical_position: str
     element: Element
     id: str
+
 
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
@@ -746,7 +784,7 @@ class Row(Element):
         #: An instance of :class:`~alfred3.element_responsive.RowLayout`, used for layouting.
         #: You can use this attribute to finetune column widths.
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
-        
+
         self.height = height
         self.elements_full_width = elements_full_width
 
@@ -1733,9 +1771,9 @@ class SingleChoiceElement(ChoiceElement):
 
         for i, lab in enumerate(self.choice_labels, start=1):
             try:
-                d.update({f"choice{i}": lab.text}) # if there is a text attribute, we use it.
+                d.update({f"choice{i}": lab.text})  # if there is a text attribute, we use it.
             except AttributeError:
-                d.update({f"choice{i}": str(lab)}) # otherwise __str__
+                d.update({f"choice{i}": str(lab)})  # otherwise __str__
 
         return d
 
@@ -2040,7 +2078,7 @@ class MultipleChoiceElement(ChoiceElement):
 class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
     """Buttons, working as a MultipleChoiceElement.
     """
-    
+
     element_class = "multiple-choice-buttons"
     button_round_corners = False
 
@@ -2084,6 +2122,7 @@ class SubmittingButtons(SingleChoiceButtons):
     """SingleChoiceButtons that trigger submission of the current page 
     on click.
     """
+
     element_class = "submitting-buttons"
 
     def added_to_page(self, page):
@@ -2100,10 +2139,12 @@ class SelectOneElement(SingleChoiceElement):
     element_template = jinja_env.get_template("SelectElement.html.j2")
     type = "select_one"
 
-    def __init__(self, *choice_labels, toplab: str = None, size: int = None, default: int = 1, **kwargs):
+    def __init__(
+        self, *choice_labels, toplab: str = None, size: int = None, default: int = 1, **kwargs
+    ):
         super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
         self.size = size
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -2119,19 +2160,19 @@ class SelectMultipleElement(MultipleChoiceElement):
     def __init__(self, *choice_labels, toplab: str = None, size: int = None, **kwargs):
         super().__init__(*choice_labels, toplab=toplab, **kwargs)
         self.size = size
-    
+
     @property
     def template_data(self):
         d = super().template_data
         d["size"] = self.size
         return d
-    
+
     def set_data(self, d):
         self._input = {}
         name_map = {str(choice.value): choice.name for choice in self.choices}
         val = d.get(self.name, None)
         val_name = name_map[val]
-        
+
         for choice in self.choices:
             if choice.name == val_name:
                 self._input[choice.name] = True
@@ -2206,6 +2247,7 @@ class MatPlotElement(Element):
         align: Alignment of the figure.
 
     """
+
     element_class = "matplot-element"
     element_template = jinja_env.get_template("ImageElement.html.j2")
 
@@ -2218,14 +2260,16 @@ class MatPlotElement(Element):
         out = io.BytesIO()
         self.fig.savefig(out, format="svg")
         out.seek(0)
-        self.src = self.experiment.user_interface_controller.add_dynamic_file(out, content_type="image/svg+xml")
-    
+        self.src = self.experiment.user_interface_controller.add_dynamic_file(
+            out, content_type="image/svg+xml"
+        )
+
     @property
     def template_data(self):
         d = super().template_data
         d["src"] = self.src
         return d
-    
+
     def __str__(self):
         return f"MatPlotElement(name: '{self.name}')"
 
