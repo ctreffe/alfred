@@ -70,10 +70,19 @@ class UserInterface:
         self.css_urls = []
         self.js_urls = []
 
+        self.css_code = []
+        self.js_code = []
+
         self._determine_style()
 
-        self._add_resources(self._js_files, "js")
-        self._add_resources(self._css_files, "css")
+        debug = self.experiment.config.getboolean("general", "debug")
+        code_in_template = self.experiment.config.getboolean("debug", "code_in_templates")
+        if debug and code_in_template:
+            self._add_resources(self._js_files, "js")
+            self._add_resources(self._css_files, "css")
+        else:
+            self._add_resource_links(self._js_files, "js")
+            self._add_resource_links(self._css_files, "css")
 
         self.forward_enabled = True
         self.backward_enabled = True
@@ -116,7 +125,7 @@ class UserInterface:
         else:
             raise ValueError("Config option 'style' in section 'layout' must be 'base', 'goe', or a valid path to a .css file.")
 
-    def _add_resources(self, resources: list, resource_type: str):
+    def _add_resource_links(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
         
         Args:
@@ -137,6 +146,18 @@ class UserInterface:
                 url = self.add_static_file(p)
                 container.append((i, url))
 
+    def _add_resources(self, resources: list, resource_type: str):
+
+        if resource_type == "js":
+            container = self.js_code
+            pkg = js
+        elif resource_type == "css":
+            container = self.css_code
+            pkg = css
+
+        for i, f in enumerate(resources):
+            container.append((i, importlib.resources.read_text(pkg, f)))
+
     def code(self, page):
         """Wraps the basic layout CSS and JavaScript together with
         the page's CSS and JavaScript in a single dictionary
@@ -147,6 +168,8 @@ class UserInterface:
 
         code["layout_css"] = sorted(self.css_urls)
         code["layout_js"] = sorted(self.js_urls)
+        code["layout_css_code"] = sorted(self.css_code)
+        code["layout_js_code"] = sorted(self.js_code)
 
         code["css_urls"] = page.css_urls
         code["css_code"] = page.css_code
@@ -248,6 +271,9 @@ class UserInterface:
             path: Path to file.
             content_type: Mimetype of the added file.
         """
+        if self.experiment.config.getboolean("general", "debug"):
+            return path
+
         path = Path(path)
         if not path.is_absolute():
             path = self.experiment.path / path
