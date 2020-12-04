@@ -361,7 +361,9 @@ class Element(ABC):
 
     @width.setter
     def width(self, value):
-        if value not in ["narrow", "medium", "wide", "full"]:
+        if value is None:
+            self._width = None
+        elif value not in ["narrow", "medium", "wide", "full"]:
             raise ValueError(f"'{value}' is not a valid width.")
         self._width = value
 
