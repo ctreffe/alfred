@@ -225,8 +225,11 @@ class Element(ABC):
         font_size: Font size for text in the element. Can be 'normal' 
             (default), 'big', 'huge', or an integer giving the desired 
             size in pt.
-        align: Alignment of text in the element. Does not usually apply
-            to labels (see :class:`.LabelledElement` for more).
+        align: Horizontal alignment of text in the element. Does not 
+            usually apply to labels. Think of it as an alignment that 
+            applies to the innermost layer of an element (while labels 
+            are generally located at outer layers). See 
+            :class:`.LabelledElement` for more on labelled elements.
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the 
             page. Values can be 'left', 'center' (default), 'end',
@@ -236,7 +239,7 @@ class Element(ABC):
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
             'wide', and 'full'. For more detailed control, you can 
-            define the *element_width* attribute.
+            define the :attr:`.element_width` attribute.
         height: Vertical height. Supply a string with a unit, e.g.
             "80px".
         showif: A dictionary, defining conditions that must be met
@@ -267,13 +270,14 @@ class Element(ABC):
                 element = Element()
                 element.element_width = [12, 12, 6]
 
-        experiment: The alfred experiment to which this element belogs.
+        experiment: The :class:`.Experiment` to which this element 
+            belongs.
         log: A :class:`~.QueuedLoggingInterface`, you can use it to log 
             messages with the standard logging methods 'debug', 'info', 
             'warning', 'error', 'exception', and 'log'. It also offers 
             direct access to the logger via :attr:`.log.queue_logger.`.
         page: The element's parent page (i.e. the page on which it is
-            displayed).
+            displayed). See :mod:`.page`.
         showif: The showif dictionary. It must be of the form
             ``{<page_uid>: {<element_name>: <value>}}``. It can contain
             showifs for multiple pages and for multiple elements on 
@@ -357,8 +361,8 @@ class Element(ABC):
 
     @width.setter
     def width(self, value):
-        if value not in ["narrow", "medium", "wide", "full"] and value is not None:
-            raise ValueError(f"'{value}' is not a valid width.'")
+        if value not in ["narrow", "medium", "wide", "full"]:
+            raise ValueError(f"'{value}' is not a valid width.")
         self._width = value
 
     @property
