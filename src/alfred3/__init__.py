@@ -174,7 +174,7 @@ class Experiment(object):
 
     def _init_sac_main(self):
         sac_main = SavingAgentController(self)
-        init_time = time.strftime("%Y-%m-%d_t%H%M%S")
+        init_time = time.strftime("%Y-%m-%d_%H:%M:%S")
         mongodb_filter = {
             "exp_id": self.exp_id,
             "type": DataManager.EXP_DATA,
@@ -273,7 +273,7 @@ class Experiment(object):
         """
         self.page_controller.generate_unset_tags_in_subtree()
         self._start_time = time.time()
-        self._start_timestamp = time.strftime("%Y-%m-%d_t%H%M%S")
+        self._start_timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
         self.log.info("Experiment.start() called. Session is starting.")
         self._user_interface_controller.start()
 
