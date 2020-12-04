@@ -191,6 +191,7 @@ def dynamicfile(identifier):
 @app.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
     f = script.experiment.user_interface_controller.get_callable(identifier)
+    
     if request.content_type == "application/json":
         values = request.get_json()
     else:
@@ -202,14 +203,4 @@ def callable(identifier):
         resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
     return resp
-
-
-@app.route("/save", methods=["GET", "POST"])
-def save():
-    if request.method == "POST":
-        data = request.values.to_dict()
-        script.experiment.page_controller.current_page.set_data(data)
-        script.experiment.page_controller.current_page.save_data()
-
-    return ""
 

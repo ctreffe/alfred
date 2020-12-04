@@ -46,9 +46,11 @@ class UserInterface:
         "jquery-3.5.1.min.js",
         "popper.min.js",
         "bootstrap-4.5.3.min.js",
+        "detect.min.js",
         "prism.js",
         "font-awesome-icons.js",
         "responsive.js",
+
     ]
 
     def __init__(self, experiment):
@@ -78,8 +80,19 @@ class UserInterface:
         self.css_code = []
         self.js_code = []
 
+        
         self._determine_style()
 
+
+        self._callables["clientinfo"] = self.save_client_info
+
+        self.forward_enabled = True
+        self.backward_enabled = True
+        self.finish_enabled = True
+        
+        # this code block enables the creation of standalone alfred3 html pages,
+        # which don't host their own JavaScript and CSS on a localserver,
+        # but instead place it directly in the html file.
         debug = self.experiment.config.getboolean("general", "debug")
         code_in_template = self.experiment.config.getboolean("debug", "code_in_templates")
         if debug and code_in_template:
@@ -89,12 +102,13 @@ class UserInterface:
             self._add_resource_links(self._js_files, "js")
             self._add_resource_links(self._css_files, "css")
 
-        self.forward_enabled = True
-        self.backward_enabled = True
-        self.finish_enabled = True
-
     def _determine_style(self):
-        """Adds .css styles and logo image to the layout."""
+        """Adds .css styles and logo image to the layout.
+        
+        This method manages the switch between the two builtin styles 
+        'base' and 'goe', and a possible customly defined style. If 
+        reads the option "style" in the section "layout" of config.conf.
+        """
         style = self.experiment.config.get("layout", "style")
 
         if style == "base":
@@ -152,6 +166,12 @@ class UserInterface:
                 url = self.add_static_file(p)
                 container.append((i, url))
 
+    def save_client_info(self, **data):
+        """Updates the client info dictionary and saves data."""
+
+        self.experiment.data_manager.client_info.update(data)
+        self.experiment.page_controller.current_page.save_data()
+
     def _add_resources(self, resources: list, resource_type: str):
 
         if resource_type == "js":
@@ -185,8 +205,8 @@ class UserInterface:
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution
         first_page = self.experiment.page_controller.all_pages[0]
-        if page is first_page:
-            code["js_code"] += [(7, importlib.resources.read_text(js, "save_first_page.js"))]
+        if page is first_page and self.experiment.config.getboolean("general", "save_client_info"):
+            code["js_code"] += [(7, importlib.resources.read_text(js, "clientinfo.js"))]
 
         return code
 

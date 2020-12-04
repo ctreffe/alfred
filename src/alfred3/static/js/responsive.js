@@ -1,12 +1,3 @@
-// Save screen resolution, if the current page is the first page.
-$(document).ready(function () {
-    const height = window.screen.height;
-    const width = window.screen.width;
-    const res = width.toString() + "x" + height.toString();
-    $("#screen_resolution").val(res);
-});
-
-
 $(".text-element table").addClass("table table-hover")
 
 // call this method when you want to leave the page without asking the user

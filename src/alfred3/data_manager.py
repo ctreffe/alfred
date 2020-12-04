@@ -36,10 +36,9 @@ class DataManager(object):
     def __init__(self, experiment):
         self._experiment = experiment
         self._additional_data = {}
-        self.screen_resolution = None
-        self.javascript_active = None
+        self.client_info = {}
         self.log.add_queue_logger(self, __name__)
-    
+
     @property
     def additional_data(self) -> dict:
         """A dictionary that can be used to store data manually and make
@@ -93,8 +92,7 @@ class DataManager(object):
         data["additional_data"] = self._additional_data
         data["alfred_version"] = self._experiment.alfred_version
         data["save_time"] = time.time()
-        data["screen_resolution"] = self.screen_resolution
-        data["javascript_active"] = self.javascript_active
+        data.update(self.client_info)
 
         return data
 
