@@ -147,10 +147,7 @@ class Element(object):
 
     def added_to_experiment(self, experiment):
         self.experiment = experiment
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
+        self.log.add_queue_logger(self, __name__)
 
     @property
     def data(self):
