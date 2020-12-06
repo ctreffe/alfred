@@ -90,7 +90,7 @@ class UserInterface:
         self.backward_enabled = True
         self.finish_enabled = True
         
-        # this code block enables the creation of standalone alfred3 html pages,
+        # the code block below enables the creation of standalone alfred3 html pages,
         # which don't host their own JavaScript and CSS on a localserver,
         # but instead place it directly in the html file.
         debug = self.experiment.config.getboolean("general", "debug")
