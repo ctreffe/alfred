@@ -186,15 +186,25 @@ class QueuedLoggingInterface:
     def queue_logger(self):
         return self._queue_logger
     
-    def add_queue_logger(self, obj, module: str):
-        if self._queue_logger is not None:
-            raise ValueError("Queue logger is already set and can only be set once.")
+    @queue_logger.setter
+    def queue_logger(self, logger):
 
+        if self.queue_logger is not None:
+            self.warning(
+                (
+                    "Queue logger already present. Overriding queue logger "
+                    f"{self.queue_logger} with {logger}."
+                )
+            )
+        
+        self._queue_logger = logger
+
+    def add_queue_logger(self, obj, module: str):
         name = self.loggername(obj, module)
-        self._queue_logger = logging.getLogger(name)
+        self.queue_logger = logging.getLogger(name)
         self.session_id = obj.experiment.config.get("metadata", "session_id")
         self.log_queued_messages()
-    
+
     def loggername(self, obj, module: str) -> str:
         """Returns a logger name for use in :class:`~alfred3.alfredlog.QueueLoggingInterface.
 
@@ -226,12 +236,12 @@ class QueuedLoggingInterface:
                     name.append(obj.name)
                 except AttributeError:
                     name.append(obj.uid)
-                    
+
         except AttributeError as e:
             self.debug(f"Suppressed exception: {e}")
 
         return ".".join(name)
-    
+
     def _unpack_worker(self):
         while not self._queue.empty():
             level, msg = self._queue.get()
