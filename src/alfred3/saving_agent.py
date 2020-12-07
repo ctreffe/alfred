@@ -22,6 +22,7 @@ import pymongo
 import bson
 
 from . import alfredlog
+from . import DataManager
 from .config import ExperimentConfig
 from .exceptions import SavingAgentException, SavingAgentRunException
 
@@ -904,6 +905,124 @@ class SavingAgentController:
 
         self.save_with_all_agents(data=data, level=level, sync=sync)
 
+
+class SavingAgentOverlord:
+
+    _LSA = "local_saving_agent"
+    _LSA_FB = ["fallback_local_saving_agent", "level2_fallback_local_saving_agent"]
+    _LSA_U = "local_saving_agent_unlinked"
+    _LSA_C = "local_saving_agent_codebook"
+    _F_LSA = "failure_local_saving_agent"
+    _MSA = "mongo_saving_agent"
+    _MSA_FB = ["fallback_mongo_saving_agent"]
+    _MSA_U = "mongo_saving_agent_unlinked"
+    _MSA_C = "mongo_saving_agent_codebook"
+
+    def __init__(self, experiment):
+        self.experiment = experiment
+        self.main = self._init_main_controller()
+        self.unlinked = self._init_unlinked_controller()
+        self.codebook = self._init_codebook_controller()
+        self.mongo_manager = MongoManager(self.experiment)
+
+    
+    def _init_main_controller(self):
+        exp = self.experiment
+
+        sac_main = SavingAgentController(exp)
+        init_time = time.strftime("%Y-%m-%d_%H:%M:%S")
+        mongodb_filter = {
+            "exp_id": exp.exp_id,
+            "type": DataManager.EXP_DATA,
+            "session_id": exp.session_id,
+        }
+
+        if exp.config.getboolean(self._LSA, "use"):
+            agent_local = AutoLocalSavingAgent(config=exp.config[self._LSA], experiment=exp)
+            agent_local.filename = f"{init_time}_{agent_local.name}_{exp.session_id}.json"
+            for fb in self._LSA_FB:
+                if exp.config.getboolean(fb, "use"):
+                    fb_agent = AutoLocalSavingAgent(config=exp.config[fb], experiment=exp)
+                    fb_agent.filename = f"{init_time}_{fb_agent.name}_{exp.session_id}.json"
+                    agent_local.append_fallback(fb_agent)
+            sac_main.append(agent_local)
+
+        if exp.config.getboolean(self._F_LSA, "use"):
+            agent_fail = AutoLocalSavingAgent(config=exp.config[self._F_LSA], experiment=exp)
+            agent_fail.filename = f"{init_time}_{agent_fail.name}_{exp.session_id}.json"
+            sac_main.append_failure_agent(agent_fail)
+
+        if exp.secrets.getboolean(self._MSA, "use"):
+            agent_mongo = self.mongo_manager.init_agent(section=self._MSA, fallbacks=self._MSA_FB)
+            agent_mongo.identifier = mongodb_filter
+            for fb_agent in agent_mongo.fallback_agents:
+                fb_agent.identifier = mongodb_filter
+            sac_main.append(agent_mongo)
+
+        if exp.config.getboolean(self._MSA, "use"):
+            agent_mongo_bw = self.mongo_manager.init_agent(
+                section=self._MSA, fallbacks=self._MSA_FB, config_name="config"
+            )
+            agent_mongo_bw.identifier = mongodb_filter
+            for fb_agent in agent_mongo_bw.fallback_agents:
+                fb_agent.identifier = mongodb_filter
+            msg = (
+                "Initialized a MongoSavingAgent that was configured in config.conf. "
+                "This is deprecated. Please configure your MongoSavingAgents in secrets.conf."
+            )
+            DeprecationWarning(msg)
+            exp.log.warning(msg)
+            sac_main.append(agent_mongo_bw)
+
+        return sac_main
+
+
+    def _init_unlinked_controller(self):
+        exp = self.experiment
+        sac_unlinked = SavingAgentController(exp)
+
+        if exp.config.getboolean(self._LSA_U, "use"):
+            agent_loc_unlnkd = AutoLocalSavingAgent(config=exp.config[self._LSA_U], experiment=exp)
+            agent_loc_unlnkd.filename = f"unlinked_{exp._unlinked_random_name_part}.json"
+            sac_unlinked.append(agent_loc_unlnkd)
+
+        if exp.secrets.getboolean(self._MSA_U, "use"):
+            agent_mongo_unlinked = self.mongo_manager.init_agent(
+                section=self._MSA_U, fill_section=self._MSA
+            )
+            agent_mongo_unlinked.identifier = {
+                "exp_id": exp.exp_id,
+                "type": DataManager.UNLINKED_DATA,
+                "_id": agent_mongo_unlinked.doc_id,
+            }
+            sac_unlinked.append(agent_mongo_unlinked)
+
+        return sac_unlinked
+
+
+    def _init_codebook_controller(self):
+        exp = self.experiment
+
+        sac_codebook = SavingAgentController(exp)
+
+        if exp.config.getboolean(self._LSA_C, "use"):
+            agent_local = CodebookLocalSavingAgent(config=exp.config[self._LSA_C], experiment=exp)
+            title = exp.title.lower().replace(" ", "_")
+            agent_local.filename = f"codebook_{title}_v{exp.version}.json"
+            sac_codebook.append(agent_local)
+
+        if exp.secrets.getboolean(self._MSA_C, "use"):
+            agent_mongo = self.mongo_manager.init_agent(
+                agent_class=CodebookMongoSavingAgent, section=self._MSA_C, fill_section=self._MSA,
+            )
+            agent_mongo.identifier = {
+                "exp_id": exp.exp_id,
+                "exp_version": exp.version,
+                "type": DataManager.CODEBOOK_DATA,
+            }
+            sac_codebook.append(agent_mongo)
+
+        return sac_codebook
 
 class CodebookMixin:
     @staticmethod

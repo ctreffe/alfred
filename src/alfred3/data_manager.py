@@ -20,6 +20,7 @@ from typing import Dict
 from typing import Iterator
 from cryptography.fernet import Fernet, InvalidToken
 
+from . import page
 from .exceptions import AlfredError
 from .config import ExperimentSecrets
 from .saving_agent import AutoMongoClient
@@ -290,6 +291,50 @@ class DataManager(object):
 
             yield doc
 
+
+    def export_data_to_csv(self):
+        exp = self.experiment
+        csv_directory = Path(exp.config.get("general", "csv_directory"))
+        if csv_directory.is_absolute():
+            data_dir = csv_directory
+        else:
+            data_dir = Path(exp.path) / csv_directory
+        data_dir.mkdir(exist_ok=True, parents=True)
+
+        time.sleep(1)
+        lsa = "local_saving_agent"
+        if exp.config.getboolean(lsa, "use"):
+            lsa_name = exp.config.get(lsa, "name")
+            lsa_dir = exp.sac_main.agents[lsa_name].directory
+            exp_exporter = ExpDataExporter()
+            exp_exporter.write_local_data_to_file(
+                in_dir=lsa_dir, out_dir=data_dir, data_type=DataManager.EXP_DATA, overwrite=True
+            )
+            exp.log.info(f"Exported experiment data to '{str(data_dir)}'")
+
+        any_unlinked_page = any(
+            [isinstance(pg, page.UnlinkedDataPage) for pg in exp.page_controller.all_pages]
+        )
+        lsa_u = "local_saving_agent_unlinked"
+        if exp.config.getboolean(lsa_u, "use") and any_unlinked_page:
+            lsa_name = exp.config.get(lsa_u, "name")
+            lsa_dir = exp.sac_unlinked.agents[lsa_name].directory
+            unlinked_exporter = ExpDataExporter()
+            unlinked_exporter.write_local_data_to_file(
+                in_dir=lsa_dir,
+                out_dir=data_dir,
+                data_type=DataManager.UNLINKED_DATA,
+                overwrite=True,
+            )
+            exp.log.info(f"Exported unlinked data to '{str(data_dir)}'")
+        
+        lsa_c = "local_saving_agent_codebook"
+        if exp.config.getboolean(lsa_c, "use"):
+            lsa_name = exp.config.get(lsa_c, "name")
+            cb_name = exp.sac_codebook.agents[lsa_name].file
+            cb_exporter = CodeBookExporter()
+            cb_exporter.write_local_data_to_file(in_file=cb_name, out_dir=data_dir, overwrite=True)
+            exp.log.info(f"Exported codebook data to '{str(data_dir)}'")
 
 def find_unique_name(directory, filename, exp_version=None, index: int = 1):
     filename = Path(filename)
