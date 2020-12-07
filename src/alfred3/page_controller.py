@@ -152,6 +152,10 @@ class PageController(object):
         return out
     
     @property
+    def all_members_dict(self):
+        return {member.name: member for member in self.all_pages}
+    
+    @property
     def all_elements(self) -> list:
         """List of all elements in the experiment."""
         out = []
