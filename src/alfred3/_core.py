@@ -8,17 +8,18 @@
 from builtins import object
 import os.path
 import logging
+import re
 from uuid import uuid4
 
 from . import alfredlog
 
 
 class ContentCore(object):
+    name: str = None
+
     def __init__(
         self,
-        tag=None,
-        uid=None,
-        tag_and_uid=None,
+        name=None,
         is_jumpable=True,
         jumptext=None,
         title=None,
@@ -33,7 +34,7 @@ class ContentCore(object):
             raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
 
         self._tag = None
-        self._uid = uid if uid is not None else uuid4().hex
+        self._uid = uuid4().hex
         self.instance_level_logging = instance_level_logging
         self._should_be_shown = True
         self._should_be_shown_filter_function = (
@@ -51,16 +52,6 @@ class ContentCore(object):
         self._has_been_shown = False
         self._has_been_hidden = False
 
-        if tag is not None:
-            self.tag = tag
-
-        if tag_and_uid and (tag or uid):
-            raise ValueError("tag_and_uid cannot be set together with tag or uid!")
-
-        if tag_and_uid is not None:
-            self.tag = tag_and_uid
-            self._uid = tag_and_uid
-
         if jumptext is not None:
             self.jumptext = jumptext
 
@@ -74,6 +65,21 @@ class ContentCore(object):
 
         if statustext is not None:
             self.statustext = statustext
+
+        if name is not None:
+            if re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
+                self.name = name
+            else:
+                raise ValueError(
+                    (
+                        "Name must start with a letter and can include only"
+                        "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
+                    )
+                )
+
+        if self.name is not None:
+            self._uid = self.name
+            self._tag = self.name
 
     def get_page_data(self, page_uid=None):
         data = self._experiment.data_manager.find_experiment_data_by_uid(page_uid)
@@ -178,7 +184,11 @@ class ContentCore(object):
         self._statustext = title
 
     def added_to_experiment(self, exp):
+        if self.name is not None and self.name in exp.page_controller.all_members_dict:
+            raise ValueError(f"A section or page of name '{self.name}' already exists.")
+        
         self._experiment = exp
+
 
     @property
     def experiment(self):
@@ -187,7 +197,7 @@ class ContentCore(object):
     def added_to_section(self, group):
         self._parent_group = group
         self._section = group
-    
+
     @property
     def section(self):
         return self._section
