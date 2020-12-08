@@ -70,22 +70,26 @@ class DataManager(object):
 
     def get_data(self):
         data = self._experiment.page_controller.data
+        
         data["type"] = self.EXP_DATA
+        
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_version"] = self._experiment.version
         data["exp_type"] = self._experiment.type
-        data["start_time"] = self._experiment.start_time
-        data["start_timestamp"] = self._experiment.start_timestamp
+        data["exp_start_time"] = self._experiment.start_time
+        data["exp_start_timestamp"] = self._experiment.start_timestamp
+        data["exp_save_time"] = time.time()
         data["exp_finished"] = self._experiment.finished
         data["exp_session"] = self._experiment.session
         data["exp_condition"] = self._experiment.condition
         data["exp_id"] = self._experiment.exp_id
-        data["session_id"] = self._experiment.session_id
+        data["exp_session_id"] = self._experiment.session_id
+        
         data["session_status"] = self._experiment.session_status
         data["additional_data"] = self.additional_data
         data["alfred_version"] = self._experiment.alfred_version
-        data["save_time"] = time.time()
+        
         data.update(self.client_info)
 
         return data
