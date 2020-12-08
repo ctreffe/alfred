@@ -18,6 +18,7 @@ from typing import Union
 from typing import List
 from typing import Dict
 from typing import Iterator
+
 from cryptography.fernet import Fernet, InvalidToken
 
 from . import page
@@ -36,17 +37,9 @@ class DataManager(object):
 
     def __init__(self, experiment):
         self._experiment = experiment
-        self._additional_data = {}
+        self.additional_data = {}
         self.client_info = {}
         self.log.add_queue_logger(self, __name__)
-
-    @property
-    def additional_data(self) -> dict:
-        """A dictionary that can be used to store data manually and make
-        it available throughout an experiment. Data stored here will be 
-        saved to the experiment data.
-        """
-        return self._additional_data
 
     @property
     def experiment(self):
@@ -62,7 +55,7 @@ class DataManager(object):
 
         """
 
-        self._additional_data[key] = value
+        self.additional_data[key] = value
 
     def get_additional_data_by_key(self, key):
         """Method for retrieving data from the additional data dictionary.
@@ -73,7 +66,7 @@ class DataManager(object):
            directly instead.
 
         """
-        return self._additional_data[key]
+        return self.additional_data[key]
 
     def get_data(self):
         data = self._experiment.page_controller.data
@@ -90,7 +83,7 @@ class DataManager(object):
         data["exp_id"] = self._experiment.exp_id
         data["session_id"] = self._experiment.session_id
         data["session_status"] = self._experiment.session_status
-        data["additional_data"] = self._additional_data
+        data["additional_data"] = self.additional_data
         data["alfred_version"] = self._experiment.alfred_version
         data["save_time"] = time.time()
         data.update(self.client_info)
@@ -123,7 +116,7 @@ class DataManager(object):
         return DataManager._find_by_uid(data, uid)
 
     def find_additional_data_by_key_and_uid(self, key, uid):
-        data = self._additional_data[key]
+        data = self.additional_data[key]
         return DataManager._find_by_uid(data, uid)
 
     @staticmethod
@@ -305,7 +298,7 @@ class DataManager(object):
         lsa = "local_saving_agent"
         if exp.config.getboolean(lsa, "use"):
             lsa_name = exp.config.get(lsa, "name")
-            lsa_dir = exp.sac_main.agents[lsa_name].directory
+            lsa_dir = exp.data_saver.main.agents[lsa_name].directory
             exp_exporter = ExpDataExporter()
             exp_exporter.write_local_data_to_file(
                 in_dir=lsa_dir, out_dir=data_dir, data_type=DataManager.EXP_DATA, overwrite=True
@@ -318,7 +311,7 @@ class DataManager(object):
         lsa_u = "local_saving_agent_unlinked"
         if exp.config.getboolean(lsa_u, "use") and any_unlinked_page:
             lsa_name = exp.config.get(lsa_u, "name")
-            lsa_dir = exp.sac_unlinked.agents[lsa_name].directory
+            lsa_dir = exp.data_saver.unlinked.agents[lsa_name].directory
             unlinked_exporter = ExpDataExporter()
             unlinked_exporter.write_local_data_to_file(
                 in_dir=lsa_dir,
@@ -331,10 +324,11 @@ class DataManager(object):
         lsa_c = "local_saving_agent_codebook"
         if exp.config.getboolean(lsa_c, "use"):
             lsa_name = exp.config.get(lsa_c, "name")
-            cb_name = exp.sac_codebook.agents[lsa_name].file
+            cb_name = exp.data_saver.codebook.agents[lsa_name].file
             cb_exporter = CodeBookExporter()
             cb_exporter.write_local_data_to_file(in_file=cb_name, out_dir=data_dir, overwrite=True)
             exp.log.info(f"Exported codebook data to '{str(data_dir)}'")
+
 
 def find_unique_name(directory, filename, exp_version=None, index: int = 1):
     filename = Path(filename)

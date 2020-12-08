@@ -1,6 +1,8 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
 import logging
+import traceback
+from deprecation import deprecated
 
 from uuid import uuid4
 from pathlib import Path
@@ -24,21 +26,16 @@ import re, os
 
 class Script:
 
-    experiment = None
+    exp = None
+    generate_experiment = None
+    exp_session = None
     expdir = None
     config = None
 
-    def generate_experiment(self, config=None):  # pylint: disable=method-hidden
-        """Hook for the ``generate_experiment`` function extracted from 
-        the user's script.py. It is meant to be replaced in ``run.py``.
-        """
-
-        return ""
-
+    @deprecated("1.2", "2.0")
     def set_generator(self, generator):
         """Included for backwards compatibility from v1.2.0 onwards.
         
-        TODO: Remove in v2.0.0
         """
         # if the script.py contains generate_experiment directly, not as a class method
         if builtins_callable(generator):
@@ -82,14 +79,18 @@ def start():
 
     # generate experiment
     try:
-        script.experiment = script.generate_experiment(config=script.config)
+        script.exp = script.generate_experiment()
+    except AttributeError:
+        script.log.debug("Error passed: " + traceback.format_exc())
+    try:
+        script.exp_session = script.exp.start_session(session_id=session_id, config=script.config)
     except Exception:
         script.log.exception("Expection during experiment generation.")
         abort(500)
 
     # start experiment
     try:
-        script.experiment.start()
+        script.exp_session.start()
     except Exception:
         log.exception("Exception during experiment startup.")
         abort(500)
@@ -128,22 +129,22 @@ def experiment():
             data.pop("par", None)
             data.pop("page_token", None)
 
-            script.experiment.page_controller.current_page.set_data(data)
+            script.exp_session.page_controller.current_page.set_data(data)
 
             if move is None and directjump is None and par is None and not data:
                 pass
             elif directjump and par:
                 posList = list(map(int, par.split(".")))
-                script.experiment.user_interface_controller.move_to_position(posList)
+                script.exp_session.user_interface_controller.move_to_position(posList)
             elif move == "started":
                 pass
             elif move == "forward":
-                script.experiment.user_interface_controller.move_forward()
+                script.exp_session.user_interface_controller.move_forward()
             elif move == "backward":
-                script.experiment.user_interface_controller.move_backward()
+                script.exp_session.user_interface_controller.move_backward()
             elif move == "jump" and par and re.match(r"^\d+(\.\d+)*$", par):
                 posList = list(map(int, par.split(".")))
-                script.experiment.user_interface_controller.move_to_position(posList)
+                script.exp_session.user_interface_controller.move_to_position(posList)
             else:
                 abort(400)
 
@@ -163,7 +164,7 @@ def experiment():
             token_list.append(page_token)
             session["page_tokens"] = token_list
 
-            html = script.experiment.user_interface_controller.render_html(page_token)
+            html = script.exp_session.user_interface_controller.render_html(page_token)
             resp = make_response(html)
             resp.cache_control.no_cache = True
             return resp
@@ -174,7 +175,7 @@ def experiment():
 
 @app.route("/staticfile/<identifier>")
 def staticfile(identifier):
-    path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
+    path, content_type = script.exp_session.user_interface_controller.get_static_file(identifier)
     dirname, filename = os.path.split(path)
     resp = make_response(send_from_directory(dirname, filename, mimetype=content_type))
     return resp
@@ -182,7 +183,7 @@ def staticfile(identifier):
 
 @app.route("/dynamicfile/<identifier>")
 def dynamicfile(identifier):
-    strIO, content_type = script.experiment.user_interface_controller.get_dynamic_file(identifier)
+    strIO, content_type = script.exp_session.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
     resp.cache_control.no_cache = True
     return resp
@@ -190,7 +191,7 @@ def dynamicfile(identifier):
 
 @app.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
-    f = script.experiment.user_interface_controller.get_callable(identifier)
+    f = script.exp_session.user_interface_controller.get_callable(identifier)
     
     if request.content_type == "application/json":
         values = request.get_json()
@@ -204,3 +205,5 @@ def callable(identifier):
     resp.cache_control.no_cache = True
     return resp
 
+# @app.route("/None")
+# def none(): pass

@@ -27,13 +27,14 @@ class PageController(object):
         self._experiment = experiment
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
         self.log.add_queue_logger(self, __name__)
+        self.all_members_dict = {}
 
-        self._rootSection = Section(tag="rootSection")
+        self._rootSection = Section(name="root")
         self._rootSection.added_to_experiment(experiment)
 
-        self._finishedSection = Section(tag="finishedSection")
+        self._finishedSection = Section(name="finishedSection")
 
-        final_page = Page(tag="finalPage", title="Experiment beendet")
+        final_page = Page(name="finalPage", title="Experiment beendet")
         if self._experiment.config.getboolean("layout", "responsive"):
             final_page += relm.TextElement("Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme.", align="center")
             final_page += relm.WebExitEnabler()
@@ -42,8 +43,6 @@ class PageController(object):
             final_page += WebExitEnabler()
         
         self.final_page = final_page
-
-        self._finishedSection.added_to_experiment(experiment)
 
         self._finished = False
         self._finishedPageAdded = False
@@ -94,7 +93,7 @@ class PageController(object):
         """
         if not self._finishedPageAdded:
             self._finishedPageAdded = True
-            self._finishedSection = Section(tag="finishedSection")
+            self._finishedSection = Section(name="finishedSection")
             self._finishedSection.added_to_experiment(self._experiment)
         self._finishedSection.append(item)
 
@@ -150,10 +149,6 @@ class PageController(object):
             elif isinstance(member, PageCore):
                 out.append(member)
         return out
-    
-    @property
-    def all_members_dict(self):
-        return {member.name: member for member in self.all_pages}
     
     @property
     def all_elements(self) -> list:

@@ -38,7 +38,7 @@ from .data_manager import DataManager
 from .data_manager import CodeBookExporter
 from .data_manager import ExpDataExporter
 from .page_controller import PageController
-from .saving_agent import SavingAgentOverlord
+from .saving_agent import DataSaver
 from .ui_controller import WebUserInterfaceController
 from .ui_controller import UserInterface
 from .exceptions import SavingAgentException
@@ -153,17 +153,18 @@ class Experiment:
             members[member_name] = (parent_name, member_inst)
 
         for parent_name, member_inst in members.values():
-            members[parent_name] += member_inst
+            if parent_name == "root":
+                continue
+            _, parent = members[parent_name]
+            parent += member_inst
 
         return members
 
     def start_session(self, config: dict, session_id: str):
 
-        exp_session = ExperimentSession(session_id=session_id)
+        exp_session = ExperimentSession(session_id=session_id, config=config)
         exp_session.additional_data = self.additional_data
         exp_session.plugins = self.plugins
-
-        exp_session.apply_config(config=config)
 
         for func in self._funcs_session_start:
             func(exp_session)
@@ -174,6 +175,8 @@ class Experiment:
         
         if self._final_page is not None:
             exp_session.final_page = self._final_page()
+        
+        return exp_session
 
     def append(self, *members, to_section: str = "root"):
         for member in members:
@@ -191,23 +194,28 @@ class Experiment:
         self.append(other, to_section="root")
         return self
 
+    def __getattr__(self, name):
+        _, member = self.members[name]
+        return member
 
 class ExperimentSession:
-    def __init__(self, session_id: str, **kwargs):
+    def __init__(self, session_id: str, config: dict, **kwargs):
+        self.config = config["exp_config"]
+        self.secrets = config["exp_secrets"]
 
         self.log = QueuedLoggingInterface(base_logger="alfred3")
-        self._session_status = None
+        self.log.queue_logger = logging.getLogger("exp." + self.exp_id)
 
         self.alfred_version = __version__
         self.session_id = session_id
-        self.config = None
-        self.secrets = None
+        self._session_status = None
 
         self._encryptor = self._set_encryptor()
 
         self.message_manager = messages.MessageManager()
         self.experimenter_message_manager = messages.MessageManager()
         self.page_controller = PageController(self)
+        self.final_page.added_to_experiment(self)
 
         # Determine web layout if necessary
         # TODO: refactor layout and UIController initializiation code
@@ -240,7 +248,7 @@ class ExperimentSession:
         self._unlinked_random_name_part = uuid4().hex
 
         self.data_manager = DataManager(self)
-        self.data_saver = SavingAgentOverlord(self)
+        self.data_saver = DataSaver(self)
 
         self._condition = ""
         self._session = ""
@@ -267,12 +275,6 @@ class ExperimentSession:
                 f"Experiment version: {self.config.get('metadata', 'version')}"
             )
         )
-
-    def apply_config(self, config):
-        self.config = config["exp_config"]
-        self.secrets = config["exp_secrets"]
-        self.log.queue_logger = logging.getLogger("exp." + self.exp_id)
-        self.log.log_queued_messages()
 
     def start(self):
         self.page_controller.generate_unset_tags_in_subtree()
@@ -454,6 +456,9 @@ class ExperimentSession:
     def __iadd__(self, other):
         self.append(other)
         return self
+
+    def __getattr__(self, name):
+        return self.page_controller.all_members_dict[name]
 
     def _set_encryptor(self):
         """Sets the experiments encryptor.

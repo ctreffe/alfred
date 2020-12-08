@@ -186,15 +186,23 @@ class ContentCore(object):
     def added_to_experiment(self, exp):
         if self.name is not None and self.name in exp.page_controller.all_members_dict:
             raise ValueError(f"A section or page of name '{self.name}' already exists.")
-        
+        exp.page_controller.all_members_dict[self.name] = self
         self._experiment = exp
 
+        if self.name in exp.__dict__:
+            raise ValueError(
+                (
+                    "The experiment has an attribute of the same name as"
+                    f"the page '{self}'. Please choose a different page name."
+                )
+            )
 
     @property
     def experiment(self):
         return self._experiment
 
     def added_to_section(self, group):
+
         self._parent_group = group
         self._section = group
 
@@ -218,7 +226,7 @@ class ContentCore(object):
 
     @property
     def short_tree(self):
-        return self.tree.replace("rootSection_", "")
+        return self.tree.replace("root_", "")
 
     def allow_leaving(self, direction):
         return True

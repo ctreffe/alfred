@@ -22,7 +22,6 @@ import pymongo
 import bson
 
 from . import alfredlog
-from . import DataManager
 from .config import ExperimentConfig
 from .exceptions import SavingAgentException, SavingAgentRunException
 
@@ -906,7 +905,9 @@ class SavingAgentController:
         self.save_with_all_agents(data=data, level=level, sync=sync)
 
 
-class SavingAgentOverlord:
+class DataSaver:
+    """Manages an experiment's standard saving agent controllers.
+    """
 
     _LSA = "local_saving_agent"
     _LSA_FB = ["fallback_local_saving_agent", "level2_fallback_local_saving_agent"]
@@ -928,37 +929,51 @@ class SavingAgentOverlord:
     
     def _init_main_controller(self):
         exp = self.experiment
+        from alfred3.data_manager import DataManager
 
         sac_main = SavingAgentController(exp)
         init_time = time.strftime("%Y-%m-%d_%H:%M:%S")
-        mongodb_filter = {
-            "exp_id": exp.exp_id,
-            "type": DataManager.EXP_DATA,
-            "session_id": exp.session_id,
-        }
-
+        
+        # local saving agent
         if exp.config.getboolean(self._LSA, "use"):
+            # init agent
             agent_local = AutoLocalSavingAgent(config=exp.config[self._LSA], experiment=exp)
             agent_local.filename = f"{init_time}_{agent_local.name}_{exp.session_id}.json"
+            
+            # append fallbacks to saving agent
             for fb in self._LSA_FB:
                 if exp.config.getboolean(fb, "use"):
                     fb_agent = AutoLocalSavingAgent(config=exp.config[fb], experiment=exp)
                     fb_agent.filename = f"{init_time}_{fb_agent.name}_{exp.session_id}.json"
                     agent_local.append_fallback(fb_agent)
-            sac_main.append(agent_local)
+            
+            sac_main.append(agent_local) 
 
+        # failure local saving agent
         if exp.config.getboolean(self._F_LSA, "use"):
             agent_fail = AutoLocalSavingAgent(config=exp.config[self._F_LSA], experiment=exp)
             agent_fail.filename = f"{init_time}_{agent_fail.name}_{exp.session_id}.json"
+            
             sac_main.append_failure_agent(agent_fail)
+        
+        # filter dict for mongodb queries
+        mongodb_filter = {}
+        mongodb_filter["exp_id"] = exp.exp_id
+        mongodb_filter["type"] = DataManager.EXP_DATA
+        mongodb_filter["session_id"] = exp.session_id
 
+        # mongo saving agent from secrets.conf
         if exp.secrets.getboolean(self._MSA, "use"):
             agent_mongo = self.mongo_manager.init_agent(section=self._MSA, fallbacks=self._MSA_FB)
             agent_mongo.identifier = mongodb_filter
+            
+            # append fallback mongo agent
             for fb_agent in agent_mongo.fallback_agents:
                 fb_agent.identifier = mongodb_filter
+            
             sac_main.append(agent_mongo)
 
+        # BW compatibility: mongo saving agent from config.conf
         if exp.config.getboolean(self._MSA, "use"):
             agent_mongo_bw = self.mongo_manager.init_agent(
                 section=self._MSA, fallbacks=self._MSA_FB, config_name="config"
@@ -978,6 +993,7 @@ class SavingAgentOverlord:
 
 
     def _init_unlinked_controller(self):
+        from alfred3.data_manager import DataManager
         exp = self.experiment
         sac_unlinked = SavingAgentController(exp)
 
@@ -1001,6 +1017,7 @@ class SavingAgentOverlord:
 
 
     def _init_codebook_controller(self):
+        from alfred3.data_manager import DataManager
         exp = self.experiment
 
         sac_codebook = SavingAgentController(exp)

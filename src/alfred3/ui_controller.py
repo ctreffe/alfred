@@ -217,6 +217,7 @@ class UserInterface:
         page.prepare_web_widget()
 
         code = self.code(page=page)
+        
 
         d = {**self.config}
 

@@ -325,15 +325,15 @@ class PageCore(ContentCore):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.sac_main.agents and not self._experiment.config.getboolean(
+        if not self._experiment.data_saver.main.agents and not self._experiment.config.getboolean(
             "general", "debug"
         ):
             self.log.warning("No saving agents available.")
         data = self._experiment.data_manager.get_data()
-        self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
+        self._experiment.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
     def __str__(self):
-        return f"{type(self).__name__}(tag='{self.tag}', uid='{self.uid}')"
+        return f"{type(self).__name__}(name='{self.name}')"
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
@@ -415,12 +415,9 @@ class CoreCompositePage(PageCore):
             if elmnt.name in self._element_dict:
                 raise ValueError("Element name must be unique on Page.")
             
-            try:
-                if hasattr(self, elmnt.name):
-                    raise ValueError((f"Element name '{elmnt.name}' is also an attribute of {self}." 
-                "Please choose a different name."))
-            except KeyError:
-                pass
+            if elmnt.name in self.__dict__:
+                raise ValueError((f"Element name '{elmnt.name}' is also an attribute of {self}." 
+            "Please choose a different name."))
 
             self._element_dict[elmnt.name] = elmnt
 
@@ -430,18 +427,16 @@ class CoreCompositePage(PageCore):
         c = element.__class__.__name__
         self._element_name_counter += 1
 
-        return f"{c}_{i}"
+        return f"{self.name}_{c}_{i}"
 
     def __iadd__(self, other):
         self.append(other)
         return self
     
-    def __getattr__(self, name):
-        """Enables element access via dot notation."""
-        try:
-            return self.element_dict[name]
-        except KeyError:
-            raise KeyError(f"No element of name '{name}' found on page {self}.")
+    # def __getattr__(self, name):
+    #     """Enables element access via dot notation."""
+    #     if name in self.element_dict:
+    #         return self.element_dict[name]
 
     @property
     def element_list(self):
@@ -1075,12 +1070,12 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.sac_unlinked.agents and not self._experiment.config.getboolean(
+        if not self._experiment.data_saver.unlinked.agents and not self._experiment.config.getboolean(
             "general", "debug"
         ):
             self.log.warning("No saving agent for unlinked data available.")
 
-        for agent in self._experiment.sac_unlinked.agents.values():
+        for agent in self._experiment.data_saver.unlinked.agents.values():
 
             if self.encrypt == "agent":
                 encrypt = agent.encrypt
@@ -1090,7 +1085,7 @@ class UnlinkedDataPage(NoDataPage):
                 encrypt = False
 
             data = self._experiment.data_manager.get_unlinked_data(encrypt=encrypt)
-            self._experiment.sac_unlinked.save_with_agent(
+            self._experiment.data_saver.unlinked.save_with_agent(
                 data=data, name=agent.name, level=level, sync=sync
             )
 
@@ -1151,8 +1146,8 @@ class CustomSavingPage(Page, ABC):
 
     def _check_for_duplicate_agents(self):
         comparison = []
-        comparison += list(self._experiment.sac_main.agents.values())
-        comparison += list(self._experiment.sac_unlinked.agents.values())
+        comparison += list(self._experiment.data_saver.main.agents.values())
+        comparison += list(self._experiment.data_saver.unlinked.agents.values())
 
         for pg in self._experiment.page_controller.pages():
             if pg == self:
@@ -1190,7 +1185,7 @@ class CustomSavingPage(Page, ABC):
             raise ValueError("The porperty 'custom_page_data' must return a dictionary.")
 
         if self.save_to_main:
-            self._experiment.sac_main.save_with_all_agents(level=level, sync=sync)
+            self._experiment.data_saver.main.save_with_all_agents(level=level, sync=sync)
 
         self.saving_agent_controller.save_with_all_agents(
             data=self.custom_save_data, level=level, sync=sync

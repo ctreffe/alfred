@@ -2,5 +2,5 @@
 
 from .experiment import Experiment
 from .page import *
-from .element import *
+from .element_responsive import *
 from .section import *

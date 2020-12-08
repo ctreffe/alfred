@@ -417,15 +417,15 @@ class Element(ABC):
             self._name = None
 
         elif name is not None:
-            if not re.match(r"^[-_A-Za-z0-9]*$", name):
+            if re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
+                self._name = name
+            else:
                 raise ValueError(
-                    "Element names may only contain following charakters: A-Z a-z 0-9 _ -"
+                    (
+                        "Name must start with a letter and can include only"
+                        "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
+                    )
                 )
-
-            if not isinstance(name, str):
-                raise TypeError
-
-            self._name = name
 
     @property
     def data(self):
@@ -483,7 +483,7 @@ class Element(ABC):
         and the page, separated by underscores. Example for the Page
         with tag 'hello_world' in section 'main'::
         
-            rootSection_main_hello_world
+            root_main_hello_world
         
         """
         return self.page.tree
@@ -491,7 +491,7 @@ class Element(ABC):
     @property
     def identifier(self):
 
-        return self.tree.replace("rootSection_", "") + "_" + self._name
+        return self.tree.replace("root_", "") + "_" + self._name
 
     @property
     def css_code(self) -> List[Tuple[int, str]]:
@@ -981,7 +981,10 @@ class JavaScript(Element):
 
     @property
     def js_urls(self):
-        return [(self.priority, self.url)]
+        if self.url:
+            return [(self.priority, self.url)]
+        else:
+            return []
 
 
 class WebExitEnabler(JavaScript):
@@ -1221,7 +1224,7 @@ class DataElement(Element):
 
         data = {}
         data["name"] = self.name
-        data["tree"] = self.tree.replace("rootSection_", "")
+        data["tree"] = self.tree.replace("root_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
@@ -1588,7 +1591,7 @@ class InputElement(LabelledElement):
         data["label_left"] = self.leftlab.text if self.leftlab is not None else ""
         data["label_right"] = self.rightlab.text if self.rightlab is not None else ""
         data["label_bottom"] = self.bottomlab.text if self.bottomlab is not None else ""
-        data["tree"] = self.tree.replace("rootSection_", "")
+        data["tree"] = self.tree.replace("root_", "")
         data["identifier"] = self.identifier
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__

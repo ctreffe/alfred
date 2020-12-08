@@ -139,7 +139,10 @@ class ExperimentRunner:
         localserver.Script.expdir = self.expdir
         localserver.Script.config = self.config
 
-        localserver.Script.generate_experiment = script.generate_experiment
+        try:
+            localserver.Script.exp = script.exp
+        except AttributeError:
+            localserver.Script.generate_experiment = script.generate_experiment
         self.app = localserver.app
         self.app.secret_key = self.config["exp_secrets"].get("flask", "secret_key")
 
