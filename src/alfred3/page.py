@@ -378,6 +378,8 @@ class CoreCompositePage(PageCore):
     def __init__(self, elements=None, **kwargs):
         super(CoreCompositePage, self).__init__(**kwargs)
 
+        self.elements = {}
+        
         self._element_list = []
         self._element_dict = {}
         self._element_name_counter = 1
@@ -387,6 +389,27 @@ class CoreCompositePage(PageCore):
                 raise TypeError
             for elmnt in elements:
                 self.append(elmnt)
+
+    @property
+    def input_elements(self) -> dict:
+        """Dict of all input elements on this page.
+
+        Does not evaluate whether an input element should be shown or
+        not, because that might change over the course of an experiment.
+        """
+
+        input_elements = {}
+        for name, el in self.elements.items():
+            if isinstance(el, (relm.InputElement, element.InputElement)):
+                input_elements[name] = el
+        return input_elements
+    
+    @property
+    def filled_input_elements(self) -> dict:
+        """Dict of all input elements on this page with non-empty data attribute.
+        """
+
+        return {name: el for name, el in self.input_elements.items() if el.data}
 
     @property
     def element_dict(self):
