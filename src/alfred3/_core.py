@@ -11,14 +11,13 @@ import logging
 from uuid import uuid4
 
 from . import alfredlog
+from .exceptions import AlfredError
 
 
 class ContentCore(object):
     def __init__(
         self,
-        tag=None,
-        uid=None,
-        tag_and_uid=None,
+        name: str = None,
         is_jumpable=True,
         jumptext=None,
         title=None,
@@ -179,6 +178,9 @@ class ContentCore(object):
 
     def added_to_experiment(self, exp):
         self._experiment = exp
+
+        if self.name in self.experiment.page_controller.all_members:
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
     @property
     def experiment(self):

@@ -3,7 +3,6 @@
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
-alfred enthält die Basisklasse :py:class:`Experiment`
 
 """
 

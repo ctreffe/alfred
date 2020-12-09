@@ -447,11 +447,6 @@ class CoreCompositePage(PageCore):
     def element_list(self):
         return self._element_list
     
-    @property
-    def input_elements(self) -> list:
-        """Returns a list of the page's input elements."""
-        return [el for el in self.element_list if isinstance(el, (relm.InputElement, InputElement))]
-
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         for element in self._element_list:
@@ -1196,3 +1191,11 @@ class CustomSavingPage(Page, ABC):
             data=self.custom_save_data, level=level, sync=sync
         )
 
+
+class DefaultFinalPage(Page):
+    name = "_final_page"
+
+    def on_exp_access(self):
+        txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
+        self += relm.TextElement(text=txt, align="center")
+        self += relm.WebExitEnabler()

@@ -11,9 +11,11 @@ import logging
 
 from functools import reduce
 
+from . import element as elm
+from . import element_responsive as relm
 from ._core import ContentCore, Direction
-from .page import PageCore, HeadOpenSectionCantClose, UnlinkedDataPage
-from .exceptions import MoveError
+from .page import PageCore, HeadOpenSectionCantClose, UnlinkedDataPage, DefaultFinalPage
+from .exceptions import MoveError, AlfredError
 from . import alfredlog
 from random import shuffle
 
@@ -24,6 +26,7 @@ class Section(ContentCore):
     def __init__(self, **kwargs):
         super(Section, self).__init__(**kwargs)
 
+        self.members = {}
         self._page_list = []
         self._members_dict = {}
         self._currentPageIndex = 0
@@ -39,32 +42,126 @@ class Section(ContentCore):
         self.append(other)
         return self
 
+    def __getattr__(self, name):
+        return self.members[name]
+
+    @property
+    def all_members(self) -> dict:
+        """Returns a flat dict of all members in this section and its subsections.
+
+        The order is preserved, i.e. members are listed in this dict in 
+        the same order in which they appear in the experiment.
+        """
+        members = {}
+
+        for name, member in self.members.items():
+            members[name] = member
+            if isinstance(member, Section):
+                members.update(member.all_members)
+        
+        return members
+
+    @property
+    def all_subsections(self) -> dict:
+        """Returns a flat dict of all sections in this section and its subsections.
+
+        The order is preserved, i.e. sections are listed in this dict in 
+        the same order in which they appear in the experiment.
+        """
+        subsections = {}
+
+        for name, member in self.members.items():
+            if isinstance(member, Section):
+                subsections[name] = member
+                subsections.update(member.all_subsections)
+        
+        return subsections
+
+    @property
+    def subsections(self) -> dict:
+        """Returns a flat dict of all subsections in this section.
+
+        Subsections in subsections are not included. Use 
+        :attr:`.all_subsections` for that purpose.
+        """
+        return {name: sec for name, sec in self.members.items() if isinstance(sec, Section)}
+
+    @property
+    def all_pages(self) -> dict:
+        """Returns a flat dict of all pages in this section and its subsections.
+
+        The order is preserved, i.e. pages are listed in this dict in 
+        the same order in which they appear in the experiment.
+        """
+
+        pages = {}
+        for name, member in self.members.items():
+            if isinstance(member, PageCore):
+                pages[name] = member
+            elif isinstance(member, Section):
+                pages.update(member.all_pages)
+        
+        return pages
+    
+    @property
+    def all_closed_pages(self) -> dict:
+        return {name: page for name, page in self.all_pages if page.is_closed}
+    
+    @property
+    def all_shown_pages(self) -> dict:
+        return {name: page for name, page in self.all_pages if page.has_been_shown}
+    
+    @property
+    def pages(self) -> dict:
+        """Returns a flat dict of all pages in this section.
+
+        Pages in subsections are not included. Use :attr:`.all_pages`
+        for that purpose.
+        """
+        return {name: page for name, page in self.members.items() if isinstance(page, PageCore)}
+    
+    @property
+    def all_elements(self) -> dict:
+        """Returns a flat dict of all elements in this section.
+        
+        Recursive: Includes elements from pages in this section and all 
+        its subsections.
+        """
+
+        elements = {}
+        for page in self.all_pages.values():
+            elements.update(page.elements)
+        return elements
+    
+    @property
+    def all_input_elements(self) -> dict:
+        """Returns a flat dict of all input elements in this section.
+        
+        Recursive: Includes elements from pages in this section and all 
+        its subsections.
+        """
+
+        elements = {}
+        for page in self.all_pages.values():
+            elements.update(page.input_elements)
+        return elements
+    
+    @property
+    def all_filled_input_elements(self) -> dict:
+        """Returns a flat dict of all filled input elements in this section.
+        
+        Recursive: Includes elements from pages in this section and all 
+        its subsections.
+        """
+
+        elements = {}
+        for page in self.all_pages.values():
+            elements.update(page.filled_input_elements)
+        return elements
+
     @property
     def page_list(self):
         return self._page_list
-
-    @property
-    def only_pages(self) -> list:
-        """List of all pages directly in this section. 
-        
-        .. warning::
-            Does not list pages in subsections. To get pages from 
-            subsections aswell, use `all_pages`.
-        
-        """
-        return [member for member in self.page_list if isinstance(member, PageCore)]
-    
-    @property
-    def all_pages(self) -> list:
-        """List of all pages in this section and all its subsections."""
-        out = []
-        for member in self.page_list:
-            if isinstance(member, Section):
-                out += member.all_pages
-            elif isinstance(member, PageCore):
-                out.append(member)
-        return out
-
 
     @property
     def data(self):
@@ -226,7 +323,7 @@ class Section(ContentCore):
 
     def added_to_experiment(self, exp):
         self._experiment = exp
-
+        
         for page in self._page_list:
             page.added_to_experiment(self._experiment)
 
@@ -260,15 +357,15 @@ class Section(ContentCore):
             except KeyError:
                 pass
             
+            self.members[item.name] = item
             self._members_dict[item.uid] = item
             
             item.added_to_section(self)
 
             if self._experiment is not None:
                 item.added_to_experiment(self._experiment)
-
+                
             self.generate_unset_tags_in_subtree()
-
 
 
     def generate_unset_tags_in_subtree(self):
@@ -643,3 +740,35 @@ class SegmentedSection(HeadOpenSection):
         # jumplist = []
 
         return jumplist
+
+
+class RootSection(Section):
+
+    name = "_root"
+
+    def __init__(self, experiment):
+        self._experiment = experiment
+
+        self.content_section = Section(name="_content")
+        self.finished_section = Section(name="_finished_section")
+
+        self._final_page = DefaultFinalPage()
+
+        self.exp_members = {}
+        self.exp_elements = {}
+    
+    def on_exp_access(self):
+        self.finished_section += self._final_page
+        
+        self += self.content_section
+        self += self.finished_section
+    
+    @property
+    def final_page(self):
+        return self._final_page
+
+    @final_page.setter
+    def final_page(self, page):
+        self._final_page = page
+        self._finished_section.members = {page.name: page}
+        self.append_member(member=page)
