@@ -28,9 +28,11 @@ import cmarkgfm
 from emoji import emojize
 
 from . import alfredlog
+from .exceptions import AlfredError
 from ._helper import alignment_converter
 from ._helper import fontsize_converter
 from ._helper import is_url
+from ._helper import check_name
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 """jinja2.Environment, giving access to included jinja-templates."""
@@ -415,17 +417,11 @@ class Element(ABC):
     def name(self, name):
         if name is None:
             self._name = None
-
+        
         elif name is not None:
-            if not re.match(r"^[-_A-Za-z0-9]*$", name):
-                raise ValueError(
-                    "Element names may only contain following charakters: A-Z a-z 0-9 _ -"
-                )
+            check_name(name)
 
-            if not isinstance(name, str):
-                raise TypeError
-
-            self._name = name
+        self._name = name
 
     @property
     def data(self):
@@ -607,6 +603,8 @@ class Element(ABC):
         """
         self.experiment = experiment
         self.log.add_queue_logger(self, __name__)
+        if self.name in self.experiment.page_controller.all_elements:
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
     def added_to_page(self, page):
         """Tells the element that it was added to a page. 
@@ -1298,7 +1296,7 @@ class LabelledElement(Element):
 
         for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
             if getattr(self, lab):
-                getattr(self, lab).name = f"{self.name}-{lab}"
+                getattr(self, lab).name = f"{self.name}_{lab}"
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)

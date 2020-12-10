@@ -115,6 +115,8 @@ def experiment():
             par = request.values.get("par", None)
             page_token = request.values.get("page_token", None)
 
+            url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
+
             try:
                 token_list = session["page_tokens"]
                 token_list.remove(page_token)
@@ -128,22 +130,21 @@ def experiment():
             data.pop("par", None)
             data.pop("page_token", None)
 
-            script.experiment.page_controller.current_page.set_data(data)
+            script.experiment.movement_manager.current_page.set_data(data)
 
             if move is None and directjump is None and par is None and not data:
                 pass
-            elif directjump and par:
-                posList = list(map(int, par.split(".")))
-                script.experiment.user_interface_controller.move_to_position(posList)
             elif move == "started":
                 pass
             elif move == "forward":
-                script.experiment.user_interface_controller.move_forward()
+                script.experiment.movement_manager.forward()
             elif move == "backward":
-                script.experiment.user_interface_controller.move_backward()
-            elif move == "jump" and par and re.match(r"^\d+(\.\d+)*$", par):
-                posList = list(map(int, par.split(".")))
-                script.experiment.user_interface_controller.move_to_position(posList)
+                script.experiment.movement_manager.backward()
+            elif move.startswith("jump"):
+                name = move[5:] # extract name. Jump-move-string: "jump>name"
+                script.experiment.movement_manager.jump_by_name(name=name)
+            elif url_pagename:
+                script.experiment.movement_manager.jump_by_name(name=url_pagename)
             else:
                 abort(400)
 

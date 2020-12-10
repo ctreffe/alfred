@@ -33,12 +33,12 @@ from cryptography.fernet import Fernet
 
 from . import layout, messages, settings, page
 from . import saving_agent
+from .section import RootSection
 from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
 from .data_manager import CodeBookExporter
 from .data_manager import ExpDataExporter
-from .page_controller import PageController
 from .saving_agent import SavingAgentController
 from .saving_agent import AutoLocalSavingAgent
 from .saving_agent import AutoMongoSavingAgent
@@ -47,6 +47,7 @@ from .saving_agent import CodebookMongoSavingAgent
 from .saving_agent import MongoManager
 from .ui_controller import WebUserInterfaceController
 from .ui_controller import UserInterface
+from .ui_controller import MovementManager
 from .exceptions import SavingAgentException
 
 _LSA = "local_saving_agent"
@@ -83,7 +84,8 @@ class Experiment(object):
 
         self._message_manager = messages.MessageManager()
         self._experimenter_message_manager = messages.MessageManager()
-        self._page_controller = PageController(self)
+        self.root_section = RootSection(self)
+        self.movement_manager = MovementManager(self)
 
         # Determine web layout if necessary
         # TODO: refactor layout and UIController initializiation code
@@ -282,15 +284,22 @@ class Experiment(object):
 
         """
         if self._finished:
-            self.log.warning(
-                "Experiment.finish() called. Experiment was already finished. Leave Method"
-            )
+            msg = "Experiment.finish() called. Experiment was already finished. Leave Method"
+            self.log.warning(msg)
+            
             return
+        
         self.log.info("Experiment.finish() called. Session is finishing.")
+        
+        for page in self.root_section.all_pages:
+            if not page.is_closed:
+                page.close()
+        
         self._finished = True
-        self._page_controller.change_to_finished_section()
+
         if self.config.getboolean("general", "debug"):
             if self.config.getboolean("debug", "disable_saving"):
+                
                 return
         
         self.save_data()
@@ -595,7 +604,7 @@ class Experiment(object):
 
         :return: :py:class:`page_controller.PageController`
         """
-        return self._page_controller
+        return self.root_section
 
     @property
     def data_manager(self):

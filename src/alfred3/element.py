@@ -149,6 +149,9 @@ class Element(object):
         self.experiment = experiment
         self.log.add_queue_logger(self, __name__)
 
+        if self.name in self.experiment.page_controller.all_elements:
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+
     @property
     def data(self):
         """

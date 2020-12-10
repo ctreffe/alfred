@@ -10,6 +10,7 @@ _helper contains internal functions which are not to be called by framework user
 from urllib.parse import urlparse
 from cryptography.fernet import Fernet
 import os
+import re
 
 def fontsize_converter(font_argument):
     '''
@@ -140,3 +141,14 @@ def is_url(url=None):
         return all([result.scheme, result.netloc, result.path])
     except:
         return False
+
+
+def check_name(name):
+    if not re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
+
+        raise ValueError(
+            (
+                "Name must start with a letter and can include only "
+                "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
+            )
+        )

@@ -17,6 +17,7 @@ from builtins import object, str
 from io import StringIO
 from pathlib import Path
 from uuid import uuid4
+from dataclasses import dataclass
 
 import importlib.resources
 
@@ -33,6 +34,194 @@ from .static import img
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
+@dataclass
+class Move:
+    """Template for saving data about participant movements.
+    
+    Attributes:
+        move_number: A continuously increasing counter of moves. Starts
+            at one.
+        tree: The full hierarchy of sections, indicating the exact 
+            position of the Move's *page* in the experiment.
+        page_name: The name of the Move's page.
+        section_allows_backward: Indicates, whether participants can move
+            backward from the Move's page.
+        section_allows_forward: Indicates, whether participants can move
+            forward from the Move's page.
+        section_allows_jumpfrom: Indicates, whether participants can 
+            jump from the Move's page.
+        section_allows_jumpto: Indicates, whether participants can 
+            jump to the Move's page.
+        show_time: Time when the page was shown in seconds since epoch.
+        hide_time: Time when the page was hidden in seconds since epoch.
+        duration: Duration in seconds, calculated as the difference 
+            hidetime - showtime.
+        page_status_before_visit: Indicates the page's status before
+            the visit represented by the Move instance, e.g. 'open', or 
+            'closed'.
+        page_status_before_visit: Indicates the page's status after
+            the visit represented by the Move instance, e.g. 'open', or 
+            'closed'.
+        leave_in_direction: Indicates the direction, in which the page 
+            was left (e.g. 'forward', 'backward', or 'jump').
+    
+    """
+
+    move_number: int = None
+    tree: str = None
+    page_name: str = None
+    show_time: float = None
+    hide_time: float = None
+    duration: float = None
+    page_status_before_visit: str = None
+    page_status_after_visit: str = None
+    leave_in_direction: str = None
+    section_allows_forward: bool = None
+    section_allows_backward: bool = None
+    section_allows_jumpfrom: bool = None
+    section_allows_jumpto: bool = None
+
+
+class MovementManager:
+
+    def __init__(self, experiment):
+        self.exp = experiment
+        self.experiment = experiment
+        self.current_index: int = 0
+        self.previous_index: int = 0
+        self.history: list = []
+    
+    
+    @property
+    def current_page(self):
+        i = self.current_index
+        return self.exp.root_section.all_pages_list[i]
+    
+    @property
+    def previous_page(self):
+        if self.current_page is self.first_page:
+            return None
+        
+        i = self.previous_index
+        return self.exp.root_section.all_pages_list[i]
+    
+    @property
+    def next_page(self):
+        # if self.current_page is self.last_page:
+        #     return None
+
+        i = self.current_index + 1
+        return self.exp.root_section.all_pages_list[i]
+    
+    @property
+    def last_page(self):
+        return self.exp.root_section.all_pages_list[-1]
+    
+    @property
+    def first_page(self):
+        return self.exp.root_section.all_pages_list[0]
+    
+    def _move(self, to_page, direction: str):
+        current_page = self.current_page
+
+        if not current_page.section.allow_move(direction=direction):
+            return False
+
+        current_page._on_hiding_widget()
+        page_was_closed = current_page.is_closed
+        
+        if current_page.section is not to_page.section:
+            current_page.section.leave()
+            self.record_move(page_was_closed, direction=direction)
+            to_page.section.enter()
+        else:
+            current_page.section.move(direction=direction)
+            self.record_move(page_was_closed, direction=direction)
+        
+        return True
+    
+    def forward(self):
+        if not self.current_page.section.allow_forward:
+            return False
+
+        if self._move(to_page=self.next_page, direction="forward"):
+            self.previous_index = self.current_index
+            self.current_index += 1
+
+            if not self.current_page.should_be_shown:
+                return self.forward()
+
+            return True
+        
+        else:
+            return False
+    
+    def backward(self):
+        if not self.current_page.section.allow_backward:
+            return False
+
+        if self._move(to_page=self.next_page, direction="backward"):
+            self.previous_index = self.current_index
+            self.current_index -= 1
+
+            if not self.current_page.should_be_shown:
+                return self.backward()
+
+            return True
+        
+        else:
+            return False
+    
+    def jump_by_name(self, name: str):
+        next_page = self.exp.root_section.members[name]
+        
+        if not self.current_page.section.allow_jumpfrom:
+            return False
+        elif not next_page.section.allow_jumpto:
+            return False
+        
+        if self._move(to_page=next_page, direction="jump"):
+            self.previous_index = self.current_index
+            self.current_index = self.exp.root_section.all_pages_list.index(name)
+            return True
+        
+        else:
+            return False
+    
+    def jump_by_index(self, index: int):
+        next_page = self.exp.root_section.all_pages_list[index]
+
+        if not self.current_page.section.allow_jumpfrom:
+            return False
+        elif not next_page.section.allow_jumpto:
+            return False
+        
+        if self._move(to_page=next_page, direction="jump"):
+            self.previous_index = self.current_index
+            self.current_index = index
+            return True
+        
+        else:
+            return False
+
+    def record_move(self,page_was_closed: bool, direction: str):
+        current_page = self.current_page
+        
+        move = Move()
+        move.move_number = len(self.history) + 1
+        move.tree = current_page.tree
+        move.page_name = current_page.name
+        move.page_status_before_visit = "closed" if page_was_closed else "open"
+        move.page_status_after_visit = "closed" if current_page.is_closed else "open"
+        move.show_time = current_page.show_times[-1]
+        move.hide_time = current_page.hide_times[-1]
+        move.duration = move.hide_time - move.show_time
+        move.section_allows_forward = current_page.section.allow_forward
+        move.section_allows_backward = current_page.section.allow_backward
+        move.section_allows_jumpfrom = current_page.section.allow_jumpfrom
+        move.section_allows_jumpto = current_page.section.allow_jumpto
+        move.leave_in_direction = direction
+        self.history.append(move)
 
 class UserInterface:
     _css_files = [
@@ -101,6 +290,10 @@ class UserInterface:
         else:
             self._add_resource_links(self._js_files, "js")
             self._add_resource_links(self._css_files, "css")
+
+    @property
+    def exp(self):
+        return self.experiment
 
     def _determine_style(self):
         """Adds .css styles and logo image to the layout.
@@ -184,7 +377,7 @@ class UserInterface:
         for i, f in enumerate(resources):
             container.append((i, importlib.resources.read_text(pkg, f)))
 
-    def code(self, page):
+    def code(self, page) -> dict:
         """Wraps the basic layout CSS and JavaScript together with
         the page's CSS and JavaScript in a single dictionary
         for easy use.
@@ -204,7 +397,7 @@ class UserInterface:
 
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution
-        first_page = self.experiment.page_controller.all_pages[0]
+        first_page = self.exp.movement_manager.first_page
         if page is first_page and self.experiment.config.getboolean("general", "save_client_info"):
             code["js_code"] += [(7, importlib.resources.read_text(js, "clientinfo.js"))]
 
@@ -213,35 +406,31 @@ class UserInterface:
     def render(self, page_token):
         """Renders the current page."""
 
-        page = self.experiment.page_controller.current_page
+        page = self.experiment.movement_manager.current_page
         page.prepare_web_widget()
-
-        code = self.code(page=page)
 
         d = {**self.config}
 
-        d["title"] = self.experiment.page_controller.current_title
-        d["subtitle"] = self.experiment.page_controller.current_subtitle
+        d["code"] = self.code(page=page)
         d["page_token"] = page_token
+        d["elements"] = page.elements.values()
 
-        if self.experiment.page_controller.current_status_text:
-            d["statustext"] = self.experiment.page_controller.current_status_text
-
-        if (
-            not self.experiment.page_controller.current_page.can_display_corrective_hints_in_line
-            and self.experiment.page_controller.current_page.corrective_hints
-        ):
-            d["corrective_hints"] = self.experiment.page_controller.current_page.corrective_hints
-
-        if self.backward_enabled:
-            if self.experiment.page_controller.can_move_backward:
-                d["backward_text"] = self.experiment.config.get("navigation", "backward")
-
-        if self.forward_enabled:
-            if self.experiment.page_controller.can_move_forward:
-                d["forward_text"] = self.experiment.config.get("navigation", "forward")
-            elif self.finish_enabled and not self.experiment.finished:
+        d["title"] = page.title
+        d["subtitle"] = page.subtitle
+        if page.statustext:
+            d["statustext"] = page.statustext
+        
+        if not page.can_display_corrective_hints_in_line:
+            d["corrective_hints"] = page.corrective_hints
+        
+        if page.section.allow_backward and not page is self.exp.movement_manager.first_page:
+            d["backward_text"] = self.experiment.config.get("navigation", "backward")
+        
+        if page.section.allow_forward:
+            if self.exp.movement_manager.next_page is self.exp.root_section.final_page:
                 d["finish_text"] = self.experiment.config.get("navigation", "finish")
+            else:
+                d["forward_text"] = self.experiment.config.get("navigation", "forward")
 
         messages = self.experiment.message_manager.get_messages()
         if messages:
@@ -254,8 +443,8 @@ class UserInterface:
         # progress bar
         n_el = len(self.experiment.page_controller.all_input_elements)
         n_pg = len(self.experiment.page_controller.all_pages)
-        i_el = self.experiment.page_controller.filled_input_elements
-        i_pg = self.experiment.page_controller.completed_pages
+        i_el = len(self.experiment.page_controller.all_filled_input_elements)
+        i_pg = len(self.experiment.page_controller.all_shown_pages)
         exact_progress = ((i_el + i_pg) / (n_el + n_pg)) * 100
         if not self.experiment.finished:
             d["progress"] = min(round(exact_progress, 1), 95)
@@ -264,7 +453,7 @@ class UserInterface:
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
 
-        return self.template.render(d=d, element_list=page.element_list, code=code)
+        return self.template.render(d)
 
     def render_html(self, page_token):
         """Alias for render, provided for compatibility."""
@@ -348,19 +537,6 @@ class UserInterface:
         )
         return url
 
-    def move_forward(self):
-        if self.experiment.page_controller.allow_leaving(Direction.FORWARD):
-            self.experiment.page_controller.current_page._on_hiding_widget()
-            if self.experiment.page_controller.can_move_forward:
-                self.experiment.page_controller.move_forward()
-            else:
-                self.experiment.finish()
-
-    def move_backward(self):
-        if self.experiment.page_controller.allow_leaving(Direction.BACKWARD):
-            self.experiment.page_controller.current_page._on_hiding_widget()
-            self.experiment.page_controller.move_backward()
-
     def start(self):
         self.experiment.page_controller.enter()
 
@@ -422,10 +598,7 @@ class UserInterfaceController(with_metaclass(ABCMeta, object)):
     def move_forward(self):
         if self._experiment.page_controller.allow_leaving(Direction.FORWARD):
             self._experiment.page_controller.current_page._on_hiding_widget()
-            if self._experiment.page_controller.can_move_forward:
-                self._experiment.page_controller.move_forward()
-            else:
-                self._experiment.finish()
+            self._experiment.page_controller.move_forward()
 
     def move_backward(self):
         if self._experiment.page_controller.allow_leaving(Direction.BACKWARD):
