@@ -12,51 +12,45 @@ import re
 from uuid import uuid4
 
 from . import alfredlog
+from ._helper import check_name
+from .exceptions import AlfredError
 
 
-class ContentCore(object):
+class ExpMember:
     name: str = None
+    instance_level_logging: bool = False
 
     def __init__(
         self,
-        name=None,
-        is_jumpable=True,
-        jumptext=None,
+        name: str = None,
         title=None,
         subtitle=None,
         statustext=None,
         should_be_shown_filter_function=None,
-        instance_level_logging=False,
-        **kwargs,
     ):
 
-        if kwargs != {}:
-            raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
-        self._tag = None
-        self._uid = uuid4().hex
-        self.instance_level_logging = instance_level_logging
         self._should_be_shown = True
         self._should_be_shown_filter_function = (
             should_be_shown_filter_function
             if should_be_shown_filter_function is not None
             else lambda exp: True
         )
-        self._parent_group = None
+
         self._experiment = None
-        self._jumptext = None
-        self._is_jumpable = False
+        self._parent_section = None
+        
         self._title = None
         self._subtitle = None
         self._statustext = None
         self._has_been_shown = False
         self._has_been_hidden = False
 
-        if jumptext is not None:
-            self.jumptext = jumptext
 
-        self.is_jumpable = is_jumpable
-
+        # the following assignments allow for assignment via class variables
+        # during subclasses, but override the attributes, if given as
+        # init parameters
         if title is not None:
             self.title = title
 
@@ -65,6 +59,22 @@ class ContentCore(object):
 
         if statustext is not None:
             self.statustext = statustext
+        
+        if name is not None:
+            self.name = name
+        
+        # regardless of how name was assigned, check it
+        if self.name is not None:
+            check_name(self.name)
+            self._uid = self.name
+            self._tag = self.name
+        elif self.name is None:
+            self._uid = uuid4().hex
+            self.name = self.uid
+            self._tag = None
+        
+        self._name_at_init = self.name
+
 
         if name is not None:
             if re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
@@ -140,26 +150,6 @@ class ContentCore(object):
         return data
 
     @property
-    def is_jumpable(self):
-        return self._is_jumpable and self.jumptext is not None
-
-    @is_jumpable.setter
-    def is_jumpable(self, is_jumpable):
-        if not isinstance(is_jumpable, bool):
-            raise TypeError
-        self._is_jumpable = is_jumpable
-
-    @property
-    def jumptext(self):
-        return self._jumptext
-
-    @jumptext.setter
-    def jumptext(self, jumptext):
-        if not (isinstance(jumptext, str) or isinstance(jumptext, str)):
-            raise TypeError("jumptext must be an instance of str or unicode")
-        self._jumptext = jumptext
-
-    @property
     def title(self):
         return self._title
 
@@ -188,6 +178,13 @@ class ContentCore(object):
             raise ValueError(f"A section or page of name '{self.name}' already exists.")
         exp.page_controller.all_members_dict[self.name] = self
         self._experiment = exp
+        self.log.add_queue_logger(self, __name__)
+
+        if self.name in self.experiment.page_controller.all_members:
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+
+        if self.name != self._name_at_init:
+            raise AlfredError(f"{self}: Name must not be changed after assignment.")
 
         if self.name in exp.__dict__:
             raise ValueError(
@@ -200,11 +197,14 @@ class ContentCore(object):
     @property
     def experiment(self):
         return self._experiment
+    
+    @property
+    def exp(self):
+        return self._experiment
 
-    def added_to_section(self, group):
-
-        self._parent_group = group
-        self._section = group
+    def added_to_section(self, section):
+        self._parent_section = section
+        self._section = section
 
     @property
     def section(self):
@@ -212,7 +212,7 @@ class ContentCore(object):
 
     @property
     def parent(self):
-        return self._parent_group
+        return self._parent_section
 
     @property
     def tree(self):
@@ -231,35 +231,3 @@ class ContentCore(object):
     def allow_leaving(self, direction):
         return True
 
-
-class Direction(object):
-    UNKNOWN = 0
-    FORWARD = 1
-    BACKWARD = 2
-    JUMP = 3
-
-    @staticmethod
-    def to_str(direction):
-        if direction == Direction.UNKNOWN:
-            return "unknown"
-        elif direction == Direction.FORWARD:
-            return "forward"
-        elif direction == Direction.BACKWARD:
-            return "backward"
-        elif direction == Direction.JUMP:
-            return "jump"
-        else:
-            raise ValueError("Unexpected Value")
-
-
-def package_path():
-    """
-    DEPRECATED
-
-    use alfred.settings.package_path instead
-    """
-
-    root = __file__
-    if os.path.islink(root):
-        root = os.path.realpath(root)
-    return os.path.dirname(os.path.abspath(root))

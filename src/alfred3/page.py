@@ -19,13 +19,13 @@ from future.utils import with_metaclass
 from . import element, alfredlog
 from . import element_responsive as relm
 from . import saving_agent
-from ._core import ContentCore
+from ._core import ExpMember
 from ._helper import _DictObj
 from .element import Element, ExperimenterMessages, TextElement, WebElementInterface, InputElement
 from .exceptions import AlfredError
 
 
-class PageCore(ContentCore):
+class PageCore(ExpMember):
     def __init__(
         self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
     ):
@@ -35,9 +35,8 @@ class PageCore(ContentCore):
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
-
-        # e.g.: alfred3.page.Page
-        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        self.show_times = []
+        self.hide_times = []
 
         super(PageCore, self).__init__(**kwargs)
 
@@ -53,8 +52,6 @@ class PageCore(ContentCore):
             )
 
         super(PageCore, self).added_to_experiment(experiment)
-
-        self.log.add_queue_logger(self, __name__)
 
         if self.experiment.config.getboolean("general", "debug"):
             if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
@@ -98,9 +95,9 @@ class PageCore(ContentCore):
         """
         Method for internal processes on showing Widget
         """
+        self.show_times.append(time.time())
 
         if not self._has_been_shown:
-            self._data["first_show_time"] = time.time()
             self.on_first_show()
 
         self.on_showing_widget()
@@ -160,11 +157,10 @@ class PageCore(ContentCore):
         """
         Method for internal processes on hiding Widget
         """
+        self.hide_times.append(time.time())
+
         if not self._has_been_hidden:
             self.on_first_hide()
-            hide_time = time.time()
-            self._data["first_hide_time"] = hide_time
-            self._data["first_display_duration"] = hide_time - self._data["first_show_time"]
 
         self.on_hiding_widget()
         self.on_hiding()
@@ -172,9 +168,7 @@ class PageCore(ContentCore):
 
         self._has_been_hidden = True
         
-        from . import section
-        if not isinstance(self.section, (section.HeadOpenSection, section.SegmentedSection)):
-            self.save_data()
+        self.save_data()
 
     def on_hiding_widget(self):
         """**DEPRECATED**: Hook for code that is meant to be executed 
@@ -265,18 +259,8 @@ class PageCore(ContentCore):
         if not self.allow_closing:
             raise AlfredError()
 
-        if "closing_time" not in self._data:
-            self._data["closing_time"] = time.time()
-        if (
-            "duration" not in self._data
-            and "first_show_time" in self._data
-            and "closing_time" in self._data
-        ):
-            self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
-
         self.on_close()
         self._is_closed = True
-        self.save_data()
 
     @property
     def allow_closing(self):
@@ -298,16 +282,15 @@ class PageCore(ContentCore):
             self.show_corrective_hints = True
             return False
 
-        if (
-            "first_show_time" in self._data
-            and time.time() - self._data["first_show_time"] < self._minimum_display_time
-        ):
-            msg = self.minimum_display_time_msg
-            self._experiment.message_manager.post_message(
-                msg.replace("${mdt}", str(self._minimum_display_time))
-            )
+        # check minimum display time
+        mintime = self._minimum_display_time
+        if time.time() - self.show_times[0] < mintime:
+            msg = self.minimum_display_time_msg.replace("${mdt}", str(mintime))
+            self.exp.message_manager.post_message(msg)
             return False
+        
         return True
+
 
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current experiment data.
@@ -378,6 +361,8 @@ class CoreCompositePage(PageCore):
     def __init__(self, elements=None, **kwargs):
         super(CoreCompositePage, self).__init__(**kwargs)
 
+        self.elements = {}
+        
         self._element_list = []
         self._element_dict = {}
         self._element_name_counter = 1
@@ -387,6 +372,27 @@ class CoreCompositePage(PageCore):
                 raise TypeError
             for elmnt in elements:
                 self.append(elmnt)
+
+    @property
+    def input_elements(self) -> dict:
+        """Dict of all input elements on this page.
+
+        Does not evaluate whether an input element should be shown or
+        not, because that might change over the course of an experiment.
+        """
+
+        input_elements = {}
+        for name, el in self.elements.items():
+            if isinstance(el, (relm.InputElement, element.InputElement)):
+                input_elements[name] = el
+        return input_elements
+    
+    @property
+    def filled_input_elements(self) -> dict:
+        """Dict of all input elements on this page with non-empty data attribute.
+        """
+
+        return {name: el for name, el in self.input_elements.items() if el.data}
 
     @property
     def element_dict(self):
@@ -421,13 +427,15 @@ class CoreCompositePage(PageCore):
 
             self._element_dict[elmnt.name] = elmnt
 
+            self.elements[elmnt.name] = elmnt
+
 
     def generate_element_name(self, element):
         i = self._element_name_counter
         c = element.__class__.__name__
         self._element_name_counter += 1
 
-        return f"{self.name}_{c}_{i}"
+        return f"P_{self.name}_{c}_{i}"
 
     def __iadd__(self, other):
         self.append(other)
@@ -442,11 +450,6 @@ class CoreCompositePage(PageCore):
     def element_list(self):
         return self._element_list
     
-    @property
-    def input_elements(self) -> list:
-        """Returns a list of the page's input elements."""
-        return [el for el in self.element_list if isinstance(el, (relm.InputElement, InputElement))]
-
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         for element in self._element_list:
@@ -455,7 +458,10 @@ class CoreCompositePage(PageCore):
 
     @property
     def allow_closing(self):
-        return reduce(lambda b, element: element.validate_data() and b, self._element_list, True)
+        return all([el.validate_data() for el in self.elements.values()])
+
+    def close(self):
+        self.close_page()
 
     def close_page(self):
         super(CoreCompositePage, self).close_page()
@@ -973,12 +979,7 @@ class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
 class NoDataPage(Page):
     """This Page does not save any data except its tag and uid."""
 
-    @property
-    def data(self):
-        # Pages must always return tag and uid!
-        data = {"tag": self.tag, "uid": self.uid}
-
-        return data
+    data = {}
 
 
 class UnlinkedDataPage(NoDataPage):
@@ -1149,7 +1150,7 @@ class CustomSavingPage(Page, ABC):
         comparison += list(self._experiment.data_saver.main.agents.values())
         comparison += list(self._experiment.data_saver.unlinked.agents.values())
 
-        for pg in self._experiment.page_controller.pages():
+        for pg in self._experiment.page_controller.all_pages.values():
             if pg == self:
                 continue
             try:
@@ -1191,3 +1192,12 @@ class CustomSavingPage(Page, ABC):
             data=self.custom_save_data, level=level, sync=sync
         )
 
+
+class DefaultFinalPage(Page):
+    name = "_final_page"
+    title = "Experiment beendet"
+
+    def on_exp_access(self):
+        txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
+        self += relm.TextElement(text=txt, align="center")
+        self += relm.WebExitEnabler()

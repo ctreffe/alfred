@@ -3,24 +3,24 @@
 {% block page %}
 
 
-<div class="container-fluid page-container {% if d.get('responsive') %} responsive-width {% else %} fixed-width {% endif %}"
+<div class="container-fluid page-container {% if responsive %} responsive-width {% else %} fixed-width {% endif %}"
 id="page-container">
 
-<div class="progress-container {% if d.get('fix_progress_top') %}progress-sticky{% endif %}" id="progress-container">
+<div class="progress-container {% if fix_progress_top %}progress-sticky{% endif %}" id="progress-container">
 
-    {% if d.get('show_progress') %}
+    {% if show_progress %}
         <div class="progress">
-            <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ d.get('progress') }}%;"
-                aria-valuenow="{{ d.get('progress') }}" aria-valuemin="0" aria-valuemax="100">
-                <!-- <span class="progress-text">{{ d.get('progress') }}%</span> -->
+            <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ progress }}%;"
+                aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+                <!-- <span class="progress-text">{{ progress }}%</span> -->
             </div>
         </div>
         {% endif %}
 </div>
 
     <!-- Experimenter Messages -->
-    {% if d.get('messages') %}
-    {% for message in d.get('messages') %}
+    {% if messages %}
+    {% for message in messages %}
     <div class="alert {{ message.level }}">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         {% if message.title %}
@@ -32,10 +32,10 @@ id="page-container">
     {% endif %}
 
     <!-- Corrective Hints -->
-    {% if d.get('corrective_hints') %}
+    {% if corrective_hints %}
     <div class="row alert alert-block" id="correctiveBar">
         <ul>
-            {% for hint in d.get('corrective_hints') %}
+            {% for hint in corrective_hints %}
             <li>{{ hint }}</li>
             {% endfor %}
         </ul>
@@ -44,12 +44,12 @@ id="page-container">
 
     <!-- Page Header -->
     <div class="page-header" id="page-header">
-        {% if d.get("title") %}
-        <h1 class="page-title">{{ d["title"] }}</h1>
+        {% if title %}
+        <h1 class="page-title">{{ title }}</h1>
         {% endif %}
 
-        {% if d.get("subtitle") %}
-        <p class="page-subtitle">{{ d["subtitle"] }}</p>
+        {% if subtitle %}
+        <p class="page-subtitle">{{ subtitle }}</p>
         {% endif %}
     </div>
 
@@ -59,7 +59,7 @@ id="page-container">
         <!-- Element widgets -->
         <div class="page-body" id="page-body">
 
-            {% for element in element_list %}
+            {% for element in elements %}
 
             {% if element.web_widget and element.should_be_shown %}
             {{ element.web_widget | safe }}
@@ -75,7 +75,7 @@ id="page-container">
             </div>
 
             <!-- Hidden fields -->
-            <input type="hidden" name="page_token" value="{{ d.get('page_token') }}">
+            <input type="hidden" name="page_token" value="{{ page_token }}">
             <input type="hidden" id="alt-submit">
         </div>
 
@@ -86,21 +86,21 @@ id="page-container">
                 <div class="col text-center form-actions" id="controls">
 
                     <!-- backward button -->
-                    {% if d.get("backward_text") %}
+                    {% if backward_text %}
                     <button type="submit" class="btn btn-dark" id="back_button" name="move" value="backward"
-                        submit="backward">{{ d.get("backward_text") }}</button>
+                        submit="backward">{{ backward_text }}</button>
                     {% endif %}
 
                     <!-- forward button -->
-                    {% if d.get("forward_text") %}
+                    {% if forward_text %}
                     <button type="submit" class="btn btn-dark" id="forward_button" name="move" value="forward"
-                        submit="forward">{{ d.get("forward_text") }}</button>
+                        submit="forward">{{ forward_text }}</button>
                     {% endif %}
 
                     <!-- finish button -->
-                    {% if d.get("finish_text") %}
+                    {% if finish_text %}
                     <button type="submit" class="btn btn-dark" id="finish_button" name="move" value="forward"
-                        submit="forward">{{ d.get("finish_text") }}</button>
+                        submit="forward">{{ finish_text }}</button>
                     {% endif %}
 
                 </div>
