@@ -7,9 +7,8 @@
 from deprecation import deprecated
 
 from . import element as elm
-from . import element_responsive as relm
 from ._core import ExpMember
-from .page import PageCore, HeadOpenSectionCantClose, UnlinkedDataPage, DefaultFinalPage
+from .page import PageCore, UnlinkedDataPage, DefaultFinalPage
 from .exceptions import MoveError, AlfredError
 from . import alfredlog
 from random import shuffle
@@ -32,10 +31,10 @@ class Section(ExpMember):
         if kwargs.get("shuffle", None):
             self.shuffle = kwargs.get("shuffle", False)
 
-    def __str__(self):
+    def __repr__(self):
         section_class = type(self).__name__
-        m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
-        return f"{section_class}(name='{self.name}', parent='{self.parent.name}', members=[{m}])"
+        # m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
+        return f"{section_class}(name='{self.name}', parent='{self.parent.name}')"
 
     def __iadd__(self, other):
         self.append(other)
@@ -169,45 +168,18 @@ class Section(ExpMember):
         for page in self.all_pages.values():
             elements.update(page.filled_input_elements)
         return elements
-
+    
     @property
     def data(self):
-        data = super(Section, self).data
-        data["subtree_data"] = []
-        for q_core in self.members.values():
-            if isinstance(q_core, UnlinkedDataPage):
-                continue
-            data["subtree_data"].append(q_core.data)
-
+        data = {}
+        for page in self.all_pages.values():
+            data.update(page.data)
         return data
     
     def unlinked_data(self, encrypt):
-        data = {"tag": self.tag}
-        data["subtree_data"] = []
-        for member in self.members.values():
-            if isinstance(member, UnlinkedDataPage):
-                data["subtree_data"].append(member.unlinked_data(encrypt=encrypt))
-
-        return data
-
-    def unlinked_data_present(self):
-        """Returns *True*, if unlinked data was collected during the
-        experiment and *False*, if no unlinked data was collected.
-        """
-        present = False
-        for member in self.members.values():
-            if isinstance(member, UnlinkedDataPage):
-                present = True
-            elif isinstance(member, Section):
-                present = member.unlinked_data_present()
-
-        return present
-
-    @property
-    def codebook_data(self):
         data = {}
         for page in self.all_pages.values():
-            data.update(page.codebook_data)
+            data.update(page.unlinked_data(encrypt=encrypt))
         return data
 
     def added_to_experiment(self, exp):
@@ -318,6 +290,7 @@ class Section(ExpMember):
         pass
 
     def enter(self):
+        self.log.debug(f"Entering Section: {self}.")
         self.on_enter()
         self.on_move()
 
@@ -328,6 +301,7 @@ class Section(ExpMember):
             self.first_member.enter()
     
     def leave(self):
+        self.log.debug(f"Leaving Section: {self}.")
         self.on_move()
         self.on_leave()
         for page in self.all_pages.values():
@@ -434,6 +408,10 @@ class RootSection(Section):
 
         self._all_pages_list = None
     
+    def append_root_sections(self):
+        self += self.content_section
+        self += self.finished_section
+
     @property
     def all_pages_list(self):
         """Improvised caching mechanism for the list of all pages."""
@@ -445,13 +423,11 @@ class RootSection(Section):
             self._all_pages_list = list(self.all_pages.values())
         
         return self._all_pages_list
-
-    def on_enter(self):
-        self.finished_section += self._final_page
-        
-        self += self.content_section
-        self += self.finished_section
     
+    # def on_enter(self):
+    #     self.finished_section.members = {}
+    #     self.finished_section += self.final_page
+
     @property
     def final_page(self):
         return self._final_page
@@ -459,8 +435,15 @@ class RootSection(Section):
     @final_page.setter
     def final_page(self, page):
         self._final_page = page
-        self._final_page += relm.HideNavigation()
-        self.finished_section.members = {page.name: page}
+        self._final_page += elm.HideNavigation()
+        self.finished_section.members = {}
+        self.finished_section += self.final_page
+    
+    def __repr__(self):
+        section_class = type(self).__name__
+        m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
+        return f"{section_class}(name='{self.name}', members=[{m}])"
+        
     
     @deprecated("1.5", "2.0", None, details="Use the simple setter for the attribute 'final_page' instead.")
     def append_item_to_finish_section(self, item):

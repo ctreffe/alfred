@@ -28,19 +28,18 @@ import pymongo
 from cryptography.fernet import Fernet
 from deprecation import deprecated
 
-from .section import Section
+from .section import Section, RootSection
 from .page import Page
-from . import layout, messages, settings, page, section
+from . import messages, page, section
 from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
 from .data_manager import CodeBookExporter
 from .data_manager import ExpDataExporter
-from .page_controller import PageController
 from .saving_agent import DataSaver
-from .ui_controller import WebUserInterfaceController
 from .ui_controller import UserInterface
+from .ui_controller import MovementManager
 from .exceptions import SavingAgentException
 
 class Experiment:
@@ -82,7 +81,7 @@ class Experiment:
 
         return wrapper()
 
-    def member(self, _member=None, *, of_section: str = "root"):
+    def member(self, _member=None, *, of_section: str = "_content"):
         """Decorator for adding pages and sections to the experiment.
 
         Works both with and without arguments.
@@ -153,7 +152,7 @@ class Experiment:
             members[member_name] = (parent_name, member_inst)
 
         for parent_name, member_inst in members.values():
-            if parent_name == "root":
+            if parent_name == "_content":
                 continue
             _, parent = members[parent_name]
             parent += member_inst
@@ -170,7 +169,7 @@ class Experiment:
             func(exp_session)
 
         for parent_name, member in self.init_members().values():
-            if parent_name == "root":
+            if parent_name == "_content":
                 exp_session += member
         
         if self._final_page is not None:
@@ -178,20 +177,20 @@ class Experiment:
         
         return exp_session
 
-    def append(self, *members, to_section: str = "root"):
+    def append(self, *members, to_section: str = "_content"):
         for member in members:
             if isclass(member):
                 name = member.__name__ if member.name is None else member.name
             else:
                 name = member.uid if member.name is None else member.name
 
-            if name in self.members or name == "root":
+            if name in self.members or name == "_cotent":
                 raise ValueError(f"A section or page of name '{name}' already exists.")
 
             self.members[name] = (to_section, member)
 
     def __iadd__(self, other: Union[Section, Page]):
-        self.append(other, to_section="root")
+        self.append(other, to_section="_content")
         return self
 
     def __getattr__(self, name):
@@ -214,35 +213,37 @@ class ExperimentSession:
 
         self.message_manager = messages.MessageManager()
         self.experimenter_message_manager = messages.MessageManager()
-        self.page_controller = PageController(self)
-        self.final_page.added_to_experiment(self)
+        self.root_section = RootSection(self)
+        self.root_section.append_root_sections()
+        self.page_controller = self.root_section
+        self.movement_manager = MovementManager(self)
 
         # Determine web layout if necessary
         # TODO: refactor layout and UIController initializiation code
         # pylint: disable=no-member
         self._type = "web"  # provided for backwards compatibility
-        if self._type == "web" or self._type == "qt-wk":
-            if kwargs.get("custom_layout"):
-                web_layout = kwargs.get("custom_layout")
-            elif "web_layout" in settings.experiment and hasattr(
-                layout, settings.experiment.web_layout
-            ):
-                web_layout = getattr(layout, settings.experiment.web_layout)()
-            elif "web_layout" in settings.experiment and not hasattr(
-                layout, settings.experiment.web_layout
-            ):
-                self.log.warning(
-                    "Layout specified in config.conf does not exist! Switching to BaseWebLayout"
-                )
-                web_layout = None
+        # if self._type == "web" or self._type == "qt-wk":
+        #     if kwargs.get("custom_layout"):
+        #         web_layout = kwargs.get("custom_layout")
+        #     elif "web_layout" in settings.experiment and hasattr(
+        #         layout, settings.experiment.web_layout
+        #     ):
+        #         web_layout = getattr(layout, settings.experiment.web_layout)()
+        #     elif "web_layout" in settings.experiment and not hasattr(
+        #         layout, settings.experiment.web_layout
+        #     ):
+        #         self.log.warning(
+        #             "Layout specified in config.conf does not exist! Switching to BaseWebLayout"
+        #         )
+        #         web_layout = None
 
-        if self._type == "web":
-            self.user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
-        else:
-            ValueError("unknown type: '%s'" % self._type)
+        # if self._type == "web":
+        #     self.user_interface_controller = WebUserInterfaceController(self, layout=web_layout)
+        # else:
+        #     ValueError("unknown type: '%s'" % self._type)
 
-        if "responsive" in self.config.get("experiment", "web_layout"):
-            self.user_interface_controller = UserInterface(self)
+        # if "responsive" in self.config.get("experiment", "web_layout"):
+        self.user_interface_controller = UserInterface(self)
 
         # Allows for session-specific saving of unlinked data.
         self._unlinked_random_name_part = uuid4().hex
@@ -277,7 +278,7 @@ class ExperimentSession:
         )
 
     def start(self):
-        self.page_controller.generate_unset_tags_in_subtree()
+        self.root_section.generate_unset_tags_in_subtree()
         self._start_time = time.time()
         self._start_timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
         self.log.info("Experiment.start() called. Session is starting.")
@@ -291,7 +292,11 @@ class ExperimentSession:
             return
         self.log.info("Experiment.finish() called. Session is finishing.")
         self.finished = True
-        self.page_controller.change_to_finished_section()
+
+        for page in self.root_section.all_pages.values():
+            if not page.is_closed:
+                page.close()
+
         if self.config.getboolean("general", "debug"):
             if self.config.getboolean("debug", "disable_saving"):
                 return
@@ -315,7 +320,7 @@ class ExperimentSession:
         data = self.data_manager.get_data()
         self.data_saver.main.save_with_all_agents(data=data, level=99)
 
-        if self.page_controller.unlinked_data_present():
+        if self.root_section.unlinked_data_present():
             for agent in self.data_saver.unlinked.agents.values():
                 unlinked_data = self.data_manager.get_unlinked_data(encrypt=agent.encrypt)
                 self.data_saver.unlinked.save_with_agent(data=unlinked_data, name=agent.name, level=99)
@@ -328,14 +333,14 @@ class ExperimentSession:
 
     @property
     def final_page(self):
-        return self.page_controller.final_page
+        return self.root_section.final_page
 
     @final_page.setter
     def final_page(self, value):
         if not isinstance(value, page.PageCore):
             raise ValueError("Not a valid page.")
 
-        self.page_controller.final_page = value
+        self.root_section.final_page = value
 
     def subpath(self, path: Union[str, Path]) -> Path:
         """Returns the full path of an experiment subdirectory.
@@ -451,14 +456,14 @@ class ExperimentSession:
 
     def append(self, *items):
         for item in items:
-            self.page_controller.append(item)
+            self.root_section.members["_content"].append(item)
 
     def __iadd__(self, other):
         self.append(other)
         return self
 
-    def __getattr__(self, name):
-        return self.page_controller.all_members_dict[name]
+    # def __getattr__(self, name):
+    #     return self.root_section.all_members_dict[name]
 
     def _set_encryptor(self):
         """Sets the experiments encryptor.
@@ -545,7 +550,7 @@ class ExperimentSession:
     def change_final_page(self, page):
         msg = "change_final_page is deprecated. Use the attribute setter for :attr:`.final_page` instead."
         self.log.warning(msg)
-        self.page_controller.append_item_to_finish_section(page)
+        self.root_section.append_item_to_finish_section(page)
     
     @deprecated("1.5", "2.0", __version__, "Use :attr:`.additional_data` instead.")
     def set_additional_data(self, key: str, value):

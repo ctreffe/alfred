@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from cryptography.fernet import Fernet
 import os
 import re
+import socket
 
 def fontsize_converter(font_argument):
     '''
@@ -152,3 +153,15 @@ def check_name(name):
                 "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
             )
         )
+
+
+def socket_checker(port):
+    try:
+        s = socket.socket()
+        s.bind(("127.0.0.1", port))
+        s.listen(1)
+        s.close()
+        return True
+    except Exception:
+        s.close()
+        return False

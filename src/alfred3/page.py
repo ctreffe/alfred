@@ -16,12 +16,11 @@ from typing import Union
 
 from future.utils import with_metaclass
 
-from . import element, alfredlog
-from . import element_responsive as relm
+from . import alfredlog
+from . import element as elm
 from . import saving_agent
 from ._core import ExpMember
 from ._helper import _DictObj
-from .element import Element, ExperimenterMessages, TextElement, WebElementInterface, InputElement
 from .exceptions import AlfredError
 
 
@@ -64,7 +63,7 @@ class PageCore(ExpMember):
             return msg
         else:
             return self.experiment.config.get("messages", "minimum_display_time")
-    
+
     @property
     def show_thumbnail(self):
         return True
@@ -86,7 +85,7 @@ class PageCore(ExpMember):
         data = super(PageCore, self).data
         data.update(self._data)
         return data
-    
+
     @property
     def has_been_shown(self) -> bool:
         return self._has_been_shown
@@ -167,7 +166,7 @@ class PageCore(ExpMember):
         self.on_each_hide()
 
         self._has_been_hidden = True
-        
+
         self.save_data()
 
     def on_hiding_widget(self):
@@ -288,9 +287,8 @@ class PageCore(ExpMember):
             msg = self.minimum_display_time_msg.replace("${mdt}", str(mintime))
             self.exp.message_manager.post_message(msg)
             return False
-        
-        return True
 
+        return True
 
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current experiment data.
@@ -315,8 +313,8 @@ class PageCore(ExpMember):
         data = self._experiment.data_manager.get_data()
         self._experiment.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
-    def __str__(self):
-        return f"{type(self).__name__}(name='{self.name}')"
+    def __repr__(self):
+        return f"{type(self).__name__}(name='{self.name}', section='{self.section}')"
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
@@ -362,7 +360,7 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).__init__(**kwargs)
 
         self.elements = {}
-        
+
         self._element_list = []
         self._element_dict = {}
         self._element_name_counter = 1
@@ -383,10 +381,10 @@ class CoreCompositePage(PageCore):
 
         input_elements = {}
         for name, el in self.elements.items():
-            if isinstance(el, (relm.InputElement, element.InputElement)):
+            if isinstance(el, (elm.InputElement)):
                 input_elements[name] = el
         return input_elements
-    
+
     @property
     def filled_input_elements(self) -> dict:
         """Dict of all input elements on this page with non-empty data attribute.
@@ -412,7 +410,7 @@ class CoreCompositePage(PageCore):
 
     def append(self, *elements):
         for elmnt in elements:
-            if not isinstance(elmnt, (Element, relm.Element)):
+            if not isinstance(elmnt, (elm.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
             self._element_list.append(elmnt)
@@ -420,15 +418,18 @@ class CoreCompositePage(PageCore):
 
             if elmnt.name in self._element_dict:
                 raise ValueError("Element name must be unique on Page.")
-            
+
             if elmnt.name in self.__dict__:
-                raise ValueError((f"Element name '{elmnt.name}' is also an attribute of {self}." 
-            "Please choose a different name."))
+                raise ValueError(
+                    (
+                        f"Element name '{elmnt.name}' is also an attribute of {self}."
+                        "Please choose a different name."
+                    )
+                )
 
             self._element_dict[elmnt.name] = elmnt
 
             self.elements[elmnt.name] = elmnt
-
 
     def generate_element_name(self, element):
         i = self._element_name_counter
@@ -440,7 +441,7 @@ class CoreCompositePage(PageCore):
     def __iadd__(self, other):
         self.append(other)
         return self
-    
+
     # def __getattr__(self, name):
     #     """Enables element access via dot notation."""
     #     if name in self.element_dict:
@@ -449,7 +450,7 @@ class CoreCompositePage(PageCore):
     @property
     def element_list(self):
         return self._element_list
-    
+
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         for element in self._element_list:
@@ -467,29 +468,14 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).close_page()
 
         for elmnt in self._element_list:
-            if isinstance(elmnt, relm.InputElement):
+            if isinstance(elmnt, elm.InputElement):
                 elmnt.disabled = True
-            elif isinstance(elmnt, Element):
-                elmnt.enabled = False
 
     @property
     def data(self):
-        data = super(CoreCompositePage, self).data
-        for elmnt in self._element_list:
-            data.update(elmnt.data)
-
-        data["tree"] = self.short_tree
-
-        return data
-
-    @property
-    def codebook_data(self):
         data = {}
-        for el in self._element_list:
-            try:
-                data.update(el.codebook_data)
-            except AttributeError:
-                pass
+        for element in self.elements.values():
+            data.update(element.data)
         return data
 
     @property
@@ -530,6 +516,54 @@ class CoreCompositePage(PageCore):
     def set_data(self, dictionary):
         for elmnt in self._element_list:
             elmnt.set_data(dictionary)
+
+    def move(self):
+        """Hook for defining a page's own movement behavior. 
+        
+        Use the :class:`.MovementManager`s movement methods to define
+        your own behavior. The available methods are
+
+        - forward
+        - backward
+        - jump_by_name
+        - jump_by_index
+
+        Example::
+
+            exp = al.Experiment()
+
+            @exp.member
+            class CustomMove(al.Page):
+                
+                def move(self):
+                    self.experiment.movement_manager.jump_by_name("third")
+
+            exp += al.Page(name="second")
+            exp += al.Page(name="third")
+
+
+        You can work with different conditions and fall back to 
+        alfred3's movement system by returning *True*::
+            
+            exp = al.Experiment()
+
+            @exp.member
+            class CustomMove(al.Page):
+
+                def on_exp_access(self):
+                    self += elm.TextEntryElement(name="text")
+                
+                def move(self):
+                    if self.data.get("text) == "yes":
+                        self.experiment.movement_manager.jump_by_name("third")
+                    else:
+                        return True    
+
+            exp += al.Page(name="second")
+            exp += al.Page(name="third")
+        
+        """
+        return True
 
 
 class WebCompositePage(CoreCompositePage, WebPageInterface):
@@ -620,36 +654,36 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
             if self.responsive_width:
                 w = self._parse_responsive_width(self.responsive_width)
-                self += relm.Style(code=self._responsive_media_query(w))
+                self += elm.Style(code=self._responsive_media_query(w))
 
             elif self.experiment.config.get("layout", "responsive_width"):
                 config_width = self.experiment.config.get("layout", "responsive_width")
                 w = self._parse_responsive_width(config_width)
-                self += relm.Style(code=self._responsive_media_query(w))
+                self += elm.Style(code=self._responsive_media_query(w))
 
         elif not self.fixed_width:
             w = self.experiment.config.get("layout", "fixed_width")
-            self += relm.Style(code=f".fixed-width {{ width: {w}; }}")
-            self += relm.Style(code=f".min-width {{ min-width: {w}; }}")
+            self += elm.Style(code=f".fixed-width {{ width: {w}; }}")
+            self += elm.Style(code=f".min-width {{ min-width: {w}; }}")
 
         else:
-            self += relm.Style(code=f".fixed-width {{ width: {self.fixed_width}; }}")
-            self += relm.Style(code=f".min-width {{ min-width: {self.fixed_width}; }}")
+            self += elm.Style(code=f".fixed-width {{ width: {self.fixed_width}; }}")
+            self += elm.Style(code=f".min-width {{ min-width: {self.fixed_width}; }}")
 
     def _set_color(self):
         if self.header_color:
-            self += relm.Style(code=f".logo-bg {{background-color: {self.header_color};}}")
+            self += elm.Style(code=f".logo-bg {{background-color: {self.header_color};}}")
 
         elif self.experiment.config.get("layout", "header_color", fallback=False):
             c = self.experiment.config.get("layout", "header_color", fallback=False)
-            self += relm.Style(code=f".logo-bg {{background-color: {c};}}")
+            self += elm.Style(code=f".logo-bg {{background-color: {c};}}")
 
         if self.background_color:
-            self += relm.Style(code=f"body {{background-color: {self.background_color};}}")
+            self += elm.Style(code=f"body {{background-color: {self.background_color};}}")
 
         elif self.experiment.config.get("layout", "background_color", fallback=False):
             c = self.experiment.config.get("layout", "background_color", fallback=False)
-            self += relm.Style(code=f"body {{background-color: {c};}}")
+            self += elm.Style(code=f"body {{background-color: {c};}}")
 
     @property
     def web_widget(self):
@@ -750,34 +784,6 @@ class PagePlaceholder(PageCore, WebPageInterface):
         pass
 
 
-class DemographicPage(CompositePage):
-    def __init__(
-        self, instruction=None, age=True, sex=True, course_of_studies=True, semester=True, **kwargs
-    ):
-        super(DemographicPage, self).__init__(**kwargs)
-
-        if instruction:
-            self.append(element.TextElement(instruction))
-        self.append(element.TextElement("Bitte gib deine persönlichen Datein ein."))
-        if age:
-            self.append(element.TextEntryElement("Dein Alter: ", name="age"))
-
-        if sex:
-            self.append(element.TextEntryElement("Dein Geschlecht: ", name="sex"))
-
-        if course_of_studies:
-            self.append(
-                element.TextEntryElement(
-                    instruction="Dein Studiengang: ", name="course_of_studies"
-                )
-            )
-
-        if semester:
-            self.append(
-                element.TextEntryElement(instruction="Dein Fachsemester ", name="semester")
-            )
-
-
 class AutoHidePage(CompositePage):
     def __init__(self, on_hiding=False, on_closing=True, **kwargs):
         super(AutoHidePage, self).__init__(**kwargs)
@@ -795,72 +801,13 @@ class AutoHidePage(CompositePage):
             self.should_be_shown = False
 
 
-class ExperimentFinishPage(CompositePage):
-    def on_showing_widget(self):
-        if "first_show_time" not in self._data:
-            exp_title = TextElement("Informationen zur Session:", font="big")
-
-            exp_infos = (
-                '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>'
-                + self._experiment.name
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Experimenttyp:</td><td>"
-                + self._experiment.type
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Experimentversion:</td><td>"
-                + self._experiment.version
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Experiment-ID:</td><td>"
-                + self._experiment.exp_id
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Session-ID:</td><td>"
-                + self._experiment.session_id
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Log-ID:</td><td>"
-                + self._experiment.session_id[:6]
-                + "</td></tr>"
-            )
-            exp_infos = exp_infos + "</table>"
-
-            exp_info_element = TextElement(exp_infos)
-
-            self.append(exp_title, exp_info_element, ExperimenterMessages())
-
-        super(ExperimentFinishPage, self).on_showing_widget()
-
-
-class HeadOpenSectionCantClose(CompositePage):
-    def __init__(self, **kwargs):
-        super(HeadOpenSectionCantClose, self).__init__(**kwargs)
-
-        self.append(
-            element.TextElement(
-                "Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"
-            )
-        )
-
-
-class BlankPage(Page):
+class NoNavigationPage(Page):
     """A normal page, but all navigation buttons are removed."""
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
-        self += relm.Style("#page-navigation {display: none;}")
+        self += elm.Style("#page-navigation {display: none;}")
+
 
 ####################
 # Page Mixins
@@ -937,7 +884,7 @@ class WebTimeoutMixin(object):
 
 class WebTimeoutForwardMixin(WebTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
-        self._experiment.user_interface_controller.move_forward()
+        self.experiment.movement_manager.forward()
 
 
 class WebTimeoutCloseMixin(WebTimeoutMixin):
@@ -1045,14 +992,15 @@ class UnlinkedDataPage(NoDataPage):
             )
 
     def unlinked_data(self, encrypt):
-        data = {"tag": self.tag, "uid": self.uid}
-        for elmnt in self._element_list:
+        data = {}
+        for elmnt in self.elements.values():
             if encrypt:
-                data.update(elmnt.encrypted_data)
+                for name, entry in elmnt.data.items():
+                    entry["value"] = self.experiment.encrypt(entry["value"])
+                    data[name] = entry
             else:
                 data.update(elmnt.data)
 
-        data["tree"] = self.short_tree
         return data
 
     def save_data(self, level: int = 1, sync: bool = False):
@@ -1071,8 +1019,9 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.data_saver.unlinked.agents and not self._experiment.config.getboolean(
-            "general", "debug"
+        if (
+            not self._experiment.data_saver.unlinked.agents
+            and not self._experiment.config.getboolean("general", "debug")
         ):
             self.log.warning("No saving agent for unlinked data available.")
 
@@ -1150,7 +1099,7 @@ class CustomSavingPage(Page, ABC):
         comparison += list(self._experiment.data_saver.main.agents.values())
         comparison += list(self._experiment.data_saver.unlinked.agents.values())
 
-        for pg in self._experiment.page_controller.all_pages.values():
+        for pg in self._experiment.root_section.all_pages.values():
             if pg == self:
                 continue
             try:
@@ -1199,5 +1148,5 @@ class DefaultFinalPage(Page):
 
     def on_exp_access(self):
         txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
-        self += relm.TextElement(text=txt, align="center")
-        self += relm.WebExitEnabler()
+        self += elm.TextElement(text=txt, align="center")
+        self += elm.WebExitEnabler()

@@ -2,6 +2,8 @@ from builtins import map, object
 from builtins import callable as builtins_callable
 import logging
 import traceback
+import re
+import os
 from deprecation import deprecated
 
 from uuid import uuid4
@@ -19,9 +21,8 @@ from flask import (
     send_from_directory,
 )
 from uuid import uuid4
-from ..config import ExperimentConfig, ExperimentSecrets
-from .. import alfredlog
-import re, os
+from .config import ExperimentConfig, ExperimentSecrets
+from . import alfredlog
 
 
 class Script:
@@ -80,8 +81,9 @@ def start():
     # generate experiment
     try:
         script.exp = script.generate_experiment()
-    except AttributeError:
+    except TypeError:
         script.log.debug("Error passed: " + traceback.format_exc())
+    
     try:
         script.exp_session = script.exp.start_session(session_id=session_id, config=script.config)
     except Exception:
@@ -112,11 +114,7 @@ def experiment():
         if request.method == "POST":
 
             move = request.values.get("move", None)
-            directjump = request.values.get("directjump", None)
-            par = request.values.get("par", None)
             page_token = request.values.get("page_token", None)
-
-            url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
 
             try:
                 token_list = session["page_tokens"]
@@ -133,25 +131,22 @@ def experiment():
 
             script.exp_session.movement_manager.current_page.set_data(data)
 
-            if move is None and directjump is None and par is None and not data:
+            if move is None and not data:
                 pass
-            elif move == "started":
-                pass
-            elif move == "forward":
-                script.exp_session.movement_manager.forward()
-            elif move == "backward":
-                script.exp_session.movement_manager.backward()
-            elif move.startswith("jump"):
-                name = move[5:] # extract name. Jump-move-string: "jump>name"
-                script.exp_session.movement_manager.jump_by_name(name=name)
-            elif url_pagename:
-                script.exp_session.movement_manager.jump_by_name(name=url_pagename)
+            elif move:
+                script.exp_session.movement_manager.move(direction=move)
+            
+
             else:
                 abort(400)
 
             return redirect(url_for("experiment"))
 
         elif request.method == "GET":
+            url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
+            if url_pagename:
+                script.exp_session.movement_manager.jump_by_name(name=url_pagename)
+
             page_token = str(uuid4())
 
             # this block extracts the list "page_tokens", if it exists in the session

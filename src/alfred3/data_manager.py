@@ -33,6 +33,7 @@ class DataManager(object):
     UNLINKED_DATA = "unlinked"
     CODEBOOK_DATA = "codebook"
 
+    instance_level_logging = False
     log = QueuedLoggingInterface(base_logger=__name__)
 
     def __init__(self, experiment):
@@ -69,10 +70,11 @@ class DataManager(object):
         return self.additional_data[key]
 
     def get_data(self):
-        data = self._experiment.page_controller.data
+        data = {}
         
         data["type"] = self.EXP_DATA
         
+        data["exp_data"] = self.experiment.root_section.data
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_version"] = self._experiment.version
@@ -95,28 +97,17 @@ class DataManager(object):
         return data
 
     def get_unlinked_data(self, encrypt=False):
-        data = self._experiment.page_controller.unlinked_data(encrypt=encrypt)
-        data["type"] = self.UNLINKED_DATA
-        data["exp_author"] = self._experiment.author
-        data["exp_title"] = self._experiment.title
-        data["exp_id"] = self._experiment.exp_id
-
-        return data
-
-    def get_codebook_data(self):
         data = {}
-        data["codebook"] = self._experiment.page_controller.codebook_data
-        data["type"] = self.CODEBOOK_DATA
-        data["exp_id"] = self._experiment.exp_id
+        data["type"] = self.UNLINKED_DATA
+        data["exp_data"] = self._experiment.root_section.unlinked_data(encrypt=encrypt)
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
-        data["exp_version"] = self._experiment.version
-        data["alfred_version"] = self._experiment.alfred_version
-        data["save_time"] = time.time()
+        data["exp_id"] = self._experiment.exp_id
+
         return data
 
     def find_experiment_data_by_uid(self, uid):
-        data = self._experiment._page_controller.data
+        data = self._experiment._root_section.data
         return DataManager._find_by_uid(data, uid)
 
     def find_additional_data_by_key_and_uid(self, key, uid):
@@ -310,7 +301,7 @@ class DataManager(object):
             exp.log.info(f"Exported experiment data to '{str(data_dir)}'")
 
         any_unlinked_page = any(
-            [isinstance(pg, page.UnlinkedDataPage) for pg in exp.page_controller.all_pages]
+            [isinstance(pg, page.UnlinkedDataPage) for pg in exp.root_section.all_pages]
         )
         lsa_u = "local_saving_agent_unlinked"
         if exp.config.getboolean(lsa_u, "use") and any_unlinked_page:

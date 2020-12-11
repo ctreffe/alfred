@@ -24,13 +24,11 @@ import importlib.resources
 from future.utils import with_metaclass
 from jinja2 import Environment, PackageLoader
 
-from ._core import Direction
 from .alfredlog import QueuedLoggingInterface
-from .helpmates import localserver as localserver
-from .layout import BaseWebLayout
 from .static import js
 from .static import css
 from .static import img
+from . import element as elm
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
@@ -83,10 +81,14 @@ class Move:
 
 
 class MovementManager:
+    instance_level_logging = False
 
     def __init__(self, experiment):
         self.exp = experiment
         self.experiment = experiment
+        self.log = QueuedLoggingInterface(base_logger=__name__)
+        self.log.add_queue_logger(self, __name__)
+
         self.current_index: int = 0
         self.previous_index: int = 0
         self.history: list = []
@@ -124,7 +126,13 @@ class MovementManager:
     def _move(self, to_page, direction: str):
         current_page = self.current_page
 
-        if not current_page.section.allow_move(direction=direction):
+        if direction == "jump":
+            allowed_jumpfrom = current_page.section.allow_move(direction="jumpfrom")
+            allowed_jumpto = to_page.section.allow_move(direction="jumpto")
+            if not allowed_jumpfrom and allowed_jumpto:
+                return False
+        
+        elif not current_page.section.allow_move(direction=direction):
             return False
 
         current_page._on_hiding_widget()
@@ -145,6 +153,7 @@ class MovementManager:
             return False
 
         if self._move(to_page=self.next_page, direction="forward"):
+            self.log.debug(f"Moving forward from {self.current_page} to {self.next_page}.")
             self.previous_index = self.current_index
             self.current_index += 1
 
@@ -160,7 +169,8 @@ class MovementManager:
         if not self.current_page.section.allow_backward:
             return False
 
-        if self._move(to_page=self.next_page, direction="backward"):
+        if self._move(to_page=self.previous_page, direction="backward"):
+            self.log.debug(f"Moving backward from {self.current_page} to {self.previous_page}.")
             self.previous_index = self.current_index
             self.current_index -= 1
 
@@ -173,7 +183,10 @@ class MovementManager:
             return False
     
     def jump_by_name(self, name: str):
-        next_page = self.exp.root_section.members[name]
+        try:
+            next_page = self.exp.root_section.all_pages[name]
+        except KeyError:
+            return False
         
         if not self.current_page.section.allow_jumpfrom:
             return False
@@ -181,8 +194,9 @@ class MovementManager:
             return False
         
         if self._move(to_page=next_page, direction="jump"):
+            self.log.debug(f"Jumping from {self.current_page} to {self.next_page}.")
             self.previous_index = self.current_index
-            self.current_index = self.exp.root_section.all_pages_list.index(name)
+            self.current_index = list(self.exp.root_section.all_pages.keys()).index(name)
             return True
         
         else:
@@ -197,6 +211,7 @@ class MovementManager:
             return False
         
         if self._move(to_page=next_page, direction="jump"):
+            self.log.debug(f"Jumping from {self.current_page} to {self.next_page}.")
             self.previous_index = self.current_index
             self.current_index = index
             return True
@@ -204,7 +219,7 @@ class MovementManager:
         else:
             return False
 
-    def record_move(self,page_was_closed: bool, direction: str):
+    def record_move(self, page_was_closed: bool, direction: str):
         current_page = self.current_page
         
         move = Move()
@@ -223,7 +238,23 @@ class MovementManager:
         move.leave_in_direction = direction
         self.history.append(move)
 
+    def move(self, direction):
+        proceed = self.current_page.move()
+        
+        if not proceed:
+            self.log.debug(f"Page defined its own move method. Alfred's move system stands by.")
+            return
+
+        if direction == "forward":
+            self.forward()
+        elif direction == "backward":
+            self.backward()
+        elif direction.startswith("jump"):
+            self.jump_by_name(direction[5:]) # jump string has the form 'jump>pagename'
+
 class UserInterface:
+    instance_level_logging = False
+
     _css_files = [
         "bootstrap-4.5.3.min.css",
         "prism.css",
@@ -346,7 +377,6 @@ class UserInterface:
             resource_typetype: A string indicating the type of resource. 
                 "js" for JavaScript, "css" for Cascading Style Sheets.
         """
-
         if resource_type == "js":
             container = self.js_urls
             pkg = js
@@ -363,7 +393,7 @@ class UserInterface:
         """Updates the client info dictionary and saves data."""
 
         self.experiment.data_manager.client_info.update(data)
-        self.experiment.page_controller.current_page.save_data()
+        self.experiment.root_section.current_page.save_data()
 
     def _add_resources(self, resources: list, resource_type: str):
 
@@ -408,8 +438,15 @@ class UserInterface:
 
         page = self.experiment.movement_manager.current_page
         page.prepare_web_widget()
-
         d = {**self.config}
+
+        if self.exp.config.getboolean("general", "debug"):
+            d["debug"] = self.exp.config.getboolean("general", "debug")
+            jumplist = elm.JumpListElement(scope="exp")
+            jumplist.should_be_shown = False
+            page += jumplist
+            jumplist.prepare()
+            d["jumplist"] = jumplist
 
         d["code"] = self.code(page=page)
         d["page_token"] = page_token
@@ -441,10 +478,10 @@ class UserInterface:
             d["messages"] = messages
 
         # progress bar
-        n_el = len(self.experiment.page_controller.all_input_elements)
-        n_pg = len(self.experiment.page_controller.all_pages)
-        i_el = len(self.experiment.page_controller.all_filled_input_elements)
-        i_pg = len(self.experiment.page_controller.all_shown_pages)
+        n_el = len(self.experiment.root_section.all_input_elements)
+        n_pg = len(self.experiment.root_section.all_pages)
+        i_el = len(self.experiment.root_section.all_filled_input_elements)
+        i_pg = len(self.experiment.root_section.all_shown_pages)
         exact_progress = ((i_el + i_pg) / (n_el + n_pg)) * 100
         if not self.experiment.finished:
             d["progress"] = min(round(exact_progress, 1), 95)
@@ -452,6 +489,8 @@ class UserInterface:
             d["progress"] = 100
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
+
+        
 
         return self.template.render(d)
 
@@ -486,14 +525,15 @@ class UserInterface:
             path: Path to file.
             content_type: Mimetype of the added file.
         """
-        if self.experiment.config.getboolean("general", "debug"):
-            return path
 
         path = Path(path)
         if not path.is_absolute():
             path = self.experiment.path / path
-
-        identifier = uuid4().hex
+        
+        if self.experiment.config.getboolean("general", "debug"):
+            identifier = str(path.name)
+        else:
+            identifier = uuid4().hex
 
         # the code below causes alfred to fail to detect changes in
         # static files when debug mode is activated
@@ -538,238 +578,5 @@ class UserInterface:
         return url
 
     def start(self):
-        self.experiment.page_controller.enter()
+        self.experiment.root_section.enter()
 
-
-class UserInterfaceController(with_metaclass(ABCMeta, object)):
-    """
-    Abstrakte Basisklasse, die die Grundfunktionalität für alle UserIntferaces bereitstellt
-
-    """
-
-    def __init__(self, experiment, layout=None):
-        """
-        :param experiment: Ein Objekt vom Typ Experiment
-        :param layout: Ein Objekt vom Typ Layout (None bedeutet Standardlayout)
-
-        |
-
-        Bei Aufruf der Klasse wird mittels :meth:`.change_layout` ein :attr:`.layout` gesetzt.
-
-        """
-        self._experiment = experiment
-        self._layout = None
-        self._oldPage = None
-        self.log = QueuedLoggingInterface(
-            base_logger=__name__, queue_logger=self.prepare_logger_name()
-        )
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-
-        if layout is None:
-            self.change_layout(BaseWebLayout())
-        else:
-            self.change_layout(layout)
-
-        self._layout.forward_text = self._experiment.config.get("navigation", "forward")
-        self._layout.backward_text = self._experiment.config.get("navigation", "backward")
-        self._layout.finish_text = self._experiment.config.get("navigation", "finish")
-
-    @property
-    def experiment(self):
-        return self._experiment
-
-    @abstractmethod
-    def render(self):
-        pass
-
-    @property
-    def layout(self):
-        return self._get_layout()
-
-    def _get_layout(self):
-        return self._layout
-
-    def change_layout(self, layout):
-        if self._layout is not None:
-            self._layout.deactivate()
-        self._layout = layout
-        self._layout.activate(self._experiment, self)
-
-    def move_forward(self):
-        if self._experiment.page_controller.allow_leaving(Direction.FORWARD):
-            self._experiment.page_controller.current_page._on_hiding_widget()
-            self._experiment.page_controller.move_forward()
-
-    def move_backward(self):
-        if self._experiment.page_controller.allow_leaving(Direction.BACKWARD):
-            self._experiment.page_controller.current_page._on_hiding_widget()
-            self._experiment.page_controller.move_backward()
-
-    def move_to_position(self, pos_list):
-        if self._experiment.page_controller.allow_leaving(Direction.JUMP):
-            self._experiment.page_controller.current_page._on_hiding_widget()
-            self._experiment.page_controller.move_to_position(pos_list)
-
-    def start(self):
-        self._experiment.page_controller.current_page.save_data()
-        self._experiment.page_controller.enter()
-
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~Section.instance_level_logging` is set to *True*.
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)
-
-
-class WebUserInterfaceController(UserInterfaceController):
-    def __init__(self, experiment, layout=None):
-
-        self._callables_dict = {}
-        self._dynamic_files_dict = {}
-        self._static_files_dict = {}
-        self._basepath = experiment.config.get("webserver", "basepath")
-
-        super(WebUserInterfaceController, self).__init__(experiment, layout)
-
-    @property
-    def basepath(self):
-        return self._basepath
-
-    def render(self, page_token):
-        self._experiment.page_controller.current_page.prepare_web_widget()
-
-        js_scripts = []
-        js_urls = []
-        css_scripts = []
-        css_urls = []
-
-        # update with layout
-        js_scripts = js_scripts + self._layout.javascript_code
-        js_urls = js_urls + self._layout.javascript_urls
-        css_scripts = css_scripts + self._layout.css_code
-        css_urls = css_urls + self._layout.css_urls
-
-        # update with current_page
-        js_scripts = js_scripts + self._experiment.page_controller.current_page.js_code
-        js_urls = js_urls + self._experiment.page_controller.current_page.js_urls
-        css_scripts = css_scripts + self._experiment.page_controller.current_page.css_code
-        css_urls = css_urls + self._experiment.page_controller.current_page.css_urls
-
-        # sort lists by first item
-        js_scripts.sort(key=lambda x: x[0])
-        js_urls.sort(key=lambda x: x[0])
-        css_scripts.sort(key=lambda x: x[0])
-        css_urls.sort(key=lambda x: x[0])
-
-        # build html code
-        html = "<!DOCTYPE html>\n<html><head><title>ALFRED</title>"
-
-        for _, js_url in js_urls:
-            html = html + '<script type="text/javascript" src="%s"></script>' % js_url
-
-        for _, js_script in js_scripts:
-            html = html + '<script type="text/javascript">%s</script>' % js_script
-
-        for _, css_url in css_urls:
-            html = html + '<link rel="stylesheet" type="text/css" href="%s" />' % css_url
-
-        for _, css_script in css_scripts:
-            html = html + '<style type="text/css">%s</style>' % css_script
-
-        html = (
-            html
-            + '</head><body><form id="form" method="post" action="%s/experiment" autocomplete="off" accept-charset="UTF-8">'
-            % self._basepath
-        )
-
-        html = html + self._layout.render()
-
-        html = html + '<input type="hidden" name="page_token" value=%s>' % page_token
-
-        html = html + "</form></body></html>"
-
-        return html
-
-    def render_html(self, page_token):
-        return self.render(page_token)
-
-    def get_dynamic_file(self, identifier):
-        file_obj, content_type = self._dynamic_files_dict[identifier]
-        file_obj.seek(0)
-        strIO = StringIO(file_obj.read())
-        strIO.seek(0)
-        return strIO, content_type
-
-    def add_dynamic_file(self, file_obj, content_type=None):
-        identifier = uuid4().hex
-        while identifier in self._dynamic_files_dict:
-            identifier = uuid4().hex
-
-        self._dynamic_files_dict[identifier] = (file_obj, content_type)
-        url = "{basepath}/dynamicfile/{identifier}".format(
-            basepath=self._basepath, identifier=identifier
-        )
-        return url
-
-    def get_static_file(self, identifier):
-        return self._static_files_dict[identifier]
-
-    def add_static_file(self, path, content_type=None):
-        if not os.path.isabs(path):
-            path = self._experiment.subpath(path)
-
-        identifier = uuid4().hex
-
-        # the code below causes alfred to fail to detect changes in
-        # static files when debug mode is activated
-
-        # if self._experiment.config.getboolean("general", "debug"):
-        #     if not hasattr(self, "sf_counter"):
-        #         self.sf_counter = 0
-        #     self.sf_counter += 1
-        #     identifier = str(self.sf_counter)
-
-        while identifier in self._static_files_dict:
-            identifier = uuid4().hex
-
-        self._static_files_dict[identifier] = (path, content_type)
-        url = "{basepath}/staticfile/{identifier}".format(
-            basepath=self._basepath, identifier=identifier
-        )
-        return url
-
-    def get_callable(self, identifier):
-        return self._callables_dict[identifier]
-
-    def add_callable(self, f):
-        identifier = uuid4().hex
-        while identifier in self._callables_dict:
-            identifier = uuid4().hex
-
-        self._callables_dict[identifier] = f
-        url = "{basepath}/callable/{identifier}".format(
-            basepath=self._basepath, identifier=identifier
-        )
-        return url
-
-    def update_with_user_input(self, d):
-        self._experiment.page_controller.current_page.set_data(d)
-
-    def jump_url_from_pos_list(self, pos_list):
-        return self._basepath + "/experiment?move=jump&par=" + ".".join(pos_list)

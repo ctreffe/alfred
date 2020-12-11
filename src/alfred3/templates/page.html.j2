@@ -83,7 +83,7 @@ id="page-container">
         <div class="page-navigation" id="page-navigation">
             <hr />
             <div class="row justify-content-center p-1">
-                <div class="col text-center form-actions" id="controls">
+                <div class="col-12 text-center form-actions" id="controls">
 
                     <!-- backward button -->
                     {% if backward_text %}
@@ -104,6 +104,13 @@ id="page-container">
                     {% endif %}
 
                 </div>
+
+                {% if debug %}
+
+                <div class="col-12 mt-3">
+                {{ jumplist.web_widget | safe }}
+                </div>
+                {% endif %}
             </div>
         </div>
     </form>

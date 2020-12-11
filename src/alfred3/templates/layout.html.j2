@@ -9,7 +9,7 @@
     <!-- CSS -->
 
     {% for _, url in code.get("layout_css") %}
-    <link rel="stylesheet" href="{{ url }}">
+    <link rel="stylesheet" href="{{ url }}" type="text/css">
     {% endfor %}
 
     <style type="text/css">
@@ -19,7 +19,7 @@
     </style>
 
     {% for _, url in code.get("css_urls") %}
-    <link rel="stylesheet" href="{{ url }}">
+    <link rel="stylesheet" href="{{ url }}" type="text/css">
     {% endfor %}
 
     <style type="text/css">

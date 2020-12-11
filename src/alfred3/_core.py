@@ -26,20 +26,17 @@ class ExpMember:
         title=None,
         subtitle=None,
         statustext=None,
-        should_be_shown_filter_function=None,
+        showif: dict = None,
     ):
 
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
+        self.showif = showif if showif else {}
         self._should_be_shown = True
-        self._should_be_shown_filter_function = (
-            should_be_shown_filter_function
-            if should_be_shown_filter_function is not None
-            else lambda exp: True
-        )
 
         self._experiment = None
         self._parent_section = None
+        self._section = None
         
         self._title = None
         self._subtitle = None
@@ -130,7 +127,7 @@ class ExpMember:
         Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
         Otherwise False is returned
         """
-        return self._should_be_shown and self._should_be_shown_filter_function(self._experiment)
+        return self._should_be_shown
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -174,13 +171,10 @@ class ExpMember:
         self._statustext = title
 
     def added_to_experiment(self, exp):
-        if self.name is not None and self.name in exp.page_controller.all_members_dict:
-            raise ValueError(f"A section or page of name '{self.name}' already exists.")
-        exp.page_controller.all_members_dict[self.name] = self
         self._experiment = exp
         self.log.add_queue_logger(self, __name__)
 
-        if self.name in self.experiment.page_controller.all_members:
+        if self.name in self.experiment.root_section.all_members:
             raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
         if self.name != self._name_at_init:
@@ -220,7 +214,7 @@ class ExpMember:
             return self.tag
 
         if self.parent.tree:
-            return self.parent.tree + "_" + self.tag
+            return self.parent.tree + "." + self.tag
         else:
             return self.tag
 

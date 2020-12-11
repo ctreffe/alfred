@@ -1,112 +1,410 @@
 # -*- coding:utf-8 -*-
+"""Provides element classes for adding content to pages.
 
+.. versionadded:: 1.5
+
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
-**element** contains general baseclass :class:`.element.Element` and its' children, which can be added to
-:class:`.page.CompositePage` (see table for an overview). It also contains abstract baseclasses for
-different interfaces (:class:`.element.WebElementInterface`, :class:`.element.QtElementInterface`), which
-must also be inherited by new child elements of :class:`.element.Element` to establish interface compatibility.
-
-===================== ===============================================================
-Name                  Description
-===================== ===============================================================
-TextElement           A simple text display (can contain html code)
-DataElement           Element for saving Variables into Data (without display)
-TextEntryElement      A singleline textedit with instruction text
-TextAreaElement       A multiline textedit field with instruction text
-RegEntryElement       An element which compares input with a regular expression
-NumberEntryElement    An entry element for numbers
-PasswordElement       An element which compares input with a predefined password
-LikertMatrix          A matrix with multiple items and a predefined number of levels
-LikertElement         A likert scale with n levels and different labels
-SingleChoiceElement   A list of items, one of which can be selected
-MultipleChoiceElement A list of items from which multiple can be selected
-ImageElement          Display an image file
-TripleBarChartElement Display a chart with three different bars (temporary)
-===================== ===============================================================
-
-"""
-from __future__ import absolute_import, division
-
-import json
 import random
 import re
 import string
 import logging
-from abc import ABCMeta, abstractproperty
-from builtins import object, range, str
-from functools import reduce
+import io
+
+from abc import ABC, abstractproperty, abstractmethod
+from pathlib import Path
+from typing import List
+from typing import Tuple
+from typing import Union
+from dataclasses import dataclass
 from uuid import uuid4
 
-from future import standard_library
-from future.utils import with_metaclass
-from jinja2 import Environment, PackageLoader, Template
+from jinja2 import Environment
+from jinja2 import PackageLoader
+from jinja2 import Template
 from past.utils import old_div
 
+import cmarkgfm
+from emoji import emojize
 
-from . import alfredlog, settings, page
-from ._helper import alignment_converter, fontsize_converter, is_url
+from . import alfredlog
 from .exceptions import AlfredError
-
-standard_library.install_aliases()
+from ._helper import alignment_converter
+from ._helper import fontsize_converter
+from ._helper import is_url
+from ._helper import check_name
 
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
+"""jinja2.Environment, giving access to included jinja-templates."""
 
+class RowLayout:
+    """Provides layouting functionality for responsive horizontal 
+    positioning of elements.
 
-class Element(object):
+    Default behavior is to have equal-width columns with an automatic
+    breakpoint on extra small screens (i.e. all columns get the bootstrap
+    class 'col-sm' by default).
+    
+    The layout's width attributes can be accessed an changed to customize
+    appearance. In this example, we change the width of the columns on
+    screens of "small" and bigger width, so that we have narrow columns
+    to the right and left (each taking up 2/12 of the available space), 
+    and one wide column (taking up 8/12 of the space) in the middle. On
+    "extra small" screens, the columns will be stacked vertically and 
+    each take up the full width::
+        
+        layout = RowLayout(ncols=3) # 3 columns of equal width
+        layout.width_sm = [2, 8, 2] 
+
+    You can define widths for five breakpoints individually, allowing
+    for fine-grained control (see attributes).
+
+    Args:
+        ncols: Number of columns to arrange in a row.
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'.
+        responsive: Boolean, indicating whether breakpoints should
+            be responsive, or not.
+
+    Attributes:
+        ncols: Number of columns
+        responsive: Indicates whether breakpoints should be responsive, 
+            or not.
+        width_xs: List of column widths on screens of size 'xs' or 
+            bigger (<576px). Widths must be defined as integers between
+            1 and 12.
+        width_sm: List of column widths on screens of size 'sm' or 
+            bigger (>=576px). Widths must be defined as integers between
+            1 and 12.
+        width_md: List of column widths on screens of size 'md' or 
+            bigger (>=768px). Widths must be defined as integers between
+            1 and 12.
+        width_lg: List of column widths on screens of size 'lg' or 
+            bigger (>=992px). Widths must be defined as integers between
+            1 and 12.
+        width_xl: List of column widths on screens of size 'xl' or 
+            bigger (>=1200px). Widths must be defined as integers between
+            1 and 12.
+
     """
-    **Description:** Baseclass for every element with basic arguments.
 
-    :param str name: Name of Element.
-    :param str alignment: Alignment of element in widget container ('left' as standard, 'center', 'right').
-    :param str/int font_size: Font size used in element ('normal' as standard, 'big', 'huge', or int value setting font size in pt).
-    :param bool instance_level_logging: If *True*, will spawn a new,
-        individually configurable logger for the given class instance.
-        (Defaults to *False*)
+    def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
+        """Constructor method."""
+        self.ncols: int = ncols
+        self._valign_cols = valign_cols if valign_cols is not None else []
+        self.responsive: bool = responsive
+
+        self.width_xs: List[int] = None
+        self.width_sm: List[int] = None
+        self.width_md: List[int] = None
+        self.width_lg: List[int] = None
+        self.width_xl: List[int] = None
+
+    def col_breaks(self, col: int) -> str:
+        """Returns the column breakpoints for a specific column as 
+        strings for use as bootstrap classes.
+        
+        Args:
+            col: Column index (starts at 0)
+        """
+        xs = self.format_breaks(self.width_xs, "xs")[col]
+        sm = self.format_breaks(self.width_sm, "sm")[col]
+        md = self.format_breaks(self.width_md, "md")[col]
+        lg = self.format_breaks(self.width_lg, "lg")[col]
+        xl = self.format_breaks(self.width_xl, "xl")[col]
+
+        if self.responsive:
+            breaks = [xs, sm, md, lg, xl]
+            if breaks == ["", "", "", "", ""]:
+                return "col-sm"
+            else:
+                return " ".join(breaks)
+        else:  # set breaks to a fixed value
+            breaks = self.format_breaks(self.width_sm, "xs")[col]  # this is ONE value
+            out = breaks if breaks != "" else "col"
+            return out
+
+    def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
+        """Takes a list of column sizes (in integers from 1 to 12) and
+        returns a corresponding list of formatted Bootstrap column 
+        classes.
+
+        Args:
+            breaks: List of integers, indicating the breakpoints.
+            bp: Specifies the relevant bootstrap breakpoint. (xs, sm,
+                md, lg, or xl).
+        """
+        try:
+            if len(breaks) > self.ncols:
+                raise ValueError("Break list length must be <= number of elements.")
+        except TypeError:
+            pass
+
+        out = []
+        for i in range(self.ncols):
+            try:
+                n = breaks[i]
+            except (IndexError, TypeError):
+                out.append("")
+                continue
+
+            if not isinstance(n, int):
+                raise TypeError("Break values must be of type integer.")
+            if not n >= 1 and n <= 12:
+                raise ValueError("Break values must be between 1 and 12.")
+
+            if bp == "xs":
+                out.append(f"col-{n}")
+            else:
+                out.append(f"col-{bp}-{n}")
+
+        return out
+
+    @property
+    def valign_cols(self) -> List[str]:
+        """List[str]: Vertical column alignments. 
+        
+        Valid values are 'auto' (default), 'top', 'center', and 'bottom'.
+        Can be specified upon initalization or modified as instance
+        attribute.
+
+        Each element of the list refers to one column. If it contains
+        fewer elements than the number of columns, the last entry of
+        the list will be used as value for the unreferenced columns::
+
+            # all columns of this layout will be aligned to the bottom
+            # of the row
+            # (specified upon initialization)
+            layout1 = RowLayout(ncols=3, valign_cols=["bottom"])
+
+            # the first column will be aligned top
+            # the 2nd and 3rd columns will be aligned bottom
+            # (specified after initialization)
+            layout2 = RowLayout(ncols=3)
+            layout2.valign_cols = ["top", "bottom"]
+
+        """
+
+        out = []
+        for i in range(self.ncols):
+            try:
+                n = self._valign_cols[i]
+            except IndexError:
+                out.append("align-self-center")
+                continue
+
+            if not isinstance(n, str):
+                raise TypeError("Col position must be of type str.")
+
+            if n == "auto":
+                out.append("")
+            elif n == "top":
+                out.append("align-self-start")
+            elif n == "center":
+                out.append("align-self-center")
+            elif n == "bottom":
+                out.append("align-self-end")
+            else:
+                raise ValueError("Valign allowed values: 'auto', 'top', 'center', and 'bottom'.")
+
+        return out
+
+    @valign_cols.setter
+    def valign_cols(self, value: List[str]):
+        if len(value) > self.ncols:
+            raise ValueError("Col position list length must be <= number of elements.")
+        self._valign_cols = value
+
+
+class Element(ABC):
+    """Element baseclass. All elements are derived from this class.
+
+    Args:
+        name: Name of the element. This should be a unique identifier.
+            It will be used to identify the corresponding data in the
+            final data set. If none is provided, a generic name will be
+            generated.
+        font_size: Font size for text in the element. Can be 'normal' 
+            (default), 'big', 'huge', or an integer giving the desired 
+            size in pt.
+        align: Horizontal alignment of text in the element. Does not 
+            usually apply to labels. Think of it as an alignment that 
+            applies to the innermost layer of an element (while labels 
+            are generally located at outer layers). See 
+            :class:`.LabelledElement` for more on labelled elements.
+            Can be 'left' (default), 'center', 'right', or 'justify'.
+        position: Horizontal position of the full element on the 
+            page. Values can be 'left', 'center' (default), 'end',
+            or any valid value for the justify-content `flexbox
+            utility`_.
+        width: Defines the horizontal width of the element from 
+            small screens upwards. It's always full-width on extra
+            small screens. Possible values are 'narrow', 'medium',
+            'wide', and 'full'. For more detailed control, you can 
+            define the :attr:`.element_width` attribute.
+        height: Vertical height. Supply a string with a unit, e.g.
+            "80px".
+        showif: A dictionary, defining conditions that must be met
+            for the element to be shown. See :attr:`showif` for details.
+        instance_level_logging: If *True*, the element will use an
+            instance-specific logger, thereby allowing detailed fine-
+            tuning of its logging behavior.
+
+    Attributes:
+        element_width: A list of relative width definitions. The
+            list can contain up to 5 width definitions, given as
+            integers from 1 to 12. They refer to the five breakbpoints 
+            in `Bootstrap 4's 12-column-grid system`_, i.e. 
+            [xs, sm, md, lg, xl].
+
+            If there is no width defined for a certain screen size,
+            the next smaller entry is used. For example, the following
+            definition will lead to full width on extra small screens
+            and 8/12 widths on all larger widths::
+
+                element = Element()
+                element.element_width = [12, 8]
+
+            To make an element full-width on extra small and small 
+            screens and half-width on medium, large and extra large 
+            screens, follow this example::
+
+                element = Element()
+                element.element_width = [12, 12, 6]
+
+        experiment: The :class:`.Experiment` to which this element 
+            belongs.
+        log: A :class:`~.QueuedLoggingInterface`, you can use it to log 
+            messages with the standard logging methods 'debug', 'info', 
+            'warning', 'error', 'exception', and 'log'. It also offers 
+            direct access to the logger via :attr:`.log.queue_logger.`.
+        page: The element's parent page (i.e. the page on which it is
+            displayed). See :mod:`.page`.
+        showif: The showif dictionary. It must be of the form
+            ``{<page_uid>: {<element_name>: <value>}}``. It can contain
+            showifs for multiple pages and for multiple elements on 
+            each page. The element will only be shown if *all* 
+            conditions are met.
+    
+    .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
+    .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
+    .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+    
     """
+
+    base_template: Template = jinja_env.get_template("Element.html.j2")
+    element_template: Template = None
+    can_display_corrective_hints_in_line: bool = False
 
     def __init__(
         self,
-        name=None,
-        should_be_shown_filter_function=None,
-        instance_level_logging=False,
+        name: str = None,
+        font_size: Union[str, int] = None,
+        align: str = "left",
+        width: str = "full",
+        height: str = None,
+        position: str = "center",
+        showif: dict = None,
+        instance_level_logging: bool = False,
         **kwargs,
     ):
-        if not isinstance(self, WebElementInterface):
-            raise AlfredError("Element must implement WebElementInterface.")
 
-        if name is not None:
-            if not re.match(r"^%s$" % "[-_A-Za-z0-9]*", name):
-                raise ValueError(
-                    "Element names may only contain following charakters: A-Z a-z 0-9 _ -"
-                )
-
-        self._name = name
-
-        self._page = None
-        self._enabled = True
-        self._show_corrective_hints = False
-        self._should_be_shown = True
-        self._should_be_shown_filter_function = (
-            should_be_shown_filter_function
-            if should_be_shown_filter_function is not None
-            else lambda exp: True
-        )
-
-        self._alignment = kwargs.pop("alignment", "left")
-        self._font_size = kwargs.pop("font_size", "normal")
-        self._maximum_widget_width = None
+        # general
+        self.name = name
+        self.page = None
         self.experiment = None
 
-        if kwargs != {}:
-            raise ValueError("Parameter '%s' is not supported." % list(kwargs.keys())[0])
+        # display settings
+        self.align = align
+        self.font_size = font_size
+        self.width = width
+        self.height = height
+        self.position = position
+        self._show_corrective_hints = False
+        self._element_width = None
+        self._maximum_widget_width = None
 
-        if instance_level_logging and not self._name:
-            raise ValueError("For instance level logging, the element must have a name.")
+        # showifs and filters
+        self._enabled = True
+        self.showif = showif if showif else {}
+        self._showif_on_current_page = False
+        self._should_be_shown = True
 
+        # additional code
+        self._css_code = []
+        self._css_urls = []
+        self._js_code = []
+        self._js_urls = []
+
+        # logging
         self.instance_level_logging = instance_level_logging
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+
+        # Catch unsupported keyword arguments
+        if kwargs != {}:
+            raise ValueError(f"Parameter '{list(kwargs.keys())[0]}' is not supported.")
+
+    # getters and setter start here ------------------------------------
+
+    @property
+    def converted_width(self):
+        if self.width == "narrow":
+            return ["col-12", "col-sm-6", "col-md-3"]
+        elif self.width == "medium":
+            return ["col-12", "col-sm-9", "col-md-6"]
+        elif self.width == "wide":
+            return ["col-12", "col-md-9"]
+        elif self.width == "full":
+            return ["col-12"]
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        if value is None:
+            self._width = None
+        elif value not in ["narrow", "medium", "wide", "full"]:
+            raise ValueError(f"'{value}' is not a valid width.")
+        self._width = value
+
+    @property
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        if value == "left":
+            self._position = "start"
+        elif value == "right":
+            self._position = "end"
+        else:
+            self._position = value
+
+    @property
+    def font_size(self):
+        return self._font_size
+
+    @font_size.setter
+    def font_size(self, value):
+        self._font_size = fontsize_converter(value)
+
+    @property
+    def element_width(self):
+        if self.width is not None:
+            return " ".join(self.converted_width)
+
+        width = self._element_width if self._element_width is not None else ["col-12"]
+        if self.experiment.config.getboolean("layout", "responsive", fallback=True):
+            return " ".join(width)
+        else:
+            return width[0]
+
+    @element_width.setter
+    def element_width(self, value: List[int]):
+        self._element_width = value
 
     @property
     def name(self):
@@ -118,39 +416,13 @@ class Element(object):
 
     @name.setter
     def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError
+        if name is None:
+            self._name = None
+        
+        elif name is not None:
+            check_name(name)
+
         self._name = name
-
-    @property
-    def maximum_widget_width(self):
-        return self._maximum_widget_width
-
-    @maximum_widget_width.setter
-    def maximum_widget_width(self, maximum_widget_width):
-        if not isinstance(maximum_widget_width, int):
-            raise TypeError
-        self._maximum_widget_width = maximum_widget_width
-
-    def added_to_page(self, q):
-        from . import page
-
-        if not isinstance(q, page.PageCore):
-            raise TypeError()
-
-        self._page = q
-        if self.name is None:
-            self.name = self.page.generate_element_name(self)
-
-        if self._page.experiment:
-            self.added_to_experiment(self._page.experiment)
-
-    def added_to_experiment(self, experiment):
-        self.experiment = experiment
-        self.log.add_queue_logger(self, __name__)
-
-        if self.name in self.experiment.page_controller.all_elements:
-            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
     @property
     def data(self):
@@ -158,30 +430,6 @@ class Element(object):
         Property **data** contains a dictionary with input data of element.
         """
         return {}
-
-    @property
-    def enabled(self):
-        """
-        Property **enabled** describes a general property of all (input) elements. Only if set to True, element can be edited.
-
-        :param bool enabled: Property setter variable.
-        """
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, enabled):
-        if not isinstance(enabled, bool):
-            raise TypeError
-
-        self._enabled = enabled
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return False
-
-    @property
-    def alignment(self):
-        return self._alignment
 
     @property
     def corrective_hints(self):
@@ -195,31 +443,15 @@ class Element(object):
     def show_corrective_hints(self, b):
         self._show_corrective_hints = bool(b)
 
-    def validate_data(self):
-        return True
-
-    def set_should_be_shown_filter_function(self, f):
-        """
-        Sets a filter function. f must take Experiment as parameter
-        :type f: function
-        """
-        self._should_be_shown_filter_function = f
-
-    def remove_should_be_shown_filter_function(self):
-        """
-        remove the filter function
-        """
-        self._should_be_shown_filter_function = lambda exp: True
-
     @property
-    def should_be_shown(self):
+    def should_be_shown(self) -> bool:
+        """Boolean, indicating whether the element is meant to be shown.
+        
+        Evaluates all *showif* conditions and can be set manually.
         """
-        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
-        Otherwise False is returned
-        """
-        return self._should_be_shown and self._should_be_shown_filter_function(
-            self._page._experiment
-        )
+        cond1 = self._should_be_shown
+        cond2 = all(self._evaluate_showif())
+        return cond1 and cond2
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -232,433 +464,1062 @@ class Element(object):
             raise TypeError("should_be_shown must be an instance of bool")
         self._should_be_shown = b
 
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~Element.instance_level_logging` is set to *True*.
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        if self.instance_level_logging and self._name:
-            name.append(self._name)
-
-        return ".".join(name)
-
     @property
     def page(self):
+        """The page to which the element belongs."""
         return self._page
+
+    @page.setter
+    def page(self, value):
+        self._page = value
 
     @property
     def tree(self):
+        """A string, giving the exact position of the element's page in 
+        the experiment. The tree is composed of the tags of all sections
+        and the page, separated by underscores. Example for the Page
+        with tag 'hello_world' in section 'main'::
+        
+            root_main_hello_world
+        
+        """
         return self.page.tree
 
     @property
-    def identifier(self):
-        return self.tree.replace("root_", "") + "_" + self._name
+    def short_tree(self):
 
+        return self.tree.replace("_root._content", "")
 
-class WebElementInterface(with_metaclass(ABCMeta, object)):
-    """
-    Abstract class **WebElementInterface** contains properties and methods allowing elements to be used and displayed
-    in experiments of type 'web'.
-    """
+    @property
+    def css_code(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and CSS code."""
+        return self._css_code
 
-    @abstractproperty
-    def web_widget(self):
-        pass
+    @property
+    def css_urls(self):
+        """A list of tuples, which contain a priority and urls pointing 
+        to CSS code."""
+        return self._css_urls
 
-    def prepare(self):
-        self.prepare_web_widget()
+    @property
+    def js_code(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and Javascript."""
+        return self._js_code
 
-    def prepare_web_widget(self):
-        pass
+    @property
+    def js_urls(self) -> List[Tuple[int, str]]:
+        """A list of tuples, which contain a priority and urls pointing
+        to JavaScript."""
+        return self._js_urls
 
     @property
     def web_thumbnail(self):
         return None
 
+    @property
+    def template_data(self):
+        d = {}
+        d["element_class"] = self.element_class
+        d["name"] = self.name
+        d["position"] = self.position
+        d["element_width"] = self.element_width
+        d["hide"] = "hide" if self._showif_on_current_page is True else ""
+        d["align"] = f"text-{self.align}"
+        d["align_raw"] = self.align
+        d["fontsize"] = f"font-size: {self.font_size}pt;" if self.font_size is not None else ""
+        d["height"] = f"height: {self.height};" if self.height is not None else ""
+        d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
+        return d
+
+    # Private methods start here ---------------------------------------
+
+    def _evaluate_showif(self) -> List[bool]:
+        """Checks the showif conditions that refer to previous pages.
+        
+        Returns:
+            A list of booleans, indicating for each condition whether
+            it is met or not.
+        """
+
+        if self.showif:
+            conditions = []
+            for page_uid, condition in self.showif.items():
+
+                # skip current page (showifs for current pages are checked elsewhere)
+                if page_uid == self.page.uid:
+                    continue
+
+                d = self.experiment.get_page_data(page_uid=page_uid)
+                for target, value in condition.items():
+                    try:
+                        conditions.append(d[target] == value)
+                    except KeyError:
+                        msg = (
+                            f"You defined a showif '{target} == {value}' for {self} "
+                            f"on Page with uid '{page_uid}', "
+                            f"but {target} was not found on the page. "
+                            "The element will NOT be shown."
+                        )
+                        self.log.warning(msg)
+                        return [False]
+            return conditions
+        else:
+            return [True]
+
+    def _activate_showif_on_current_page(self):
+        """Adds JavaScript to self for dynamic showif functionality."""
+        on_current_page = self.showif.get(self.page.uid, None)
+        if on_current_page:
+
+            # If target element is not even on the same page
+            for element_name, value in on_current_page.items():
+                if not element_name in self.page.element_dict:
+                    msg = (
+                        f"You defined a showif '{element_name} == {value}' for {self} "
+                        f"on {self.page}, "
+                        f"but {element_name} was not found on the page. "
+                        "The element will NOT be shown."
+                    )
+                    self.log.warning(msg)
+                    self.should_be_shown = False
+                    return
+
+            t = jinja_env.get_template("showif.js.j2")
+            js = t.render(showif=on_current_page, element=self.name)
+            self.js_code.append((7, js))
+            self._showif_on_current_page = True
+
+    # Public methods start here ----------------------------------------
+
+    def added_to_experiment(self, experiment):
+        """Tells the element that it was added to an experiment. 
+        
+        The experiment is made available to the element, and the 
+        element's logging interface initializes its experiment-specific
+        logging.
+
+        Args:
+            experiment: The alfred experiment to which the element was
+                added.
+        """
+        self.experiment = experiment
+        self.log.add_queue_logger(self, __name__)
+        if self.name in self.experiment.root_section.all_elements:
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+
+    def added_to_page(self, page):
+        """Tells the element that it was added to a page. 
+        
+        The page and the experiment are made available to the element.
+
+        Args:
+            page: The page to which the element was added.
+        """
+        from . import page as pg
+
+        if not isinstance(page, pg.PageCore):
+            raise TypeError()
+
+        self._page = page
+        if self.name is None:
+            self.name = self.page.generate_element_name(self)
+
+        if self.page.experiment:
+            self.added_to_experiment(self._page.experiment)
+
     def set_data(self, data):
         pass
 
+    def validate_data(self):
+        return True
+
+    def prepare(self):
+        """Wraps *prepare_web_widget* to allow for additional, generic
+        preparations that are the same for all elements.
+        
+        This is useful, because *prepare_web_widget* is often redefined
+        in derived elements.
+        """
+        self._activate_showif_on_current_page()
+        self.prepare_web_widget()
+
+    def prepare_web_widget(self):
+        """Hook for computations for preparing an element's web widget.
+        
+        This method is supposed to be overridden by derived elements if
+        necessary.
+        """
+        pass
+
+    # Magic methods start here -----------------------------------------
+
+    def __str__(self):
+        return f"{type(self).__name__}(name: '{self.name}')"
+
+    def __repr__(self):
+        return self.__str__()
+
+    # abstract attributes start here -----------------------------------
+
+    @property
+    def inner_html(self) -> str:
+        """Renders :attr:`~alfred3.element_responsive.Element.element_template`
+        with :attr:`~alfred3.element_responsive.Element.template_data`
+        and returns the resulting html.
+
+        If no `element_template` is defined, `None` is returned.
+        """
+        if self.element_template is not None:
+            return self.element_template.render(self.template_data)
+        else:
+            return None
+
+    @property
+    def web_widget(self) -> str:
+        """Returns the full html-code for the element's display on the
+        screen.
+
+        This is done by rendering the 
+        :attr:`~alfred3.element_responsive.Element.base_template` with
+        the :attr:`~alfred3.element_responsive.Element.template_data` 
+        and injecting the :attr:`~alfred3.element_responsive.Element.inner_html`
+        into it.
+
+        """
+        d = self.template_data
+        d["html"] = self.inner_html
+        return self.base_template.render(d)
+
+    @property
+    def element_class(self) -> str:
+        """Returns the name of the element's class. Used, e.g. as
+        CSS class name in the base element template.
+        """
+        return type(self).__name__
+
+    def add_css(self, code: str, priority: int = 10):
+        """Adds CSS to the element.
+        
+        Args:
+            code: Css code
+            priority: Can be used to influence the order in which code
+                is added to the page. Sorting is ascending, i.e. the 
+                lowest numbers appear closest to the top of the page.
+        
+        """
+        self._css_code.append((priority, code))
+
+    def add_js(self, code: str, priority: int = 10):
+        """Adds Javascript to the element.
+        
+        Args:
+            code: Css code
+            priority: Can be used to influence the order in which code
+                is added to the page. Sorting is ascending, i.e. the 
+                lowest numbers appear closest to the top of the page.
+        
+        """
+        self._js_code.append((priority, code))
+
+
+@dataclass
+class _RowCol:
+    """Just a little helper for handling columns inside a Row.
+    
+    :meta private:
+    """
+
+    breaks: str
+    vertical_position: str
+    element: Element
+    id: str
+
+
+class Row(Element):
+    """Allows you to arrange up to 12 elements in a row.
+
+    .. versionadded:: 1.5
+
+    The row will arrange your elements using Bootstrap 4's grid system
+    and breakpoints, making the arrangement responsive. You can 
+    customize the behavior of the row for five different screen sizes
+    (Bootstrap 4's default break points) with the width attributes of
+    its layout attribute.
+
+    If you don't specify breakpoints manually via the *layout* attribute, 
+    the columns will default to equal width and wrap on breakpoints 
+    automatically.
+
+    .. note::
+        In Bootstrap's grid, the horizontal space is divided into 12
+        equally wide units. You can define the horizontal width of a
+        column by assigning it a number of those units. A column of 
+        width 12 will take up all available horizontal space, other 
+        columns will be placed below such a full-width column.
+
+        You can define the column width for each of five breakpoints
+        separately. The definition will be valid for screens of the
+        respective size up to the next breakpoint.
+
+        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
+        for detailed documentation of how Bootstrap's breakpoints work.
+    
+    .. note::
+        **Some information regarding the width attributes**
+        
+        * If you specify fewer values than the number of columns in the 
+          width attributes, the columns with undefined width will take up 
+          equal portions of the remaining horizontal space.
+        * If a breakpoint is not specified manually, the values from the
+          next smaller breakpoint are inherited.
+    
+    Args:
+        elements: The elements that you want to arrange in a row.
+        height: Custom row height (with unit, e.g. '100px').
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'.
+        elements_full_width: A switch, telling the row whether you wish
+            it to resize all elements in it to full-width (default: True).
+            This switch exists, because some elements might default to
+            a smaller width, but when using them in a Row, you usually
+            want them to span the full width of their column.
+    
+    """
+
+    element_template = jinja_env.get_template("Row.html.j2")
+
+    def __init__(
+        self,
+        *elements: Element,
+        height: str = "auto",
+        valign_cols: List[str] = None,
+        name: str = None,
+        showif: dict = None,
+        elements_full_width: bool = True,
+    ):
+        """Constructor method."""
+        super().__init__(name=name, showif=showif)
+        self.elements = elements
+
+        #: An instance of :class:`~alfred3.element_responsive.RowLayout`, used for layouting.
+        #: You can use this attribute to finetune column widths.
+        self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
+
+        self.height = height
+        self.elements_full_width = elements_full_width
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for element in self.elements:
+            if element is None:
+                continue
+            element.should_be_shown = False
+            page += element
+
+            if self.elements_full_width:
+                element.width = "full"
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+        for element in self.elements:
+            element.prepare_web_widget()
+
+    @property
+    def cols(self) -> list:
+        """Returns a list of columns."""
+        out = []
+        for i, element in enumerate(self.elements):
+            col = _RowCol(
+                breaks=self.layout.col_breaks(col=i),
+                vertical_position=self.layout.valign_cols[i],
+                element=element,
+                id=f"{self.name}_col{i+1}",
+            )
+            out.append(col)
+        return out
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["columns"] = self.cols
+        d["name"] = self.name
+        return d
+
+
+class Stack(Row):
+    """Stacks multiple elements on top of each other.
+    
+    Stacks are intended for use in Rows. They allow you to flexibly 
+    arrange elements in a grid.
+
+    Here is an example, that will display two stacked elements next to
+    one other element::
+
+        from alfred3 import element_responsive as el
+        
+        el1 = el.TextElement("text")
+        el2 = el.TextEntryElement(toplab="lab")
+        el3 = el.TextElement("long text")
+
+        row = el.Row(el.Stack(el1, el2), el3)
+
+    The Arrangement will look like this::
+
+        |=========|========|
+        |   el1   |        |
+        |=========|  el3   |
+        |   el2   |        |
+        |=========|========|
+    
+    Args:
+        *elements: The elements to stack.
+        **kwargs: Keyword arguments that are passend on to the parent 
+            class :class:`Row`.
+
+    """
+
+    def __init__(self, *elements: Element, **kwargs):
+        """Constructor method."""
+        super().__init__(*elements, **kwargs)
+        self.layout.width_xs = [12 for element in elements]
+
+
+class VerticalSpace(Element):
+    """The easiest way to add vertical space to a page.
+    
+    Args:
+        space: Desired space in any unit that is understood by a CSS
+            margin (e.g. em, px, cm). Include the unit (e.g. '1em').
+    """
+
+    def __init__(self, space: str = "1em"):
+        """Constructor method."""
+        super().__init__()
+        self.space = space
+
+    @property
+    def web_widget(self):
+        return f"<div style='margin-bottom: {self.space};'></div>"
+
+
+class Style(Element):
+    """Adds CSS code to a page. 
+    
+    CSS styling can be used to change the appearance of page or 
+    individual elements. 
+    
+    .. note:: 
+        A Style is added to a specific page, and thus only affects the 
+        layout of that page. To change the appearance of the whole 
+        experiment, you can define your styles in a .css file and 
+    """
+
+    web_widget = None
+    should_be_shown = False
+
+    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+        super().__init__()
+        self.priority = priority
+        self.code = code
+        self.url = url
+
+        self.path = Path(path) if path is not None else None
+        self.should_be_shown = False
+
+        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
+            raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
+
     @property
     def css_code(self):
-        return []
+        if self.path:
+            p = self.experiment.subpath(self.path)
+
+            code = p.read_text()
+            return [(self.priority, code)]
+        else:
+            return [(self.priority, self.code)]
 
     @property
     def css_urls(self):
-        return []
+        return [(self.priority, self.url)]
+
+
+class HideNavigation(Style):
+    def __init__(self):
+        super().__init__()
+        self.code = "#page-navigation {display: none;}"
+
+
+class JavaScript(Element):
+    """Adds JavaScript to a page.
+    
+    Javascript can be used to implement dynamic behavior on the client
+    side.
+    """
+
+    web_widget = None
+    should_be_shown = False
+
+    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+        super().__init__()
+        self.priority = priority
+        self.code = code
+        self.url = url
+
+        self.path = Path(path) if path is not None else None
+        self.should_be_shown = False
+
+        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
+            raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property
     def js_code(self):
-        return []
+        if self.path:
+            p = self.experiment.subpath(self.path)
+
+            code = p.read_text()
+            return [(self.priority, code)]
+        else:
+            return [(self.priority, self.code)]
 
     @property
     def js_urls(self):
-        return []
-
-
-class HorizontalLine(Element, WebElementInterface):
-    def __init__(self, strength=1, color="black", **kwargs):
-        """
-        **HorizontalLine** allows display of a simple divider in pages.
-
-        :param int strength: Set line thickness (in pixel).
-        :param str color: Set line color (color argument as string).
-        """
-        super(HorizontalLine, self).__init__(**kwargs)
-
-        self._strength = strength
-        self._color = color
-
-    @property
-    def web_widget(self):
-
-        widget = '<hr class="horizontal-line" style="%s %s">' % (
-            "height: %spx;" % self._strength,
-            "background-color: %s;" % self._color,
-        )
-
-        return widget
-
-
-class ProgressBar(Element, WebElementInterface):
-    def __init__(
-        self,
-        instruction="",
-        bar_range=(0, 100),
-        bar_value=50,
-        bar_width=None,
-        instruction_width=None,
-        instruction_height=None,
-        **kwargs,
-    ):
-        """
-        **ProgressBar** allows display of a manually controlled progress bar.
-        """
-        super(ProgressBar, self).__init__(**kwargs)
-
-        self._instruction = instruction
-        self._instruction_width = instruction_width
-        self._instruction_height = instruction_height
-        self._bar_range = bar_range
-        self._bar_value = float(bar_value)
-
-        if bar_width:
-            self._bar_width = bar_width
+        if self.url:
+            return [(self.priority, self.url)]
         else:
-            self._bar_width = None
-
-        self._progress_bar = None
-
-    @property
-    def bar_value(self):
-        return self._bar_value
-
-    @bar_value.setter
-    def bar_value(self, value):
-        self._bar_value = value
-        if self._progress_bar:
-            self._progress_bar.set_value(self._bar_value)
-            self._progress_bar.repaint()
-
-    @property
-    def web_widget(self):
-        if self._bar_range[1] - self._bar_range[0] == 0:
-            raise ValueError("bar_range in web progress bar must be greater than 0")
-
-        widget = '<div class="progress-bar"><table class="%s" style="font-size: %spt;">' % (
-            alignment_converter(self._alignment, "container"),
-            fontsize_converter(self._font_size),
-        )
-
-        widget = widget + '<tr><td><table class="%s"><tr><td style="%s %s">%s</td>' % (
-            alignment_converter(self._alignment, "container"),
-            "width: %spx;" % self._instruction_width
-            if self._instruction_width is not None
-            else "",
-            "height: %spx;" % self._instruction_height
-            if self._instruction_height is not None
-            else "",
-            self._instruction,
-        )
-
-        widget = (
-            widget
-            + '<td><meter value="%s" min="%s" max="%s" style="font-size: %spt; width: %spx; margin-left: 5px;"></meter></td>'
-            % (
-                self._bar_value,
-                self._bar_range[0],
-                self._bar_range[1],
-                fontsize_converter(self._font_size) + 5,
-                self._bar_width if self._bar_width is not None else "200",
-            )
-        )
-
-        widget = widget + '<td style="font-size: %spt; padding-left: 5px;">%s</td>' % (
-            fontsize_converter(self._font_size),
-            str(int(old_div(self._bar_value, (self._bar_range[1] - self._bar_range[0]) * 100)))
-            + "%",
-        )
-
-        widget = widget + "</tr></table></td></tr></table></div>"
-
-        return widget
+            return []
 
 
-class TextElement(Element, WebElementInterface):
-    def __init__(self, text, text_width=None, text_height=None, **kwargs):
-        """
-        **TextElement** allows display of simple text labels.
+class WebExitEnabler(JavaScript):
+    """If added to a page, this element disables the 'Do you really want
+    to leave this page?' popup on that page."""
 
-        :param str text: Text to be displayed by TextElement (can contain html commands).
-        :param str alignment: Alignment of TextElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Fontsize used in TextElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param int text_width: Set the width of the label to a fixed size, still allowing for word wrapping and growing height of text.
-        :param int text_height: Set the height of the label to a fixed size (sometimes necessary when using rich text).
-        """
-        super(TextElement, self).__init__(**kwargs)
+    def __init__(self):
+        code = "$(document).ready(function(){glob_unbind_leaving();});"
+        super().__init__(code=code, priority=10)
 
-        self._text = text
-        self._text_width = text_width
-        self._text_height = text_height
-        self._text_label = None
+
+class TextElement(Element):
+    """Displays text.
+
+    You can use GitHub-flavored Markdown syntax [#md]_ and common emoji 
+    shortcodes [#emoji]_ . Additionally, you can use raw html for 
+    advanced formatting.
+
+    Example::
+
+        TextElement("**This is boldfaced** text. :blush:")
+
+    Text can be entered directly through the `text` parameter, or
+    it can be read from a file by specifying the 'path' parameter.
+    Note that you can only use one of these options, if you specify
+    both, the element will raise an error.
+
+    Example::
+
+        # Text element with responsive width
+        text = TextElement('Text display')
+
+        # Text element that is always displayed as full-width
+        text = TextElement('Text display', width='full')
+
+        # Text element with content read from file
+        text = TextElement(path='files/text.md')
+        
+    Args:
+        text: Text to be displayed.
+        text_width: Text width in px. **Deprecated** for responsive
+            design (v1.5). Use `element_width` instead, when using
+            the responsive design.
+        text_height: Element height in px.
+        path: Filepath to a textfile (relative to the experiment 
+            directory).
+        width: Element width. Usage is the same as in 
+            :class:`Element`, but the TextElement uses its own
+            specific default, which ensures good readability in 
+            most cases on different screen sizes.
+        **element_args: Keyword arguments passed to the parent class
+            :class:`Element`. Accepted keyword arguments are: name, 
+            font_size, align, width, position, showif, 
+            instance_level_logging.
+    
+    Attributes:
+        emojize: If True (default), emoji shortcodes in the text will
+            be converted to unicode.
+
+    .. [#md] https://guides.github.com/features/mastering-markdown/
+    .. [#emoji] Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
+    """
+
+    element_class = "text-element"
+    element_template = jinja_env.get_template("TextElement.html.j2")
+    emojize = True
+
+    def __init__(
+        self, text: str = None, path: Union[Path, str] = None, width: str = None, **element_args,
+    ):
+
+        """Constructor method."""
+        super().__init__(width=width, **element_args)
+
+        self._text = text if text is not None else ""
+        self.path = path
+
+        if self._text and self.path:
+            raise ValueError("You can only specify one of 'text' and 'path'.")
 
     @property
     def text(self):
-        return self._text
-
-    @text.setter
-    def text(self, text):
-        self._text = text
-        if self._text_label:
-            self._text_label.set_text(self._text)
-            self._text_label.repaint()
-
-    @property
-    def web_widget(self):
-        widget = (
-            '<div class="text-element"><div class="%s" style="font-size: %spt; %s %s">%s</div></div>'
-            % (
-                alignment_converter(self._alignment, "both"),
-                fontsize_converter(self._font_size),
-                "width: %spx;" % self._text_width if self._text_width is not None else "",
-                "height: %spx;" % self._text_height if self._text_height is not None else "",
-                self._text,
-            )
-        )
-
-        return widget
-
-
-class CodeElement(Element, WebElementInterface):
-    def __init__(
-        self,
-        text=None,
-        lang="nohighlight",
-        style="atom-one-light",
-        first=True,
-        toggle_button=True,
-        button_label="Show / Hide Code",
-        hide_by_default=True,
-        **kwargs,
-    ):
-        """
-        **CodeElement** allows display of highlighted code blocks.
-
-        :param str text: Text to be displayed.
-        :param str/int font_size: Fontsize used in CodeElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param str lang: Programming language that is used in text. The default uses no highlighing.
-        :param str style: Highlighting style to use. Styles can be found at https://highlightjs.org/static/demo/
-        :param bool first: Indicates, whether the current CodeElement is the first CodeElement on the current page. If False, the highlight.js components are not imported again by the element.
-        :param bool toggle_button: If True, a button is included that allows users to toggle the display of the code block.
-        :param str button_label: Text to be shown on the toggle button.
-        :param bool hide_by_default: If True, the default state of the code block is hidden. Only works, if toggle_button is True.
-        """
-        super(CodeElement, self).__init__(**kwargs)
-
-        self._text = text
-        self._lang = lang
-        self._style = style
-        self._first = first
-        self._id = str(uuid4())
-        self._toggle_button = toggle_button
-        self._button_label = button_label
-        if hide_by_default and toggle_button:
-            self._div_class = "hidden"
+        if self.path:
+            return self.experiment.subpath(self.path).read_text()
         else:
-            self._div_class = ""
+            return self._text
 
-    @property
-    def text(self):
-        return self._text
+    def render_text(self):
+        if self.emojize:
+            text = emojize(self.text, use_aliases=True)
+        else:
+            text = self.text
+        return cmarkgfm.github_flavored_markdown_to_html(text)
 
     @text.setter
     def text(self, text):
         self._text = text
 
     @property
-    def web_widget(self):
-        if self._toggle_button:
-            button = '<a class="btn" id="button-{id}" href="#">{button_label}</a>'.format(
-                id=self._id, button_label=self._button_label
-            )
-        else:
-            button = ""
+    def element_width(self):
+        if self.width is not None:
+            return " ".join(self.converted_width)
 
-        widget = (
-            button
-            + '<div id={id} class="{div_class}"><pre><code style="white-space: pre;" class="{lang}"\
-         style="font-size:{fontsize}">{text}</code></pre></div>'.format(
-                id=self._id,
-                div_class=self._div_class,
-                lang=self._lang,
-                text=self._text,
-                fontsize=fontsize_converter(self._font_size),
-            )
-        )
-
-        return widget
+        responsive = self.experiment.config.getboolean("layout", "responsive", fallback=True)
+        if responsive:
+            if self._element_width is None:
+                return " ".join(["col-12", "col-sm-11", "col-lg-10", "col-xl-9"])
+            else:
+                return " ".join(self._element_width)
+        elif not responsive:
+            return "col-9"
 
     @property
-    def css_urls(self):
+    def template_data(self) -> dict:
+        d = super().template_data
+        d["text"] = self.render_text()
+        # height = f"height: {self._text_height}px;" if self._text_height is not None else ""
+        # d["style"] += f"{height}"
 
-        if self._first:
-            css = "//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.9/styles/{style}.min.css".format(
-                style=self._style
-            )
-            return [(10, css)]
+        return d
+
+    def __str__(self):
+        if len(self.text) <= 10:
+            text = self.text
         else:
-            return []
+            text = self.text[0:10] + "..."
+
+        return f"{type(self).__name__}(text: '{text}'; name: '{self.name}')"
+
+
+class Hline(Element):
+    element_class = "hline-element"
+    inner_html = "<hr>"
+
+
+class CodeElement(TextElement):
+    """A convenience element for displaying highlighted code.
+
+    Args:
+        lang: The programming language to highlight [#lang]_ . Defaults 
+            to 'auto', which tries to auto-detect the right language. 
+    
+    .. [#lang] see https://prismjs.com/index.html#supported-languages
+        for an overview of possible language codes. Note though that 
+        we may not support all possible languages.
+    """
+
+    element_class = "code-element"
+
+    def __init__(
+        self,
+        text: str = None,
+        path: Union[Path, str] = None,
+        lang: str = "auto",
+        width: str = "full",
+        **element_args,
+    ):
+
+        """Constructor method."""
+        super().__init__(text=text, path=path, width=width, **element_args)
+        self.lang = lang if lang is not None else ""
 
     @property
-    def js_urls(self):
+    def text(self):
+        if self.path:
+            text = self.experiment.subpath(self.path).read_text()
 
-        if self._first:
-            js = "//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.9/highlight.min.js"
-            return [(10, js)]
+            code = f"```{self.lang}\n{text}\n```"
+            return code
         else:
-            return []
+            code = f"```{self.lang}\n{self._text}\n```"
+            return code
+
+    def __str__(self):
+        text = self.text.replace(f"```{self.lang}", "").replace("\n", "").replace("\r", "")
+        if len(self.text) > 10:
+            text = text[0:10] + " ..."
+
+        return f"{type(self).__name__}(text: '{text}'; lang: '{self.lang}'; name: '{self.name}')"
+
+
+class Label(TextElement):
+    """A child of TextElement, serving mainly as label for other 
+    elements.
+    """
+
+    element_class = "label-element"
+
+    def __init__(self, text, width="full", **kwargs):
+        super().__init__(text=text, width=width, **kwargs)
+        self.layout: RowLayout = None
+        self.layout_col: int = None
 
     @property
-    def js_code(self):
+    def col_breaks(self):
+        return self.layout.col_breaks(self.layout_col)
 
-        if self._toggle_button:
-            button_js = '$(function() {{$( "#button-{id}" ).click(function() {{$( "#{id}" ).toggle();}});}});'.format(
-                id=self._id
-            )
-        else:
-            button_js = ""
-
-        if self._first:
-            js = "hljs.initHighlightingOnLoad();"
-            return [(11, js), (12, button_js)]
-        else:
-
-            return [(11, button_js)]
+    @property
+    def vertical_alignment(self):
+        return self.layout.valign_cols[self.layout_col]
 
 
-class DataElement(Element, WebElementInterface):
-    def __init__(self, variable, description=None, **kwargs):
-        """
-        **DataElement** returns no widget, but can save a variable of any type into experiment data.
+class DataElement(Element):
+    """DataElement can be used to save data without any display.
 
-        :param str variable: Variable to be stored into experiment data.
-        """
+    Example::
+
+        DataElement(value="test", name="mydata")
+    
+    Args:
+        value: The value that you want to save.
+    """
+
+    def __init__(self, value: Union[str, int, float], description: str = None, **kwargs):
+        """Constructor method."""
+
+        if kwargs.pop("variable", False):
+            raise ValueError("'variable' is not a valid parameter. Use 'value' instead.")
+
         super(DataElement, self).__init__(**kwargs)
-        self._variable = variable
+        self.value = value
         self.description = description
-
-    @property
-    def variable(self):
-        return self._variable
-
-    @variable.setter
-    def variable(self, variable):
-        self._variable = variable
-
-    @property
-    def web_widget(self):
-        return ""
+        self.should_be_shown = False
 
     @property
     def data(self):
-        return {self.name: self._variable}
+        from alfred3 import page
 
-    @property
-    def encrypted_data(self):
-        encrypted_variable = self.experiment.encrypt(self._variable)
-        return {self.name: encrypted_variable}
-
-    @property
-    def codebook_data_flat(self):
         data = {}
+        data["value"] = self.value
+        
         data["name"] = self.name
-        data["tree"] = self.tree.replace("root_", "")
-        data["identifier"] = self.identifier
+        data["tree"] = self.short_tree
         data["page_title"] = self.page.title
+        data["page_name"] = self.page.name
         data["element_type"] = type(self).__name__
         data["description"] = self.description
-        data["duplicate_identifier"] = False
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
-        return data
 
-    @property
-    def codebook_data(self):
-        return {self.identifier: self.codebook_data_flat}
+        return {self.name: data}
+
+    def __str__(self):
+        return f"{type(self).__name__}(value: '{self.value}'; name: '{self.name}')"
 
 
-class InputElement(Element):
+class LabelledElement(Element):
+    """An intermediate Element class which provides support for labels.
+    
+    Args:
+        toplab, leftlab, rightlab, bottomlab: Strings or instances of
+            :class:`Label`, which will be used to label the element.
+        layout: A list of integers, specifying the allocation of 
+            horizontal space between leftlab, main element widget and
+            rightlab. Uses Bootstraps 12-column-grid, i.e. you can
+            choose integers between 1 and 12.
     """
-    Class **InputElement** is the base class for any element allowing data input.
 
-    :param bool force_input: Sets user input to be mandatory (False as standard or True).
-    :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-
-    .. todo:: Parent class :class:`.element.Element` has method *corrective_hints()*, but not sure why this is necessary, since corrective_hints only make sense in input elements, right?
-    """
+    base_template = jinja_env.get_template("LabelledElement.html.j2")
+    element_class = "labelled-element"
 
     def __init__(
         self,
-        force_input=False,
-        no_input_corrective_hint=None,
-        debug_string=None,
-        debug_value=None,
-        default=None,
-        description=None,
+        toplab: str = None,
+        leftlab: str = None,
+        rightlab: str = None,
+        bottomlab: str = None,
+        layout: List[int] = None,
         **kwargs,
     ):
-        super(InputElement, self).__init__(**kwargs)
+        """Constructor method."""
+        super().__init__(**kwargs)
+        # default for width
+        if leftlab and rightlab:
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 1
+            self.layout = RowLayout(ncols=3)
+            self.layout.width_sm = layout if layout is not None else [2, 8, 2]
+        elif leftlab:
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 1
+            self.layout = RowLayout(ncols=2)
+            self.layout.width_sm = layout if layout is not None else [3, 9]
+        elif rightlab:
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 0
+            self.layout = RowLayout(ncols=2)
+            self.layout.width_sm = layout if layout is not None else [9, 3]
+        else:
+            # for accessing the right col in layout.col_breaks for the input field
+            self.input_col = 0
+            self.layout = RowLayout(ncols=1)
+            self.layout.width_sm = [12]
+
+        self.layout.valign_cols = ["center" for el in range(self.layout.ncols)]
+
+        self.toplab = toplab
+        self.leftlab = leftlab
+        self.rightlab = rightlab
+        self.bottomlab = bottomlab
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
+            if getattr(self, lab):
+                getattr(self, lab).name = f"{self.name}_{lab}"
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self.layout.responsive = self.experiment.config.getboolean("layout", "responsive")
+
+        if self.toplab:
+            self.toplab.added_to_experiment(experiment)
+
+        if self.leftlab:
+            self.leftlab.added_to_experiment(experiment)
+
+        if self.rightlab:
+            self.rightlab.added_to_experiment(experiment)
+
+        if self.bottomlab:
+            self.bottomlab.added_to_experiment(experiment)
+
+    @property
+    def toplab(self):
+        """Label above of the main element widget."""
+        return self._toplab
+
+    @toplab.setter
+    def toplab(self, value: str):
+        if isinstance(value, Label):
+            self._toplab = value
+        elif isinstance(value, str):
+            self._toplab = Label(text=value, align="center")
+        else:
+            self._toplab = None
+
+    @property
+    def bottomlab(self):
+        """Label below of the main element widget."""
+        return self._bottomlab
+
+    @bottomlab.setter
+    def bottomlab(self, value: str):
+        if isinstance(value, Label):
+            self._bottomlab = value
+        elif isinstance(value, str):
+            self._bottomlab = Label(text=value, align="center")
+        else:
+            self._bottomlab = None
+
+    @property
+    def leftlab(self):
+        """Label to the left of the main element widget."""
+        return self._leftlab
+
+    @leftlab.setter
+    def leftlab(self, value: str):
+        if isinstance(value, Label):
+            self._leftlab = value
+            self._leftlab.layout = self.layout
+            self._leftlab.layout_col = 0
+        elif isinstance(value, str):
+            self._leftlab = Label(text=value, align="right")
+            self._leftlab.layout = self.layout
+            self._leftlab.layout_col = 0
+        else:
+            self._leftlab = None
+
+    @property
+    def rightlab(self):
+        """Label to the right of the main element widget."""
+        return self._rightlab
+
+    @rightlab.setter
+    def rightlab(self, value: str):
+        if isinstance(value, Label):
+            self._rightlab = value
+            self._rightlab.layout = self.layout
+            self._rightlab.layout_col = self.input_col + 1
+        elif isinstance(value, str):
+            self._rightlab = Label(text=value, align="left")
+            self._rightlab.layout = self.layout
+            self._rightlab.layout_col = self.input_col + 1
+        else:
+            self._rightlab = None
+
+    @property
+    def labels(self) -> str:
+        """Returns the labels in a single, nicely formatted string."""
+
+        labels = []
+        if self.toplab:
+            labels.append(f"toplab: '{self.toplab.text}'")
+        if self.leftlab:
+            labels.append(f"leftlab: '{self.leftlab.text}'")
+        if self.rightlab:
+            labels.append(f"rightlab: '{self.rightlab.text}'")
+        if self.bottomlab:
+            labels.append(f"bottomlab: '{self.bottomlab.text}'")
+
+        if labels:
+            return ", ".join(labels)
+
+    def __str__(self):
+        return f"{type(self).__name__}({self.labels}; name: '{self.name}')"
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["toplab"] = self.toplab
+        d["leftlab"] = self.leftlab
+        d["rightlab"] = self.rightlab
+        d["bottomlab"] = self.bottomlab
+        d["input_breaks"] = self.layout.col_breaks(col=self.input_col)
+        d["input_valign"] = self.layout.valign_cols[self.input_col]
+        return d
+
+
+class InputElement(LabelledElement):
+    """Base class for elements that allow data input.
+
+    This class handles the logic und layouting of instructions for input 
+    elements.
+
+    Args:
+        no_input_corrective_hint: Hint to be displayed if force_input 
+            set to True and no user input registered. Defaults to the
+            experiment-wide value specified in config.conf.
+        instruction_width: Horizontal width of instructions. 
+            **Deprecated** for responsive design (v1.5+). Use 
+            `instruction_col_width` instead, when using the responsive 
+            design.
+        instruction_height: Minimum vertical size of instruction label.
+        force_input: If `True`, users can only progress to the next page
+            if they enter data into this field. **Note** that this works
+            only in HeadOpenSections and SegmentedSections, not in plain
+            Sections.
+        description: An additional description of the element. This will
+            show up in the additional alfred-generated codebook. It has
+            no effect on the display of the experiment.
+        default: Default value.
+        **kwargs: Further keyword arguments that are passed on to the
+            parent class :class:`Element`.
+    
+    Attributes:
+        instruction_col_width: Width of the instruction area, using
+            Bootstrap's 12-column-grid. You can assign an integer 
+            between 1 and 12 here to fine-tune the instruction width.
+        input_col_width: Width of the input area, using
+            Bootstrap's 12-column-grid. You can assign an integer 
+            between 1 and 12 here to fine-tune the input area width.
+    """
+
+    can_display_corrective_hints_in_line = True
+    disabled = False
+
+    def __init__(
+        self,
+        toplab: str = None,
+        force_input: bool = False,
+        no_input_corrective_hint: str = None,
+        default=None,
+        description: str = None,
+        disabled: bool = False,
+        **kwargs,
+    ):
+        super().__init__(toplab=toplab, **kwargs)
+        self.description = description
+
         self._input = ""
         self._force_input = force_input
         self._no_input_corrective_hint = no_input_corrective_hint
-        self._debug_string = debug_string
-        self._debug_value = debug_value
-        self.description = description
-        self.default = default
+        self._default = default
 
-        if settings.debugmode and settings.debug.default_values:
-            if self._debug_value:
-                self._input = self._debug_value
-            elif not self._debug_string:
-                self._input = settings.debug.get(self.__class__.__name__)
-            else:
-                self._input = settings._config_parser.get("debug", debug_string)
+        if disabled:
+            self.disabled = disabled
 
         if default is not None:
             self._input = default
+
+        if self._force_input and (self._showif_on_current_page or self.showif):
+            raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+
+    @property
+    def debug_value(self):
+        name = f"{type(self).__name__}_default"
+        return self.experiment.config.get("debug", name, fallback=None)
+
+    @property
+    def debug_enabled(self) -> bool:
+        if self.experiment.config.getboolean("general", "debug"):
+            if self.experiment.config.getboolean("debug", "set_default_values"):
+                return True
+        return False
+
+    @property
+    def default(self):
+        if self._default:
+            return self._default
+        elif self.debug_enabled:
+            return self.debug_value
+        else:
+            return None
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def force_input(self):
+        return self._force_input
+
+    @force_input.setter
+    def force_input(self, value: bool):
+        if not isinstance(value, bool):
+            raise ValueError("Force input must be a boolean value.")
+
+        self._force_input = value
+
+    @property
+    def template_data(self) -> dict:
+        d = super().template_data
+        d["default"] = self.default
+        d["input"] = self.input
+        d["disabled"] = self.disabled
+
+        if self.corrective_hints:
+            d["corrective_hint"] = self.corrective_hints[0]
+
+        return d
 
     def validate_data(self):
         return not self._force_input or not self._should_be_shown or bool(self._input)
@@ -667,7 +1528,7 @@ class InputElement(Element):
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-        if self._force_input and self._input == "":
+        if self._force_input and not self._input:
             return [self.no_input_hint]
         else:
             return super(InputElement, self).corrective_hints
@@ -680,22 +1541,27 @@ class InputElement(Element):
 
     @property
     def default_no_input_hint(self):
-        if self._page and self._page._experiment:
-            hints = self._page._experiment.settings.hints
-            name = type(self).__name__
-            no_input_name = ("no_input%s" % name).lower()
-            if no_input_name in hints:
-                return hints[no_input_name]
+        name = f"no_input{type(self).__name__}"
+        return self.experiment.config.get("hints", name, fallback="You need to enter something.")
 
-        self.log.error(f"Can't access default no input hint for element {self}")
-        return f"Can't access default no input hint for element {type(self).__name__}"
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
 
     @property
     def data(self):
-        return {self.name: self._input}
+        data = {}
+        data["value"] = self.input
+        data.update(self.codebook_data)
+        return {self.name: data}
 
     @property
     def encrypted_data(self):
+        """Returns the element's data with encrypted values."""
         enrcypted_dict = {}
         for k, v in self.data.items():
             try:
@@ -708,110 +1574,79 @@ class InputElement(Element):
         return enrcypted_dict
 
     def set_data(self, d):
-        if self.enabled:
+        if not self.disabled:
             self._input = d.get(self.name, "")
 
     @property
-    def codebook_data_flat(self):
+    def codebook_data(self):
+        from alfred3 import page
+        
         data = {}
         data["name"] = self.name
-        data["tree"] = self.tree.replace("root_", "")
-        data["identifier"] = self.identifier
+        data["label_top"] = self.toplab.text if self.toplab is not None else ""
+        data["label_left"] = self.leftlab.text if self.leftlab is not None else ""
+        data["label_right"] = self.rightlab.text if self.rightlab is not None else ""
+        data["label_bottom"] = self.bottomlab.text if self.bottomlab is not None else ""
+        data["tree"] = self.short_tree
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
         data["force_input"] = self._force_input
         data["default"] = self.default
         data["description"] = self.description
-        data["duplicate_identifier"] = False
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
-    @property
-    def codebook_data(self):
-        return {self.identifier: self.codebook_data_flat}
 
+class TextEntryElement(InputElement):
+    """Provides a text entry field.
 
-class TextEntryElement(InputElement, WebElementInterface):
+    Args:
+        prefix: Prefix for the input field.
+        suffix: Suffix for the input field.
+        placeholder: Placeholder text, displayed inside the input field.
+        default: Default value.
+        **kwargs: Further keyword arguments that are passed on to the
+            parent class :class:`InputElement`.
+        
+    """
+
+    element_class = "text-entry-element"
+    element_template = jinja_env.get_template("TextEntryElement.html.j2")
+
     def __init__(
         self,
-        instruction="",
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        prefix=None,
-        suffix=None,
+        toplab: str = None,
+        prefix: str = None,
+        suffix: str = None,
+        placeholder: str = None,
         **kwargs,
     ):
-        """
-        **TextEntryElement*** returns a single line text edit with an instruction text on its' left.
+        """Constructor method."""
+        super().__init__(toplab=toplab, **kwargs)
 
-        :param str name: Name of TextEntryElement and stored input variable.
-        :param str instruction: Instruction to be displayed with line edit field (can contain html commands).
-        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
-        :param str alignment: Alignment of TextEntryElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-        super(TextEntryElement, self).__init__(
-            no_input_corrective_hint=no_input_corrective_hint, **kwargs
-        )
-
-        self._instruction_width = instruction_width
-        self._instruction_height = instruction_height
-        self._instruction = instruction
         self._prefix = prefix
         self._suffix = suffix
-        self._template = Template(
-            """
-        <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
-        <tr><td valign="bottom"><table class="{{ alignment }}"><tr><td style="padding-right: 5px;{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td>
-        <td valign="bottom">
-        {% if prefix or suffix %}
-            <div class="{% if prefix %}input-prepend {% endif %}{% if suffix %}input-append {% endif %}" style="margin-bottom: 0px;">
-        {% endif %}
-        {% if prefix %}
-            <span class="add-on">{{prefix}}</span>
-        {% endif %}
-        <input class="text-input" type="text" style="font-size: {{ fontsize }}pt; margin-bottom: 0px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %} />
-        {% if suffix %}
-            <span class="add-on">{{suffix}}</span>
-        {% endif %}
-        {% if prefix or suffix %}
-            </div>
-        {% endif %}
-
-        </td></tr></table></td></tr>
-        {% if corrective_hint %}
-            <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
-        {% endif %}
-        </table></div>
-
-        """
-        )
+        self._placeholder = placeholder if placeholder is not None else ""
 
     @property
-    def web_widget(self):
-
-        d = {}
-        d["alignment"] = alignment_converter(self._alignment, "container")
-        d["fontsize"] = fontsize_converter(self._font_size)
-        d["width"] = self._instruction_width
-        d["height"] = self._instruction_height
-        d["instruction"] = self._instruction
-        d["name"] = self.name
-        d["input"] = self._input
-        d["disabled"] = not self.enabled
-        d["prefix"] = self._prefix
-        d["suffix"] = self._suffix
-        if self.corrective_hints:
-            d["corrective_hint"] = self.corrective_hints[0]
-        return self._template.render(d)
+    def prefix(self):
+        return self._prefix
 
     @property
-    def can_display_corrective_hints_in_line(self):
-        return True
+    def suffix(self):
+        return self._suffix
+
+    @property
+    def placeholder(self):
+        return self._placeholder
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["placeholder"] = self.placeholder
+        d["prefix"] = self.prefix
+        d["suffix"] = self.suffix
+        return d
 
     def validate_data(self):
         super(TextEntryElement, self).validate_data()
@@ -821,2313 +1656,736 @@ class TextEntryElement(InputElement, WebElementInterface):
 
         return True
 
-    def set_data(self, d):
-        """
-        .. todo:: No data can be set when using qt interface (compare web interface functionality). Is this a problem?
-        .. update (20.02.2019) removed qt depencies
-        """
-        if self.enabled:
-            super(TextEntryElement, self).set_data(d)
-
     @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-        data["instruction"] = self._instruction
-        data["prefix"] = self._prefix
-        data["suffix"] = self._suffix
+    def codebook_data(self):
+        data = super().codebook_data
+        data["prefix"] = self.prefix
+        data["suffix"] = self.suffix
+        data["placeholder"] = self.placeholder
 
         return data
 
 
 class TextAreaElement(TextEntryElement):
+    element_class = "text-area-element"
+    element_template = jinja_env.get_template("TextAreaElement.html.j2")
+
+    def __init__(self, toplab: str = None, nrows: int = 5, **kwargs):
+        super().__init__(toplab=toplab, **kwargs)
+        self.area_nrows = nrows
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["area_nrows"] = self.area_nrows
+        return d
+
+
+@dataclass
+class Choice:
+    """Dataclass for managing choices."""
+
+    label: str = None
+    label_id: str = None
+    id: str = None
+    name: str = None
+    value: str = None
+    type: str = "radio"
+    checked: bool = False
+    css_class: str = None
+
+
+class ChoiceElement(InputElement, ABC):
+    element_class = "choice-element"
+    element_template = jinja_env.get_template("ChoiceElement.html.j2")
+    type = None
+    emojize: bool = True
+
     def __init__(
         self,
-        instruction="",
-        x_size=300,
-        y_size=150,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
+        *choice_labels,
+        vertical: bool = False,
+        shuffle: bool = False,
+        align: str = "center",
         **kwargs,
     ):
-        """
-        **TextAreaElement** returns a multiline text edit with an instruction on top.
+        super().__init__(align=align, **kwargs)
 
-        :param str name: Name of TextAreaElement and stored input variable.
-        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
-        :param int x_size: Horizontal size for visible text edit field in pixels.
-        :param int y_size: Vertical size for visible text edit field in pixels.
-        :param str alignment: Alignment of TextAreaElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-        super(TextAreaElement, self).__init__(
-            instruction,
-            no_input_corrective_hint=no_input_corrective_hint,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            **kwargs,
-        )
+        self.choice_labels = choice_labels
+        self.vertical = vertical
+        self.shuffle = shuffle
 
-        self._x_size = x_size
-        self._y_size = y_size
+        if self.shuffle:
+            random.shuffle(self.choice_labels)
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for label in self.choice_labels:
+            if isinstance(label, Element):
+                label.added_to_page(page)
+                label.should_be_shown = False
+                label.width = "full"  # in case of TextElement, b/c its default is a special width
+
+    def prepare_web_widget(self):
+        self.choices = self.define_choices()
 
     @property
-    def web_widget(self):
-
-        widget = '<div class="text-area-element"><table class="%s" style="font-size: %spt;">' % (
-            alignment_converter(self._alignment, "container"),
-            fontsize_converter(self._font_size),
-        )
-
-        widget = (
-            widget
-            + '<tr><td class="itempagination-left" style="padding-bottom: 10px;">%s</td></tr>'
-            % (self._instruction)
-        )
-
-        widget = (
-            widget
-            + '<tr><td class="%s"><textarea class="text-input pagination-left" style="font-size: %spt; height: %spx; width: %spx;" name="%s" %s>%s</textarea></td></tr>'
-            % (
-                alignment_converter(self._alignment),
-                fontsize_converter(self._font_size),
-                self._y_size,
-                self._x_size,
-                self.name,
-                "" if self.enabled else ' disabled="disabled"',
-                self._input,
-            )
-        )
-
-        if self.corrective_hints:
-            widget = (
-                widget
-                + '<tr><td class="corrective-hint %s" style="font-size: %spt;">%s</td></tr>'
-                % (
-                    alignment_converter(self._alignment, "both"),
-                    fontsize_converter(self._font_size) - 1,
-                    self.corrective_hints[0],
-                )
-            )
-
-        widget = widget + "</table></div>"
-
-        return widget
-
-    @property
-    def css_code(self):
-        return [(99, ".TextareaElement { resize: none; }")]
-
-    def set_data(self, d):
-        if self.enabled:
-            super(TextAreaElement, self).set_data(d)
-
-
-class RegEntryElement(TextEntryElement):
-    def __init__(
-        self,
-        instruction="",
-        reg_ex=".*",
-        no_input_corrective_hint=None,
-        match_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        **kwargs,
-    ):
-        """
-        **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
-        on the left side of the line edit field.
-
-        :param str name: Name of TextAreaElement and stored input variable.
-        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param str reg_ex: Regular expression to match with user input.
-        :param str alignment: Alignment of TextAreaElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-
-        super(RegEntryElement, self).__init__(
-            instruction,
-            no_input_corrective_hint=no_input_corrective_hint,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            **kwargs,
-        )
-
-        self._reg_ex = reg_ex
-        self._match_hint = match_hint
-
-    def validate_data(self):
-        super(RegEntryElement, self).validate_data()
-
-        if not self._should_be_shown:
-            return True
-
-        if not self._force_input and self._input == "":
-            return True
-
-        if re.match(r"^%s$" % self._reg_ex, str(self._input)):
-            return True
-
-        return False
-
-    @property
-    def match_hint(self):
-        if self._match_hint is not None:
-            return self._match_hint
-        if (
-            self._page
-            and self._page._experiment
-            and "corrective_regentry" in self._page._experiment.settings.hints
-        ):
-            return self._page._experiment.settings.hints["corrective_regentry"]
-
-        msg = f"Can't access match_hint for  {type(self).__name__}"
-        self.log.error(msg)
-        return msg
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        elif re.match(r"^%s$" % self._reg_ex, self._input):
-            return []
-        elif self._input == "" and not self._force_input:
-            return []
-        elif self._input == "" and self._force_input:
-            return [self.no_input_hint]
-        else:
-            return [self.match_hint]
-
-    @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-        data["reg_ex_pattern"] = self._reg_ex
-        return data
-
-
-class NumberEntryElement(RegEntryElement):
-    def __init__(
-        self,
-        instruction="",
-        decimals=0,
-        min=None,
-        max=None,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        match_hint=None,
-        **kwargs,
-    ):
-        """
-        **NumberEntryElement*** displays a line edit, which only accepts numerical input. Instruction is shown
-        on the left side of the line edit field.
-
-        :param str name: Name of NumberEntryElement and stored input variable.
-        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param int decimals: Accepted number of decimals (0 as standard).
-        :param float min: Minimum accepted entry value.
-        :param float max: Maximum accepted entry value.
-        :param int spacing: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param str alignment: Alignment of NumberEntryElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in NumberEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-
-        """
-        super(NumberEntryElement, self).__init__(
-            instruction,
-            no_input_corrective_hint=no_input_corrective_hint,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            match_hint=match_hint,
-            **kwargs,
-        )
-
-        self._validator = None
-        self._decimals = decimals
-        self._min = min
-        self._max = max
-
-        self._template = Template(
-            """
-        <div class="text-entry-element"><table class="{{ alignment }}" style="font-size: {{ fontsize }}pt";>
-        <tr><td valign="bottom"><table class="{{ alignment }}"><tr><td style="padding-right: 5px;{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td>
-        <td valign="bottom">
-        {% if prefix or suffix %}
-            <div class="{% if prefix %}input-prepend {% endif %}{% if suffix %}input-append {% endif %}" style="margin-bottom: 0px;">
-        {% endif %}
-        {% if prefix %}
-            <span class="add-on">{{prefix}}</span>
-        {% endif %}
-        <input class="text-input" type="number" style="font-size: {{ fontsize }}pt; margin-bottom: 0px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %} {% if max is defined %}max={{ max }}{% endif %} {% if min is defined %}min={{ min }}{% endif %} {% if step %}step={{ step }}{% endif %} />
-        {% if suffix %}
-            <span class="add-on">{{suffix}}</span>
-        {% endif %}
-        {% if prefix or suffix %}
-            </div>
-        {% endif %}
-
-        </td></tr></table></td></tr>
-        {% if corrective_hint %}
-            <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
-        {% endif %}
-        </table></div>
-
-        """
-        )
-
-    @property
-    def web_widget(self):
-
-        d = {}
-        d["alignment"] = alignment_converter(self._alignment, "container")
-        d["fontsize"] = fontsize_converter(self._font_size)
-        d["width"] = self._instruction_width
-        d["height"] = self._instruction_height
-        d["instruction"] = self._instruction
-        d["name"] = self.name
-        d["input"] = self._input
-        d["disabled"] = not self.enabled
-        d["prefix"] = self._prefix
-        d["suffix"] = self._suffix
-        d["step"] = (
-            None
-            if self._decimals == 0
-            else "0." + "".join("0" for i in range(1, self._decimals)) + "1"
-        )
-        d["min"] = self._min
-        d["max"] = self._max
-        if self.corrective_hints:
-            d["corrective_hint"] = self.corrective_hints[0]
-        return self._template.render(d)
-
-    def validate_data(self):
-        """
-        """
-        super(NumberEntryElement, self).validate_data()
-
-        if not self._should_be_shown:
-            return True
-
-        if not self._force_input and self._input == "":
-            return True
-
-        try:
-            f = float(self._input)
-        except Exception:
-            return False
-
-        if self._min is not None:
-            if not self._min <= f:
-                return False
-
-        if self._max is not None:
-            if not f <= self._max:
-                return False
-
-        re_str = (
-            r"^[+-]?\d+$"
-            if self._decimals == 0
-            else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
-        )
-        if re.match(re_str, str(self._input)):
-            return True
-
-        return False
-
-    @property
-    def data(self):
-        if 0 < self._decimals:
-            try:
-                temp_input = float(self._input)
-            except Exception:
-                temp_input = ""
-        else:
-            try:
-                temp_input = int(self._input)
-            except Exception:
-                temp_input = ""
-
-        if self.validate_data() and temp_input != "":
-            return {self.name: temp_input}
-        else:
-            return {self.name: ""}
-
-    def set_data(self, d):
-
-        if self.enabled:
-            val = d.get(self.name, "")
-            if not isinstance(val, str):
-                val = str(val)
-            val = val.replace(",", ".")
-            super(NumberEntryElement, self).set_data({self.name: val})
-
-    @property
-    def match_hint(self):
-        if self._match_hint is not None:
-            return self._match_hint
-
-        if (
-            self._page
-            and self._page._experiment
-            and "corrective_numberentry" in self._page._experiment.settings.hints
-        ):
-            return self._page._experiment.settings.hints["corrective_numberentry"]
-        self.log.error(f"Can't access match_hint for {type(self).__name__}")
-        return f"Can't access match_hint for {type(self).__name__}"
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-
-        elif self._input == "" and not self._force_input:
-            return []
-
-        elif self._force_input and self._input == "":
-            return [self.no_input_hint]
-        else:
-            re_str = (
-                r"^[+-]?\d+$"
-                if self._decimals == 0
-                else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
-            )
-            if (
-                not re.match(re_str, str(self._input))
-                or (self._min is not None and not self._min <= float(self._input))
-                or (self._max is not None and not float(self._input) <= self._max)
-            ):
-
-                hint = self.match_hint
-
-                if 0 < self._decimals:
-                    hint = hint + " (Bis zu %s Nachkommastellen" % (self._decimals)
-                else:
-                    hint = hint + " (Keine Nachkommastellen"
-
-                if self._min is not None and self._max is not None:
-                    hint = hint + ", Min = %s, Max = %s)" % (self._min, self._max)
-                elif self._min is not None:
-                    hint = hint + ", Min = %s)" % self._min
-                elif self._max is not None:
-                    hint = hint + ", Max = %s)" % self._max
-                else:
-                    hint = hint + ")"
-                return [hint]
-
-            return []
-
-    @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-
-        data["decimals"] = self._decimals
-        data["min"] = self._min
-        data["max"] = self._max
-
-        return data
-
-
-class PasswordElement(TextEntryElement):
-    def __init__(
-        self,
-        instruction="",
-        password="",
-        force_input=True,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        wrong_password_hint=None,
-        **kwargs,
-    ):
-        """
-        **PasswordElement*** desplays a single line text edit for entering a password (input is not visible) with an instruction text on its' left.
-
-        :param str name: Name of PasswordElement and stored input variable.
-        :param str instruction: Instruction to be displayed with line edit field (can contain html commands).
-        :param str password: Password to be matched against user input.
-        :param int spacing: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param str alignment: Alignment of PasswordElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in PasswordElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (True as standard or False).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        :param str wrong_password_hint: Hint to be displayed if user input does not equal password.
-
-        .. caution:: If force_input is set to false, any input will be accepted, but still validated against correct password.
-        """
-        super(PasswordElement, self).__init__(
-            instruction,
-            no_input_corrective_hint=no_input_corrective_hint,
-            force_input=force_input,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            **kwargs,
-        )
-
-        self._password = password
-        self.wrong_password_hint_user = wrong_password_hint
-
-    @property
-    def web_widget(self):
-
-        widget = '<div class="text-entry-element"><table class="%s" style="font-size: %spt;">' % (
-            alignment_converter(self._alignment, "container"),
-            fontsize_converter(self._font_size),
-        )
-
-        widget = widget + '<tr><td valign="bottom"><table class="%s"><tr><td %s>%s</td>' % (
-            alignment_converter(self._alignment, "container"),
-            'style="width: %spx;"' % self._instruction_width
-            if self._instruction_width is not None
-            else "",
-            self._instruction,
-        )
-
-        widget = (
-            widget
-            + '<td valign="bottom"><input class="text-input" type="password" style="font-size: %spt; margin-bottom: 0px; margin-left: 5px;" name="%s" value="%s" %s /></td></tr></table></td></tr>'
-            % (
-                fontsize_converter(self._font_size),
-                self.name,
-                self._input,
-                "" if self.enabled else 'disabled="disabled"',
-            )
-        )
-
-        if self.corrective_hints:
-            widget = (
-                widget
-                + '<tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: %spt;">%s</td></tr></table></td></tr>'
-                % (fontsize_converter(self._font_size), self.corrective_hints[0])
-            )
-
-        widget = widget + "</table></div>"
-
-        return widget
-
-    def validate_data(self):
-        super(PasswordElement, self).validate_data()
-
-        if not self._force_input or not self._should_be_shown:
-            return True
-
-        return self._input == self._password
-
-    @property
-    def wrong_password_hint(self):
-        if self.wrong_password_hint_user is not None:
-            return self.wrong_password_hint_user
-        elif (
-            self._page
-            and self._page._experiment
-            and "corrective_password" in self._page._experiment.settings.hints
-        ):
-            return self._page._experiment.settings.hints["corrective_password"]
-        self.log.error(f"Can't access wrong_password_hint for {type(self).__name__}")
-        return f"Can't access wrong_password_hint for {type(self).__name__}"
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and self._input == "" and self._password != "":
-            return [self.no_input_hint]
-
-        if self._password != self._input:
-            return [self.wrong_password_hint]
-        else:
-            return []
-
-    @property
-    def data(self):
-        return {}
-
-    @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-        data["password"] = self._password
-        return data
-
-
-class LikertMatrix(InputElement, WebElementInterface):
-    def __init__(
-        self,
-        instruction="",
-        levels=7,
-        items=4,
-        top_scale_labels=None,
-        bottom_scale_labels=None,
-        item_labels=None,
-        item_label_width=None,
-        spacing=30,
-        transpose=False,
-        no_input_corrective_hint=None,
-        table_striped=False,
-        shuffle=False,
-        instruction_width=None,
-        instruction_height=None,
-        use_short_labels=False,
-        **kwargs,
-    ):
-        """
-        **LikertMatrix** displays a matrix of multiple likert items with adjustable scale levels per item.
-        Instruction is shown above element.
-
-        :param str name: Name of LikertMatrix and stored input variable.
-        :param str instruction: Instruction to be displayed above likert matrix (can contain html commands).
-        :param int levels: Number of scale levels.
-        :param int items: Number of items in matrix (rows or columns if transpose = True).
-        :param list top_scale_labels: Labels for each scale level on top of the Matrix.
-        :param list bottom_scale_labels: Labels for each scale level under the Matrix.
-        :param list item_labels: Labels for each item on both sides of the scale.
-        :param int spacing: Sets column width or row height (if transpose set to True) in likert matrix, can be used to ensure symmetric layout.
-        :param bool transpose: If set to True matrix is layouted vertically instead of horizontally.
-        :param str alignment: Alignment of LikertMatrix in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in LikertMatrix ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-
-        super(LikertMatrix, self).__init__(
-            no_input_corrective_hint=no_input_corrective_hint, **kwargs
-        )
-
-        if spacing < 30:
-            raise ValueError("Spacing must be greater or equal than 30!")
-
-        self._instruction = instruction
-        self._instruction_width = instruction_width
-        self._instruction_height = instruction_height
-        self._levels = levels
-        self._items = items
-        self._item_label_width = item_label_width
-        self._spacing = spacing
-        self._table_striped = table_striped
-        self._transpose = transpose
-        self._use_short_labels = use_short_labels
-
-        self._default_set = False
-
-        self._permutation = list(range(items))
-        self._shuffle = shuffle
-        if shuffle:
-            random.shuffle(self._permutation)
-
-        if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
-            raise ValueError(
-                "Es mussen keine oder %s OBERE (bei Transpose LINKE) Skalenlabels ubergeben werden."
-                % self._levels
-            )
-        self._top_scale_labels = top_scale_labels
-
-        if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
-            raise ValueError(
-                "Es mussen keine oder %s UNTERE (bei Transpose RECHTE) Skalenlabels ubergeben werden."
-                % self._levels
-            )
-        self._bottom_scale_labels = bottom_scale_labels
-
-        if item_labels is not None and not len(item_labels) == (2 * self._items):
-            raise ValueError(
-                "Es mussen keine oder %s Itemlabels ubergeben werden." % (2 * self._items)
-            )
-        self._item_labels = item_labels
-
-        if settings.debugmode and settings.debug.default_values:
-            self._input = [str(int(self._input) - 1) for i in range(self._items)]
-        elif not self._input == "":
-            self._input = [str(int(self._input) - 1) for i in range(self._items)]
-            self._default_set = True
-        else:
-            self._input = ["-1" for i in range(self._items)]
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return True
-
-    @property
-    def data(self):
-        lm_data = {}
-        for i in range(self._items):
-            label = self.name + "_item" + str(i + 1)
-            if self._use_short_labels:
-                short_labels = self._short_labels()
-                label += "_" + short_labels[i]
-            lm_data.update(
-                {label: None if int(self._input[i]) + 1 == 0 else int(self._input[i]) + 1}
-            )
-        lm_data[self.name + "_permutation"] = [i + 1 for i in self._permutation]
-        return lm_data
-
-    def _short_labels(self):
-        L = 6
-        rv = []
-        for i in range(self._items):
-            label = self._item_labels[2 * i]
-            if label != "":
-                label = label.replace(".", "")
-                words = label.split()
-                num = int(round((old_div(L, len(words))) + 0.5))
-                sl = ""
-                for w in words:
-                    sl = sl + w[:num]
-                rv.append(sl[:L])
+    def template_data(self):
+        d = super().template_data
+        d["choices"] = self.choices
+        d["vertical"] = self.vertical
+        d["type"] = self.type
+        return d
+
+    @abstractmethod
+    def define_choices(self) -> list:
+        pass
+
+
+class SingleChoiceElement(ChoiceElement):
+    """ 
+    """
+
+    element_class = "single-choice-element"
+    type = "radio"
+
+    def define_choices(self):
+        choices = []
+        for i, label in enumerate(self.choice_labels, start=1):
+            choice = Choice()
+
+            if isinstance(label, Element):
+                choice.label = label.web_widget
             else:
-                rv.append("")
-        return rv
+                if self.emojize:
+                    label = emojize(str(label), use_aliases=True)
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            choice.type = "radio"
+            choice.value = i
+            choice.name = self.name
+            choice.id = f"choice{i}-{self.name}"
+            choice.label_id = f"{choice.id}-lab"
 
-    @property
-    def web_widget(self):
+            if self.debug_enabled:
+                choice.checked = True if i == 1 else False
+            elif self.input:
+                choice.checked = True if int(self.input) == i else False
+            elif self.default:
+                choice.checked = True if (self.default == i) else False
 
-        widget = (
-            '<div class="likert-matrix"><table class="%s" style="clear: both; font-size: %spt; margin-bottom: 10px;"><tr><td %s>%s</td></tr></table>'
-            % (
-                alignment_converter(self._alignment, "container"),
-                fontsize_converter(self._font_size),
-                'style="width: %spx;"' % self._instruction_width
-                if self._instruction_width is not None
-                else "",
-                self._instruction,
-            )
-        )  # Extra Table for instruction
+            choice.css_class = f"choice-button choice-button-{self.name}"
 
-        widget = (
-            widget
-            + '<table class="%s %s table" style="width: auto; clear: both; font-size: %spt; margin-bottom: 10px;">'
-            % (
-                alignment_converter(self._alignment, "container"),
-                "table-striped" if self._table_striped else "",
-                fontsize_converter(self._font_size),
-            )
-        )  # Beginning Table
-
-        if not self._transpose:
-            if self._top_scale_labels:
-                widget = (
-                    widget + "<thead><tr><th></th>"
-                )  # Beginning row for top scalelabels, adding 1 column for left item_labels
-                for label in self._top_scale_labels:
-                    widget = (
-                        widget
-                        + '<th class="pagination-centered containerpagination-centered" style="text-align:center;width: %spx; vertical-align: bottom;">%s</th>'
-                        % (self._spacing, label)
-                    )  # Adding top Scalelabels
-
-                widget = (
-                    widget + "<th></th></tr></thead>"
-                )  # adding 1 Column for right Itemlabels, ending Row for top Scalelabels
-
-            widget = widget + "<tbody>"
-            for i in self._permutation:
-                widget = widget + "<tr>"  # Beginning new row for item
-                if self._item_labels:
-                    widget = (
-                        widget
-                        + '<td style="text-align:right; vertical-align: middle;">%s</td>'
-                        % self._item_labels[i * 2]
-                    )  # Adding left itemlabel
-                else:
-                    widget = widget + "<td></td>"  # Placeholder if no item_labels set
-
-                for j in range(self._levels):  # Adding Radiobuttons for each level
-                    widget = (
-                        widget
-                        + '<td style="text-align:center; vertical-align: middle; margin: auto auto;"><input type="radio" style="margin: 4px 4px 4px 4px;" name="%s" value="%s" %s %s /></td>'
-                        % (
-                            self.name + "_" + str(i),
-                            j,
-                            ' checked="checked"' if self._input[i] == str(j) else "",
-                            "" if self.enabled else ' disabled="disabled"',
-                        )
-                    )
-
-                if self._item_labels:
-                    widget = (
-                        widget
-                        + '<td style="text-align:left;vertical-align: middle;">%s</td>'
-                        % self._item_labels[(i + 1) * 2 - 1]
-                    )  # Adding right itemlabel
-                else:
-                    widget = widget + "<td></td>"  # Placeholder if no item_labels set
-
-                widget = widget + "</tr>"  # Closing row for item
-            widget = widget + "</tbody>"
-
-            if self._bottom_scale_labels:
-                widget = (
-                    widget + "<tfoot><tr><th></th>"
-                )  # Beginning row for bottom scalelabels, adding 1 column for left item_labels
-                for label in self._bottom_scale_labels:
-                    widget = (
-                        widget
-                        + '<th class="pagination-centered containerpagination-centered" style="text-align:center;width: %spx; vertical-align: top;">%s</th>'
-                        % (self._spacing, label)
-                    )  # Adding bottom Scalelabels
-
-                widget = (
-                    widget + "<th></th></tr></tfoot>"
-                )  # adding 1 Column for right Itemlabels, ending Row for bottom Scalelabels
-
-            widget = widget + "</table>"  # Closing table for LikertMatrix
-
-        else:  # If transposed is set to True
-            if self._item_labels:
-                widget = (
-                    widget + "<tr><td></td>"
-                )  # Beginning row for top (left without transpose) item_labels, adding 1 column for left (top without transpose) scalelabels
-                for i in range(old_div(len(self._item_labels), 2)):
-                    widget = (
-                        widget
-                        + '<td class="pagination-centered containerpagination-centered" style="text-align:center; vertical-align: bottom;">%s</td>'
-                        % self._item_labels[i * 2]
-                    )  # Adding top item_labels
-
-                widget = (
-                    widget + "<td></td></tr>"
-                )  # adding 1 Column for right scalelabels, ending Row for top item_labels
-
-            for i in range(self._levels):
-                widget = (
-                    widget + '<tr style="height: %spx;">' % self._spacing
-                )  # Beginning new row for level
-                if self._top_scale_labels:
-                    widget = (
-                        widget
-                        + '<td class="pagination-right" style="vertical-align: middle;">%s</td>'
-                        % self._top_scale_labels[i]
-                    )  # Adding left scalelabel
-                else:
-                    widget = widget + "<td></td>"  # Placeholder if no scalelabels set
-
-                for j in range(self._items):  # Adding Radiobuttons for each item
-                    widget = (
-                        widget
-                        + '<td class="pagination-centered" style="text-align:center; vertical-align: middle; margin: auto auto;"><input type="radio" style="margin: 4px 4px 4px 4px;" name="%s" value="%s"%s%s /></td>'
-                        % (
-                            self.name + "_" + str(j),
-                            i,
-                            ' checked="checked"' if self._input[j] == str(i) else "",
-                            "" if self.enabled else ' disabled="disabled"',
-                        )
-                    )
-
-                if self._bottom_scale_labels:
-                    widget = (
-                        widget
-                        + '<td class="pagination-left" style="vertical-align: middle;">%s</td>'
-                        % self._bottom_scale_labels[i]
-                    )  # Adding right scalelabel
-                else:
-                    widget = widget + "<td></td>"  # Placeholder if no scalelabels set
-
-                widget = widget + "</tr>"  # Closing row for level
-
-            if self._item_labels:
-                widget = (
-                    widget + "<tr><td></td>"
-                )  # Beginning row for bottom (right without transpose) item_labels, adding 1 column for left (top without transpose) scalelabels
-                for i in range(old_div(len(self._item_labels), 2)):
-                    widget = (
-                        widget
-                        + '<td class="pagination-centered containerpagination-centered" style="text-align:center; vertical-align: top;">%s</td>'
-                        % self._item_labels[(i + 1) * 2 - 1]
-                    )  # Adding bottom item_labels
-
-                widget = (
-                    widget + "<td></td></tr>"
-                )  # adding 1 Column for right scalelabels, ending Row for bottom item_labels
-
-            widget = widget + "</table>"  # Closing table for LikertMatrix
-
-        if self.corrective_hints:
-
-            widget = (
-                widget
-                + '<table class="%s" style="clear: both; font-size: %spt;"><tr><td class="corrective-hint" >%s</td></tr></table>'
-                % (
-                    alignment_converter(self._alignment, "container"),
-                    fontsize_converter(self._font_size) - 1,
-                    self.corrective_hints[0],
-                )
-            )
-
-        widget = widget + "</div>"
-
-        return widget
-
-    def validate_data(self):
-        super(LikertMatrix, self).validate_data()
-        try:
-            if not self._force_input or not self._should_be_shown:
-                return True
-
-            ret = True
-            for i in range(self._items):
-                value = int(self._input[i])
-                ret = ret and 0 <= value <= self._levels
-            return ret
-        except Exception:
-            return False
-
-    def set_data(self, d):
-        if self.enabled:
-            for i in range(self._items):
-                self._input[i] = d.get(self.name + "_" + str(i), "-1")
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and reduce(lambda b, val: b or val == "-1", self._input, False):
-            return [self.no_input_hint]
-        else:
-            return super(InputElement, self).corrective_hints
-
-    @property
-    def codebook_data_flat(self):
-        raise NotImplementedError("Property not implemented for LikertMatrix.")
-
-    def _likert_name(self, item: int) -> str:
-        suffix = f"_item{item}" if self.__class__.__name__ == "LikertMatrix" else ""
-        return self.identifier + suffix
+            choices.append(choice)
+        return choices
 
     @property
     def codebook_data(self):
-        data = {}
+        d = super().codebook_data
 
-        labels = []
-        for i in range(len(self._item_labels)):
-            if i % 2 == 0:
-                labels.append(self._item_labels[i : i + 2])
+        for i, lab in enumerate(self.choice_labels, start=1):
+            try:
+                d.update({f"choice{i}": lab.text})  # if there is a text attribute, we use it.
+            except AttributeError:
+                d.update({f"choice{i}": str(lab)})  # otherwise __str__
 
-        for item in range(self._items):
-            element = super().codebook_data_flat
-            label_left, label_right = labels[item]
-            element["identifier"] = self._likert_name(item + 1)
-            element["item"] = item + 1
-            element["instruction"] = self._instruction
-            element["n_levels"] = self._levels
-            element["top_labels"] = (
-                ", ".join(self._top_scale_labels) if self._top_scale_labels else None
-            )
-            element["bottom_labels"] = (
-                ", ".join(self._bottom_scale_labels) if self._bottom_scale_labels else None
-            )
-            element["item_label_left"] = label_left
-            element["item_label_right"] = label_right
-            element["transposed"] = self._transpose
-            element["shuffle"] = self._shuffle
-            element["duplicate_identifier"] = False
-            data[element["identifier"]] = element
-
-        return data
-
-
-class LikertElement(LikertMatrix):
-    def __init__(
-        self,
-        instruction="",
-        levels=7,
-        top_scale_labels=None,
-        bottom_scale_labels=None,
-        item_labels=None,
-        item_label_width=None,
-        spacing=30,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        transpose=False,
-        **kwargs,
-    ):
-        """
-        **LikertElement** returns a single likert item with n scale levels and an instruction shown above the element.
-
-        :param str name: Name of LikertElement and stored input variable.
-        :param str instruction: Instruction to be displayed above likert matrix (can contain html commands).
-        :param int levels: Number of scale levels.
-        :param list topscalelabels: Labels for each scale level on top of the Item.
-        :param list bottomscalelabels: Labels for each scale level under the Item.
-        :param list itemlabels: Labels on both sides of the scale.
-        :param int spacing: Sets column width or row height (if transpose set to True) in LikertElement, can be used to ensure symmetric layout.
-        :param bool transpose: If True item is layouted vertically instead of horizontally.
-        :param str alignment: Alignment of LikertElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in LikertElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-        super(LikertElement, self).__init__(
-            instruction=instruction,
-            items=1,
-            levels=levels,
-            top_scale_labels=top_scale_labels,
-            bottom_scale_labels=bottom_scale_labels,
-            item_labels=item_labels,
-            item_label_width=item_label_width,
-            spacing=spacing,
-            no_input_corrective_hint=no_input_corrective_hint,
-            table_striped=False,
-            transpose=transpose,
-            shuffle=False,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            **kwargs,
-        )
-
-    @property
-    def data(self):
-        lm_data = {}
-        lm_data.update(
-            {self.name: None if int(self._input[0]) + 1 == 0 else int(self._input[0]) + 1}
-        )
-        return lm_data
-
-
-class SingleChoiceElement(LikertElement):
-    def __init__(
-        self,
-        instruction="",
-        item_labels=None,
-        item_label_width=None,
-        item_label_height=None,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        shuffle=False,
-        table_striped=False,
-        **kwargs,
-    ):
-        """
-        **SingleChoiceElement** returns a vertically layouted item with adjustable choice alternatives (comparable to levels of likert scale),
-        from which only one can be selected.
-
-        :param str name: Name of SingleChoiceElement and stored input variable.
-        :param str instruction: Instruction to be displayed above SingleChoiceElement (can contain html commands).
-        :param int levels: Number of choice alternatives.
-        :param list labels: Labels for each choice alternative on the right side of the scale.
-        :param int spacing: Sets row height in SingleChoiceElement, can be used to ensure symmetric layout.
-        :param str alignment: Alignment of SingleChoiceElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in SingleChoiceElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-
-        kwargs.pop(
-            "transpose", None
-        )  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
-        kwargs.pop(
-            "items", None
-        )  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
-
-        if len(item_labels) == 0:
-            raise ValueError("Es müssen Itemlabels übergeben werden.")
-        super(SingleChoiceElement, self).__init__(
-            instruction=instruction,
-            no_input_corrective_hint=no_input_corrective_hint,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            **kwargs,
-        )
-
-        self._permutation = list(range(len(item_labels)))
-        if shuffle:
-            random.shuffle(self._permutation)
-
-        self._item_label_width = item_label_width
-        self._item_label_height = item_label_height
-        self._table_striped = table_striped
-        self._items = 1
-        self._levels = len(item_labels)
-        self._item_labels = item_labels
-        self._suffle = shuffle
-
-        if settings.debugmode and settings.debug.default_values:
-            self._input = str(int(self._input[0]))
-        elif not self._input == "":
-            self._input = str(int(self._input[0]))
-            self._default_set = True
-        else:
-            self._input = "-1"
-
-    @property
-    def web_widget(self):
-
-        widget = (
-            '<div class="single-choice-element"><table class="%s" style="clear: both; font-size: %spt; margin-bottom: 10px;"><tr><td %s>%s</td></tr></table>'
-            % (
-                alignment_converter(self._alignment, "container"),
-                fontsize_converter(self._font_size),
-                'style="width: %spx;"' % self._instruction_width
-                if self._instruction_width is not None
-                else "",
-                self._instruction,
-            )
-        )  # Extra Table for instruction
-
-        widget = (
-            widget
-            + '<table class="%s %s table" style="width: auto; clear: both; font-size: %spt; margin-bottom: 10px;">'
-            % (
-                alignment_converter(self._alignment, "container"),
-                "table-striped" if self._table_striped else "",
-                fontsize_converter(self._font_size),
-            )
-        )  # Beginning Table
-
-        for i in range(
-            self._levels
-        ):  # Adding Radiobuttons for each sclae level in each likert item
-
-            widget = (
-                widget
-                + '<tr><td class="pagination-centered" style="vertical-align: middle; margin: auto auto;"><input type="radio" style="margin: 4px 4px 4px 4px;" name="%s" value="%s"%s%s /></td>'
-                % (
-                    self.name,
-                    self._permutation[i],
-                    ' checked="checked"' if self._input == str(self._permutation[i]) else "",
-                    "" if self.enabled else ' disabled="disabled"',
-                )
-            )
-
-            widget = (
-                widget
-                + '<td class="pagination-left" style="vertical-align: middle;" %s>%s</td></tr>'
-                % (
-                    "width: " + str(self._item_label_width) + "px;"
-                    if self._item_label_width
-                    else "",
-                    self._item_labels[self._permutation[i]],
-                )
-            )  # Adding item label
-
-        widget = widget + "</table>"  # Closing table for SingleChoiceElement
-
-        if self.corrective_hints:
-            widget = (
-                widget
-                + '<table class="%s" style="clear: both; font-size: %spt;"><tr><td class="corrective-hint" >%s</td></tr></table>'
-                % (
-                    alignment_converter(self._alignment, "container"),
-                    fontsize_converter(self._font_size),
-                    self.corrective_hints[0],
-                )
-            )
-
-        widget = widget + "</div>"
-
-        return widget
-
-    def set_data(self, d):
-        if self.enabled:
-            self._input = d.get(self.name, "-1")
-
-    @property
-    def data(self):
-        d = {self.name: None if int(self._input) + 1 == 0 else int(self._input) + 1}
-        if self._suffle:
-            d[self.name + "_permutation"] = [i + 1 for i in self._permutation]
         return d
 
-    def validate_data(self):
-        super(SingleChoiceElement, self).validate_data()
-        try:
-            if not self._force_input or not self._should_be_shown:
-                return True
 
-            ret = True
-            value = int(self._input)
-            ret = ret and 0 <= value <= self._levels
-            return ret
-        except Exception:
-            return False
+class SingleChoiceButtons(SingleChoiceElement):
+    """
 
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and self._input == "-1":
-            return [self.no_input_hint]
-        else:
-            return super(InputElement, self).corrective_hints
+    "align" parameter has no effect in labels.
 
+    Keyword Arguments:
+        button_width: Can be used to manually define the width of 
+            buttons. If you supply a single string, the same width will
+            be applied to all buttons in the element. If you supply
+            "auto", button width will be determined automatically. You 
+            can also supply a list of specific widths for each 
+            individual button. You must specify a unit, e.g. '140px'. 
+            Defaults to "equal".
+        button_style: Can be used for quick color-styling, using 
+            Bootstraps default color keywords: btn-primary, btn-secondary,
+            btn-success, btn-info, btn-warning, btn-danger, btn-light, 
+            btn-dark. You can also use the "outline" variant to get 
+            outlined buttons (eg. "btn-outline-secondary"). If you 
+            specify a single string, this style is applied to all 
+            buttons in the element. If you supply a list, you can define
+            individual styles for each button. If you supply a list that
+            is shorter than the list of labels, the last style
+            will be repeated for remaining buttons. Advanced user can
+            supply their own CSS classes for button-styling.
+        button_toolbar: A boolean switch to toggle whether buttons should
+            be layoutet as a connected toolbar (*True*), or as separate
+            neighbouring buttons (*False*, default).
+        button_round_corners: A boolean switch to toggle whether buttons
+            should be displayed with additionally rounded corners 
+            (*True*). Defaults to *False*.
+    """
 
-class MultipleChoiceElement(LikertElement):
+    element_class: str = "single-choice-buttons"
+    element_template = jinja_env.get_template("ChoiceButtons.html.j2")
+
+    button_toolbar: bool = False
+    button_group_class: str = "choice-button-group"
+    button_round_corners = True
+
     def __init__(
         self,
-        instruction="",
-        item_labels=[],
-        min_select=None,
-        max_select=None,
-        select_hint=None,
-        item_label_width=None,
-        item_label_height=None,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        shuffle=False,
-        table_striped=False,
+        *choice_labels,
+        button_width: Union[str, list] = "equal",
+        button_style: Union[str, list] = "btn-outline-dark",
+        button_corners: str = None,
         **kwargs,
     ):
-        """
-        **SingleChoiceElement** returns a vertically layouted item with adjustable choice alternatives (comparable to levels of likert scale)
-        as checkboxes, from which one or more can be selected.
+        super().__init__(*choice_labels, **kwargs)
+        self.button_width = button_width
+        self.button_style = button_style
+        if button_corners is not None and button_corners == "normal":
+            self.button_round_corners = False
 
-        :param str name: Name of MultipleChoiceElement and stored input variable.
-        :param str instruction: Instruction to be displayed above MultipleChoiceElement (can contain html commands).
-        :param int levels: Number of choice alternatives.
-        :param list labels: Labels for each choice alternative on the right side of the scale.
-        :param int spacing: Sets row height in MultipleChoiceElement, can be used to ensure symmetric layout.
-        :param str alignment: Alignment of MultipleChoiceElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in MultipleChoiceElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
+    @property
+    def button_style(self):
+        return self._button_style
 
-        kwargs.pop(
-            "transpose", None
-        )  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
-        kwargs.pop(
-            "items", None
-        )  # Stellt sicher, dass keine ungültigen Argumente verwendet werden
+    @button_style.setter
+    def button_style(self, value):
 
-        default = kwargs.pop("default", None)
-        debug_string = kwargs.pop("debug_string", None)
+        # create list of fitting length, if only string is provided
+        if isinstance(value, str):
+            self._button_style = [value for x in self.choice_labels]
 
-        if len(item_labels) == 0:
-            raise ValueError("Es müssen Itemlabels übergeben werden.")
+        # take styles-list if the length fits
+        elif isinstance(value, list) and len(value) == len(self.choice_labels):
+            self._button_style = value
 
-        super(MultipleChoiceElement, self).__init__(
-            instruction=instruction,
-            no_input_corrective_hint=no_input_corrective_hint,
-            instruction_width=instruction_width,
-            instruction_height=instruction_height,
-            **kwargs,
-        )
+        # repeat last value, if styles-list is shorter than labels-list
+        elif isinstance(value, list) and len(value) < len(self.choice_labels):
+            self._button_style = []
+            for i, _ in enumerate(self.choice_labels):
+                try:
+                    self._button_style.append(value[i])
+                except IndexError:
+                    self._button_style.append(value[-1])
 
-        self._permutation = list(range(len(item_labels)))
-        if shuffle:
-            random.shuffle(self._permutation)
+        elif isinstance(value, list) and len(value) > len(self.choice_labels):
+            raise ValueError("List of button styles cannot be longer than list of button labels.")
 
-        self._item_label_width = item_label_width
-        self._item_label_height = item_label_height
-        self._table_striped = table_striped
-        self._levels = len(item_labels)
-        self._items = 1
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["button_style"] = self.button_style
+        d["button_group_class"] = self.button_group_class
+        d["align_raw"] = self._convert_alignment()
+        return d
 
-        if min_select and min_select > self._levels:
-            raise ValueError("min_select must be smaller than number of items")
+    def _button_width(self):
+        """Add css for button width."""
 
-        if max_select and max_select < 2:
-            raise ValueError("max_select must be set to 2 or higher")
-
-        self._min_select = min_select
-        self._max_select = max_select
-
-        if select_hint:
-            self._select_hint = select_hint
-        else:
-            if min_select and not max_select:
-                self._select_hint = (
-                    "Bitte wählen Sie mindestens %i Optionen aus" % self._min_select
-                )
-            elif max_select and not min_select:
-                self._select_hint = "Bitte wählen Sie höchstens %i Optionen aus" % self._max_select
-            elif max_select and min_select:
-                self._select_hint = (
-                    "Bitte wählen Sie mindestens %i und höchstens %i Optionen aus"
-                    % (self._min_select, self._max_select)
-                )
-
-        if self._min_select:
-            self._no_input_corrective_hint = self._select_hint
-
-        self._item_labels = item_labels
-        self._suffle = shuffle
-
-        # default values and debug values have to be implemented with the following workaround resulting from deducing LikertItem
-
-        self._input = ["0" for i in range(len(self._item_labels))]
-
-        if settings.debugmode and settings.debug.default_values:
-            if not debug_string:
-                self._input = settings.debug.get(
-                    self.__class__.__name__
-                )  # getting default value (True or False)
+        if self.button_width == "equal":
+            if not self.vertical:
+                # set button width to small value, because they will grow to fit the group
+                css = f".btn.choice-button-{self.name} {{width: 10px;}} "
             else:
-                self._input = settings._config_parser.get("debug", debug_string)
+                css = []
+            # full-width buttons on small screens
+            css += (
+                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
+            )
+            self._css_code += [(7, css)]
 
-            if self._input is True:
-                self._input = ["1" for i in range(len(self._item_labels))]
-            else:
-                self._input = ["0" for i in range(len(self._item_labels))]
+        elif isinstance(self.button_width, str):
+            # the group needs to be switched to growing with its member buttons
+            css = f"#choice-button-group-{self.name} {{width: auto;}} "
+            # and return to 100% with on small screens
+            css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}} "
 
-        if default is not None:
-            self._input = default
+            # now the width of the individual button has an effect
+            css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
+            # and it, too returns to full width on small screens
+            css += (
+                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
+            )
+            self._css_code += [(7, css)]
 
-            if not len(self._input) == len(self._item_labels):
+        elif isinstance(self.button_width, list):
+            if not len(self.button_width) == len(self.choices):
                 raise ValueError(
-                    'Wrong default data! Default value must be set to a list of %s values containing either "0" or "1"!'
-                    % (len(self._item_labels))
+                    "Length of list 'button_width' must equal length of list 'choices'."
                 )
 
-    @property
-    def web_widget(self):
+            # the group needs to be switched to growing with its member buttons
+            css = f"#choice-button-group-{self.name} {{width: auto;}} "
+            # and return to 100% with on small screens
+            css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}}"
+            self._css_code += [(7, css)]
 
-        widget = (
-            '<div class="multiple-choice-element"><table class="%s" style="clear: both; font-size: %spt; margin-bottom: 10px;"><tr><td %s>%s</td></tr></table>'
-            % (
-                alignment_converter(self._alignment, "container"),
-                fontsize_converter(self._font_size),
-                'style="width: %spx;"' % self._instruction_width
-                if self._instruction_width is not None
-                else "",
-                self._instruction,
-            )
-        )  # Extra Table for instruction
+            # set width for each individual button
+            for w, c in zip(self.button_width, self.choices):
+                css = f"#{c.label_id} {{width: {w};}} "
+                css += f"@media (max-width: 576px) {{#{c.label_id} {{width: 100%!important;}}}} "
+                self._css_code += [(7, css)]
 
-        widget = (
-            widget
-            + '<table class="%s %s" style="clear: both; font-size: %spt; line-height: normal; margin-bottom: 10px;">'
-            % (
-                alignment_converter(self._alignment, "container"),
-                "table-striped" if self._table_striped else "",
-                fontsize_converter(self._font_size),
-            )
-        )  # Beginning Table
+    def _round_corners(self):
+        """Adds css for rounded buttons."""
 
-        for i in range(self._levels):
-            widget = (
-                widget
-                + '<tr style="height: %spx;"><td class="pagination-centered" style="vertical-align: middle; margin: auto auto;"><input type="checkbox" style="vertical-align: middle; margin: 4px 4px 4px 4px;" name="%s" value="%s" %s %s /></td>'
-                % (
-                    self._spacing,
-                    self.name + "_" + str(self._permutation[i]),
-                    1,
-                    ' checked="checked"' if self._input[self._permutation[i]] == "1" else "",
-                    "" if self.enabled else ' disabled="disabled"',
-                )
-            )
-            widget = (
-                widget
-                + '<td class="pagination-left" style="vertical-align: middle;">%s</td></tr>'
-                % self._item_labels[self._permutation[i]]
-            )
+        spec = "border-radius: 1rem;"
+        css = f"div#choice-button-group-{ self.name }.btn-group>label.btn.choice-button {{{spec}}}"
+        self._css_code += [(7, css)]
 
-        widget = widget + "</table>"
+    def _toolbar(self):
+        """Adds css for toolbar display instead of separate buttons."""
 
-        if self.corrective_hints:
-            widget = (
-                widget
-                + '<table class="%s" style="clear: both; font-size: %spt;"><tr><td class="corrective-hint" >%s</td></tr></table>'
-                % (
-                    alignment_converter(self._alignment, "container"),
-                    fontsize_converter(self._font_size),
-                    self.corrective_hints[0],
-                )
-            )
+        not_ = "last", "first"
+        margin = "right", "left"
 
-        widget = widget + "</div>"
+        for exceptn, m in zip(not_, margin):
+            n = "0" if m == "right" else "-1px"
+            spec = f"margin-{m}: {n}; "
+            spec += f"border-top-{m}-radius: 0; "
+            spec += f"border-bottom-{m}-radius: 0;"
+            css = f"div#choice-button-group-{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
+            self._css_code += [(7, css)]
 
-        return widget
-
-    @property
-    def data(self):
-        mc_data = {}
-        for i in range(self._levels):
-            mc_data.update({self.name + "_" + str(i + 1): int(self._input[i])})
-        if self._suffle:
-            mc_data[self.name + "_permutation"] = [i + 1 for i in self._permutation]
-        return mc_data
-
-    def set_data(self, d):
-        if self.enabled:
-            for i in range(self._levels):
-                self._input[i] = d.get(self.name + "_" + str(i), "0")
-
-    def validate_data(self):
-        if not self._force_input or not self._should_be_shown:
-            return True
-
-        if not self._min_select and not self._max_select:
-            for item in self._input:
-                if item == "1":
-                    return True
+    def _convert_alignment(self):
+        if self.vertical:
+            if self.align == "center":
+                return "align-self-center"
+            elif self.align == "left":
+                return "align-self-start"
+            elif self.align == "right":
+                return "align-self-end"
         else:
-            count = 0
-            for item in self._input:
-                if item == "1":
-                    count += 1
-
-            if self._min_select and count < self._min_select:
-                return False
-            if self._max_select and count > self._max_select:
-                return False
-
-            return True
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and not reduce(lambda b, val: b or val == "1", self._input, False):
-            return [self.no_input_hint]
-
-        if self._min_select or self._max_select:
-            hints = []
-            count = 0
-            for item in self._input:
-                if item == "1":
-                    count += 1
-
-            if self._min_select and count < self._min_select:
-                hints.append(self._select_hint)
-            elif self._max_select and count > self._max_select:
-                hints.append(self._select_hint)
-
-            return hints
-
-        return super(InputElement, self).corrective_hints
-
-    @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-        data["min_select"] = self._min_select
-        data["max_select"] = self._max_select
-        data["top_labels"] = ", ".join(self._top_scale_labels) if self._top_scale_labels else None
-        data["bottom_labels"] = (
-            ", ".join(self._bottom_scale_labels) if self._bottom_scale_labels else None
-        )
-        return data
-
-
-class LikertListElement(InputElement, WebElementInterface):
-    def __init__(
-        self,
-        instruction="",
-        levels=7,
-        top_scale_labels=None,
-        bottom_scale_labels=None,
-        item_labels=[],
-        item_label_height=None,
-        item_label_width=None,
-        item_label_alignment="left",
-        table_striped=False,
-        spacing=30,
-        shuffle=False,
-        instruction_width=None,
-        instruction_height=None,
-        use_short_labels=False,
-        **kwargs,
-    ):
-        """
-        **LikertListElement** displays a likert item with images as labels.
-        Instruction is shown above element.
-
-        :param str name: Name of WebLikertImageElement and stored input variable.
-        :param str instruction: Instruction to be displayed above likert matrix (can contain html commands).
-        :param int levels: Number of scale levels..
-        :param int spacing: Sets column width between radio buttons.
-        :param str alignment: Alignment of WebLikertImageElement in widget container ('left' as default, 'center', 'right').
-        :param str/int font: Fontsize used in WebLikertImageElement ('normal' as default, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as default or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-
-        super(LikertListElement, self).__init__(**kwargs)
-
-        self._instruction = instruction
-        self._instruction_width = instruction_width
-        self._instruction_height = instruction_height
-        self._levels = levels
-        self._top_scale_labels = top_scale_labels
-        self._bottom_scale_labels = bottom_scale_labels
-        self._item_labels = item_labels
-        self._item_label_height = item_label_height
-        self._item_label_width = item_label_width
-        self._item_label_align = item_label_alignment
-        self._table_striped = table_striped
-        self._spacing = spacing
-        self._default_set = False
-        self._use_short_labels = use_short_labels
-
-        if spacing < 30:
-            raise ValueError("Spacing must be greater or equal than 30!")
-
-        if top_scale_labels is not None and not len(top_scale_labels) == self._levels:
-            raise ValueError(
-                "Es müssen keine oder %s OBERE Skalenlabels übergeben werden." % self._levels
-            )
-
-        if bottom_scale_labels is not None and not len(bottom_scale_labels) == self._levels:
-            raise ValueError(
-                "Es müssen keine oder %s UNTERE Skalenlabels übergeben werden." % self._levels
-            )
-
-        self._permutation = list(range(len(item_labels)))
-        if shuffle:
-            random.shuffle(self._permutation)
-
-        if settings.debugmode and settings.debug.default_values:
-            self._input = [str(int(self._input) - 1) for i in item_labels]
-        elif not self._input == "":
-            self._input = [str(int(self._input) - 1) for i in item_labels]
-            self._default_set = True
-        else:
-            self._input = ["-1" for i in item_labels]
-
-        self._template = Template(
-            """
-            <div class="" style="font-size: {{fontsize}}pt; text-align: {{alignment}}">
-                {% if instruction %}<p>{{instruction}}</p>{% endif %}
-                <table class="{{contalignment}} table {{striped}}" style="width: auto;">
-                    {% if topscalelabels %}
-                    <thead>
-                    <tr>
-                        <th></th>
-                        {% for topscalelabel in topscalelabels %}
-                            <th style="text-align:center;">{{topscalelabel}}</th>
-                        {% endfor %}
-                    </tr>
-                    </thead>
-                    {% endif %}
-                    {% if bottomscalelabels %}
-                    <tfoot>
-                    <tr>
-                        <th></th>
-                        {% for bottomscalelabel in bottomscalelabels %}
-                            <th style="text-align:center;">{{bottomscalelabel}}</th>
-                        {% endfor %}
-                    </tr>
-                    </tfoot>
-                    {% endif %}
-                    <tbody>
-                    {% for i in permutation %}
-                        <tr>
-                        <td style="text-align: {{itemlabel_align}};{% if itemlabel_width%}width: {{itemlabel_width}}px;{% endif %}">{{itemlabels[i]}}</td>
-                        {% for j in range(levels) %}
-                            <td style="width:{{spacing}}pt;vertical-align: middle; text-align:center;"><input type="radio" style="margin: 4px 4px 4px 4px;" name={{name}}_{{i}} value="{{j}}"{% if j == values[i] %} checked="checked"{% endif %}{% if not enabled %} disabled="disabled"{% endif %} /></td>
-                        {% endfor %}
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% for hint in hints%}
-                    <p style="color: red;">{{hint}}</p>
-                {% endfor %}
-
-            </div>
-            """
-        )
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return True
-
-    def _short_labels(self):
-        L = 6
-        rv = []
-        for label in self._item_labels:
-            if label != "":
-                label = label.replace(".", "")
-                words = label.split()
-                num = int(round((old_div(L, len(words))) + 0.5))
-                sl = ""
-                for w in words:
-                    sl = sl + w[:num]
-                rv.append(sl[:L])
-            else:
-                rv.append("")
-        return rv
-
-    @property
-    def data(self):
-        d = {}
-        d[self._name + "_permutation"] = [i + 1 for i in self._permutation]
-        short_labels = self._short_labels()
-        for i in range(len(self._item_labels)):
-            label = self.name + "_" + str(i + 1)
-            if self._use_short_labels:
-                label += "_" + short_labels[i]
-            d[label] = int(self._input[i]) + 1
-            if d[label] == 0:
-                d[label] = None
-        return d
-
-    def set_data(self, d):
-        if self._enabled:
-            for i in range(len(self._item_labels)):
-                self._input[i] = d.get(self.name + "_" + str(i), "-1")
-
-    @property
-    def web_widget(self):
-        d = {}
-        d["fontsize"] = fontsize_converter(self._font_size)
-        d["contalignment"] = alignment_converter(self._alignment, "container")
-        d["alignment"] = self._alignment
-        d["instruction"] = self._instruction
-        d["striped"] = "table-striped" if self._table_striped else ""
-        d["spacing"] = self._spacing
-        d["hints"] = self.corrective_hints
-        d["name"] = self.name
-        d["enabled"] = self.enabled
-        d["levels"] = self._levels
-        d["values"] = [int(v) for v in self._input]
-        d["permutation"] = self._permutation
-        d["topscalelabels"] = self._top_scale_labels
-        d["bottomscalelabels"] = self._bottom_scale_labels
-        d["itemlabels"] = self._item_labels
-        d["itemlabel_width"] = self._item_label_width
-        d["itemlabel_align"] = self._item_label_align
-
-        return self._template.render(d)
-
-    def validate_data(self):
-        super(LikertListElement, self).validate_data()
-        try:
-            if not self._force_input or not self._should_be_shown:
-                return True
-
-            ret = True
-            for v in self._input:
-                ret = ret and 0 <= int(v) < self._levels
-            return ret
-        except Exception:
-            return False
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and reduce(lambda b, val: b or val == "-1", self._input, False):
-            return [self.no_input_hint]
-        else:
-            return super(LikertListElement, self).corrective_hints
-
-    @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-        data["labels"] = "(images)"
-        data["n_levels"] = self._levels
-        data["top_labels"] = ", ".join(self._top_scale_labels) if self._top_scale_labels else None
-        data["bottom_labels"] = (
-            ", ".join(self._bottom_scale_labels) if self._bottom_scale_labels else None
-        )
-        return data
-
-
-class ImageElement(Element, WebElementInterface):
-    def __init__(
-        self, path=None, url=None, x_size=None, y_size=None, alt=None, maximizable=False, **kwargs
-    ):
-        super(ImageElement, self).__init__(**kwargs)
-
-        if not path and not url:
-            raise ValueError("path or url must be set in image element")
-
-        self._path = path
-        self._url = url
-
-        self._x_size = x_size
-        self._y_size = y_size
-        self._alt = alt
-        self._image_url = None
-        self._maximizable = maximizable
-        self._min_times = []
-        self._max_times = []
+            return None
 
     def prepare_web_widget(self):
-        if self._image_url is None:
-            if self._path:
-                self._image_url = self._page._experiment.user_interface_controller.add_static_file(
-                    self._path
-                )
-            elif self._url:
-                self._image_url = self._url
+        super().prepare_web_widget()
+
+        if self.button_toolbar:
+            self._toolbar()
+
+        if self.button_round_corners:
+            self._round_corners()
+
+        if not self.button_width == "auto":
+            self._button_width()
+
+
+class SingleChoiceBar(SingleChoiceButtons):
+    element_class = "single-choice-bar"
+    button_group_class = "choice-button-bar"  # this leads to display as connected buttons
+    button_toolbar = True
+    button_round_corners = True
+
+
+class MultipleChoiceElement(ChoiceElement):
+    """Checkboxes, allowing users to select multiple options.
+
+    Defining 'min', 'max' implies force_input.
+    """
+
+    element_class = "multiple-choice-element"
+    type = "checkbox"
+
+    def __init__(
+        self,
+        *choice_labels,
+        min: int = None,
+        max: int = None,
+        select_hint: str = None,
+        default: Union[int, List[int]] = None,
+        **kwargs,
+    ):
+        super().__init__(*choice_labels, **kwargs)
+
+        self._input = {}
+
+        if min is not None or max is not None:
+            self.force_input = True
+
+        self.min = min if min is not None else 0
+        self.max = max if max is not None else len(self.choice_labels)
+        self._select_hint = select_hint
+
+        if isinstance(default, int):
+            self.default = [default]
+        elif default is not None and not isinstance(default, list):
+            raise ValueError(
+                "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
+            )
+        else:
+            self.default = default
 
     @property
-    def web_widget(self):
-        html = '<p class="%s">' % alignment_converter(self._alignment, "text")
-
-        if self._maximizable:
-            html = html + '<a href="#" id="link-%s">' % self.name
-
-        html = html + '<img  src="%s" ' % self._image_url
-        if self._alt is not None:
-            html = html + 'alt="%s"' % self._alt
-
-        html = html + 'style="'
-
-        if self._x_size is not None:
-            html = html + " width: %spx;" % self._x_size
-
-        if self._y_size is not None:
-            html = html + " height: %spx;" % self._y_size
-        html = html + '" />'
-
-        if self._maximizable:
-            html = (
-                html
-                + '</a><input type="hidden" id="%s" name="%s" value="%s"></input><input type="hidden" id="%s" name="%s" value="%s"></input>'
-                % (
-                    self.name + "_max_times",
-                    self.name + "_max_times",
-                    self._min_times,
-                    self.name + "_min_times",
-                    self.name + "_min_times",
-                    self._max_times,
-                )
+    def select_hint(self):
+        if self._select_hint:
+            return self._select_hint
+        else:
+            hint = string.Template(
+                self.experiment.config.get("hints", "select_MultipleChoiceElement")
             )
-
-        return html + "</p>"
+            return hint.substitute(min=self.min, max=self.max)
 
     @property
-    def css_code(self):
-        return [
-            (
-                10,
-                """
-            #overlay-%s {position:absolute;left:0;top:0;min-width:100%%;min-height:100%%;z-index:1 !important;background-color:black;
-        """
-                % self.name,
-            )
-        ]
+    def corrective_hints(self):
 
-    @property
-    def js_code(self):
-        template = string.Template(
-            """
-         $$(document).ready(function(){
-         var maxtimes = $$.parse_json($$('#${maxtimes}').val());
-         var mintimes = $$.parse_json($$('#${mintimes}').val());
-         $$('#${linkid}').click(function(){
+        if not self.show_corrective_hints:
+            return []
 
-          // Add time to max_times
-          maxtimes.push(new Date().get_time()/1000);
-          $$('#${maxtimes}').val(JSON.stringify(maxtimes));
+        elif self._force_input and not self._input:
+            return [self.no_input_hint]
 
-          // Add overlay
-          $$('<div id="${overlayid}" />')
-           .hide()
-           .append_to('body')
-           .fade_in('fast');
+        elif not self.validate_data():
+            return [self.select_hint]
 
-          // Add image & center
-          $$('<img id="${imageid}" class="pop" src="${imgurl}" style="max-width: none;">').append_to('#${overlayid}');
-          var img = $$('#${imageid}');
-          //img.css({'max-width': 'auto'});
-          var img_top = Math.max(($$(window).height() - img.height())/2, 0);
-          var img_lft = Math.max(($$(window).width() - img.width())/2, 0);
-          img
-           .hide()
-           .css({ position: 'relative', top: img_top, left: img_lft })
-           .fade_in('fast');
-
-          // Add click functionality to hide everything
-          $$('#${overlayid}').click(function(){
-           // Add time to min_times
-           mintimes.push(new Date().get_time()/1000);
-           $$('#${mintimes}').val(JSON.stringify(mintimes));
-
-           $$('#${overlayid},#${imageid}').fade_out('fast',function(){
-             $$(this).remove();
-             $$('#${overlayid}').remove();
-           });
-          });
-          $$('#${imageid}').click(function(){
-           $$('#${overlayid},#${imageid}').fade_out('fast',function(){
-             $$(this).remove();
-             $$('#${overlayid}').remove();
-           });
-          })
-         });
-        });
-            """
-        )
-        return [
-            (
-                10,
-                template.substitute(
-                    linkid="link-" + self.name,
-                    overlayid="overlay-" + self.name,
-                    imageid="image-" + self.name,
-                    imgurl=self._image_url,
-                    maxtimes=self.name + "_max_times",
-                    mintimes=self.name + "_min_times",
-                ),
-            )
-        ]
+    def validate_data(self):
+        if not self.force_input or not self._should_be_shown:
+            return True
+        elif self.min <= sum(list(self.input.values())) <= self.max:
+            return True
+        else:
+            return False
 
     @property
     def data(self):
-        if self._maximizable:
-            return {
-                self.name + "_max_times": self._max_times,
-                self.name + "_min_times": self._min_times,
-            }
+        data = {}
+        for choice_name, value in self._input.items():
+            c = {}
+            c[value] = value
+            c.update(self.codebook_data)
+            data[choice_name] = c
+
+        return data
+
+    def set_data(self, d):
+        self._input = {}
+        for choice in self.choices:
+            value = d.get(choice.name, None)
+            if value:
+                self._input[choice.name] = True
+            else:
+                self._input[choice.name] = False
+
+    def define_choices(self):
+        choices = []
+        for i, label in enumerate(self.choice_labels, start=1):
+            choice = Choice()
+
+            if isinstance(label, Element):
+                choice.label = label.web_widget
+            else:
+                if self.emojize:
+                    label = emojize(str(label), use_aliases=True)
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            choice.type = "checkbox"
+            choice.value = i
+            choice.id = f"{self.name}_choice{i}"
+            choice.name = choice.id
+            choice.label_id = f"{choice.id}-lab"
+            choice.css_class = f"choice-button choice-button-{self.name}"
+
+            if self.debug_enabled:
+                choice.checked = True if i <= self.max else False
+            elif self.input:
+                choice.checked = True if self.input[choice.name] is True else False
+            elif self.default:
+                choice.checked = True if i in self.default else False
+
+            choices.append(choice)
+        return choices
+
+
+class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
+    """Buttons, working as a MultipleChoiceElement.
+    """
+
+    element_class = "multiple-choice-buttons"
+    button_round_corners = False
+
+
+class MultipleChoiceBar(MultipleChoiceButtons):
+    """MultipleChoiceButtons, which are displayed as a toolbar instead
+    of separate buttons.
+    """
+
+    element_class = "multiple-choice-bar"
+    button_group_class = "choice-button-bar"
+    button_toolbar = True
+    button_round_corners = False
+
+
+class ButtonLabels(SingleChoiceButtons):
+    """Disabled buttons. Example usecase might be additional labelling."""
+
+    element_class = "button-choice-labels"
+    disabled = True
+
+    @property
+    def data(self):
         return {}
 
-    def set_data(self, d):
-        if self.enabled and self._maximizable:
-            try:
-                self._min_times = json.loads(d.get(self.name + "_min_times", "[]"))
-                self._max_times = json.loads(d.get(self.name + "_max_times", "[]"))
-            except Exception:
-                self._min_times = []
-                self._max_times = []
 
+class BarLabels(SingleChoiceBar):
+    """Disabled Button-Toolbar. Example usecase might be additional 
+    labelling.
+    """
 
-class TableElement(Element, WebElementInterface):
-    def __init__(self, elements=[], **kwargs):
-        super(TableElement, self).__init__(**kwargs)
-        self._elements = elements
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError
-        self._name = name
-        for row in range(len(self._elements)):
-            for column in range(len(self._elements[row])):
-                e = self._elements[row][column]
-                if not e.name:
-                    e.name = (
-                        self.name
-                        + "_"
-                        + e.__class__.__name__
-                        + "_r"
-                        + str(row)
-                        + "_c"
-                        + str(column)
-                    )
-
-    @property
-    def flat_elements(self):
-        return [e for l in self._elements for e in l]
-
-    def added_to_page(self, q):
-        super(TableElement, self).added_to_page(q)
-        for e in self.flat_elements:
-            e.added_to_page(q)
+    element_class = "bar-choice-labels"
+    disabled = True
 
     @property
     def data(self):
-        d = {}
-        for e in self.flat_elements:
-            d.update(e.data)
+        return {}
+
+
+class SubmittingButtons(SingleChoiceButtons):
+    """SingleChoiceButtons that trigger submission of the current page 
+    on click.
+    """
+
+    element_class = "submitting-buttons"
+
+    def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-info", **kwargs):
+        super().__init__(*choice_labels, button_style=button_style, **kwargs)
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        t = jinja_env.get_template("submittingbuttons.js.j2")
+        js = t.render(name=self.name)
+
+        page += JavaScript(code=js)
+
+
+class JumpButtons(SingleChoiceButtons): 
+
+    js_template = jinja_env.get_template("jumpbuttons.js.j2")
+
+    def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-primary", **kwargs):
+        super().__init__(*choice_labels, button_style=button_style, **kwargs)
+        self.choice_labels, self.targets = map(list, zip(*choice_labels))
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+        
+        self._js_code = []
+        
+        for choice, target in zip(self.choices, self.targets):
+            js = self.js_template.render(id=choice.id, target=target)
+            self.add_js(js)
+    
+    def validate_data(self):
+        cond1 = bool(self.data) if self.force_input else True
+        cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
+        return cond1 and cond2
+
+class DynamicJumpButtons(JumpButtons):
+
+    js_template = jinja_env.get_template("dynamic_jumpbuttons.js.j2")
+    
+    def validate_data(self):
+        return True
+        # cond1 = bool(self.data) if self.force_input else True
+
+        # cond2 = True
+        # for target in self.targets:
+        #     value = self.experiment.data.get(target, None)
+        #     cond2 = value in self.experiment.root_section.all_pages
+        #     if not cond2:
+        #         break
+
+        # cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
+        # return cond1 and cond2
+
+# class JumpListButtons(DynamicJumpButtons):
+
+#     js_template = jinja_env.get_template("jumplist.js.j2")
+
+
+class SelectOneElement(SingleChoiceElement):
+    element_class = "select-one-element"
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+    type = "select_one"
+
+    def __init__(
+        self, *choice_labels, toplab: str = None, size: int = None, default: int = 1, **kwargs
+    ):
+        super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
+        self.size = size
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["size"] = self.size
+        return d
+    
+
+class SelectPageElement(SelectOneElement):
+
+    def __init__(self, toplab: str = None, scope: str = "section", **kwargs):
+        super().__init__(toplab=toplab, **kwargs)
+        self.scope = scope
+    
+    def prepare_web_widget(self):
+        if self.scope in ["experiment", "exp"]:
+            self.choice_labels = list(self.experiment.root_section.all_pages.keys())
+        elif self.scope == "section":
+            self.choice_labels = list(self.page.section.all_pages.keys())
+        
+        self.choices = self.define_choices()
+        
+        for i, choice in enumerate(self.choices):
+            choice.value = self.choice_labels[i]
+            
+            page_title = self.experiment.root_section.all_pages[choice.value].title
+            if len(page_title) > 25:
+                page_title = page_title[:25] + "..."
+            choice.label = f"{page_title} (name='{choice.value}')"
+    
+    def set_data(self, d):
+        value = d.get(self.name)
+        if value:
+            self._input = self.choice_labels.index(value) + 1
+
+
+class JumpListElement(Row):
+
+    def __init__(self, scope: str = "section", label: str = "Jump", **kwargs):
+        
+        random_name ="jumplist_" + uuid4().hex
+        name = kwargs.get("name", random_name)
+        select_name = name + "_select"
+        btn_name = name + "_btn"
+        select = SelectPageElement(scope=scope, name=select_name)
+        btn = DynamicJumpButtons((label, select_name), name=btn_name)
+        super().__init__(select, btn, **kwargs)
+
+        self.layout.width_sm = [8, 4]
+        
+
+
+
+class SelectMultipleElement(MultipleChoiceElement):
+    element_class = "select-multiple-element"
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+    type = "select_multiple"
+
+    def __init__(self, *choice_labels, toplab: str = None, size: int = None, **kwargs):
+        super().__init__(*choice_labels, toplab=toplab, **kwargs)
+        self.size = size
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["size"] = self.size
         return d
 
-    def set_data(self, data):
-        for e in self.flat_elements:
-            e.set_data(data)
-
-    @property
-    def enabled(self):
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, enabled):
-        self._enabled = enabled
-        for e in self.flat_elements:
-            e.enabled = enabled
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return reduce(
-            lambda b, e: b and e.can_display_corrective_hints_in_line, self.flat_elements, True,
-        )
-
-    @property
-    def corrective_hints(self):
-        return [hint for e in self.flat_elements for hint in e.corrective_hints]
-
-    @property
-    def show_corrective_hints(self):
-        return self._show_corrective_hints
-
-    @show_corrective_hints.setter
-    def show_corrective_hints(self, b):
-        self._show_corrective_hints = b
-        for e in self.flat_elements:
-            e.show_corrective_hints = b
-
-    def validate_data(self):
-        return reduce(lambda b, e: b and e.validate_data(), self.flat_elements, True)
-
-    @property
-    def web_widget(self):
-        html = '<table class="%s" style="text-align: center; font-size:%spt">' % (
-            alignment_converter(self._alignment, "container"),
-            fontsize_converter(self._font_size),
-        )
-
-        for l in self._elements:
-            html = html + "<tr>"
-            for e in l:
-                html = html + "<td>" + e.web_widget if e.should_be_shown else "" + "</td>"
-            html = html + "</tr>"
-        html = html + "</table>"
-
-        return html
-
-    def prepare_web_widget(self):
-        for e in self.flat_elements:
-            e.prepare_web_widget()
-
-    @property
-    def css_code(self):
-        return [code for e in self.flat_elements for code in e.css_code]
-
-    @property
-    def css_urls(self):
-        return [url for e in self.flat_elements for url in e.css_urls]
-
-    @property
-    def js_code(self):
-        return [code for e in self.flat_elements for code in e.js_code]
-
-    @property
-    def js_urls(self):
-        return [url for e in self.flat_elements for url in e.js_urls]
-
-
-class WebSliderElement(InputElement, WebElementInterface):
-    def __init__(
-        self,
-        instruction="",
-        slider_width=200,
-        min=0,
-        max=100,
-        step=1,
-        no_input_corrective_hint=None,
-        instruction_width=None,
-        instruction_height=None,
-        item_labels=None,
-        top_label=None,
-        bottom_label=None,
-        **kwargs,
-    ):
-        """
-        **TextSliderElement*** returns a slider bar.
-
-        :param str name: Name of TextEntryElement and stored input variable.
-        :param str instruction: Instruction to be displayed with line edit field (can contain html commands).
-        :param int instruction_width: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param int instruction_height: Minimum vertical size of instruction label (can be used for layouting purposes).
-        :param str alignment: Alignment of TextEntryElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font_size: Font size used in TextEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-
-        # TODO: Required image files from jquery-ui are missing! Widget will not be displayed correctly, but works nonetheless.
-        super(WebSliderElement, self).__init__(
-            no_input_corrective_hint=no_input_corrective_hint, **kwargs
-        )
-
-        self._instruction_width = instruction_width
-        self._instruction_height = instruction_height
-        self._instruction = instruction
-        self._slider_width = slider_width
-        self._min = min
-        self._max = max
-        self._step = step
-
-        if item_labels is not None and not len(item_labels) == 2:
-            raise ValueError("Es müssen keine oder 2 Itemlabels übergeben werden.")
-        self._item_labels = item_labels
-        self._top_label = top_label
-        self._bottom_label = bottom_label
-
-        self._template = Template(
-            """
-        <div class="web-slider-element">
-            <table class="{{ alignment }}" style="font-size: {{ fontsize }}pt;">
-            <tr><td valign="bottom">
-                <table class="{{ alignment }}">
-                <tr><td style="{% if width %}width:{{width}}px;{% endif %}{% if height %}width:{{height}}px;{% endif %}">{{ instruction }}</td></tr>
-                <tr><table>
-                    <tr><td align="center" colspan="3">{{ toplabel }}</td></tr>
-                    <tr><td align="right">{{ l_label }}</td>
-                    <td valign="bottom"><div style="width: {{ slider_width }}px; margin-left: 15px; margin-right: 15px; margin-top: 5px; margin-bottom: 5px;" name="{{ name }}" value="{{ input }}" {% if disabled %}disabled="disabled"{% endif %}></div></td>
-                    <td align="left">{{ r_label }}</td></tr>
-                    <tr><td align="center" colspan="3">{{ bottomlabel }}</td></tr>
-                    </table></tr>
-                </table></td></tr>
-
-            {% if corrective_hint %}
-            <tr><td><table class="corrective-hint containerpagination-right"><tr><td style="font-size: {{fontsize}}pt;">{{ corrective_hint }}</td></tr></table></td></tr>
-            {% endif %}
-
-            </table>
-        </div>
-
-        <input type="hidden" value="{{ input }}" name="{{ name }}" />
-
-        <script>
-        $('div[name={{ name }}]').slider({change: function( event, ui ) {
-            $('input[name={{ name }}]').val(ui.value);
-        }});
-
-        $('div[name={{ name }}]').slider( "option", "max", {{ max }} );
-        $('div[name={{ name }}]').slider( "option", "min", {{ min }} );
-        $('div[name={{ name }}]').slider( "option", "step", {{ step }} );
-
-        {% if input != "" %}
-            $('div[name={{ name }}]').slider( "option", "value", {{ input }});
-        {% endif %}
-
-
-
-        </script>
-
-        """
-        )
-
-    @property
-    def web_widget(self):
-
-        d = {}
-        d["alignment"] = alignment_converter(self._alignment, "container")
-        d["fontsize"] = fontsize_converter(self._font_size)
-        d["width"] = self._instruction_width
-        d["slider_width"] = self._slider_width
-        d["height"] = self._instruction_height
-        d["instruction"] = self._instruction
-        d["l_label"] = self._item_labels[0] if self._item_labels else ""
-        d["r_label"] = self._item_labels[1] if self._item_labels else ""
-        d["toplabel"] = self._top_label if self._top_label else ""
-        d["bottomlabel"] = self._bottom_label if self._bottom_label else ""
-        d["name"] = self.name
-        d["input"] = self._input
-        d["min"] = self._min
-        d["max"] = self._max
-        d["step"] = self._step
-        d["disabled"] = not self.enabled
-        if self.corrective_hints:
-            d["corrective_hint"] = self.corrective_hints[0]
-        return self._template.render(d)
-
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return True
-
-    def validate_data(self):
-        super(WebSliderElement, self).validate_data()
-
-        if not self._should_be_shown:
-            return True
-
-        if self._force_input and self._input == "":
-            return False
-
-        return True
-
     def set_data(self, d):
-        if self.enabled:
-            self._input = d.get(self.name, "")
+        self._input = {}
+        name_map = {str(choice.value): choice.name for choice in self.choices}
+        val = d.get(self.name, None)
+        val_name = name_map[val]
 
-        if self._input == "None":
-            self._input = ""
-
-    @property
-    def codebook_data_flat(self):
-        data = super().codebook_data_flat
-        data["min"] = self._min
-        data["max"] = self._max
-        data["step"] = self._step
-
-        if self._item_labels:
-            data["item_label_1"] = self._item_labels[0]
-            data["item_label_1"] = self._item_labels[1]
-
-        data["top_labels"] = self._top_label
-        data["bottom_labels"] = self._bottom_label
-        return data
-
-
-class WebAudioElement(Element, WebElementInterface):
-    def __init__(
-        self,
-        wav_url=None,
-        wav_path=None,
-        ogg_url=None,
-        ogg_path=None,
-        mp3_url=None,
-        mp3_path=None,
-        controls=True,
-        autoplay=False,
-        loop=False,
-        **kwargs,
-    ):
-        """
-        TODO: Add docstring
-        """
-        super(WebAudioElement, self).__init__(**kwargs)
-        # if wav_path is not None and not os.path.isabs(wav_path):
-        #     wav_path = os.path.join(settings.general.external_files_dir, wav_path)
-        # if ogg_path is not None and not os.path.isabs(ogg_path):
-        #     ogg_path = os.path.join(settings.general.external_files_dir, ogg_path)
-        # if mp3_path is not None and not os.path.isabs(mp3_path):
-        #     mp3_path = os.path.join(settings.general.external_files_dir, mp3_path)
-
-        self._wav_path = wav_path
-        self._ogg_path = ogg_path
-        self._mp3_path = mp3_path
-
-        self._wav_audio_url = wav_url
-        self._ogg_audio_url = ogg_url
-        self._mp3_audio_url = mp3_url
-
-        self._controls = controls
-        self._autoplay = autoplay
-        self._loop = loop
-
-        if (
-            self._wav_path is None
-            and self._ogg_path is None
-            and self._mp3_path is None
-            and self._wav_audio_url is None
-            and self._ogg_audio_url is None
-            and self._mp3_audio_url is None
-        ):
-            raise AlfredError
-
-    def prepare_web_widget(self):
-
-        if self._wav_audio_url is None and self._wav_path is not None:
-            self._wav_audio_url = self._page._experiment.user_interface_controller.add_static_file(
-                self._wav_path
-            )
-
-        if self._ogg_audio_url is None and self._ogg_path is not None:
-            self._ogg_audio_url = self._page._experiment.user_interface_controller.add_static_file(
-                self._ogg_path
-            )
-
-        if self._mp3_audio_url is None and self._mp3_path is not None:
-            self._mp3_audio_url = self._page._experiment.user_interface_controller.add_static_file(
-                self._mp3_path
-            )
-
-    @property
-    def web_widget(self):
-        widget = (
-            '<div class="audio-element"><p class="%s"><audio %s %s %s><source src="%s" type="audio/mp3"><source src="%s" type="audio/ogg"><source src="%s" type="audio/wav">Your browser does not support the audio element</audio></p></div>'
-            % (
-                alignment_converter(self._alignment, "both"),
-                "controls" if self._controls else "",
-                "autoplay" if self._autoplay else "",
-                "loop" if self._loop else "",
-                self._mp3_audio_url,
-                self._ogg_audio_url,
-                self._wav_audio_url,
-            )
-        )
-
-        return widget
-
-
-class WebVideoElement(Element, WebElementInterface):
-    def __init__(
-        self,
-        source=None,
-        sources_list=[],
-        width=720,
-        height=None,
-        controls=True,
-        autoplay=False,
-        muted=False,
-        loop=False,
-        mp4_url=None,
-        mp4_path=None,
-        ogg_url=None,
-        ogg_path=None,
-        web_m_url=None,
-        web_m_path=None,
-        **kwargs,
-    ):
-        """
-        TODO: Add docstring
-        """
-        super(WebVideoElement, self).__init__(**kwargs)
-
-        self._template = None
-
-        # if single source is given
-        self._source = source
-
-        # if source list is given
-        self._sources_list = sources_list
-        self._ordered_sources = []
-        self._urls = []
-
-        # attributes
-        self._attributes = None
-        self._width = width
-        self._height = height
-        self._controls = controls
-        self._autoplay = autoplay
-        self._muted = muted
-        self._loop = loop
-
-        # -------------------------------------------- #
-        # catch deprecated parameters (21.03.2020)
-        self._deprecated_parameters = [
-            mp4_url,
-            mp4_path,
-            ogg_url,
-            ogg_path,
-            web_m_url,
-            web_m_path,
-        ]
-        self._mp4_path = mp4_path
-        self._ogg_path = ogg_path
-        self._web_m_path = web_m_path
-        self._mp4_video_url = mp4_url
-        self._ogg_video_url = ogg_url
-        self._web_m_video_url = web_m_url
-        # -------------------------------------------- #
-
-        if not any([self._source, self._sources_list, self._deprecated_parameters]):
-            raise AlfredError
-
-    def order_sources(self):
-        # ensure that .mp4 files come first
-        for source in self._sources_list:
-            if source.endswith(".mp4"):
-                self._ordered_sources.insert(0, source)
+        for choice in self.choices:
+            if choice.name == val_name:
+                self._input[choice.name] = True
             else:
-                self._ordered_sources.append(source)
+                self._input[choice.name] = False
 
-    def prepare_url(self, source):
-        if is_url(source):
-            url = source
+
+
+
+class ImageElement(Element):
+    element_class = "image-element"
+    element_template = jinja_env.get_template("ImageElement.html.j2")
+
+    def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
+        super().__init__(**kwargs)
+
+        self.path = path
+        if url is not None and not is_url(url):
+            raise ValueError("Supplied value is not a valid url.")
         else:
-            url = self._page._experiment.user_interface_controller.add_static_file(source)
-        return url
+            self.url = url
 
-    def prepare_attributes(self):
-        attr = []
-        if self._width:
-            attr.append('width="{}"'.format(self._width))
-        if self._height:
-            attr.append('height="{}"'.format(self._height))
-        if self._controls:
-            attr.append("controls")
-        if self._autoplay:
-            attr.append("autoplay")
-        if self._muted:
-            attr.append("muted")
-        if self._loop:
-            attr.append("loop")
-        self._attributes = " ".join(attr)
+        if path and url:
+            raise ValueError("You can only specify one of 'path' and 'url'.")
+
+        self.src = None
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        if self.path:
+            p = self.experiment.subpath(self.path)
+            url = self.experiment.user_interface_controller.add_static_file(p)
+            self.src = url
+        else:
+            self.src = self.url
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["src"] = self.src
+        return d
+
+    def __str__(self):
+        src = self.path if self.path is not None else self.url
+        return f"ImageElement(src: '{src}'; name: '{self.name}')"
+
+
+class MatPlotElement(Element):
+    """Displays a :class:`matplotlib.figure.Figure` object.
+    
+    Can be used for static and dynamic plotting.
+
+    .. note::
+        When plotting in alfred, you need to use the Object-oriented 
+        matplotlib API
+        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
+
+    Example plot (note that in general, the page would need to be added 
+    to an experiment instance at some point to be displayed)::
+        
+        from matplotlib.figure import Figure
+        from alfred3.page import Page
+        import alfred3.element_responsive as el
+
+        fig = Figure()
+        ax = fig.add_subplot()
+        ax.plot(range(10))
+
+        pg = Page()
+        pg += el.MatPlotElement(fig=fig)
+
+    Args:
+        fig (matplotlib.figure.Figure): The figure to display.
+        align: Alignment of the figure.
+
+    """
+
+    element_class = "matplot-element"
+    element_template = jinja_env.get_template("ImageElement.html.j2")
+
+    def __init__(self, fig, align: str = "center", **kwargs):
+        super().__init__(align=align, **kwargs)
+        self.fig = fig
+        self.src = None
 
     def prepare_web_widget(self):
-        # load template
-        self._template = jinja_env.get_template("WebVideoElement.html.j2")
-
-        # prepare attributes
-        self.prepare_attributes()
-
-        # prepare urls
-        if self._source:
-            self._sources_list.append(self._source)
-
-        self.order_sources()
-        for src in self._ordered_sources:
-            url = self.prepare_url(src)
-            self._urls.append(url)
-
-        # -------------------------------------------- #
-        # handle deprecated parameters (21.03.2020)
-        for parameter in self._deprecated_parameters:
-            if parameter:
-                self.log.warning(
-                    "The parameters mp4_url, mp4_path, ogg_url, ogg_path, web_m_url, and web_m_path in Element.WebVideoElement are deprecated. Please use source or sources_list instead."
-                )
-
-        if self._mp4_video_url is None and self._mp4_path is not None:
-            self._mp4_video_url = self._page._experiment.user_interface_controller.add_static_file(
-                self._mp4_path, content_type="video/mp4"
-            )
-            self._urls.insert(0, self._mp4_video_url)
-
-        if self._ogg_video_url is None and self._ogg_path is not None:
-            self._ogg_video_url = self._page._experiment.user_interface_controller.add_static_file(
-                self._ogg_path, content_type="video/ogg"
-            )
-            self._urls.append(self._ogg_video_url)
-
-        if self._web_m_video_url is None and self._web_m_path is not None:
-            self._web_m_video_url = self._page._experiment.user_interface_controller.add_static_file(
-                self._web_m_path, content_type="video/webm"
-            )
-            self._urls.append(self._web_m_video_url)
-        # -------------------------------------------- #
-
-    @property
-    def web_widget(self):
-        alignment = alignment_converter(self._alignment, type="div")
-        widget = self._template.render(
-            element_class="video-element",
-            alignment=alignment,
-            urls=self._urls,
-            attributes=self._attributes,
+        out = io.BytesIO()
+        self.fig.savefig(out, format="svg")
+        out.seek(0)
+        self.src = self.experiment.user_interface_controller.add_dynamic_file(
+            out, content_type="image/svg+xml"
         )
-        return widget
 
     @property
-    def js_code(self):
-        # disables the right-click context menu
-        code = (
-            11,
-            '$(document).ready(function() {$("video").bind("contextmenu",function(){return false;});} );',
-        )
-        return [code]  # Pages expect a list of the described tuples from each element
+    def template_data(self):
+        d = super().template_data
+        d["src"] = self.src
+        return d
 
+    def __str__(self):
+        return f"MatPlotElement(name: '{self.name}')"
 
-class ExperimenterMessages(TableElement):
-    def prepare_web_widget(self):
-        self._elements = []
-        messages = self._page._experiment.experimenter_message_manager.get_messages()
-
-        for message in messages:
-            output = ""
-
-            if not message.title == "":
-                output = output + "<strong>" + message.title + "</strong> - "
-
-            output = output + message.msg
-
-            message.level = "" if message.level == "warning" else "alert-" + message.level
-
-            message_element = TextElement(
-                '<div class="alert '
-                + message.level
-                + '"><button type="button" class="close" data-dismiss="alert">&times;</button>'
-                + output
-                + " </div>"
-            )
-
-            message_element.added_to_page(self._page)
-
-            self._elements.append([message_element])
-
-        super(ExperimenterMessages, self).prepare_web_widget()
-
-
-class WebExitEnabler(Element, WebElementInterface):
-    @property
-    def web_widget(self):
-        widget = "<script>$(document).ready(function(){glob_unbind_leaving();});</script>"
-
-        return widget
