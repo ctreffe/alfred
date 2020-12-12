@@ -54,6 +54,7 @@ class PageCore(ExpMember):
 
         if self.experiment.config.getboolean("general", "debug"):
             if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
+                self.log.debug("Minimum display time disabled (debug mode).")
                 self._minimum_display_time = 0
 
     @property
@@ -276,7 +277,14 @@ class PageCore(ExpMember):
         """
         return []
 
-    def allow_leaving(self, direction):
+    def validate(self):
+        """Alias for 'allow_leaving'. Better description of what this
+        method does.
+        """
+        
+        return self.allow_leaving()
+
+    def allow_leaving(self):
         if not self.allow_closing:
             self.show_corrective_hints = True
             return False
@@ -314,7 +322,7 @@ class PageCore(ExpMember):
         self._experiment.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
     def __repr__(self):
-        return f"{type(self).__name__}(name='{self.name}', section='{self.section}')"
+        return f"{type(self).__name__}(name='{self.name}', section='{self.section.name}')"
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
@@ -467,9 +475,14 @@ class CoreCompositePage(PageCore):
     def close_page(self):
         super(CoreCompositePage, self).close_page()
 
-        for elmnt in self._element_list:
+        for elmnt in self.elements.values():
             if isinstance(elmnt, elm.InputElement):
                 elmnt.disabled = True
+        
+        debug_jumplist = self.elements.get(self.name + "__debug_jumplist__")
+        if debug_jumplist:
+            for elmnt in debug_jumplist.elements:
+                elmnt.disabled = False
 
     @property
     def data(self):
@@ -517,7 +530,7 @@ class CoreCompositePage(PageCore):
         for elmnt in self._element_list:
             elmnt.set_data(dictionary)
 
-    def move(self):
+    def custom_move(self):
         """Hook for defining a page's own movement behavior. 
         
         Use the :class:`.MovementManager`s movement methods to define
@@ -535,7 +548,7 @@ class CoreCompositePage(PageCore):
             @exp.member
             class CustomMove(al.Page):
                 
-                def move(self):
+                def custom_move(self):
                     self.experiment.movement_manager.jump_by_name("third")
 
             exp += al.Page(name="second")
@@ -553,7 +566,7 @@ class CoreCompositePage(PageCore):
                 def on_exp_access(self):
                     self += elm.TextEntryElement(name="text")
                 
-                def move(self):
+                def custom_move(self):
                     if self.data.get("text) == "yes":
                         self.experiment.movement_manager.jump_by_name("third")
                     else:
@@ -641,7 +654,7 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
     def prepare_web_widget(self):
         self._on_showing_widget()
 
-        for elmnt in self._element_list:
+        for elmnt in self.elements.values():
             elmnt.prepare()
 
     def added_to_experiment(self, experiment):

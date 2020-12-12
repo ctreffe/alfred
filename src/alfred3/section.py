@@ -34,7 +34,12 @@ class Section(ExpMember):
     def __repr__(self):
         section_class = type(self).__name__
         # m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
-        return f"{section_class}(name='{self.name}', parent='{self.parent.name}')"
+        bw = f"allow_backward: {self.allow_backward}"
+        fw = f"allow_forward: {self.allow_forward}"
+        jf = f"allow_jumpfrom: {self.allow_jumpfrom}"
+        jt = f"allow_jumpto: {self.allow_jumpto}"
+        move = f"movement='{bw}, {fw}, {jf}, {jt}'"
+        return f"{section_class}(name='{self.name}', parent='{self.parent.name}', {move})"
 
     def __iadd__(self, other):
         self.append(other)
@@ -176,7 +181,7 @@ class Section(ExpMember):
             data.update(page.data)
         return data
     
-    def unlinked_data(self, encrypt):
+    def unlinked_data(self, encrypt: bool = False):
         data = {}
         for page in self.all_pages.values():
             data.update(page.unlinked_data(encrypt=encrypt))
@@ -309,6 +314,32 @@ class Section(ExpMember):
         
         if self is self.parent.last_member:
             self.parent.leave()
+    
+    def resume(self):
+        self.log.debug(f"Resuming to Section: {self}.")
+        self.on_move()
+        self.on_resume()
+    
+    def hand_over(self):
+        self.log.debug(f"Section: {self} handing over to child section.")
+        self.on_move()
+        self.on_hand_over()
+    
+    def on_resume(self):
+        """ 
+        Resuming takes place, when a child section is left and the
+        next page is a direct child of this section (self). Then this 
+        section (self) becomes the primary current section again, it
+        resumes its status.
+        """
+        pass
+
+    def on_hand_over(self):
+        """
+        Handover takes place, when a child section of this section 
+        is entered.
+        """
+        pass
 
     def forward(self):
         self.on_forward()
@@ -334,13 +365,9 @@ class Section(ExpMember):
         elif direction == "jumpto":
             self.jumpto()
 
-    def allow_move(self, direction: str):
-        
-        direction_allowed = getattr(self, "allow_" + direction)
-        current_page = self.exp.movement_manager.current_page
-        page_validate = current_page.allow_leaving(direction=direction)
-
-        return direction_allowed and page_validate
+    @staticmethod
+    def validate(page):
+        return page.validate()
 
 
 class NoValidationSection(Section):
@@ -355,12 +382,12 @@ class NoValidationSection(Section):
     allow_jumpfrom: bool = True
     allow_jumpto: bool = True
 
-    def allow_move(self, direction: str):
-        direction_allowed = getattr(self, "allow_" + direction)
-        return direction_allowed
+    @staticmethod
+    def validate(page):
+        return True
 
 
-class RevisitSection(Section):
+class CommitInputSection(Section):
     allow_forward: bool = True
     allow_backward: bool = True
     allow_jumpfrom: bool = True
@@ -375,7 +402,7 @@ class RevisitSection(Section):
         self.exp.movement_manager.current_page.close()
 
 
-class OnlyForwardSection(RevisitSection):
+class OnlyForwardSection(CommitInputSection):
     allow_forward: bool = True
     allow_backward: bool = False
     allow_jumpfrom: bool = False
@@ -407,11 +434,24 @@ class RootSection(Section):
         self.final_page = DefaultFinalPage()
 
         self._all_pages_list = None
+        self._all_page_names = None
     
     def append_root_sections(self):
         self += self.content_section
         self += self.finished_section
 
+    @property
+    def all_page_names(self):
+        """Improvised caching mechanism for the list of all page names."""
+
+        if not self._all_page_names:
+            self._all_page_names = list(self.all_pages.keys())
+
+        elif not len(self._all_page_names) == len(self.all_pages):
+            self._all_page_names = list(self.all_pages.keys())
+        
+        return self._all_page_names
+    
     @property
     def all_pages_list(self):
         """Improvised caching mechanism for the list of all pages."""
@@ -424,10 +464,6 @@ class RootSection(Section):
         
         return self._all_pages_list
     
-    # def on_enter(self):
-    #     self.finished_section.members = {}
-    #     self.finished_section += self.final_page
-
     @property
     def final_page(self):
         return self._final_page

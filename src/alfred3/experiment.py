@@ -320,13 +320,10 @@ class ExperimentSession:
         data = self.data_manager.get_data()
         self.data_saver.main.save_with_all_agents(data=data, level=99)
 
-        if self.root_section.unlinked_data_present():
+        if self.root_section.unlinked_data():
             for agent in self.data_saver.unlinked.agents.values():
                 unlinked_data = self.data_manager.get_unlinked_data(encrypt=agent.encrypt)
                 self.data_saver.unlinked.save_with_agent(data=unlinked_data, name=agent.name, level=99)
-
-        codebook_data = self.data_manager.get_codebook_data()
-        self.data_saver.codebook.save_with_all_agents(data=codebook_data, level=99)
 
     def get_page_data(self, page_uid):
         return self.data_manager.find_experiment_data_by_uid(uid=page_uid)

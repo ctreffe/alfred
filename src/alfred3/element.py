@@ -38,6 +38,7 @@ from ._helper import check_name
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 """jinja2.Environment, giving access to included jinja-templates."""
 
+
 class RowLayout:
     """Provides layouting functionality for responsive horizontal 
     positioning of elements.
@@ -418,7 +419,7 @@ class Element(ABC):
     def name(self, name):
         if name is None:
             self._name = None
-        
+
         elif name is not None:
             check_name(name)
 
@@ -819,7 +820,7 @@ class Row(Element):
 
             if self.elements_full_width:
                 element.width = "full"
-    
+
     def prepare_web_widget(self):
         super().prepare_web_widget()
         for element in self.elements:
@@ -1219,7 +1220,7 @@ class DataElement(Element):
 
         data = {}
         data["value"] = self.value
-        
+
         data["name"] = self.name
         data["tree"] = self.short_tree
         data["page_title"] = self.page.title
@@ -1487,7 +1488,7 @@ class InputElement(LabelledElement):
 
     @property
     def default(self):
-        if self._default:
+        if self._default is not None:
             return self._default
         elif self.debug_enabled:
             return self.debug_value
@@ -1580,7 +1581,7 @@ class InputElement(LabelledElement):
     @property
     def codebook_data(self):
         from alfred3 import page
-        
+
         data = {}
         data["name"] = self.name
         data["label_top"] = self.toplab.text if self.toplab is not None else ""
@@ -1693,6 +1694,7 @@ class Choice:
     type: str = "radio"
     checked: bool = False
     css_class: str = None
+    disabled: bool = False
 
 
 class ChoiceElement(InputElement, ABC):
@@ -1766,13 +1768,12 @@ class SingleChoiceElement(ChoiceElement):
             choice.name = self.name
             choice.id = f"choice{i}-{self.name}"
             choice.label_id = f"{choice.id}-lab"
+            choice.disabled = True if self.disabled else False
 
-            if self.debug_enabled:
-                choice.checked = True if i == 1 else False
-            elif self.input:
+            if self.input:
                 choice.checked = True if int(self.input) == i else False
-            elif self.default:
-                choice.checked = True if (self.default == i) else False
+            elif self.default is not None:
+                choice.checked = True if self.default == i else False
 
             choice.css_class = f"choice-button choice-button-{self.name}"
 
@@ -2158,32 +2159,32 @@ class SubmittingButtons(SingleChoiceButtons):
         page += JavaScript(code=js)
 
 
-class JumpButtons(SingleChoiceButtons): 
+class JumpButtons(SingleChoiceButtons):
 
     js_template = jinja_env.get_template("jumpbuttons.js.j2")
 
     def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-primary", **kwargs):
         super().__init__(*choice_labels, button_style=button_style, **kwargs)
         self.choice_labels, self.targets = map(list, zip(*choice_labels))
-    
+
     def prepare_web_widget(self):
         super().prepare_web_widget()
-        
+
         self._js_code = []
-        
+
         for choice, target in zip(self.choices, self.targets):
             js = self.js_template.render(id=choice.id, target=target)
             self.add_js(js)
-    
+
     def validate_data(self):
         cond1 = bool(self.data) if self.force_input else True
-        cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
-        return cond1 and cond2
+        return cond1
+
 
 class DynamicJumpButtons(JumpButtons):
 
     js_template = jinja_env.get_template("dynamic_jumpbuttons.js.j2")
-    
+
     def validate_data(self):
         return True
         # cond1 = bool(self.data) if self.force_input else True
@@ -2198,9 +2199,7 @@ class DynamicJumpButtons(JumpButtons):
         # cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
         # return cond1 and cond2
 
-# class JumpListButtons(DynamicJumpButtons):
 
-#     js_template = jinja_env.get_template("jumplist.js.j2")
 
 
 class SelectOneElement(SingleChoiceElement):
@@ -2219,30 +2218,71 @@ class SelectOneElement(SingleChoiceElement):
         d = super().template_data
         d["size"] = self.size
         return d
-    
+
 
 class SelectPageElement(SelectOneElement):
 
-    def __init__(self, toplab: str = None, scope: str = "section", **kwargs):
+    def __init__(
+        self,
+        toplab: str = None,
+        scope: str = "exp",
+        check_jumpto: bool = True,
+        check_jumpfrom: bool = True,
+        **kwargs,
+    ):
         super().__init__(toplab=toplab, **kwargs)
         self.scope = scope
-    
+        self.check_jumpto = check_jumpto
+        self.check_jumpfrom = check_jumpfrom
+
     def prepare_web_widget(self):
         if self.scope in ["experiment", "exp"]:
-            self.choice_labels = list(self.experiment.root_section.all_pages.keys())
+            namelist = list(self.experiment.root_section.members["_content"].all_pages.keys())
+            self.choice_labels = namelist
         elif self.scope == "section":
             self.choice_labels = list(self.page.section.all_pages.keys())
-        
+        else:
+            try:
+                target_section = self.experiment.root_section.all_members[self.scope]
+                self.choice_labels = list(target_section.all_pages.keys())
+            except AttributeError:
+                raise AlfredError("Paramter 'scope' must be a section name.")
+
+        if self.experiment.config.getboolean("general", "debug"):
+            current_page = self.experiment.movement_manager.current_page
+            self.default = self.choice_labels.index(current_page.name) + 1
+
         self.choices = self.define_choices()
-        
-        for i, choice in enumerate(self.choices):
-            choice.value = self.choice_labels[i]
-            
-            page_title = self.experiment.root_section.all_pages[choice.value].title
+
+        for i, choice in enumerate(self.choices, start=1):
+            choice.value = self.choice_labels[i - 1]
+
+            target_page = self.experiment.root_section.all_pages[choice.value]
+
+            # disable choice if the target page can't be jumped to
+            if self.check_jumpto:
+                choice.disabled = not (target_page.section.allow_jumpto)
+
+            # disable choice if self can't be jumped from
+            if self.check_jumpfrom:
+                choice.disabled = not (self.page.section.allow_jumpfrom)
+
+            # shorten page title for nicer display
+            page_title = target_page.title
             if len(page_title) > 25:
                 page_title = page_title[:25] + "..."
             choice.label = f"{page_title} (name='{choice.value}')"
-    
+
+            # set default value
+            if self.default == i:
+                choice.checked = True
+            elif int(self.input) == i:
+                choice.checked = True
+            elif self.debug_enabled and i == 1:
+                choice.checked = True
+            else:
+                choice.checked = False
+
     def set_data(self, d):
         value = d.get(self.name)
         if value:
@@ -2250,20 +2290,34 @@ class SelectPageElement(SelectOneElement):
 
 
 class JumpListElement(Row):
+    def __init__(
+        self,
+        scope: str = "exp",
+        label: str = "Jump",
+        check_jumpto: bool = True,
+        check_jumpfrom: bool = True,
+        debugmode: bool = False,
+        **kwargs,
+    ):
 
-    def __init__(self, scope: str = "section", label: str = "Jump", **kwargs):
-        
-        random_name ="jumplist_" + uuid4().hex
+        random_name = "jumplist_" + uuid4().hex
         name = kwargs.get("name", random_name)
         select_name = name + "_select"
         btn_name = name + "_btn"
-        select = SelectPageElement(scope=scope, name=select_name)
+        select = SelectPageElement(
+            scope=scope, name=select_name, check_jumpto=check_jumpto, check_jumpfrom=check_jumpfrom
+        )
         btn = DynamicJumpButtons((label, select_name), name=btn_name)
         super().__init__(select, btn, **kwargs)
 
         self.layout.width_sm = [8, 4]
-        
-
+        self.debugmode = debugmode
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+        if self.debugmode:
+            for el in self.elements:
+                el.disabled = False
 
 
 class SelectMultipleElement(MultipleChoiceElement):
@@ -2292,8 +2346,6 @@ class SelectMultipleElement(MultipleChoiceElement):
                 self._input[choice.name] = True
             else:
                 self._input[choice.name] = False
-
-
 
 
 class ImageElement(Element):

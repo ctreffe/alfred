@@ -101,11 +101,7 @@ def start():
 
     session["page_tokens"] = []
 
-    # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
-    resp = make_response(redirect(url_for("experiment")))
-    resp.cache_control.no_cache = True
-
-    return resp
+    return redirect(url_for("experiment"))
 
 
 @app.route("/experiment", methods=["GET", "POST"])

@@ -52,7 +52,20 @@
     {% block page %}
     {% endblock page %}
 
+    
+    {% if debug %}
+    <div class="container-fluid {% if responsive %} responsive-width {% else %} fixed-width {% endif %} mt-4" id="jumplist">
+    <div class="row">
+    <div class="col-12 pr-1 pl-1">
+    {{ jumplist.web_widget | safe }}
+    </div>
+    </div>
+    </div>
+    {% endif %}
+    
+
     <div class="footer-container d-flex justify-content-center {% if not responsive %} min-width {% endif %}" id="footer-container">
+    
             <div class="footer text-center small muted mt-1">
                 {% if footer_text %}
                 <p class="footer-text mt-1">{{ footer_text }}</p>

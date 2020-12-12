@@ -215,7 +215,7 @@ class SavingAgent(ABC):
         """
         if self._experiment.config.getboolean("general", "debug"):
             if self._experiment.config.getboolean("debug", "disable_saving"):
-                self.log.debug(f"[DEBUG mode]: Saving disabled. 'save_data' was called on {self}.")
+                self.log.debug(f"Saving disabled. 'save_data' was called on {self}, but not executed.")
                 return (True, "success")
 
         self._lock.acquire()
