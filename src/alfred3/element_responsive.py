@@ -2240,18 +2240,23 @@ class ImageElement(Element):
 
 
 class AlertElement(TextElement):
-    """
-    Provides contextual feedback messages for typical user actions with the handful of available and flexible
-    alert messages.
+    """Allows the display of customized alerts
+
+    Example:
+        AlertElement(
+        text="Text to be displayed in the alert",
+        category="dark",
+        dismiss=True,
+        position="center",
+        )
 
     Args:
         category: Affects the appearance of alerts.
-                For the BaseWebLayout, values can be: "info", "error", "success" and "warning".
-                For a layout, based on bootstrap-4.5.3.min.css, values can be: "info", "success", "warning", "primary",
+                Values can be: "info", "success", "warning", "primary",
                 "secondory", "dark", "light", "danger".
-        dismiss: Boolean parameter. If "True", AlertElement can be dismissed by a click. If "False", AlertElement is
-                not dismissible. Default = "False"
-        .. todo:: Predefine category-options, add codebook record
+        dismiss: Boolean parameter. If "True", AlertElement can be dismissed by a click.
+                If "False", AlertElement is not dismissible. Default = "False"
+
     """
 
     element_class = "alert-element"
@@ -2273,6 +2278,30 @@ class AlertElement(TextElement):
 
 
 class RegEntryElement(TextEntryElement):
+    """
+    Displays an input field, which only accepts inputs, matching a predefined
+    regular expression.
+
+    Example:
+        RegEntryElement(
+        toplab="Only the input 'Try this' will be accepted.",
+        reg_ex="Try this",
+        force_input=True,
+        )
+
+    Args:
+        reg_ex: Regular expression to match with user input.
+        match_hint: Hint to be displayed if the user input doesn't match with the
+            regular expression.
+        no_input_corrective_hint: Hint to be displayed if force_input set to True and
+            no user input registered.
+        input: User input
+
+    Todo:
+        * Add position
+
+    """
+
     element_class = "regentry-element"
     element_template = jinja_env.get_template("TextEntryElement.html")
 
@@ -2282,47 +2311,30 @@ class RegEntryElement(TextEntryElement):
         reg_ex: str = ".*",
         no_input_corrective_hint: str = None,
         match_hint: str = None,
-        position: str = "center",
         **kwargs,
     ):
-        """
-        **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
-        on the left side of the line edit field.
-
-        :param str name: Name of TextAreaElement and stored input variable.
-        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param str reg_ex: Regular expression to match with user input.
-        :param str alignment: Alignment of TextAreaElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in TextAreaElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-        """
-
         super(RegEntryElement, self).__init__(
             no_input_corrective_hint=no_input_corrective_hint,
             toplab=toplab,
-            position=position,
             **kwargs,
         )
 
         self._input = ""
         self._reg_ex = reg_ex
         self._match_hint = match_hint
-        self.position = position
 
     def validate_data(self):
         super(RegEntryElement, self).validate_data()
 
-        if not self._should_be_shown:
-            return True
+        if (
+            self._force_input
+            and self._should_be_shown
+            and self._input == ""
+            and not re.match(r"^%s$" % self._reg_ex, str(self._input))
+        ):
+            return False
 
-        if not self._force_input and self._input == "":
-            return True
-
-        if re.match(r"^%s$" % self._reg_ex, str(self._input)):
-            return True
-
-        return False
+        return True
 
     @property
     def match_hint(self):
@@ -2374,7 +2386,6 @@ class RegEntryElement(TextEntryElement):
         d = super().template_data
         d["toplab"] = self.toplab
         d["input"] = self.input
-        d["position"] = self.position
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
 
@@ -2382,6 +2393,29 @@ class RegEntryElement(TextEntryElement):
 
 
 class NumberEntryElement(RegEntryElement):
+    """
+    Displays an input field, which only accepts numerical input.
+
+    Example:
+        NumberEntryElement(
+        toplab="Only numbers will be accepted.",
+        decimals=2,
+        min=-10,
+        max=10,
+        force_input=True,
+        )
+
+    Args:
+        decimals: Accepted number of decimals (0 as default).
+        min: Minimum accepted entry value.
+        max: Maximum accepted entry value.
+        input: User input
+
+    Todo:
+        * Add position
+
+    """
+
     element_class = "number-entry-element"
     element_template = jinja_env.get_template("TextEntryElement.html")
 
@@ -2393,72 +2427,40 @@ class NumberEntryElement(RegEntryElement):
         max: float = None,
         no_input_corrective_hint: str = None,
         match_hint: str = None,
-        position: str = "center",
         **kwargs,
     ):
-        """
-        **NumberEntryElement*** displays a line edit, which only accepts numerical input. Instruction is shown
-        on the left side of the line edit field.
-
-        :param str name: Name of NumberEntryElement and stored input variable.
-        :param str instruction: Instruction to be displayed above multiline edit field (can contain html commands).
-        :param int decimals: Accepted number of decimals (0 as standard).
-        :param float min: Minimum accepted entry value.
-        :param float max: Maximum accepted entry value.
-        :param int spacing: Minimum horizontal size of instruction label (can be used for layouting purposes).
-        :param str alignment: Alignment of NumberEntryElement in widget container ('left' as standard, 'center', 'right').
-        :param str/int font: Fontsize used in NumberEntryElement ('normal' as standard, 'big', 'huge', or int value setting fontsize in pt).
-        :param bool force_input: Sets user input to be mandatory (False as standard or True).
-        :param str no_input_corrective_hint: Hint to be displayed if force_input set to True and no user input registered.
-
-        """
         super(NumberEntryElement, self).__init__(
             toplab=toplab,
             no_input_corrective_hint=no_input_corrective_hint,
             match_hint=match_hint,
-            position=position,
             **kwargs,
         )
 
-        self._validator = None
         self._decimals = decimals
         self._min = min
         self._max = max
         self._input = ""
-        self.position = position
 
     def validate_data(self):
-        """"""
         super(NumberEntryElement, self).validate_data()
 
-        if not self._should_be_shown:
-            return True
-
-        if not self._force_input and self._input == "":
-            return True
-
+        if self._force_input and self._should_be_shown and self._input == "":
+            return False
         try:
             f = float(self._input)
         except Exception:
             return False
-
-        if self._min is not None:
-            if f < self._min:
-                return False
-
-        if self._max is not None:
-            if f > self._max:
-                return False
-
+        if f < self._min or f > self._max:
+            return False
         re_str = (
             r"^[+-]?\d+$"
             if self._decimals == 0
             else r"^[+-]?(\d*[.,]\d{1,%s}|\d+)$" % self._decimals
         )
-        if re.match(re_str, str(self._input)):
-            return True
+        if not re.match(re_str, str(self._input)):
+            return False
 
-        return False
+        return True
 
     @property
     def data(self):
