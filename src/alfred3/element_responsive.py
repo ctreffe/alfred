@@ -32,20 +32,20 @@ jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 def icon(name: str, ml: int = 0, mr: int = 0) -> str:
     """Returns HTML code for displaying font-awesome icons.
-    
+
     These icons can be used in all places where HTML code is rendered,
     i.e. TextElements, and all labels of elements.
 
 
     Example::
-        
+
         TextElement(f"Camera Icon: {icon('camera')}")
 
     If you need more control, you can simply use the HTML code directly
     and apply classes and styles as you wish::
-        
+
         TextElement("<i class='fas fa-camera'></i>")
-    
+
     Args:
         name: The icon name, as shown on https://fontawesome.com/icons?d=gallery&m=free
         ml: Margin to the left, can be an integer from 0 to 5.
@@ -57,12 +57,12 @@ def icon(name: str, ml: int = 0, mr: int = 0) -> str:
 
 def emoji(text: str) -> str:
     """Returns a unicode representation of emojis, based on shortcodes.
-    
+
     Emoji printing can be used in all TextElements and Element labels.
     Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
 
     Example::
-        
+
         TextElement(f"Joy emoji: {emoji(':joy:')}")
 
     You can also print unicode emojis directly without the help of this
@@ -73,7 +73,7 @@ def emoji(text: str) -> str:
 
     Args:
         text: Text, containing emoji shortcodes.
-    
+
     .. [#unicode] http://www.unicode.org/emoji/charts/full-emoji-list.html
 
     """
@@ -81,13 +81,15 @@ def emoji(text: str) -> str:
 
 
 class RowLayout:
-    """ 
+    """
     Args:
         responsive: Boolean, indicating whether breakpoints should
                     be responsive, or not.
     """
 
-    def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
+    def __init__(
+        self, ncols: int, valign_cols: List[str] = None, responsive: bool = True
+    ):
         self.ncols = ncols
         self._valign_cols = valign_cols
         self.responsive = responsive
@@ -99,9 +101,9 @@ class RowLayout:
         self.width_xl = None
 
     def col_breaks(self, col: int) -> str:
-        """Returns the column breakpoints for a specific column as 
+        """Returns the column breakpoints for a specific column as
         strings for use as bootstrap classes.
-        
+
         Args:
             col: Column index (starts at 0)
         """
@@ -124,7 +126,7 @@ class RowLayout:
 
     def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
         """Takes a tuple of column sizes (in integers from 1 to 12) and
-        returns a corresponding list of formatted Bootstrap column 
+        returns a corresponding list of formatted Bootstrap column
         classes.
 
         Args:
@@ -202,21 +204,21 @@ class RowLayout:
 
 
 class Element(ABC):
-    """Element baseclass. 
-    
-    Elements are derived from this class. Most of them inherit its 
+    """Element baseclass.
+
+    Elements are derived from this class. Most of them inherit its
     arguments, attributes, and methods, unless stated otherwise.
 
-    The simplest way to subclass *Element* is by defining the 
+    The simplest way to subclass *Element* is by defining the
     *inner_html* attribute::
 
         class NewElement(Element):
 
             inner_html = "Element html goes <b>here</b>"
-    
-    For most cases, you will want some additional control over the 
-    attribute. Maybe you even want to use your own jinja template. 
-    You can achieve that by defining *inner_html* as a property, which 
+
+    For most cases, you will want some additional control over the
+    attribute. Maybe you even want to use your own jinja template.
+    You can achieve that by defining *inner_html* as a property, which
     returns your desired html code::
 
         import jinja2
@@ -227,35 +229,35 @@ class Element(ABC):
             def inner_html(self):
                 t = jinja2.Template("Element html goes <b>{{ text }}</b>")
                 return t.render(text="here")
-    
-    Both of the above methods utilise alfred's basic element html 
+
+    Both of the above methods utilise alfred's basic element html
     template and inject your code into it, which allows the basic layout
     and logic to simply translate to your new element. If your new
     Element has its own *__init__* constructor method, you can pass
-    specific arguments or all available arguments on to the Element 
+    specific arguments or all available arguments on to the Element
     base class::
 
         # define new argument 'myarg' and save it as an attribute
-        # set a new default for argument width and pass it on to the 
-        # Element base class allow all other valid keyword arguments for 
+        # set a new default for argument width and pass it on to the
+        # Element base class allow all other valid keyword arguments for
         # the Element base class and pass them on ('**kwargs')
-        
+
         class NewElement(Element):
 
             def __init__(self, myarg: str = "test", width: str = "narrow", **kwargs):
                 super().__init__(width=width, **kwargs)
                 self.myarg = myarg
-        
+
 
     .. note::
         All elements that are derived in this way receive a CSS class
         of their class name, which can be used for css styling (i.e. a
-        new element 'ExampleElement' receives the CSS class 
+        new element 'ExampleElement' receives the CSS class
         'ExampleElement'). Further, all elements receive a html element
         ID of the form 'elid-<name>', where <name> is replaced by the
         element's name attribute. This can be used to style individual
         elements via CSS.
-    
+
     If you want full control over the element's html template, you can
     redefine the *web_widget* property. This will overwrite the
     basic html layouting functionality. Example::
@@ -271,19 +273,19 @@ class Element(ABC):
             It will be used to identify the corresponding data in the
             final data set. If none is provided, a generic name will be
             generated.
-        font_size: Font size for text in the element. Can be 'normal' 
-            (default), 'big', 'huge', or an integer giving the desired 
+        font_size: Font size for text in the element. Can be 'normal'
+            (default), 'big', 'huge', or an integer giving the desired
             size in pt.
-        align: Alignment of text/instructions inside the element. 
+        align: Alignment of text/instructions inside the element.
             Can be 'left' (default), 'center', 'right', or 'justify'.
-        position: Horizontal position of the full element on the 
+        position: Horizontal position of the full element on the
             page. Values can be 'left', 'center' (default), 'end',
             or any valid value for the justify-content flexbox
             utility [#bs_flex]_ .
-        width: Defines the horizontal width of the element from 
+        width: Defines the horizontal width of the element from
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
-            'wide', and 'full'. For more detailed control, you can 
+            'wide', and 'full'. For more detailed control, you can
             define the *element_width* attribute.
         height: Vertical height. Supply a string with a unit, e.g.
             "80px".
@@ -293,31 +295,31 @@ class Element(ABC):
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
-        alignment: Alignment of text/instructions inside the element. 
-            Can be 'left' (default), 'center', 'right', or 'justify'. 
-            *Deprecated in v1.5*. Please use *align*. 
+        alignment: Alignment of text/instructions inside the element.
+            Can be 'left' (default), 'center', 'right', or 'justify'.
+            *Deprecated in v1.5*. Please use *align*.
 
     Attributes:
         element_width: A list of relative width definitions. The
             list can contain up to 5 width definitions, given as
-            integers from 1 to 12. They refer to the five breakbpoints 
-            in Bootstrap 4's 12-column-grid system, i.e. 
+            integers from 1 to 12. They refer to the five breakbpoints
+            in Bootstrap 4's 12-column-grid system, i.e.
             [xs, sm, md, lg, xl] [#bs_grid]_ .
         experiment: The alfred experiment to which this element belogs.
         log: An instance of :class:`alfred3.logging.QueuedLoggingInterface`,
             which is a modified interface to python's logging facility
             [#log]_ . You can use it to log messages with the standard
-            logging methods 'debug', 'info', 'warning', 'error', 
+            logging methods 'debug', 'info', 'warning', 'error',
             'exception', and 'log'. It also offers direct access to the
             logger via ``log.queue_logger``.
         page: The element's parent page (i.e. the page on which it is
             displayed).
         showif: The showif dictionary. It must be of the form
             ``{<page_uid>: {<element_name>: <value>}}``. It can contain
-            showifs for multiple pages and for multiple elements on 
-            each page. The element will only be shown if *all* 
+            showifs for multiple pages and for multiple elements on
+            each page. The element will only be shown if *all*
             conditions are met.
-    
+
     .. [#bs_flex] see https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
     .. [#bs_grid] see https://getbootstrap.com/docs/4.0/layout/grid/
     .. [#log] see https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
@@ -544,7 +546,9 @@ class Element(ABC):
         d["hide"] = "hide" if self._showif_on_current_page is True else ""
         d["align"] = f"text-{self.align}"
         d["align_raw"] = self.align
-        d["fontsize"] = f"font-size: {self.font_size}pt;" if self.font_size is not None else ""
+        d["fontsize"] = (
+            f"font-size: {self.font_size}pt;" if self.font_size is not None else ""
+        )
         d["height"] = f"height: {self.height};" if self.height is not None else ""
         d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         return d
@@ -553,7 +557,7 @@ class Element(ABC):
 
     def _evaluate_showif(self) -> List[bool]:
         """Checks the showif conditions that refer to previous pages.
-        
+
         Returns:
             A list of booleans, indicating for each condition whether
             it is met or not.
@@ -610,9 +614,9 @@ class Element(ABC):
     # Public methods start here ----------------------------------------
 
     def added_to_experiment(self, experiment):
-        """Tells the element that it was added to an experiment. 
-        
-        The experiment is made available to the element, and the 
+        """Tells the element that it was added to an experiment.
+
+        The experiment is made available to the element, and the
         element's logging interface initializes its experiment-specific
         logging.
 
@@ -628,8 +632,8 @@ class Element(ABC):
         self.log.log_queued_messages()
 
     def added_to_page(self, page):
-        """Tells the element that it was added to a page. 
-        
+        """Tells the element that it was added to a page.
+
         The page and the experiment are made available to the element.
 
         Args:
@@ -656,7 +660,7 @@ class Element(ABC):
     def prepare(self):
         """Wraps *prepare_web_widget* to allow for additional, generic
         preparations that are the same for all elements.
-        
+
         This is useful, because *prepare_web_widget* is often redefined
         in derived elements.
         """
@@ -665,7 +669,7 @@ class Element(ABC):
 
     def prepare_web_widget(self):
         """Hook for computations for preparing an element's web widget.
-        
+
         This method is supposed to be overridden by derived elements if
         necessary.
         """
@@ -677,8 +681,8 @@ class Element(ABC):
         The name has the following format::
 
             exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
+
+        with *class_uid* only added, if
         :attr:`~Element.instance_level_logging` is set to *True*.
         """
         # remove "alfred3" from module name
@@ -716,7 +720,7 @@ class Element(ABC):
     @property
     def web_widget(self):
         """Every child class *must* redefine the web widget.
-        
+
         This is the html-code that defines the element's display on the
         screen.
         """
@@ -729,12 +733,11 @@ class Element(ABC):
         return type(self).__name__
 
 
-
 class Row(Element):
     """Allows you to arrange up to 12 elements in a row.
 
     The row will arrange your elements using Bootstrap 4's grid system
-    and breakpoints, making the arrangement responsive. You can 
+    and breakpoints, making the arrangement responsive. You can
     customize the behavior of the row for five different screen sizes
     (Bootstrap 4's default break points) with the width attributes of
     its layout attribute.
@@ -745,48 +748,48 @@ class Row(Element):
     .. info::
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
-        column by assigning it a number of those units. A column of 
-        width 12 will take up all available horizontal space, other 
+        column by assigning it a number of those units. A column of
+        width 12 will take up all available horizontal space, other
         columns will be placed below such a full-width column.
 
         You can define the column width for each of five breakpoints
         separately. The definition will be valid for screens of the
         respective size up to the next breakpoint.
 
-        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
+        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options
         for detailed documentation of how Bootstrap's breakpoints work.
-    
+
     .. info::
         **Some information regarding the width attributes**
-        
-        - If you specify fewer values than the number of columns in the 
-        width attributes, the columns with undefined width will take up 
+
+        - If you specify fewer values than the number of columns in the
+        width attributes, the columns with undefined width will take up
         equal portions of the remaining horizontal space.
         - If a breakpoint is not specified manually, the values from the
         next smaller breakpoint are inherited.
-    
+
     Args:
         elements: The elements that you want to arrange in a row.
         height: Custom row height (with unit, e.g. '100px').
-        valign_cols: List of vertical column alignments. Valid values 
+        valign_cols: List of vertical column alignments. Valid values
             are 'auto' (default), 'top', 'center', and 'bottom'.
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
-    
+
     Attributes:
-        width_xs: List of column widths on screens of size 'xs' or 
+        width_xs: List of column widths on screens of size 'xs' or
             bigger (<576px). Widths must be defined as integers between
             1 and 12.
-        width_sm: List of column widths on screens of size 'sm' or 
+        width_sm: List of column widths on screens of size 'sm' or
             bigger (>=576px). Widths must be defined as integers between
             1 and 12.
-        width_md: List of column widths on screens of size 'md' or 
+        width_md: List of column widths on screens of size 'md' or
             bigger (>=768px). Widths must be defined as integers between
             1 and 12.
-        width_lg: List of column widths on screens of size 'lg' or 
+        width_lg: List of column widths on screens of size 'lg' or
             bigger (>=992px). Widths must be defined as integers between
             1 and 12.
-        width_xl: List of column widths on screens of size 'xl' or 
+        width_xl: List of column widths on screens of size 'xl' or
             bigger (>=1200px). Widths must be defined as integers between
             1 and 12.
     """
@@ -794,6 +797,7 @@ class Row(Element):
     @dataclass
     class InternalCol:
         """Just a little helper for handling columns."""
+
         breaks: str
         vertical_position: str
         element: Element
@@ -861,14 +865,14 @@ class Row(Element):
 
 class Stack(Row):
     """Stacks multiple elements on top of each other.
-    
-    Stacks are intended for use in Rows. They allow you to flexibly 
+
+    Stacks are intended for use in Rows. They allow you to flexibly
     arrange elements in a grid.
 
     Here is an example, that will display two stacked elements next to
     one other element::
         from alfred3 import element_responsive as el
-        
+
         el1 = el.TextElement("text")
         el2 = el.TextEntryElement(toplab="lab")
         el3 = el.TextElement("long text")
@@ -882,12 +886,13 @@ class Stack(Row):
         |=========|  el3   |
         |   el2   |        |
         |=========|========|
-    
+
     Args:
         *elements: The elements to stack.
-        **kwargs: Keyword arguments that are passend on to the parent 
+        **kwargs: Keyword arguments that are passend on to the parent
             class :class:`Row`.
     """
+
     def __init__(self, *elements: Element, **kwargs):
         """Constructor method."""
         super().__init__(*elements, **kwargs)
@@ -896,7 +901,7 @@ class Stack(Row):
 
 class VerticalSpace(Element):
     """The easiest way to add vertical space to a page.
-    
+
     Args:
         space: Desired space in any unit that is understood by a CSS
             margin (e.g. em, px, cm). Include the unit (e.g. '1em').
@@ -913,21 +918,23 @@ class VerticalSpace(Element):
 
 
 class Style(Element):
-    """Adds CSS code to a page. 
-    
-    CSS styling can be used to change the appearance of page or 
-    individual elements. 
-    
-    .. note:: 
-        A Style is added to a specific page, and thus only affects the 
-        layout of that page. To change the appearance of the whole 
-        experiment, you can define your styles in a .css file and 
+    """Adds CSS code to a page.
+
+    CSS styling can be used to change the appearance of page or
+    individual elements.
+
+    .. note::
+        A Style is added to a specific page, and thus only affects the
+        layout of that page. To change the appearance of the whole
+        experiment, you can define your styles in a .css file and
     """
 
     web_widget = None
     should_be_shown = False
 
-    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+    def __init__(
+        self, code: str = None, url: str = None, path: str = None, priority: int = 10
+    ):
         super().__init__()
         self.priority = priority
         self.code = code
@@ -936,7 +943,11 @@ class Style(Element):
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
+        if (
+            (self.code and self.path)
+            or (self.code and self.url)
+            or (self.path and self.url)
+        ):
             raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property
@@ -955,7 +966,6 @@ class Style(Element):
 
 
 class HideNavigation(Style):
-
     def __init__(self):
         super().__init__()
         self.code = "#page-navigation {display: none;}"
@@ -963,7 +973,7 @@ class HideNavigation(Style):
 
 class JavaScript(Element):
     """Adds JavaScript to a page.
-    
+
     Javascript can be used to implement dynamic behavior on the client
     side.
     """
@@ -971,7 +981,9 @@ class JavaScript(Element):
     web_widget = None
     should_be_shown = False
 
-    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+    def __init__(
+        self, code: str = None, url: str = None, path: str = None, priority: int = 10
+    ):
         super().__init__()
         self.priority = priority
         self.code = code
@@ -980,7 +992,11 @@ class JavaScript(Element):
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
+        if (
+            (self.code and self.path)
+            or (self.code and self.url)
+            or (self.path and self.url)
+        ):
             raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property
@@ -1010,8 +1026,8 @@ class WebExitEnabler(JavaScript):
 class TextElement(Element):
     """Displays text.
 
-    You can use GitHub-flavored Markdown syntax [#md]_ and common emoji 
-    shortcodes [#emoji]_ . Additionally, you can use raw html for 
+    You can use GitHub-flavored Markdown syntax [#md]_ and common emoji
+    shortcodes [#emoji]_ . Additionally, you can use raw html for
     advanced formatting.
 
     Example::
@@ -1032,24 +1048,24 @@ class TextElement(Element):
 
         # Text element with content read from file
         text = TextElement(path='files/text.md')
-        
+
     Args:
         text: Text to be displayed.
         text_width: Text width in px. **Deprecated** for responsive
             design (v1.5). Use `element_width` instead, when using
             the responsive design.
         text_height: Element height in px.
-        path: Filepath to a textfile (relative to the experiment 
+        path: Filepath to a textfile (relative to the experiment
             directory).
-        width: Element width. Usage is the same as in 
+        width: Element width. Usage is the same as in
             :class:`Element`, but the TextElement uses its own
-            specific default, which ensures good readability in 
+            specific default, which ensures good readability in
             most cases on different screen sizes.
         **element_args: Keyword arguments passed to the parent class
-            :class:`Element`. Accepted keyword arguments are: name, 
-            font_size, align, width, position, showif, 
+            :class:`Element`. Accepted keyword arguments are: name,
+            font_size, align, width, position, showif,
             instance_level_logging.
-    
+
     Attributes:
         emojize: If True (default), emoji shortcodes in the text will
             be converted to unicode.
@@ -1063,7 +1079,11 @@ class TextElement(Element):
     emojize = True
 
     def __init__(
-        self, text: str = None, path: Union[Path, str] = None, width: str = None, **element_args,
+        self,
+        text: str = None,
+        path: Union[Path, str] = None,
+        width: str = None,
+        **element_args,
     ):
 
         """Constructor method."""
@@ -1098,7 +1118,9 @@ class TextElement(Element):
         if self.width is not None:
             return " ".join(self.converted_width)
 
-        responsive = self.experiment.config.getboolean("layout", "responsive", fallback=True)
+        responsive = self.experiment.config.getboolean(
+            "layout", "responsive", fallback=True
+        )
         if responsive:
             if self._element_width is None:
                 return " ".join(["col-12", "col-sm-11", "col-lg-10", "col-xl-9"])
@@ -1129,15 +1151,16 @@ class Hline(Element):
     element_class = "hline-element"
     inner_html = "<hr>"
 
+
 class CodeElement(TextElement):
     """A convenience element for displaying highlighted code.
 
     Args:
-        lang: The programming language to highlight [#lang]_ . Defaults 
-            to 'auto', which tries to auto-detect the right language. 
-    
+        lang: The programming language to highlight [#lang]_ . Defaults
+            to 'auto', which tries to auto-detect the right language.
+
     .. [#lang] see https://prismjs.com/index.html#supported-languages
-        for an overview of possible language codes. Note though that 
+        for an overview of possible language codes. Note though that
         we may not support all possible languages.
     """
 
@@ -1168,7 +1191,9 @@ class CodeElement(TextElement):
             return code
 
     def __str__(self):
-        text = self.text.replace(f"```{self.lang}", "").replace("\n", "").replace("\r", "")
+        text = (
+            self.text.replace(f"```{self.lang}", "").replace("\n", "").replace("\r", "")
+        )
         if len(self.text) > 10:
             text = text[0:10] + " ..."
 
@@ -1176,7 +1201,7 @@ class CodeElement(TextElement):
 
 
 class Label(TextElement):
-    """A child of TextElement, serving mainly as label for other 
+    """A child of TextElement, serving mainly as label for other
     elements.
     """
 
@@ -1202,16 +1227,20 @@ class DataElement(Element):
     Example::
 
         DataElement(value="test", name="mydata")
-    
+
     Args:
         value: The value that you want to save.
     """
 
-    def __init__(self, value: Union[str, int, float], description: str = None, **kwargs):
+    def __init__(
+        self, value: Union[str, int, float], description: str = None, **kwargs
+    ):
         """Constructor method."""
 
         if kwargs.pop("variable", False):
-            raise ValueError("'variable' is not a valid parameter. Use 'value' instead.")
+            raise ValueError(
+                "'variable' is not a valid parameter. Use 'value' instead."
+            )
 
         super(DataElement, self).__init__(**kwargs)
         self.value = value
@@ -1239,7 +1268,9 @@ class DataElement(Element):
         data["element_type"] = type(self).__name__
         data["description"] = self.description
         data["duplicate_identifier"] = False
-        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
+        data["unlinked"] = (
+            True if isinstance(self.page, page.UnlinkedDataPage) else False
+        )
         return data
 
     @property
@@ -1252,11 +1283,11 @@ class DataElement(Element):
 
 class LabelledElement(Element):
     """An intermediate Element class which provides support for labels.
-    
+
     Args:
         toplab, leftlab, rightlab, bottomlab: Strings or instances of
             :class:`Label`, which will be used to label the element.
-        layout: A list of integers, specifying the allocation of 
+        layout: A list of integers, specifying the allocation of
             horizontal space between leftlab, main element widget and
             rightlab. Uses Bootstraps 12-column-grid, i.e. you can
             choose integers between 1 and 12.
@@ -1314,7 +1345,9 @@ class LabelledElement(Element):
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
-        self.layout.responsive = self.experiment.config.getboolean("layout", "responsive")
+        self.layout.responsive = self.experiment.config.getboolean(
+            "layout", "responsive"
+        )
 
         if self.toplab:
             self.toplab.added_to_experiment(experiment)
@@ -1427,16 +1460,16 @@ class LabelledElement(Element):
 class InputElement(LabelledElement):
     """Base class for elements that allow data input.
 
-    This class handles the logic und layouting of instructions for input 
+    This class handles the logic und layouting of instructions for input
     elements.
 
     Args:
-        no_input_corrective_hint: Hint to be displayed if force_input 
+        no_input_corrective_hint: Hint to be displayed if force_input
             set to True and no user input registered. Defaults to the
             experiment-wide value specified in config.conf.
-        instruction_width: Horizontal width of instructions. 
-            **Deprecated** for responsive design (v1.5+). Use 
-            `instruction_col_width` instead, when using the responsive 
+        instruction_width: Horizontal width of instructions.
+            **Deprecated** for responsive design (v1.5+). Use
+            `instruction_col_width` instead, when using the responsive
             design.
         instruction_height: Minimum vertical size of instruction label.
         force_input: If `True`, users can only progress to the next page
@@ -1449,13 +1482,13 @@ class InputElement(LabelledElement):
         default: Default value.
         **kwargs: Further keyword arguments that are passed on to the
             parent class :class:`Element`.
-    
+
     Attributes:
         instruction_col_width: Width of the instruction area, using
-            Bootstrap's 12-column-grid. You can assign an integer 
+            Bootstrap's 12-column-grid. You can assign an integer
             between 1 and 12 here to fine-tune the instruction width.
         input_col_width: Width of the input area, using
-            Bootstrap's 12-column-grid. You can assign an integer 
+            Bootstrap's 12-column-grid. You can assign an integer
             between 1 and 12 here to fine-tune the input area width.
     """
 
@@ -1487,7 +1520,9 @@ class InputElement(LabelledElement):
             self._input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
-            raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+            raise ValueError(
+                f"Elements with 'showif's can't be 'force_input' ({self})."
+            )
 
     @property
     def debug_value(self):
@@ -1509,7 +1544,7 @@ class InputElement(LabelledElement):
             return self.debug_value
         else:
             return None
-    
+
     @default.setter
     def default(self, value):
         self._default = value
@@ -1517,7 +1552,7 @@ class InputElement(LabelledElement):
     @property
     def force_input(self):
         return self._force_input
-    
+
     @force_input.setter
     def force_input(self, value: bool):
         if not isinstance(value, bool):
@@ -1558,7 +1593,9 @@ class InputElement(LabelledElement):
     @property
     def default_no_input_hint(self):
         name = f"no_input{type(self).__name__}"
-        return self.experiment.config.get("hints", name, fallback="You need to enter something.")
+        return self.experiment.config.get(
+            "hints", name, fallback="You need to enter something."
+        )
 
     @property
     def input(self):
@@ -1608,7 +1645,9 @@ class InputElement(LabelledElement):
         data["default"] = self.default
         data["description"] = self.description
         data["duplicate_identifier"] = False
-        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
+        data["unlinked"] = (
+            True if isinstance(self.page, page.UnlinkedDataPage) else False
+        )
         return data
 
     @property
@@ -1626,7 +1665,7 @@ class TextEntryElement(InputElement):
         default: Default value.
         **kwargs: Further keyword arguments that are passed on to the
             parent class :class:`InputElement`.
-        
+
     """
 
     element_class = "text-entry-element"
@@ -1744,7 +1783,9 @@ class ChoiceElement(InputElement, ABC):
             if isinstance(label, Element):
                 label.added_to_page(page)
                 label.should_be_shown = False
-                label.width = "full"  # in case of TextElement, b/c its default is a special width
+                label.width = (
+                    "full"  # in case of TextElement, b/c its default is a special width
+                )
 
     def prepare_web_widget(self):
         self.choices = self.define_choices()
@@ -1762,8 +1803,7 @@ class ChoiceElement(InputElement, ABC):
 
 
 class SingleChoiceElement(ChoiceElement):
-    """ 
-    """
+    """"""
 
     element_class = "single-choice-element"
     type = "radio"
@@ -1814,19 +1854,19 @@ class SingleChoiceButtons(SingleChoiceElement):
     "align" parameter has no effect in labels.
 
     Keyword Arguments:
-        button_width: Can be used to manually define the width of 
+        button_width: Can be used to manually define the width of
             buttons. If you supply a single string, the same width will
             be applied to all buttons in the element. If you supply
-            "auto", button width will be determined automatically. You 
-            can also supply a list of specific widths for each 
-            individual button. You must specify a unit, e.g. '140px'. 
+            "auto", button width will be determined automatically. You
+            can also supply a list of specific widths for each
+            individual button. You must specify a unit, e.g. '140px'.
             Defaults to "equal".
-        button_style: Can be used for quick color-styling, using 
+        button_style: Can be used for quick color-styling, using
             Bootstraps default color keywords: btn-primary, btn-secondary,
-            btn-success, btn-info, btn-warning, btn-danger, btn-light, 
-            btn-dark. You can also use the "outline" variant to get 
-            outlined buttons (eg. "btn-outline-secondary"). If you 
-            specify a single string, this style is applied to all 
+            btn-success, btn-info, btn-warning, btn-danger, btn-light,
+            btn-dark. You can also use the "outline" variant to get
+            outlined buttons (eg. "btn-outline-secondary"). If you
+            specify a single string, this style is applied to all
             buttons in the element. If you supply a list, you can define
             individual styles for each button. If you supply a list that
             is shorter than the list of labels, the last style
@@ -1836,7 +1876,7 @@ class SingleChoiceButtons(SingleChoiceElement):
             be layoutet as a connected toolbar (*True*), or as separate
             neighbouring buttons (*False*, default).
         button_round_corners: A boolean switch to toggle whether buttons
-            should be displayed with additionally rounded corners 
+            should be displayed with additionally rounded corners
             (*True*). Defaults to *False*.
     """
 
@@ -1886,7 +1926,9 @@ class SingleChoiceButtons(SingleChoiceElement):
                     self._button_style.append(value[-1])
 
         elif isinstance(value, list) and len(value) > len(self.choice_labels):
-            raise ValueError("List of button styles cannot be longer than list of button labels.")
+            raise ValueError(
+                "List of button styles cannot be longer than list of button labels."
+            )
 
     @property
     def template_data(self):
@@ -1902,13 +1944,11 @@ class SingleChoiceButtons(SingleChoiceElement):
         if self.button_width == "equal":
             if not self.vertical:
                 # set button width to small value, because they will grow to fit the group
-                css = f".btn.choice-button-{self.name} {{width: 10px;}} " 
+                css = f".btn.choice-button-{self.name} {{width: 10px;}} "
             else:
                 css = []
             # full-width buttons on small screens
-            css += (
-                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
-            )
+            css += f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, str):
@@ -1916,13 +1956,11 @@ class SingleChoiceButtons(SingleChoiceElement):
             css = f"#choice-button-group-{self.name} {{width: auto;}} "
             # and return to 100% with on small screens
             css += f"@media (max-width: 576px) {{#choice-button-group-{self.name} {{width: 100%!important;}}}} "
-            
+
             # now the width of the individual button has an effect
             css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
             # and it, too returns to full width on small screens
-            css += (
-                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
-            )
+            css += f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, list):
@@ -1990,7 +2028,9 @@ class SingleChoiceButtons(SingleChoiceElement):
 
 class SingleChoiceBar(SingleChoiceButtons):
     element_class = "single-choice-bar"
-    button_group_class = "choice-button-bar"  # this leads to display as connected buttons
+    button_group_class = (
+        "choice-button-bar"  # this leads to display as connected buttons
+    )
     button_toolbar = True
     button_round_corners = True
 
@@ -2005,7 +2045,13 @@ class MultipleChoiceElement(ChoiceElement):
     type = "checkbox"
 
     def __init__(
-        self, *choice_labels, min: int = None, max: int = None, select_hint: str = None, default: list = None, **kwargs,
+        self,
+        *choice_labels,
+        min: int = None,
+        max: int = None,
+        select_hint: str = None,
+        default: list = None,
+        **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
 
@@ -2019,7 +2065,9 @@ class MultipleChoiceElement(ChoiceElement):
         self._select_hint = select_hint
 
         if default is not None and not isinstance(default, list):
-            raise ValueError("Default for MultipleChoiceElement must be a list of integers, indicating the default choices.")
+            raise ValueError(
+                "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
+            )
         else:
             self.default = default
 
@@ -2096,9 +2144,8 @@ class MultipleChoiceElement(ChoiceElement):
 
 
 class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
-    """Buttons, working as a MultipleChoiceElement.
-    """
-    
+    """Buttons, working as a MultipleChoiceElement."""
+
     element_class = "multiple-choice-buttons"
     button_round_corners = False
 
@@ -2126,7 +2173,7 @@ class ButtonLabels(SingleChoiceButtons):
 
 
 class BarLabels(SingleChoiceBar):
-    """Disabled Button-Toolbar. Example usecase might be additional 
+    """Disabled Button-Toolbar. Example usecase might be additional
     labelling.
     """
 
@@ -2139,9 +2186,10 @@ class BarLabels(SingleChoiceBar):
 
 
 class SubmittingButtons(SingleChoiceButtons):
-    """SingleChoiceButtons that trigger submission of the current page 
+    """SingleChoiceButtons that trigger submission of the current page
     on click.
     """
+
     element_class = "submitting-buttons"
 
     def added_to_page(self, page):
@@ -2190,6 +2238,7 @@ class ImageElement(Element):
         src = self.path if self.path is not None else self.url
         return f"ImageElement(src: '{src}'; name: '{self.name}')"
 
+
 class AlertElement(TextElement):
     """
     Provides contextual feedback messages for typical user actions with the handful of available and flexible
@@ -2203,11 +2252,12 @@ class AlertElement(TextElement):
         dismiss: Boolean parameter. If "True", AlertElement can be dismissed by a click. If "False", AlertElement is
                 not dismissible. Default = "False"
         .. todo:: Predefine category-options, add codebook record
-        """
+    """
+
     element_class = "alert-element"
     element_template = jinja_env.get_template("AlertElement.html")
 
-    def __init__(self, category:str = "info", dismiss:bool = False, **element_args):
+    def __init__(self, category: str = "info", dismiss: bool = False, **element_args):
         super(AlertElement, self).__init__(**element_args)
         self.category = category
         self.dismiss = dismiss
@@ -2223,10 +2273,18 @@ class AlertElement(TextElement):
 
 
 class RegEntryElement(TextEntryElement):
-    element_class="regentry-element"
+    element_class = "regentry-element"
     element_template = jinja_env.get_template("TextEntryElement.html")
-    def __init__(self, toplab: str = None, reg_ex: Union[str, int] = ".*", no_input_corrective_hint:str = None,
-        match_hint:str =None,**kwargs,):
+
+    def __init__(
+        self,
+        toplab: str = None,
+        reg_ex: str = ".*",
+        no_input_corrective_hint: str = None,
+        match_hint: str = None,
+        position: str = "center",
+        **kwargs,
+    ):
         """
         **RegEntryElement*** displays a line edit, which only accepts Patterns that mach a predefined regular expression. Instruction is shown
         on the left side of the line edit field.
@@ -2243,12 +2301,14 @@ class RegEntryElement(TextEntryElement):
         super(RegEntryElement, self).__init__(
             no_input_corrective_hint=no_input_corrective_hint,
             toplab=toplab,
+            position=position,
             **kwargs,
         )
 
         self._input = ""
         self._reg_ex = reg_ex
         self._match_hint = match_hint
+        self.position = position
 
     def validate_data(self):
         super(RegEntryElement, self).validate_data()
@@ -2266,18 +2326,16 @@ class RegEntryElement(TextEntryElement):
 
     @property
     def match_hint(self):
-        if self._match_hint is not None:
+        if self._match_hint:
             return self._match_hint
-        if (
-            self._page
-            and self._page._experiment
-            and "corrective_regentry" in self._page._experiment.settings.hints
-        ):
-            return self._page._experiment.settings.hints["corrective_regentry"]
+        return self.default_no_match_hint
 
-        msg = f"Can't access match_hint for  {type(self).__name__}"
-        self.log.error(msg)
-        return msg
+    @property
+    def default_no_match_hint(self):
+        name = f"corrective_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name, fallback="Please check your input."
+        )
 
     @property
     def corrective_hints(self):
@@ -2285,12 +2343,25 @@ class RegEntryElement(TextEntryElement):
             return []
         elif re.match(r"^%s$" % self._reg_ex, self._input):
             return []
-        elif self._input == "" and not self._force_input:
+        elif not self._force_input and not self._input:
             return []
-        elif self._input == "" and self._force_input:
+        elif self._force_input and not self._input:
             return [self.no_input_hint]
         else:
             return [self.match_hint]
+
+    @property
+    def no_input_hint(self):
+        if self._no_input_corrective_hint:
+            return self._no_input_corrective_hint
+        return self.default_no_input_hint
+
+    @property
+    def default_no_input_hint(self):
+        name = f"no_input{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name, fallback="You need to enter something."
+        )
 
     @property
     def codebook_data_flat(self):
@@ -2303,14 +2374,17 @@ class RegEntryElement(TextEntryElement):
         d = super().template_data
         d["toplab"] = self.toplab
         d["input"] = self.input
+        d["position"] = self.position
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
 
         return d
 
+
 class NumberEntryElement(RegEntryElement):
     element_class = "number-entry-element"
     element_template = jinja_env.get_template("TextEntryElement.html")
+
     def __init__(
         self,
         toplab: str = None,
@@ -2319,6 +2393,7 @@ class NumberEntryElement(RegEntryElement):
         max: float = None,
         no_input_corrective_hint: str = None,
         match_hint: str = None,
+        position: str = "center",
         **kwargs,
     ):
         """
@@ -2341,6 +2416,7 @@ class NumberEntryElement(RegEntryElement):
             toplab=toplab,
             no_input_corrective_hint=no_input_corrective_hint,
             match_hint=match_hint,
+            position=position,
             **kwargs,
         )
 
@@ -2349,11 +2425,10 @@ class NumberEntryElement(RegEntryElement):
         self._min = min
         self._max = max
         self._input = ""
-
+        self.position = position
 
     def validate_data(self):
-        """
-        """
+        """"""
         super(NumberEntryElement, self).validate_data()
 
         if not self._should_be_shown:
@@ -2368,11 +2443,11 @@ class NumberEntryElement(RegEntryElement):
             return False
 
         if self._min is not None:
-            if not self._min <= f:
+            if f < self._min:
                 return False
 
         if self._max is not None:
-            if not f <= self._max:
+            if f > self._max:
                 return False
 
         re_str = (
@@ -2403,38 +2478,35 @@ class NumberEntryElement(RegEntryElement):
         else:
             return {self.name: ""}
 
-   # def set_data(self, d):
+    def set_data(self, d):
 
-    #    if self.enabled:
-     #       val = d.get(self.name, "")
-      #      if not isinstance(val, str):
-       #         val = str(val)
-        #    val = val.replace(",", ".")
-         #   super(NumberEntryElement, self).set_data({self.name: val})
+        if not self.disabled:
+            val = d.get(self.name, "")
+            if not isinstance(val, str):
+                val = str(val)
+            val = val.replace(",", ".")
+            super(NumberEntryElement, self).set_data({self.name: val})
 
     @property
     def match_hint(self):
-        if self._match_hint is not None:
+        if self._match_hint:
             return self._match_hint
+        return self.default_no_match_hint
 
-        if (
-            self._page
-            and self._page._experiment
-            and "corrective_numberentry" in self._page._experiment.settings.hints
-        ):
-            return self._page._experiment.settings.hints["corrective_numberentry"]
-        self.log.error(f"Can't access match_hint for {type(self).__name__}")
-        return f"Can't access match_hint for {type(self).__name__}"
+    @property
+    def default_no_match_hint(self):
+        name = f"corrective_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name, fallback="Please check your input."
+        )
 
     @property
     def corrective_hints(self):
         if not self.show_corrective_hints:
             return []
-
-        elif self._input == "" and not self._force_input:
+        elif not self._force_input and not self._input:
             return []
-
-        elif self._force_input and self._input == "":
+        elif self._force_input and not self._input:
             return [self.no_input_hint]
         else:
             re_str = (
@@ -2444,8 +2516,8 @@ class NumberEntryElement(RegEntryElement):
             )
             if (
                 not re.match(re_str, str(self._input))
-                or (self._min is not None and not self._min <= float(self._input))
-                or (self._max is not None and not float(self._input) <= self._max)
+                or (self._min is not None and float(self._input) < self._min)
+                or (self._max is not None and float(self._input) > self._max)
             ):
 
                 hint = self.match_hint
@@ -2454,9 +2526,8 @@ class NumberEntryElement(RegEntryElement):
                     hint = hint + " (Bis zu %s Nachkommastellen" % (self._decimals)
                 else:
                     hint = hint + " (Keine Nachkommastellen"
-
                 if self._min is not None and self._max is not None:
-                    hint = hint + ", Min = %s, Max = %s)" % (self._min, self._max)
+                    hint = hint + ", [Min = %s; Max = %s])" % (self._min, self._max)
                 elif self._min is not None:
                     hint = hint + ", Min = %s)" % self._min
                 elif self._max is not None:
