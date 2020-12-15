@@ -2346,7 +2346,7 @@ class RegEntryElement(TextEntryElement):
     def default_no_match_hint(self):
         name = f"corrective_{type(self).__name__}"
         return self.experiment.config.get(
-            "hints", name, fallback="Please check your input."
+            "hints", name
         )
 
     @property
@@ -2372,7 +2372,7 @@ class RegEntryElement(TextEntryElement):
     def default_no_input_hint(self):
         name = f"no_input{type(self).__name__}"
         return self.experiment.config.get(
-            "hints", name, fallback="You need to enter something."
+            "hints", name
         )
 
     @property
@@ -2413,6 +2413,8 @@ class NumberEntryElement(RegEntryElement):
 
     Todo:
         * Add position
+        * Add kwargs
+        * Add elements
 
     """
 
@@ -2450,8 +2452,12 @@ class NumberEntryElement(RegEntryElement):
             f = float(self._input)
         except Exception:
             return False
-        if f < self._min or f > self._max:
-            return False
+        if self._min is not None:
+            if f <= self._min:
+                return False
+        if self._max is not None:
+            if f > self._max:
+                return False
         re_str = (
             r"^[+-]?\d+$"
             if self._decimals == 0
@@ -2499,7 +2505,41 @@ class NumberEntryElement(RegEntryElement):
     def default_no_match_hint(self):
         name = f"corrective_{type(self).__name__}"
         return self.experiment.config.get(
-            "hints", name, fallback="Please check your input."
+            "hints", name
+        )
+
+    @property
+    def no_decimals_hint(self):
+        name = f"no_decimals_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name
+        )
+
+    @property
+    def decimals_hint(self):
+        name = f"decimals_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name
+        )
+
+    @property
+    def max_hint(self):
+        name = f"max_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name
+        )
+
+    @property
+    def min_hint(self):
+        name = f"min_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name
+        )
+    @property
+    def min_max_hint(self):
+        name = f"min_max_{type(self).__name__}"
+        return self.experiment.config.get(
+            "hints", name
         )
 
     @property
@@ -2522,20 +2562,16 @@ class NumberEntryElement(RegEntryElement):
                 or (self._max is not None and float(self._input) > self._max)
             ):
 
-                hint = self.match_hint
-
                 if 0 < self._decimals:
-                    hint = hint + " (Bis zu %s Nachkommastellen" % (self._decimals)
+                    hint = self.match_hint + " " + self.decimals_hint.replace("${dec}", str(self._decimals))
                 else:
-                    hint = hint + " (Keine Nachkommastellen"
+                    hint = self.match_hint + " " + self.no_decimals_hint
                 if self._min is not None and self._max is not None:
-                    hint = hint + ", [Min = %s; Max = %s])" % (self._min, self._max)
+                    hint = hint + " " + self.min_max_hint.replace("${minimum}", str(self._min)).replace("${maximum}", str(self._max))
                 elif self._min is not None:
-                    hint = hint + ", Min = %s)" % self._min
+                    hint = hint + " " + self.min_hint.replace("${minimum}", str(self._min))
                 elif self._max is not None:
-                    hint = hint + ", Max = %s)" % self._max
-                else:
-                    hint = hint + ")"
+                    hint = hint + " " + self.max_hint.replace("${maximum}", str(self._max))
                 return [hint]
 
             return []
