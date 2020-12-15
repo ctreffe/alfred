@@ -4,6 +4,11 @@
     height: 30px;
 }
 
+div.btn-group.choice-button-group>label.btn.choice-button:only-child {
+    margin-left: 0;
+    margin-right: 0;
+}
+
 /* make button group separate */
 div.btn-group.choice-button-group>label.btn.choice-button {
     margin-right: .25rem;
@@ -106,6 +111,11 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     border-radius: 1rem;
 }
 
+.jumplist-container {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
 
 .footer-container {
     margin-top: 1rem;
@@ -202,6 +212,10 @@ p.page-subtitle {
 
 .progress-text {
     font-size: 8pt;
+}
+
+.row-element .col-element:not(:last-child) {
+    padding-right: 0;
 }
 
 

@@ -56,7 +56,6 @@ from alfred3 import localserver
 from alfred3 import alfredlog
 from alfred3.config import init_configuration
 
-
 class ExperimentRunner:
     def __init__(self, path: str = None):
         self.expdir = self.find_path(path)

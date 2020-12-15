@@ -66,7 +66,11 @@ class Move:
             was left (e.g. 'forward', 'backward', or 'jump').
     
     """
-
+    exp_title: str = None
+    exp_author: str = None
+    exp_version: str = None
+    exp_id: str = None
+    exp_session_id: str = None
     move_number: int = None
     tree: str = None
     page_name: str = None
@@ -74,10 +78,10 @@ class Move:
     hide_time: float = None
     duration: float = None
     previous_page: str = None
-    page_should_be_shown: bool = None
     page_status_before_visit: str = None
     page_status_after_visit: str = None
     leave_in_direction: str = None
+    target_page: str = None
     section_allows_forward: bool = None
     section_allows_backward: bool = None
     section_allows_jumpfrom: bool = None
@@ -164,12 +168,12 @@ class MovementManager:
         if not to_page.should_be_shown:
         
             if direction == "forward":
-                to_page = self.page_after(to_page)
                 self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'forward'.")
+                return self._move(to_page=self.page_after(to_page), direction="forward")
         
             elif direction == "backward":
-                to_page = self.page_before(to_page)
                 self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'backward'.")
+                return self._move(to_page=self.page_before(to_page), direction="backward")
         
             elif direction == "jump":
                 self.log.debug(f"{to_page} should not be shown. Aborting move.")
@@ -204,16 +208,25 @@ class MovementManager:
                 current_page.section.hand_over()
             else:
                 current_page.section.leave()
-            
-            self.record_move(page_status_before, direction=direction)
-            
+                
+            if self.exp.config.getboolean("general", "record_move_history"):
+                self.record_move(page_status_before, direction=direction, to_page=to_page)
+
             if current_page.section.name not in to_page.section.all_members:
                 to_page.section.enter()
             else:
                 to_page.section.resume()
         else:
+            if self.exp.config.getboolean("general", "record_move_history"):
+                self.record_move(page_status_before, direction=direction, to_page=to_page)
+
+        if direction == "jump":
+            current_page.section.jumpfrom()
+            to_page.section.jumpto()
+
+        else:
             current_page.section.move(direction=direction)
-            self.record_move(page_status_before, direction=direction)
+        
         
         return self.current_index, self.index_of(to_page)
     
@@ -257,14 +270,18 @@ class MovementManager:
         
         self.previous_index, self.current_index = self._move(to_page=to_page, direction="jump")
 
-    def record_move(self, page_was_closed: bool, direction: str):
+    def record_move(self, page_was_closed: bool, direction: str, to_page):
         current_page = self.current_page
         
         move = Move()
+        move.exp_title = self.exp.title
+        move.exp_author = self.exp.author
+        move.exp_version = self.exp.config.get("metadata", "version")
+        move.exp_id = self.exp.exp_id
+        move.exp_session_id = self.exp.session_id
         move.move_number = len(self.history) + 1
-        move.tree = current_page.tree
+        move.tree = current_page.short_tree
         move.page_name = current_page.name
-        move.page_should_be_shown = current_page.should_be_shown
         move.page_status_before_visit = "closed" if page_was_closed else "open"
         move.page_status_after_visit = "closed" if current_page.is_closed else "open"
         move.show_time = current_page.show_times[-1]
@@ -276,9 +293,10 @@ class MovementManager:
         move.section_allows_jumpfrom = current_page.section.allow_jumpfrom
         move.section_allows_jumpto = current_page.section.allow_jumpto
         move.leave_in_direction = direction
+        move.target_page = to_page.name
         self.history.append(move)
 
-    def move(self, direction):
+    def move(self, direction, to: Union[str, int] = None):
         proceed = self.current_page.custom_move()
         
         if not proceed:
@@ -289,6 +307,8 @@ class MovementManager:
             self.forward()
         elif direction == "backward":
             self.backward()
+        elif direction == "jump":
+            self.jump(to=to)
         elif direction.startswith("jump"):
             self.jump(to=direction[5:]) # jump string has the form 'jump>pagename'
 
@@ -432,7 +452,7 @@ class UserInterface:
     def save_client_info(self, **data):
         """Updates the client info dictionary and saves data."""
 
-        self.experiment.data_manager.client_info.update(data)
+        self.experiment.data_manager.client_data.update(data)
         self.experiment.movement_manager.current_page.save_data()
 
     def _add_resources(self, resources: list, resource_type: str):
@@ -519,25 +539,34 @@ class UserInterface:
             d["messages"] = messages
 
         # progress bar
-        n_el = len(self.experiment.root_section.all_input_elements)
-        n_pg = len(self.experiment.root_section.all_pages)
-        i_el = len(self.experiment.root_section.all_filled_input_elements)
-        i_pg = len(self.experiment.root_section.all_shown_pages)
-        exact_progress = ((i_el + i_pg) / (n_el + n_pg)) * 100
-        if not self.experiment.finished:
-            d["progress"] = min(round(exact_progress, 1), 95)
-        else:
-            d["progress"] = 100
+        d["progress"] = self.progress()
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
-
-        
 
         return self.template.render(d)
 
     def render_html(self, page_token):
         """Alias for render, provided for compatibility."""
         return self.render(page_token=page_token)
+
+    def progress(self):
+        n_el = 0
+        for el in self.exp.root_section.all_input_elements.values():
+            if el.should_be_shown:
+                n_el += 1
+            elif el.showif or el.page.showif or el.section.showif:
+                n_el += 0.3
+
+        n_pg = len(self.experiment.root_section.visible("all_pages"))
+        shown_el = len(self.experiment.root_section.all_shown_input_elements)
+        shown_pg = len(self.experiment.root_section.all_shown_pages)
+        exact_progress = ((shown_el + shown_pg) / (n_el + n_pg)) * 100
+        
+        if not self.experiment.finished:
+            return min(round(exact_progress, 1), 95)
+        else:
+            return 100
+
 
     @property
     def basepath(self):

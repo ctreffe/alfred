@@ -151,6 +151,7 @@ def check_name(name):
             (
                 "Name must start with a letter and can include only "
                 "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
+                f"Name '{name}' does not match this pattern."
             )
         )
 

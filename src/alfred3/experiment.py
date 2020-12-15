@@ -35,12 +35,13 @@ from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
-from .data_manager import CodeBookExporter
-from .data_manager import ExpDataExporter
+from .export import Exporter
 from .saving_agent import DataSaver
 from .ui_controller import UserInterface
 from .ui_controller import MovementManager
 from .exceptions import SavingAgentException
+from .config import ExperimentConfig
+from .config import ExperimentSecrets
 
 class Experiment:
 
@@ -159,9 +160,9 @@ class Experiment:
 
         return members
 
-    def start_session(self, config: dict, session_id: str):
+    def start_session(self, config: dict, session_id: str, **urlargs):
 
-        exp_session = ExperimentSession(session_id=session_id, config=config)
+        exp_session = ExperimentSession(session_id=session_id, config=config, **urlargs)
         exp_session.additional_data = self.additional_data
         exp_session.plugins = self.plugins
 
@@ -179,29 +180,34 @@ class Experiment:
 
     def append(self, *members, to_section: str = "_content"):
         for member in members:
-            if isclass(member):
-                name = member.__name__ if member.name is None else member.name
-            else:
-                name = member.uid if member.name is None else member.name
-
-            if name in self.members or name == "_cotent":
+            name = member.name
+            if name in self.members or name in ["_content", "_root", "_finished_section"]:
                 raise ValueError(f"A section or page of name '{name}' already exists.")
 
-            self.members[name] = (to_section, member)
+            self.members[member.name] = (to_section, member)
 
     def __iadd__(self, other: Union[Section, Page]):
         self.append(other, to_section="_content")
         return self
 
-    def __getattr__(self, name):
+    def __getitem__(self, name):
         _, member = self.members[name]
         return member
 
-class ExperimentSession:
-    def __init__(self, session_id: str, config: dict, **kwargs):
-        self.config = config["exp_config"]
-        self.secrets = config["exp_secrets"]
 
+class ExperimentSession:
+    def __init__(self, session_id: str, config: dict = None, **urlargs):
+        self._condition = ""
+        self._session = ""
+        self.finished = False
+        self.start_timestamp = None
+        self.start_time = None
+        
+        
+        self.config = config["exp_config"] if config is not None else ExperimentConfig()
+        self.secrets = config["exp_secrets"] if config is not None else ExperimentSecrets()
+        self.urlargs = urlargs
+        
         self.log = QueuedLoggingInterface(base_logger="alfred3")
         self.log.queue_logger = logging.getLogger("exp." + self.exp_id)
 
@@ -211,12 +217,16 @@ class ExperimentSession:
 
         self._encryptor = self._set_encryptor()
 
+        self.movement_manager = MovementManager(self)
+        self.data_manager = DataManager(self)
+        self.data_saver = DataSaver(self)
         self.message_manager = messages.MessageManager()
         self.experimenter_message_manager = messages.MessageManager()
         self.root_section = RootSection(self)
         self.root_section.append_root_sections()
+        self.root_section.update_members_recursively()
+        self.root_section.generate_unset_tags_in_subtree()
         self.page_controller = self.root_section
-        self.movement_manager = MovementManager(self)
 
         # Determine web layout if necessary
         # TODO: refactor layout and UIController initializiation code
@@ -245,29 +255,12 @@ class ExperimentSession:
         # if "responsive" in self.config.get("experiment", "web_layout"):
         self.user_interface_controller = UserInterface(self)
 
-        # Allows for session-specific saving of unlinked data.
-        self._unlinked_random_name_part = uuid4().hex
+        # shortcuts
+        self.jump = self.movement_manager.jump
+        self.forward = self.movement_manager.forward
+        self.backward = self.movement_manager.backward
 
-        self.data_manager = DataManager(self)
-        self.data_saver = DataSaver(self)
-
-        self._condition = ""
-        self._session = ""
-        self.finished = False
-        self.start_timestamp = None
-        self.start_time = None
-
-        if kwargs.get("basepath", None) is not None:
-            self.log.warning("Usage of basepath is deprecated.")
-
-        if kwargs.get("config_string", None) is not None:
-            self.log.warning(
-                (
-                    "Usage of config_string is deprecated. Use "
-                    + "alfred3.config.ExperimentConfig with the appropriate arguments instead."
-                )
-            )
-        
+        # init logging message
         self.log.info(
             (
                 f"Alfred {self.config.get('experiment', 'type')} experiment session initialized! "
@@ -278,11 +271,14 @@ class ExperimentSession:
         )
 
     def start(self):
-        self.root_section.generate_unset_tags_in_subtree()
-        self._start_time = time.time()
-        self._start_timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
+        self.start_time = time.time()
+        self.start_timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
         self.log.info("Experiment.start() called. Session is starting.")
         self.user_interface_controller.start()
+
+        jumpto = self.urlargs.get("jumpto")
+        if jumpto:
+            self.movement_manager.move("jump", to=jumpto)
 
     def finish(self):
         if self.finished:
@@ -304,10 +300,17 @@ class ExperimentSession:
         self.save_data()
 
         if self.config.getboolean("general", "transform_data_to_csv"):
-            export_to_csv = threading.Thread(target=self.data_manager.export_data_to_csv, name="export")
-            export_to_csv.start()
+            exporter = Exporter(self)
+            if self.config.getboolean("local_saving_agent", "use"):
+                exporter.export(DataManager.EXP_DATA)
+            if self.root_section.unlinked_data:
+                exporter.export(DataManager.UNLINKED_DATA)
+            if self.config.getboolean("general", "export_codebook"):
+                exporter.export(DataManager.CODEBOOK_DATA)
+            if self.config.getboolean("general", "record_move_history"):
+                exporter.export(DataManager.HISTORY)
 
-    def save_data(self):
+    def save_data(self, sync: bool = False):
         """Saves data with the main, unlinked and codebook :class:`SavingAgentController`s.
 
         .. warning::
@@ -317,13 +320,13 @@ class ExperimentSession:
             You need to call those manually.
         """
 
-        data = self.data_manager.get_data()
-        self.data_saver.main.save_with_all_agents(data=data, level=99)
+        data = self.data_manager.session_data
+        self.data_saver.main.save_with_all_agents(data=data, level=99, sync=sync)
 
-        if self.root_section.unlinked_data():
+        if self.root_section.unlinked_data:
             for agent in self.data_saver.unlinked.agents.values():
-                unlinked_data = self.data_manager.get_unlinked_data(encrypt=agent.encrypt)
-                self.data_saver.unlinked.save_with_agent(data=unlinked_data, name=agent.name, level=99)
+                data = self.data_manager.unlinked_data_with(agent)
+                self.data_saver.unlinked.save_with_agent(data=data, name=agent.name, level=99, sync=sync)
 
     def get_page_data(self, page_uid):
         return self.data_manager.find_experiment_data_by_uid(uid=page_uid)
@@ -459,8 +462,8 @@ class ExperimentSession:
         self.append(other)
         return self
 
-    # def __getattr__(self, name):
-    #     return self.root_section.all_members_dict[name]
+    def __getitem__(self, name):
+        return self.root_section.all_members[name]
 
     def _set_encryptor(self):
         """Sets the experiments encryptor.

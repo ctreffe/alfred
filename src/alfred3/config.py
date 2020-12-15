@@ -65,13 +65,13 @@ class ExperimentConfig(ConfigParser):
     global_config_name = "alfred.conf"
     exp_config_name = "config.conf"
 
-    def __init__(self, expdir: str, config_objects: list = None, *args, **kwargs):
+    def __init__(self, expdir: str = None, config_objects: list = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._config_objects = config_objects if config_objects is not None else []
 
         self._config_files = []
-        self.expdir = Path(expdir) if expdir else None
+        self.expdir = Path(expdir) if expdir is not None else Path.cwd()
         self._parse_alfred_config()
 
     def _collect_config_files(self):

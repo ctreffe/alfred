@@ -22,8 +22,8 @@ class Section(ExpMember):
 
     shuffle: bool = False
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, title: str = None, name: str = None, **kwargs):
+        super().__init__(title=title, name=name, **kwargs)
 
         self.members = {}
         self._should_be_shown = True
@@ -32,18 +32,14 @@ class Section(ExpMember):
             self.shuffle = kwargs.get("shuffle", False)
 
     def __repr__(self):
-        section_class = type(self).__name__
-        # m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
-        bw = f"allow_backward: {self.allow_backward}"
-        fw = f"allow_forward: {self.allow_forward}"
-        jf = f"allow_jumpfrom: {self.allow_jumpfrom}"
-        jt = f"allow_jumpto: {self.allow_jumpto}"
-        move = f"movement='{bw}, {fw}, {jf}, {jt}'"
-        return f"{section_class}(name='{self.name}', parent='{self.parent.name}', {move})"
+        return f"Section(class='{type(self).__name__}', name='{self.name}')"
 
     def __iadd__(self, other):
         self.append(other)
         return self
+    
+    def __getitem__(self, name):
+        return self.all_members[name]
 
     def shuffle_members(self):
         """Non-recursive shuffling of this section's members."""
@@ -51,6 +47,29 @@ class Section(ExpMember):
         members = list(self.members.items())
         shuffle(members)
         self.members = dict(members)
+    
+    @property
+    def all_updated_members(self) -> dict:
+        """ 
+        Returns a dict of all members that already have exp access.
+        """
+        return {name: m for name, m in self.all_members.items() if m.exp is not None}
+    
+    @property
+    def all_updated_pages(self) -> dict:
+        pages = {}
+        for name, member in self.all_updated_members.items():
+            if isinstance(member, PageCore):
+                pages[name] = member
+        
+        return pages
+    
+    @property
+    def all_checked_elements(self) -> dict:
+        elements = {}
+        for page in self.all_updated_pages.values():
+            elements.update(page.checked_elements)
+        return elements
 
     @property
     def all_members(self) -> dict:
@@ -120,11 +139,12 @@ class Section(ExpMember):
     
     @property
     def all_closed_pages(self) -> dict:
-        return {name: page for name, page in self.all_pages if page.is_closed}
+        return {name: page for name, page in self.all_pages.items() if page.is_closed}
     
     @property
     def all_shown_pages(self) -> dict:
         return {name: page for name, page in self.all_pages.items() if page.has_been_shown}
+    
     
     @property
     def pages(self) -> dict:
@@ -162,8 +182,8 @@ class Section(ExpMember):
         return elements
     
     @property
-    def all_filled_input_elements(self) -> dict:
-        """Returns a flat dict of all filled input elements in this section.
+    def all_shown_input_elements(self) -> dict:
+        """Returns a flat dict of all shown input elements in this section.
         
         Recursive: Includes elements from pages in this section and all 
         its subsections.
@@ -171,7 +191,8 @@ class Section(ExpMember):
 
         elements = {}
         for page in self.all_pages.values():
-            elements.update(page.filled_input_elements)
+            if page.has_been_shown:
+                elements.update(page.input_elements)
         return elements
     
     @property
@@ -181,20 +202,43 @@ class Section(ExpMember):
             data.update(page.data)
         return data
     
-    def unlinked_data(self, encrypt: bool = False):
+    @property
+    def unlinked_data(self):
         data = {}
         for page in self.all_pages.values():
-            data.update(page.unlinked_data(encrypt=encrypt))
+            data.update(page.unlinked_data)
+        
+        return data
+    
+    @property
+    def unlinked_element_data(self):
+        data = {}
+        for page in self.all_pages.values():
+            data.update(page.unlinked_element_data)
+        
         return data
 
     def added_to_experiment(self, exp):
         super().added_to_experiment(exp)
+        self.log.add_queue_logger(self, __name__)
+        self.on_exp_access()
+        self.update_members_recursively()
+    
+    def update_members(self):
         
         for member in self.members.values():
-            member.added_to_experiment(exp)
+            if not member.experiment:
+                member.added_to_experiment(self.exp)
+            if not member.section:
+                member.added_to_section(self)
+    
+    def update_members_recursively(self):
 
-        self.on_exp_access()
+        self.update_members()
 
+        for member in self.members.values():
+            member.update_members_recursively()
+    
     def generate_unset_tags_in_subtree(self):
         for i, member in enumerate(self.members.values(), start=1):
             
@@ -227,12 +271,20 @@ class Section(ExpMember):
             except KeyError:
                 pass
             
+            if item.name in self.members:
+                raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+
+            item.added_to_section(self)
+
+            self.members[item.name] = item
+            
             if self.experiment is not None:
                 item.added_to_experiment(self.experiment)
+                item.update_members_recursively()
             
-            self.members[item.name] = item
-            item.added_to_section(self)
-            self.generate_unset_tags_in_subtree()
+            if not item.tag:
+                item.tag = str(len(self.members) + 1)
+
 
     def on_exp_access(self):
         """Hook for code that is meant to be executed as soon as a 
@@ -297,7 +349,6 @@ class Section(ExpMember):
     def enter(self):
         self.log.debug(f"Entering Section: {self}.")
         self.on_enter()
-        self.on_move()
 
         if self.shuffle:
             self.shuffle_members()
@@ -307,8 +358,8 @@ class Section(ExpMember):
     
     def leave(self):
         self.log.debug(f"Leaving Section: {self}.")
-        self.on_move()
         self.on_leave()
+
         for page in self.all_pages.values():
             page.close()
         
@@ -317,16 +368,16 @@ class Section(ExpMember):
     
     def resume(self):
         self.log.debug(f"Resuming to Section: {self}.")
-        self.on_move()
         self.on_resume()
     
     def hand_over(self):
         self.log.debug(f"Section: {self} handing over to child section.")
-        self.on_move()
         self.on_hand_over()
     
     def on_resume(self):
         """ 
+        Hook for code to be executed on resuming this section.
+
         Resuming takes place, when a child section is left and the
         next page is a direct child of this section (self). Then this 
         section (self) becomes the primary current section again, it
@@ -336,7 +387,9 @@ class Section(ExpMember):
 
     def on_hand_over(self):
         """
-        Handover takes place, when a child section of this section 
+        Hook for code to be executed when this section hands over.
+
+        Handover takes place, when a subsection of this section 
         is entered.
         """
         pass
@@ -355,15 +408,12 @@ class Section(ExpMember):
     
     def move(self, direction: str):
         self.on_move()
+        self.update_members()
 
         if direction == "forward":
             self.forward()
         elif direction == "backward":
             self.backward()
-        elif direction == "jumpfrom":
-            self.jumpfrom()
-        elif direction == "jumpto":
-            self.jumpto()
 
     @staticmethod
     def validate(page):

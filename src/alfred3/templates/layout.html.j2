@@ -55,9 +55,11 @@
     
     {% if debug %}
     <div class="container-fluid {% if responsive %} responsive-width {% else %} fixed-width {% endif %} mt-4" id="jumplist">
+    <div class="jumplist-container">
     <div class="row">
-    <div class="col-12 pr-1 pl-1">
+    <div class="col-12">
     {{ jumplist.web_widget | safe }}
+    </div>
     </div>
     </div>
     </div>

@@ -44,13 +44,12 @@ class PageCore(ExpMember):
         self.values = _DictObj(values)
 
     def added_to_experiment(self, experiment):
+
         if not isinstance(self, WebPageInterface):
-            raise TypeError(
-                "%s must be an instance of %s"
-                % (self.__class__.__name__, WebPageInterface.__name__)
-            )
+            raise TypeError(f"{self} must be an instance of WebPageInterface.")
 
         super(PageCore, self).added_to_experiment(experiment)
+        self.log.add_queue_logger(self, __name__)
 
         if self.experiment.config.getboolean("general", "debug"):
             if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
@@ -82,10 +81,14 @@ class PageCore(ExpMember):
         return self._is_closed
 
     @property
-    def data(self):
-        data = super(PageCore, self).data
-        data.update(self._data)
-        return data
+    def should_be_shown(self):
+        thispage = super().should_be_shown
+        section = self.section.should_be_shown
+        return thispage and section
+    
+    @should_be_shown.setter
+    def should_be_shown(self, value: bool):
+        self._should_be_shown = bool(value)
 
     @property
     def has_been_shown(self) -> bool:
@@ -281,7 +284,7 @@ class PageCore(ExpMember):
         """Alias for 'allow_leaving'. Better description of what this
         method does.
         """
-        
+
         return self.allow_leaving()
 
     def allow_leaving(self):
@@ -314,15 +317,15 @@ class PageCore(ExpMember):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.data_saver.main.agents and not self._experiment.config.getboolean(
+        if not self.experiment.data_saver.main.agents and not self._experiment.config.getboolean(
             "general", "debug"
         ):
             self.log.warning("No saving agents available.")
-        data = self._experiment.data_manager.get_data()
+        data = self.experiment.data_manager.session_data
         self._experiment.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
     def __repr__(self):
-        return f"{type(self).__name__}(name='{self.name}', section='{self.section.name}')"
+        return f"Page(class='{type(self).__name__}', name='{self.name}')"
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
@@ -373,11 +376,14 @@ class CoreCompositePage(PageCore):
         self._element_dict = {}
         self._element_name_counter = 1
         self._thumbnail_element = None
+        
         if elements is not None:
             if not isinstance(elements, list):
                 raise TypeError
-            for elmnt in elements:
-                self.append(elmnt)
+            self.append(*elements)
+    
+    def __getitem__(self, name):
+        return self.elements[name]
 
     @property
     def input_elements(self) -> dict:
@@ -392,14 +398,31 @@ class CoreCompositePage(PageCore):
             if isinstance(el, (elm.InputElement)):
                 input_elements[name] = el
         return input_elements
+    
+    @property
+    def all_input_elements(self) -> dict:
+        return self.input_elements
+    
+    @property
+    def all_elements(self) -> dict:
+        return self.elements
+    
+    @property
+    def checked_elements(self) -> dict:
+        return {name: elm for name, elm in self.elements.items() if elm.exp is not None}
 
     @property
     def filled_input_elements(self) -> dict:
         """Dict of all input elements on this page with non-empty data attribute.
         """
 
-        return {name: el for name, el in self.input_elements.items() if el.data}
-
+        return {name: el for name, el in self.input_elements.items() if el.input}
+    
+    @property
+    def all_parent_sections(self) -> dict:
+        
+        pass
+    
     @property
     def element_dict(self):
         return self._element_dict
@@ -421,11 +444,8 @@ class CoreCompositePage(PageCore):
             if not isinstance(elmnt, (elm.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
-            self._element_list.append(elmnt)
-            elmnt.added_to_page(self)
-
-            if elmnt.name in self._element_dict:
-                raise ValueError("Element name must be unique on Page.")
+            if not elmnt.name:
+                elmnt.name = self.generate_element_name(elmnt)
 
             if elmnt.name in self.__dict__:
                 raise ValueError(
@@ -435,8 +455,11 @@ class CoreCompositePage(PageCore):
                     )
                 )
 
-            self._element_dict[elmnt.name] = elmnt
+            elmnt.added_to_page(self)
 
+            if self.exp is not None and elmnt.exp is None:
+                elmnt.added_to_experiment(self.exp)
+            
             self.elements[elmnt.name] = elmnt
 
     def generate_element_name(self, element):
@@ -461,9 +484,21 @@ class CoreCompositePage(PageCore):
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
-        for element in self._element_list:
-            element.added_to_experiment(experiment)
         self.on_exp_access()
+        self.update_elements()
+    
+    def added_to_section(self, section):
+        super().added_to_section(section)
+        self.update_elements()
+    
+    def update_members_recursively(self):
+        self.update_elements()
+    
+    def update_elements(self):
+        if self.exp and self.section and self.tree.startswith("_root"):
+            for element in self.elements.values():
+                if not element.exp:
+                    element.added_to_experiment(self.experiment)
 
     @property
     def allow_closing(self):
@@ -478,7 +513,7 @@ class CoreCompositePage(PageCore):
         for elmnt in self.elements.values():
             if isinstance(elmnt, elm.InputElement):
                 elmnt.disabled = True
-        
+
         debug_jumplist = self.elements.get(self.name + "__debug_jumplist__")
         if debug_jumplist:
             for elmnt in debug_jumplist.elements:
@@ -486,11 +521,18 @@ class CoreCompositePage(PageCore):
 
     @property
     def data(self):
-        data = {}
-        for element in self.elements.values():
-            data.update(element.data)
-        return data
+        if not self.has_been_shown:
+            return {}
+        else:
+            data = {}
+            for element in self.input_elements.values():
+                data.update(element.data)
+            return data
 
+    @property
+    def unlinked_data(self):
+        return {}
+    
     @property
     def can_display_corrective_hints_in_line(self):
         return reduce(
@@ -531,7 +573,8 @@ class CoreCompositePage(PageCore):
             elmnt.set_data(dictionary)
 
     def custom_move(self):
-        """Hook for defining a page's own movement behavior. 
+        """
+        Hook for defining a page's own movement behavior. 
         
         Use the :class:`.MovementManager`s movement methods to define
         your own behavior. The available methods are
@@ -580,8 +623,8 @@ class CoreCompositePage(PageCore):
 
 
 class WebCompositePage(CoreCompositePage, WebPageInterface):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, title: str = None, name: str = None, *args, **kwargs):
+        super().__init__(title=title, name=name, *args, **kwargs)
 
         self._fixed_width = None
         if kwargs.get("fixed_width"):
@@ -662,6 +705,8 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         self._set_width()
         self._set_color()
 
+
+
     def _set_width(self):
         if self.experiment.config.getboolean("layout", "responsive"):
 
@@ -737,19 +782,19 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
     @property
     def css_code(self):
-        return reduce(lambda l, element: l + element.css_code, self._element_list, [])
+        return reduce(lambda l, element: l + element.css_code, self.elements.values(), [])
 
     @property
     def css_urls(self):
-        return reduce(lambda l, element: l + element.css_urls, self._element_list, [])
+        return reduce(lambda l, element: l + element.css_urls, self.elements.values(), [])
 
     @property
     def js_code(self):
-        return reduce(lambda l, element: l + element.js_code, self._element_list, [])
+        return reduce(lambda l, element: l + element.js_code, self.elements.values(), [])
 
     @property
     def js_urls(self):
-        return reduce(lambda l, element: l + element.js_urls, self._element_list, [])
+        return reduce(lambda l, element: l + element.js_urls, self.elements.values(), [])
 
 
 class CompositePage(WebCompositePage):
@@ -776,7 +821,7 @@ class PagePlaceholder(PageCore, WebPageInterface):
 
     @property
     def data(self):
-        data = super(PageCore, self).data
+        data = {}
         data.update(self._ext_data)
         return data
 
@@ -1003,19 +1048,17 @@ class UnlinkedDataPage(NoDataPage):
             raise ValueError(
                 "The argument 'encrypt' must take one of the following values: 'agent', 'always', 'never'."
             )
-
-    def unlinked_data(self, encrypt):
-        data = {}
-        for elmnt in self.elements.values():
-            if encrypt:
-                for name, entry in elmnt.data.items():
-                    entry["value"] = self.experiment.encrypt(entry["value"])
-                    data[name] = entry
-            else:
-                data.update(elmnt.data)
-
-        return data
-
+    
+    @property
+    def unlinked_data(self):
+        if not self.has_been_shown:
+            return {}
+        else:
+            data = {}
+            for element in self.input_elements.values():
+                data.update(element.data)
+            return data
+    
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current unlinked data.
         
@@ -1039,16 +1082,16 @@ class UnlinkedDataPage(NoDataPage):
             self.log.warning("No saving agent for unlinked data available.")
 
         for agent in self._experiment.data_saver.unlinked.agents.values():
-
+            
             if self.encrypt == "agent":
-                encrypt = agent.encrypt
-            if self.encrypt == "always":
-                encrypt = True
-            if self.encrypt == "never":
-                encrypt = False
+                data = self.experiment.data_manager.unlinked_data_with(agent)
+            elif self.encrypt == "always":
+                data = self.experiment.data_manager.unlinked_data
+                data = self.experiment.data_manager.encrypt_values(data)
+            elif self.encrypt == "never":
+                data = self.experiment.data_manager.unlinked_data
 
-            data = self._experiment.data_manager.get_unlinked_data(encrypt=encrypt)
-            self._experiment.data_saver.unlinked.save_with_agent(
+            self.exp.data_saver.unlinked.save_with_agent(
                 data=data, name=agent.name, level=level, sync=sync
             )
 

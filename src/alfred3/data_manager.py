@@ -11,6 +11,7 @@ import csv
 import io
 import json
 import random
+import copy
 
 from pathlib import Path
 from builtins import object
@@ -18,6 +19,8 @@ from typing import Union
 from typing import List
 from typing import Dict
 from typing import Iterator
+
+from dataclasses import asdict
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -32,15 +35,30 @@ class DataManager(object):
     EXP_DATA = "exp_data"
     UNLINKED_DATA = "unlinked"
     CODEBOOK_DATA = "codebook"
+    HISTORY = "move_history"
 
     instance_level_logging = False
     log = QueuedLoggingInterface(base_logger=__name__)
 
     def __init__(self, experiment):
         self._experiment = experiment
+        self.exp = experiment
         self.additional_data = {}
-        self.client_info = {}
         self.log.add_queue_logger(self, __name__)
+        
+        self.client_data = {}
+        self.client_data["client_resolution_screen"] = None
+        self.client_data["client_resolution_inner"] = None
+        self.client_data["client_referrer"] = None
+        self.client_data["client_javascript_active"] = None
+        self.client_data["client_device_type"] = None
+        self.client_data["client_device_manufacturer"] = None
+        self.client_data["client_device_family"] = None
+        self.client_data["client_browser"] = None
+        self.client_data["client_os_family"] = None
+        self.client_data["client_os_name"] = None
+        self.client_data["client_os_version"] = None
+
 
     @property
     def experiment(self):
@@ -69,12 +87,14 @@ class DataManager(object):
         """
         return self.additional_data[key]
 
-    def get_data(self):
+    @property
+    def metadata(self):
         data = {}
         
         data["type"] = self.EXP_DATA
+        data["alfred_version"] = self._experiment.alfred_version
+        data["session_status"] = self._experiment.session_status
         
-        data["exp_data"] = self.experiment.root_section.data
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_version"] = self._experiment.version
@@ -88,23 +108,119 @@ class DataManager(object):
         data["exp_id"] = self._experiment.exp_id
         data["exp_session_id"] = self._experiment.session_id
         
-        data["session_status"] = self._experiment.session_status
-        data["additional_data"] = self.additional_data
-        data["alfred_version"] = self._experiment.alfred_version
-        
-        data.update(self.client_info)
-
         return data
+    
+    @property
+    def move_history(self):
+        return [asdict(move) for move in self.exp.movement_manager.history]
+    
+    @property
+    def values(self):
+        return {el["name"]: el["value"] for el in self.exp.root_section.data.values()}
+    
+    @property
+    def element_data(self):
+        eldata = self.experiment.root_section.data
+        # ul_eldata = self.experiment.root_section.unlinked_element_data
+        return {**eldata}
+    
+    @property
+    def session_data(self):
+        d = {**self.metadata, **self.client_data}
+        d["exp_data"] = self.element_data
+        d["exp_move_history"] = self.move_history
+        d["additional_data"] = self.additional_data
+        return d
+    
+    @property
+    def codebook_data(self) -> List[dict]:
+        exp = self.extract_codebook_data(self.session_data)
+        unlinked = self.extract_codebook_data(self.unlinked_data)
 
-    def get_unlinked_data(self, encrypt=False):
+        return exp + unlinked
+    
+    @staticmethod
+    def extract_codebook_data(exp_data: dict) -> List[dict]:
+        meta = {}
+        meta["alfred_version"] = exp_data["alfred_version"]
+        meta["exp_author"] = exp_data["exp_author"]
+        meta["exp_title"] = exp_data["exp_title"]
+        meta["exp_version"] = exp_data["exp_version"]
+        meta["exp_type"] = exp_data["exp_type"]
+
+        codebook = exp_data.pop("exp_data")
+        for entry in codebook.values():
+            entry.pop("value", None)
+            entry.update(meta)
+        
+        return [value for value in codebook.values()]
+    
+    @staticmethod
+    def extract_fieldnames(data: dict) -> list:
+        fieldnames = {}
+        for element in data:
+            fieldnames.update(element) 
+        
+        return list(fieldnames)
+
+    @staticmethod
+    def flatten(data: dict) -> dict:
+        eldata = data.pop("exp_data")
+        data.pop("exp_move_history", None)
+        values = {name: elmnt["value"] for name, elmnt in eldata.items()}
+        
+        additional_data = data.pop("additional_data", {})
+
+        return {**data, **values, **additional_data}
+
+    @property
+    def unlinked_data(self):
         data = {}
         data["type"] = self.UNLINKED_DATA
-        data["exp_data"] = self._experiment.root_section.unlinked_data(encrypt=encrypt)
+        data["exp_data"] = self._experiment.root_section.unlinked_data
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_id"] = self._experiment.exp_id
-
+        data["exp_version"] = "__unlinked__"
+        data["alfred_version"] = self.experiment.alfred_version
+        data["exp_type"] = self._experiment.type
         return data
+    
+    @property
+    def unlinked_values(self):
+        return {el["name"]: el["value"] for el in self.exp.root_section.unlinked_data.values()}
+
+    
+    def unlinked_data_with(self, saving_agent):
+        if saving_agent.encrypt:
+            return self.exp.data_manager.encrypt_values(self.unlinked_data)
+        else:
+            return self.unlinked_data
+    
+    @property
+    def flat_session_data(self):
+        return self.flatten(self.session_data)
+    
+    def flat_unlinked_data(self):
+        return self.flatten(self.unlinked_data)
+    
+    def encrypt_values(self, data: dict) -> dict:
+        data = copy.copy(data)
+        for eldata in data["exp_data"].values():
+            eldata["value"] = self.exp.encrypt(eldata["value"])
+        return data
+    
+    def decrypt_values(self, data: dict) -> dict:
+        data = copy.copy(data)
+        for eldata in data["exp_data"].values():
+            eldata["value"] = self.exp.decrypt(eldata["value"])
+            return data
+    
+    def get_page_data(self, name):
+        return self.experiment.root_section.all_pages[name].data
+    
+    def get_section_data(self, name):
+        return self.experiment.root_section.all_subsections[name].data
 
     def find_experiment_data_by_uid(self, uid):
         data = self._experiment._root_section.data
@@ -134,60 +250,42 @@ class DataManager(object):
 
         return worker(data, uid)
 
-    def get_full_exp_data(
-        self, source: str = "mongodb", out="dict"
-    ) -> Union[List[dict], List[list]]:
-        """Collects and returns the full experiment data.
-
-        .. versionadded:: 1.5
-
-        Args:
-            source: Specifies the source from which to collect the data.
-                Can be 'mongodb' or 'local'. 'mongodb' leads to data being 
-                collected from the main MongoDB used to save experiment
-                data. 'local' leads to data being collected from the
-                experiment directory.
-            out: Specifies the output format. Can be 'dict' or 'list'.
-                In case of 'dict', the function returns a list of 
-                flattened dictionaries, where each dictionary contains 
-                data from one experiment session.
-                In case of 'list', the function returns a list of lists.
-                The first entry in this list contains the variable names. 
-                The subsequent entries each contain the values of one 
-                session.
-        
-        Returns:
-            A list with all available experiment data, either as a list
-            of dictionaries or a list of lists, depending on the value 
-            of `out`.
-            
-        """
-        if not out in ["dict", "list"]:
-            raise ValueError("Parameter 'out' must be 'list' or 'dict'.")
-
-        if not source in ["mongodb", "local"]:
-            raise ValueError("Parameter 'source' must be 'mongodb' or 'local'.")
-
-        exporter = ExpDataExporter()
-        exp = self.experiment
-
-        if source == "mongodb":
-            cursor = self.iterate_mongo_data(
-                exp_id=exp.exp_id, data_type=self.EXP_DATA, secrets=exp.secrets
+    def mongo_exp_data(self, data_type: str = "exp_data"):
+        cursor = self.iterate_mongo_data(
+            exp_id=self.exp.exp_id, 
+            data_type=data_type, 
+            secrets=self.exp.secrets
             )
-        elif source == "local":
-            path = exp.config.get("local_saving_agent", "path")
-            path = exp.subpath(path)
-            cursor = self.iterate_local_data(data_type=self.EXP_DATA, directory=path)
+        
+        if data_type == "unlinked" and len(cursor) < 15:
+            self.log.warning("Can't access unlinked data (too few datasets for unlinking).")
+            return []
+        
+        return [self.flatten(dataset) for dataset in cursor]
+    
+    def local_exp_data(self, data_type: str = "exp_data"):
+        if data_type == "exp_data":
+            path = self.exp.config.get("local_saving_agent", "path")
+        elif data_type == "unlinked_data":
+            path = self.exp.config.get("local_saving_agent_unlinked", "path")
+        
+        path = self.exp.subpath(path)
+        cursor = self.iterate_local_data(data_type=data_type, directory=path)
 
-        for doc in cursor:
-            exporter.process_one(doc)
+        if data_type == "unlinked" and len(cursor) < 15:
+            self.log.warning("Can't access unlinked data (too few datasets for unlinking).")
+            return []
 
-        if out == "dict":
-            return exporter.list_of_docs
-        elif out == "list":
-            return exporter.list_of_lists
-
+        return [self.flatten(dataset) for dataset in cursor]
+    
+    @property
+    def all_exp_data(self):
+        return self.mongo_exp_data() + self.local_exp_data()
+    
+    @property
+    def all_unlinked_data(self):
+        return self.mongo_exp_data("unlinked") + self.local_exp_data("unlinked")
+    
     @staticmethod
     def iterate_mongo_data(
         exp_id: str, data_type: str, secrets: ExperimentSecrets, exp_version: str = None
@@ -263,7 +361,7 @@ class DataManager(object):
                 continue
 
             try:
-                with open(fp, "r") as f:
+                with open(fp, "r", encoding="utf-8") as f:
                     doc = json.load(f)
             except json.decoder.JSONDecodeError:
                 cls.log.warning(f"Skipped file '{fp}' (not valid .json).")
@@ -278,621 +376,6 @@ class DataManager(object):
                 continue
 
             yield doc
-
-
-    def export_data_to_csv(self):
-        exp = self.experiment
-        csv_directory = Path(exp.config.get("general", "csv_directory"))
-        if csv_directory.is_absolute():
-            data_dir = csv_directory
-        else:
-            data_dir = Path(exp.path) / csv_directory
-        data_dir.mkdir(exist_ok=True, parents=True)
-
-        time.sleep(1)
-        lsa = "local_saving_agent"
-        if exp.config.getboolean(lsa, "use"):
-            lsa_name = exp.config.get(lsa, "name")
-            lsa_dir = exp.data_saver.main.agents[lsa_name].directory
-            exp_exporter = ExpDataExporter()
-            exp_exporter.write_local_data_to_file(
-                in_dir=lsa_dir, out_dir=data_dir, data_type=DataManager.EXP_DATA, overwrite=True
-            )
-            exp.log.info(f"Exported experiment data to '{str(data_dir)}'")
-
-        any_unlinked_page = any(
-            [isinstance(pg, page.UnlinkedDataPage) for pg in exp.root_section.all_pages]
-        )
-        lsa_u = "local_saving_agent_unlinked"
-        if exp.config.getboolean(lsa_u, "use") and any_unlinked_page:
-            lsa_name = exp.config.get(lsa_u, "name")
-            lsa_dir = exp.data_saver.unlinked.agents[lsa_name].directory
-            unlinked_exporter = ExpDataExporter()
-            unlinked_exporter.write_local_data_to_file(
-                in_dir=lsa_dir,
-                out_dir=data_dir,
-                data_type=DataManager.UNLINKED_DATA,
-                overwrite=True,
-            )
-            exp.log.info(f"Exported unlinked data to '{str(data_dir)}'")
-        
-        lsa_c = "local_saving_agent_codebook"
-        if exp.config.getboolean(lsa_c, "use"):
-            lsa_name = exp.config.get(lsa_c, "name")
-            cb_name = exp.data_saver.codebook.agents[lsa_name].file
-            cb_exporter = CodeBookExporter()
-            cb_exporter.write_local_data_to_file(in_file=cb_name, out_dir=data_dir, overwrite=True)
-            exp.log.info(f"Exported codebook data to '{str(data_dir)}'")
-
-
-def find_unique_name(directory, filename, exp_version=None, index: int = 1):
-    filename = Path(filename)
-    name = filename.stem
-    ext = filename.suffix
-    exp_version = "_" + exp_version if exp_version else ""
-
-    normal_name = name + exp_version + ext
-    idx_name = name + exp_version + f"_{index}" + ext
-
-    if not normal_name in os.listdir(directory):
-        return normal_name
-    elif not idx_name in os.listdir(directory):
-        return idx_name
-    else:
-        i = index + 1
-        return find_unique_name(directory=directory, filename=filename, index=i)
-
-
-class CodeBookExporter:
-    """Used to turn the codebook data into .csv format
-    
-    Usage:
-    1. Initialize
-    2. Process codebook via :meth:`process`
-    3. Use :meth:`write_to_file` or :meth:`write_to_object` to create
-        the csv file / object. 
-    """
-
-    ORDER = {
-        "alfred_version": "0a",
-        "exp_author": "0b",
-        "exp_title": "0c",
-        "exp_version": "0d",
-        "exp_id": "0d1",
-        "page_title": "0d2",
-        "identifier": "0e",
-        "tree": "0f",
-        "name": "0g",
-        "element_type": "0h",
-        "instruction": "0i",
-        "desctiption": "0j",
-        "default": "0k",
-        "force_input": "0l",
-        "description": "0m",
-        "prefix": "0n",
-        "suffix": "0o",
-        "item": "1a",
-        "n_levels": "1b",
-        "item_label_left": "1c",
-        "item_label_right": "1c1",
-        "top_labels": "1d",
-        "bottom_labels": "1e",
-        "shuffle": "1f",
-        "transposed": "1g",
-        "unlinked": "z1",
-        "duplicate_identifier": "z2",
-    }
-
-    def __init__(self):
-        self.meta = None
-        self.codebook = None
-        self.sorted = None
-        self.fieldnames = None
-
-    @property
-    def full_codebook(self):
-        return {**self.meta, "codebook": self.codebook}
-
-    def reset(self):
-        self.meta = None
-        self.codebook = None
-        self.sorted = None
-        self.fieldnames = None
-
-    def process(self, raw: dict, dot_notation: bool = True):
-        self.meta = raw
-        self.meta.pop("save_time")
-        data_type = self.meta.pop("type")
-        if not data_type == DataManager.CODEBOOK_DATA:
-            return
-        try:
-            self.meta.pop("_id")  # remove ID in case of MongoDB download
-            self.meta.pop("_default_id")
-        except KeyError:
-            pass
-
-        if dot_notation:
-            cb = self.meta.pop("codebook")
-            d = {}
-            for key, value in cb.items():
-                dot_tree = value["tree"].replace("_", ".")
-                dot_identifier = dot_tree + "." + value["name"]
-
-                value["tree"] = dot_tree
-                value["identifier"] = dot_identifier
-                d[key] = value
-            self.codebook = d
-        else:
-            self.codebook = self.meta.pop("codebook")
-
-        self._find_fieldnames()
-        self._sort_fieldnames()
-
-    def _find_fieldnames(self):
-        names = set(self.meta)
-
-        for el in self.codebook.values():
-            for k in el.keys():
-                names.add(k)
-
-        self.fieldnames = list(names)
-
-    def _sort_helper(self, item: str):
-        try:
-            return str(self.ORDER[item])
-        except KeyError:
-            return item
-
-    def _sort_fieldnames(self):
-        self.fieldnames.sort(key=lambda item: self._sort_helper(item))
-
-    def write_to_file(self, csvfile, **kwargs):
-
-        with open(csvfile, "w", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=self.fieldnames, **kwargs)
-            writer.writeheader()
-
-            for element in self.codebook.values():
-                writer.writerow({**self.meta, **element})
-
-    def write_to_object(self, **kwargs) -> io.StringIO:
-        csvfile = io.StringIO()
-        writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames, **kwargs)
-        writer.writeheader()
-
-        for element in self.codebook.values():
-            writer.writerow({**self.meta, **element})
-
-        return csvfile
-
-    @property
-    def list_of_docs(self):
-        out = list()
-        for element in self.codebook.values():
-            out.append({**self.meta, **element})
-
-        return out
-
-    def write_local_data_to_file(
-        self,
-        in_file: Union[str, Path],
-        out_dir: Union[str, Path],
-        csv_name: str = None,
-        overwrite: bool = False,
-        **kwargs,
-    ):
-        """Export codebook data from a local .json file to a .csv file
-        
-        If the *in_file* is not an absolute path, it is assumed that it resides in
-        the current working directory.
-
-        Args:
-            in_file: The .json file to export.
-            out_dir: The .csv file will be placed in this directory.
-            csv_name: Name of the .csv file.
-            overwrite: If true, existing files of the name *csv_name* 
-                will be overwritten.
-        """
-        if csv_name and overwrite:
-            csv_name = csv_name
-        elif csv_name and not overwrite:
-            csv_name = find_unique_name(directory=out_dir, filename=csv_name)
-        elif not csv_name and overwrite:
-            csv_name = Path(in_file).name.replace(".json", ".csv")
-        else:
-            csv_name = find_unique_name(
-                directory=out_dir, filename=Path(in_file).name.replace(".json", ".csv")
-            )
-
-        in_file = Path(in_file).resolve()
-
-        if not in_file.is_absolute():
-            in_file = Path.cwd() / in_file
-
-        outfile = Path(out_dir) / csv_name
-
-        try:
-            with open(in_file, "r", encoding="utf-8") as f:
-                doc = json.load(f)
-        except json.decoder.JSONDecodeError:
-            self.reset()
-            return
-        except IsADirectoryError:
-            return
-
-        if not doc.get("type") == DataManager.CODEBOOK_DATA:
-            self.reset()
-            return
-
-        self.process(doc)
-        self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
-
-    def write_mongo_data_to_file(
-        self, collection, exp_id, exp_version, out_dir: Union[str, Path], csv_name: str, **kwargs
-    ):
-        """Export codebook data from a MongoDB collection and save to a
-        .csv file.
-        
-        Args:
-            collection: A pymongo collection object, containig the data.
-            exp_id: ID of the experiment whose data will be exported.
-            out_dir: The .csv file will be placed in this directory.
-            csv_name: Name of the .csv file.
-            data_type: A string, specifying the data type to
-                export (generally, either 'exp_data' or 'unlinked').
-        """
-
-        if csv_name:
-            csv_name = find_unique_name(
-                directory=out_dir, filename=csv_name, exp_version=exp_version
-            )
-        else:
-            csv_name = find_unique_name(
-                directory=out_dir, filename="codebook.csv", exp_version=exp_version
-            )
-
-        outfile = Path(out_dir) / csv_name
-
-        doc = collection.find_one(
-            {"exp_id": exp_id, "exp_version": exp_version, "type": DataManager.CODEBOOK_DATA}
-        )
-        self.process(doc)
-        self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
-
-
-class ExpDataExporter:
-    """Used to turn experiment data dictionaries into easier to handle 
-    formats.
-    
-    Usage:
-    1. Initialize without arguments
-    2. Use the method :meth:`process_one` or :meth:`process_many`.
-    
-    Then, you have several options:
-
-    - Access the data directly via the :attr:`list_of_docs`, a list of
-        flattened dictionaries, where each dictionary contains the
-        data from one experiment session.
-    - Access the data directly via the :attr:`list_of_lists`. The first
-        entry in this list contains the variable names. The subsequent
-        entries each contain the values of one session.
-    - Write in .csv format to an object via :meth:`write_to_object`
-    - Write in .csv format to a file via :meth:`write_to_file`
-    """
-
-    def __init__(self):
-        self.meta_data_names = dict()
-        self.subtree_data_names = dict()
-        self.additional_data_names = dict()
-
-        self.list_of_docs = []
-
-    @property
-    def list_of_lists(self):
-        """Returns the experiment data as a list of lists.
-        
-        The first sublist contains the variable names. The subsequent
-        sublists each contain the values for one session.
-        """
-
-        if not self.list_of_docs:
-            raise ValueError("List of documents is empty.")
-
-        out = []
-
-        header = list(self.list_of_docs[0])
-        out.append(header)
-
-        for doc in self.list_of_docs:
-            out.append(list(doc.values()))
-
-        return out
-
-    @property
-    def fieldnames(self):
-        fieldnames = sorted(list(self.meta_data_names))
-        fieldnames += sorted(list(self.subtree_data_names))
-        fieldnames += sorted(list(self.additional_data_names))
-        return fieldnames
-
-    def process_many(self, docs: list, add_to_instance=True, **pageargs) -> list:
-        """Processes a list of data dictionaries containing alfred
-        experiment data.
-        
-        Returns a list of flattened dictionaries.
-        """
-        for doc in docs:
-            self.process_one(doc, **pageargs)
-
-        return self.list_of_docs
-
-    def process_one(self, doc, add_to_instance=True, **pageargs) -> dict:
-        """Processes a dictionary containing alfred experiment data.
-        
-        The dict is flattened and returned.
-        The fields 'tag', 'type', and 'uid' are removed.
-
-        
-        pageargs:
-            remove_linebreaks: Indicates, whether ``\\n`` should be removed
-                    from strings. Defaults to `False`.
-            missings: An optional value to be inserted for missing values.
-                Defaults to `None`.
-            dot_notation: Indicates, whether the section tree in the
-                variable name should be written with dots or underscores 
-                as separation symbols. Defaults to `True`.
-        """
-
-        try:
-            additional_data_raw = doc.pop("additional_data")
-            additional_data = self._process_additional_data(
-                data=additional_data_raw, remove_linebreaks=pageargs.get("remove_linebreaks")
-            )
-        except KeyError:
-            additional_data = {}
-
-        subtree_data_raw = doc.pop("subtree_data")
-        subtree_data = self._process_subtree(subtree=subtree_data_raw, **pageargs)
-
-        meta_data = doc
-        meta_data.pop("type")
-        meta_data.pop("tag")
-        # meta_data.pop("uid")
-        try:
-            meta_data.pop("_id")
-            meta_data.pop("_default_id")
-        except KeyError:
-            pass
-        try:
-            meta_data.pop("_unlinked_id")
-        except KeyError:
-            pass
-
-        # add names to dicts (used as ordered sets) for fieldnames in csv writer
-        [self.meta_data_names.update({entry: None}) for entry in meta_data]
-        [self.subtree_data_names.update({entry: None}) for entry in list(subtree_data)]
-        [self.additional_data_names.update({entry: None}) for entry in list(additional_data)]
-
-        full_data = {**meta_data, **subtree_data, **additional_data}
-
-        if add_to_instance:
-            self.list_of_docs.append(full_data)
-
-        return full_data
-
-    def _process_additional_data(self, data: dict, remove_linebreaks: bool = False):
-        d = {}
-        for k, v in data.items():
-            if remove_linebreaks and isinstance(v, str):
-                v = v.replace("\n", "")
-            d[f"additional_data.{k}"] = v
-        return d
-
-    def _process_subtree(self, subtree: list, **pageargs):
-        """Recursive function that processes subtree data.
-        Returns a flat dictionary with all element data belonging to
-        an experiment, identified by unique keys.
-        
-        The keys are a combination of the element name and its tree, 
-        i.e. its position in the experiment.
-        """
-
-        d = {}
-
-        for branch in subtree:
-            if "subtree_data" in branch:
-                branch_subtree = branch.pop("subtree_data")
-                subtree_data = self._process_subtree(subtree=branch_subtree, **pageargs)
-                d.update(subtree_data)
-                continue
-
-            page_data = self._process_one_page(
-                page=branch,
-                remove_linebreaks=pageargs.get("remove_linebreaks"),
-                missings=pageargs.get("missings"),
-            )
-            d.update(page_data)
-
-        return d
-
-    @staticmethod
-    def _process_one_page(
-        page: dict,
-        remove_linebreaks: bool = False,
-        missings: str = None,
-        dot_notation: bool = True,
-    ) -> dict:
-        """Returns a dictionary of page data, with keys containing the 
-        page's tree (which indicates its position in the experiment).
-        That way, the keys are experiment-wide unique.
-        
-        Args:
-            page: Dictionary of page data.
-            remove_linebreaks: Indicates, whether `\n` should be removed
-                from strings.
-            missings: An optional value to be inserted for missing values.
-            dot_notation: Indicates, whether the section tree in the
-                variable name should be written with dots or underscores 
-                as separation symbols.
-        """
-        tree = page.pop("tree")
-        try:
-            page.pop("tag")
-            page.pop("uid")
-        except KeyError:
-            pass
-
-        d = {}
-        for key, value in page.items():
-            if remove_linebreaks and isinstance(value, str):
-                value = value.replace("\n", "")
-            if not value:
-
-                value = missings
-
-            if dot_notation:
-                insert_key = tree.replace("_", ".") + "." + key
-            else:
-                insert_key = f"{tree}_{key}"
-
-            d[insert_key] = value
-
-        return d
-
-    def write_to_object(self, shuffle=False, **writer_args) -> io.StringIO:
-        if shuffle:
-            random.shuffle(self.list_of_docs)
-
-        csvfile = io.StringIO()
-
-        writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames, **writer_args)
-        writer.writeheader()
-        writer.writerows(self.list_of_docs)
-
-        return csvfile
-
-    def write_to_file(self, csvfile, shuffle=False, **writer_args):
-        if shuffle:
-            random.shuffle(self.list_of_docs)
-
-        with open(csvfile, "w", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=self.fieldnames, **writer_args)
-            writer.writeheader()
-            writer.writerows(self.list_of_docs)
-
-    def write_local_data_to_file(
-        self,
-        in_dir: Union[str, Path],
-        out_dir: Union[str, Path],
-        data_type: str = None,
-        csv_name: str = None,
-        overwrite: bool = False,
-        **kwargs,
-    ):
-        """Exports experiment or unlinked data from all .json files in a 
-        the directory *in_dir* to a .csv file.
-
-        The function expects that only .json files of one type 
-        (experiment data or unlinked data) are present in *in_dir*. 
-        If multiple types are present, the function will raise a ValueError.
-        
-        You can manually specify the *data_type* that you want to export.
-
-        Args:
-            in_dir: This directory will be scanned for .json files with
-                a fitting 'type' field. If it is not absolute, it is
-                assumed that *in_dir* is a subdirectory of the current
-                working directory.
-            out_dir: The .csv file will be placed in this directory.
-            data_type: An optional string, specifying the data type to
-                export (generally, either 'exp_data' or 'unlinked').
-            csv_name: Name of the .csv file.
-            overwrite: If true, existing files of the name *csv_name* 
-                will be overwritten.
-        """
-
-        if csv_name and overwrite:
-            csv_name = csv_name
-        elif csv_name and not overwrite:
-            csv_name = find_unique_name(directory=out_dir, filename=csv_name)
-        elif not csv_name and overwrite:
-            csv_name = f"{data_type}.csv"
-        else:
-            csv_name = find_unique_name(directory=out_dir, filename=f"{data_type}.csv")
-
-        in_dir = Path(in_dir).resolve()
-        if not in_dir.is_absolute():
-            in_dir = Path.cwd() / in_dir
-
-        if not in_dir.exists():
-            return
-
-        type_previous = None
-        for filename in os.listdir(in_dir):
-            if not filename.endswith(".json"):
-                continue
-
-            fp = Path(in_dir) / filename
-
-            try:
-                with open(fp, "r") as f:
-                    doc = json.load(f)
-            except json.decoder.JSONDecodeError:
-                print(f"Skipped file '{fp}' (not valid .json).")
-                continue
-            except IsADirectoryError:
-                continue
-
-            type_current = doc.get("type")
-
-            if not type_current in [DataManager.EXP_DATA, DataManager.UNLINKED_DATA]:
-                continue
-
-            if data_type and not data_type == type_current:
-                continue
-
-            if type_previous and not type_current == type_previous:
-                raise ValueError(
-                    "Different data types found in directory. Please specify the 'type' parameter."
-                )
-
-            type_previous = type_current
-
-            self.process_one(doc, **kwargs)
-
-        csvfile = Path(out_dir) / csv_name
-        shuffle = True if data_type == "unlinked" else False
-        self.write_to_file(csvfile, shuffle=shuffle, delimiter=kwargs.get("delimiter", ","))
-
-    def write_mongo_data_to_file(
-        self,
-        collection,
-        exp_id: str,
-        out_dir: Union[str, Path],
-        data_type: str,
-        csv_name: str = None,
-        **kwargs,
-    ):
-        """Exports experiment data from a MongoDB collection to a .csv 
-        file.
-        
-        Args:
-            collection: A pymongo collection object, containig the data.
-            exp_id: ID of the experiment whose data will be exported.
-            out_dir: The .csv file will be placed in this directory.
-            data_type: A string, specifying the data type to
-                export (generally, either 'exp_data' or 'unlinked').
-            csv_name: Name of the .csv file.
-        """
-        if csv_name:
-            csv_name = find_unique_name(directory=out_dir, filename=csv_name)
-        else:
-            csv_name = find_unique_name(directory=out_dir, filename=f"{data_type}.csv")
-        outfile = Path(out_dir) / csv_name
-
-        docs = list(collection.find({"exp_id": exp_id, "type": data_type}))
-        self.process_many(docs, **kwargs)
-        self.write_to_file(outfile, delimiter=kwargs.get("delimiter", ","))
 
 
 class DataDecryptor:

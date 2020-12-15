@@ -283,10 +283,11 @@ class Element(ABC):
         page: The element's parent page (i.e. the page on which it is
             displayed). See :mod:`.page`.
         showif: The showif dictionary. It must be of the form
-            ``{<page_uid>: {<element_name>: <value>}}``. It can contain
-            showifs for multiple pages and for multiple elements on 
-            each page. The element will only be shown if *all* 
-            conditions are met.
+            ``{<element_name>: <value>}``. It can contain multiple 
+            conditions. You can use all key-value pairs that show up in
+            :attr:`.~DataManager.flat_session_data`, i.e. all variable 
+            names that show up in the final dataset. The element will 
+            only be shown if *all* conditions are met.
     
     .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
     .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
@@ -315,6 +316,7 @@ class Element(ABC):
         self.name = name
         self.page = None
         self.experiment = None
+        self.exp = None
 
         # display settings
         self.align = align
@@ -452,7 +454,8 @@ class Element(ABC):
         """
         cond1 = self._should_be_shown
         cond2 = all(self._evaluate_showif())
-        return cond1 and cond2
+        cond3 = self.page.should_be_shown
+        return cond1 and cond2 and cond3
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -469,6 +472,10 @@ class Element(ABC):
     def page(self):
         """The page to which the element belongs."""
         return self._page
+
+    @property
+    def section(self):
+        return self.page.section
 
     @page.setter
     def page(self, value):
@@ -489,7 +496,7 @@ class Element(ABC):
     @property
     def short_tree(self):
 
-        return self.tree.replace("_root._content", "")
+        return self.tree.replace("_root._content.", "")
 
     @property
     def css_code(self) -> List[Tuple[int, str]]:
@@ -544,46 +551,25 @@ class Element(ABC):
 
         if self.showif:
             conditions = []
-            for page_uid, condition in self.showif.items():
-
+            for name, condition in self.showif.items():
+                
                 # skip current page (showifs for current pages are checked elsewhere)
-                if page_uid == self.page.uid:
+                if name in self.page.all_input_elements:
                     continue
 
-                d = self.experiment.get_page_data(page_uid=page_uid)
-                for target, value in condition.items():
-                    try:
-                        conditions.append(d[target] == value)
-                    except KeyError:
-                        msg = (
-                            f"You defined a showif '{target} == {value}' for {self} "
-                            f"on Page with uid '{page_uid}', "
-                            f"but {target} was not found on the page. "
-                            "The element will NOT be shown."
-                        )
-                        self.log.warning(msg)
-                        return [False]
+                val = self.exp.data_manager.flat_session_data[name]
+                conditions.append(condition == val)
+
             return conditions
         else:
             return [True]
 
     def _activate_showif_on_current_page(self):
         """Adds JavaScript to self for dynamic showif functionality."""
-        on_current_page = self.showif.get(self.page.uid, None)
+        pg = self.page.all_input_elements
+        on_current_page = dict([cond for cond in self.showif.items() if cond[0] in pg])
+        
         if on_current_page:
-
-            # If target element is not even on the same page
-            for element_name, value in on_current_page.items():
-                if not element_name in self.page.element_dict:
-                    msg = (
-                        f"You defined a showif '{element_name} == {value}' for {self} "
-                        f"on {self.page}, "
-                        f"but {element_name} was not found on the page. "
-                        "The element will NOT be shown."
-                    )
-                    self.log.warning(msg)
-                    self.should_be_shown = False
-                    return
 
             t = jinja_env.get_template("showif.js.j2")
             js = t.render(showif=on_current_page, element=self.name)
@@ -593,7 +579,8 @@ class Element(ABC):
     # Public methods start here ----------------------------------------
 
     def added_to_experiment(self, experiment):
-        """Tells the element that it was added to an experiment. 
+        """
+        Tells the element that it was added to an experiment. 
         
         The experiment is made available to the element, and the 
         element's logging interface initializes its experiment-specific
@@ -603,10 +590,16 @@ class Element(ABC):
             experiment: The alfred experiment to which the element was
                 added.
         """
+        if self.name in experiment.root_section.all_checked_elements:
+            raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
+        
+        if self.name in experiment.data_manager.flat_session_data:
+            raise AlfredError(f"Element name '{self.name}' conflicts with a protected name.")
+        
         self.experiment = experiment
+        self.exp = experiment
         self.log.add_queue_logger(self, __name__)
-        if self.name in self.experiment.root_section.all_elements:
-            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+        
 
     def added_to_page(self, page):
         """Tells the element that it was added to a page. 
@@ -625,7 +618,7 @@ class Element(ABC):
         if self.name is None:
             self.name = self.page.generate_element_name(self)
 
-        if self.page.experiment:
+        if self.page.experiment and not self.experiment:
             self.added_to_experiment(self._page.experiment)
 
     def set_data(self, data):
@@ -943,7 +936,10 @@ class Style(Element):
 
     @property
     def css_urls(self):
-        return [(self.priority, self.url)]
+        if self.url:
+            return [(self.priority, self.url)]
+        else:
+            return []
 
 
 class HideNavigation(Style):
@@ -1111,15 +1107,6 @@ class TextElement(Element):
 
         return d
 
-    def __str__(self):
-        if len(self.text) <= 10:
-            text = self.text
-        else:
-            text = self.text[0:10] + "..."
-
-        return f"{type(self).__name__}(text: '{text}'; name: '{self.name}')"
-
-
 class Hline(Element):
     element_class = "hline-element"
     inner_html = "<hr>"
@@ -1163,13 +1150,6 @@ class CodeElement(TextElement):
             code = f"```{self.lang}\n{self._text}\n```"
             return code
 
-    def __str__(self):
-        text = self.text.replace(f"```{self.lang}", "").replace("\n", "").replace("\r", "")
-        if len(self.text) > 10:
-            text = text[0:10] + " ..."
-
-        return f"{type(self).__name__}(text: '{text}'; lang: '{self.lang}'; name: '{self.name}')"
-
 
 class Label(TextElement):
     """A child of TextElement, serving mainly as label for other 
@@ -1190,49 +1170,6 @@ class Label(TextElement):
     @property
     def vertical_alignment(self):
         return self.layout.valign_cols[self.layout_col]
-
-
-class DataElement(Element):
-    """DataElement can be used to save data without any display.
-
-    Example::
-
-        DataElement(value="test", name="mydata")
-    
-    Args:
-        value: The value that you want to save.
-    """
-
-    def __init__(self, value: Union[str, int, float], description: str = None, **kwargs):
-        """Constructor method."""
-
-        if kwargs.pop("variable", False):
-            raise ValueError("'variable' is not a valid parameter. Use 'value' instead.")
-
-        super(DataElement, self).__init__(**kwargs)
-        self.value = value
-        self.description = description
-        self.should_be_shown = False
-
-    @property
-    def data(self):
-        from alfred3 import page
-
-        data = {}
-        data["value"] = self.value
-
-        data["name"] = self.name
-        data["tree"] = self.short_tree
-        data["page_title"] = self.page.title
-        data["page_name"] = self.page.name
-        data["element_type"] = type(self).__name__
-        data["description"] = self.description
-        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
-
-        return {self.name: data}
-
-    def __str__(self):
-        return f"{type(self).__name__}(value: '{self.value}'; name: '{self.name}')"
 
 
 class LabelledElement(Element):
@@ -1394,9 +1331,6 @@ class LabelledElement(Element):
         if labels:
             return ", ".join(labels)
 
-    def __str__(self):
-        return f"{type(self).__name__}({self.labels}; name: '{self.name}')"
-
     @property
     def template_data(self):
         d = super().template_data
@@ -1473,6 +1407,9 @@ class InputElement(LabelledElement):
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+
+        if not kwargs.get("name", False):
+            raise AlfredError(f"{type(self).__name__} must be initialized with a unique name.")
 
     @property
     def debug_value(self):
@@ -1560,19 +1497,6 @@ class InputElement(LabelledElement):
         data.update(self.codebook_data)
         return {self.name: data}
 
-    @property
-    def encrypted_data(self):
-        """Returns the element's data with encrypted values."""
-        enrcypted_dict = {}
-        for k, v in self.data.items():
-            try:
-                enrcypted_dict[k] = self.experiment.encrypt(v)
-            except TypeError:
-                if isinstance(v, list):
-                    v = [self.experiment.encrypt(entry) for entry in v]
-                enrcypted_dict[k] = v
-
-        return enrcypted_dict
 
     def set_data(self, d):
         if not self.disabled:
@@ -1597,6 +1521,29 @@ class InputElement(LabelledElement):
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
+
+class DataElement(InputElement):
+    """
+    DataElement can be used to save data without any display.
+
+    Example::
+
+        DataElement(value="test", name="mydata")
+    
+    Args:
+        value: The value that you want to save.
+    """
+
+    def __init__(self, value: Union[str, int, float], description: str = None, **kwargs):
+        """Constructor method."""
+
+        if kwargs.pop("variable", False):
+            raise ValueError("'variable' is not a valid parameter. Use 'value' instead.")
+
+        super(DataElement, self).__init__(**kwargs)
+        self.value = value
+        self.description = description
+        self.should_be_shown = False
 
 class TextEntryElement(InputElement):
     """Provides a text entry field.
@@ -2051,13 +1998,10 @@ class MultipleChoiceElement(ChoiceElement):
     @property
     def data(self):
         data = {}
-        for choice_name, value in self._input.items():
-            c = {}
-            c[value] = value
-            c.update(self.codebook_data)
-            data[choice_name] = c
-
-        return data
+        vals = [str(i) for i, (name, checked) in enumerate(self.input.items()) if checked]
+        data["value"] = ",".join(vals)
+        data.update(self.codebook_data)
+        return {self.name: data}
 
     def set_data(self, d):
         self._input = {}
@@ -2228,60 +2172,106 @@ class SelectPageElement(SelectOneElement):
         scope: str = "exp",
         check_jumpto: bool = True,
         check_jumpfrom: bool = True,
+        show_all_in_scope: bool = True,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
         self.scope = scope
         self.check_jumpto = check_jumpto
         self.check_jumpfrom = check_jumpfrom
+        self.show_all_in_scope = show_all_in_scope
+    
+    def _determine_scope(self) -> List[str]:
 
-    def prepare_web_widget(self):
         if self.scope in ["experiment", "exp"]:
-            namelist = list(self.experiment.root_section.members["_content"].all_pages.keys())
-            self.choice_labels = namelist
+            scope = list(self.experiment.root_section.members["_content"].all_pages.values())
         elif self.scope == "section":
-            self.choice_labels = list(self.page.section.all_pages.keys())
+            scope = list(self.page.section.all_pages.values())
         else:
             try:
                 target_section = self.experiment.root_section.all_members[self.scope]
-                self.choice_labels = list(target_section.all_pages.keys())
+                scope = list(target_section.all_pages.values())
             except AttributeError:
-                raise AlfredError("Paramter 'scope' must be a section name.")
+                raise AlfredError("Parameter 'scope' must be a section or page name.")
+        
+        choice_labels = []
+        if not self.show_all_in_scope:
+            for page in scope:
+                jumpto_allowed = all([parent.allow_jumpto for parent in page.uptree()])
+                if jumpto_allowed and page.should_be_shown:
+                    choice_labels.append(page.name)
+        else:
+            choice_labels = [page.name for page in scope]
+        
+        return choice_labels
+    
+    def define_choices(self) -> List[Choice]:
+        choices = []
+        for i, page_name in enumerate(self.choice_labels, start=1):
+            choice = Choice()
 
+            choice.label = self._choice_label(page_name)
+            choice.type = "radio"
+            choice.value = page_name
+            choice.name = self.name
+            choice.id = f"choice{i}-{self.name}"
+            choice.label_id = f"{choice.id}-lab"
+            choice.disabled = True if self.disabled else self._jump_forbidden(page_name)
+            choice.checked = self._determine_check(i)
+            choice.css_class = f"choice-button choice-button-{self.name}"
+
+            choices.append(choice)
+
+        return choices
+    
+    def _jump_forbidden(self, page_name: str) -> bool:
+        target_page = self.experiment.root_section.all_pages[page_name]
+
+        forbidden = False
+
+        # disable choice if the target page can't be jumped to
+        if self.check_jumpto:
+            forbidden = not (target_page.section.allow_jumpto)
+
+        # disable choice if self can't be jumped from
+        if self.check_jumpfrom:
+            forbidden = not (self.page.section.allow_jumpfrom)
+
+        # if not self.experiment.config.getboolean("general", "debug"):
+        if not target_page.should_be_shown:
+            forbidden = True
+        
+        return forbidden
+    
+    def _choice_label(self, page_name: str) -> str:
+        target_page = self.experiment.root_section.all_pages[page_name]
+        # shorten page title for nicer display
+        page_title = target_page.title
+        if len(page_title) > 35:
+            page_title = page_title[:35] + "..."
+
+        return f"{page_title} (name='{page_name}')"
+
+    def _determine_check(self, i: int) -> bool:
+        # set default value
+        if self.default == i:
+            checked = True
+        elif int(self.input) == i:
+            checked = True
+        elif self.debug_enabled and i == 1:
+            checked = True
+        else:
+            checked = False
+        
         if self.experiment.config.getboolean("general", "debug"):
             current_page = self.experiment.movement_manager.current_page
-            self.default = self.choice_labels.index(current_page.name) + 1
+            checked = i == (self.choice_labels.index(current_page.name) + 1)
+        
+        return checked
 
+    def prepare_web_widget(self):
+        self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
-
-        for i, choice in enumerate(self.choices, start=1):
-            choice.value = self.choice_labels[i - 1]
-
-            target_page = self.experiment.root_section.all_pages[choice.value]
-
-            # disable choice if the target page can't be jumped to
-            if self.check_jumpto:
-                choice.disabled = not (target_page.section.allow_jumpto)
-
-            # disable choice if self can't be jumped from
-            if self.check_jumpfrom:
-                choice.disabled = not (self.page.section.allow_jumpfrom)
-
-            # shorten page title for nicer display
-            page_title = target_page.title
-            if len(page_title) > 25:
-                page_title = page_title[:25] + "..."
-            choice.label = f"{page_title} (name='{choice.value}')"
-
-            # set default value
-            if self.default == i:
-                choice.checked = True
-            elif int(self.input) == i:
-                choice.checked = True
-            elif self.debug_enabled and i == 1:
-                choice.checked = True
-            else:
-                choice.checked = False
 
     def set_data(self, d):
         value = d.get(self.name)
@@ -2297,6 +2287,9 @@ class JumpListElement(Row):
         check_jumpto: bool = True,
         check_jumpfrom: bool = True,
         debugmode: bool = False,
+        show_all_in_scope: bool = True,
+        button_style: Union[str, list] = "btn-dark",
+        button_corners: str = "normal",
         **kwargs,
     ):
 
@@ -2305,12 +2298,21 @@ class JumpListElement(Row):
         select_name = name + "_select"
         btn_name = name + "_btn"
         select = SelectPageElement(
-            scope=scope, name=select_name, check_jumpto=check_jumpto, check_jumpfrom=check_jumpfrom
+            scope=scope, 
+            name=select_name, 
+            check_jumpto=check_jumpto, 
+            check_jumpfrom=check_jumpfrom,
+            show_all_in_scope=show_all_in_scope
         )
-        btn = DynamicJumpButtons((label, select_name), name=btn_name)
+        btn = DynamicJumpButtons(
+            (label, select_name), 
+            name=btn_name,
+            button_style=button_style,
+            button_corners=button_corners
+        )
         super().__init__(select, btn, **kwargs)
 
-        self.layout.width_sm = [8, 4]
+        self.layout.width_sm = [10, 2]
         self.debugmode = debugmode
     
     def prepare_web_widget(self):
@@ -2318,7 +2320,7 @@ class JumpListElement(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
-
+   
 
 class SelectMultipleElement(MultipleChoiceElement):
     element_class = "select-multiple-element"
@@ -2381,11 +2383,6 @@ class ImageElement(Element):
         d["src"] = self.src
         return d
 
-    def __str__(self):
-        src = self.path if self.path is not None else self.url
-        return f"ImageElement(src: '{src}'; name: '{self.name}')"
-
-
 class MatPlotElement(Element):
     """Displays a :class:`matplotlib.figure.Figure` object.
     
@@ -2437,7 +2434,4 @@ class MatPlotElement(Element):
         d = super().template_data
         d["src"] = self.src
         return d
-
-    def __str__(self):
-        return f"MatPlotElement(name: '{self.name}')"
 

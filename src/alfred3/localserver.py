@@ -74,6 +74,7 @@ def start():
     # pylint: disable=unsubscriptable-object
     exp_id = script.config["exp_config"].get("metadata", "exp_id")
     session_id = script.config["exp_config"].get("metadata", "session_id")
+    # session_id = uuid4().hex
     log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
     log.session_id = session_id
     script.log = log
@@ -82,10 +83,11 @@ def start():
     try:
         script.exp = script.generate_experiment()
     except TypeError:
-        script.log.debug("Error passed: " + traceback.format_exc())
+        pass
+        # script.log.debug("Error passed: " + traceback.format_exc())
     
     try:
-        script.exp_session = script.exp.start_session(session_id=session_id, config=script.config)
+        script.exp_session = script.exp.start_session(session_id=session_id, config=script.config, **request.args)
     except Exception:
         script.log.exception("Expection during experiment generation.")
         abort(500)
@@ -131,8 +133,6 @@ def experiment():
                 pass
             elif move:
                 script.exp_session.movement_manager.move(direction=move)
-            
-
             else:
                 abort(400)
 

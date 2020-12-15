@@ -369,7 +369,7 @@ class LocalSavingAgent(SavingAgent):
         """Write data to file."""
         self._check_directory()
         with open(self.file, "w", encoding="utf-8") as outfile:
-            json.dump(data, outfile, indent=4, sort_keys=True, ensure_ascii=False)
+            json.dump(data, outfile, indent=4, sort_keys=False, ensure_ascii=False)
 
     @property
     def file(self):
@@ -921,12 +921,14 @@ class DataSaver:
     _MSA_C = "mongo_saving_agent_codebook"
 
     def __init__(self, experiment):
+        # Allows for session-specific saving of unlinked data.
+        self._unlinked_random_name_part = uuid4().hex
+        
         self.experiment = experiment
+        self.exp = experiment
         self.main = self._init_main_controller()
         self.unlinked = self._init_unlinked_controller()
-        self.codebook = self._init_codebook_controller()
         self.mongo_manager = MongoManager(self.experiment)
-
     
     def _init_main_controller(self):
         exp = self.experiment
@@ -1003,7 +1005,7 @@ class DataSaver:
 
         if exp.config.getboolean(self._LSA_U, "use"):
             agent_loc_unlnkd = AutoLocalSavingAgent(config=exp.config[self._LSA_U], experiment=exp)
-            agent_loc_unlnkd.filename = f"unlinked_{exp._unlinked_random_name_part}.json"
+            agent_loc_unlnkd.filename = f"unlinked_{self._unlinked_random_name_part}.json"
             sac_unlinked.append(agent_loc_unlnkd)
 
         if exp.secrets.getboolean(self._MSA_U, "use"):
@@ -1018,138 +1020,6 @@ class DataSaver:
             sac_unlinked.append(agent_mongo_unlinked)
 
         return sac_unlinked
-
-
-    def _init_codebook_controller(self):
-        from alfred3.data_manager import DataManager
-        exp = self.experiment
-
-        sac_codebook = SavingAgentController(exp)
-
-        if exp.config.getboolean(self._LSA_C, "use"):
-            agent_local = CodebookLocalSavingAgent(config=exp.config[self._LSA_C], experiment=exp)
-            title = exp.title.lower().replace(" ", "_")
-            agent_local.filename = f"codebook_{title}_v{exp.version}.json"
-            sac_codebook.append(agent_local)
-
-        if exp.secrets.getboolean(self._MSA_C, "use"):
-            agent_mongo = self.mongo_manager.init_agent(
-                agent_class=CodebookMongoSavingAgent, section=self._MSA_C, fill_section=self._MSA,
-            )
-            agent_mongo.identifier = {
-                "exp_id": exp.exp_id,
-                "exp_version": exp.version,
-                "type": DataManager.CODEBOOK_DATA,
-            }
-            sac_codebook.append(agent_mongo)
-
-        return sac_codebook
-
-class CodebookMixin:
-    @staticmethod
-    def _identify_duplicates_and_update(old_data: dict, new_data: dict) -> Tuple[int, dict]:
-        """Updates a nested dictionary with values from another nested dictionary.
-
-        If duplicate keys with different values are encountered, the keys
-        will be mutated to include the term '_duplicate' plus a counter
-        of duplicates. The value dicts will receive an additional field 
-        of ``"duplicate_identifier": True``.
-
-        Example::
-
-            a = {"exp_title": "test", 
-                "codebook": {
-                    "name1": {"instruction": "instr1"}
-                    },
-                }
-            
-            b = {
-                "exp_title": "test",
-                "codebook": {
-                    "name1": {"instruction": "instr2", "desription": "desc"},
-                    "name2": {"instruction": "instr2"},
-                },
-            }
-
-            counter, updated_data = duplicate_save_update(old_data=a, new_data=b)
-
-            # counter = 2
-            # updated_data =  { 'name1_duplicate1': {'duplicate_identifier': True, 'instruction': 'instr1'},
-                                'name1_duplicate2': {'desription': 'desc',
-                                                    'duplicate_identifier': True,
-                                                    'instruction': 'instr2'},
-                                'name2': {'instruction': 'instr2'}}
-
-
-
-        Returns:
-            A tuple containing the duplicate counter (total number of
-            affected key-value pairs in the updated dictionary) and the
-            updated dictionary.
-        """
-        duplicate_entries = 0
-
-        update_entries = []
-        for identifier, new_element in new_data.items():
-            try:
-                duplicate_elements = 0
-                old_element = old_data[identifier]
-                if not old_element == new_element:
-                    new_element["duplicate_identifier"] = True
-                    old_element["duplicate_identifier"] = True
-                    old_data.pop(identifier)
-
-                    duplicate_entries += 2
-                    duplicate_elements += 1
-
-                    entry2 = {f"{identifier}_duplicate{duplicate_elements}": new_element}
-
-                    update_entries.append({identifier: old_element})
-                    update_entries.append(entry2)
-            except KeyError:
-                update_entries.append({identifier: new_element})
-
-        for entry in update_entries:
-            old_data.update(entry)
-
-        return duplicate_entries, old_data
-
-
-class CodebookLocalSavingAgent(AutoLocalSavingAgent, CodebookMixin):
-    def _save(self, data: dict):
-        try:
-            with open(self.file, "r", encoding="utf-8") as f:
-                existing_data = json.load(f)
-
-            _, updated_codebook = self._identify_duplicates_and_update(
-                old_data=existing_data["codebook"], new_data=data["codebook"]
-            )
-
-            existing_data["codebook"] = updated_codebook
-
-            super()._save(data=existing_data)
-        except FileNotFoundError:
-            super()._save(data=data)
-
-
-class CodebookMongoSavingAgent(AutoMongoSavingAgent, CodebookMixin):
-    def _save(self, data: dict):
-
-        f = self.identifier
-        existing_data = self._col.find_one(filter=f)
-        if existing_data:
-            self.doc_id = existing_data["_id"]
-
-        try:
-            _, updated_codebook = self._identify_duplicates_and_update(
-                old_data=existing_data["codebook"], new_data=data["codebook"]
-            )
-            existing_data["codebook"] = updated_codebook
-            # self.col.find_one_and_replace(filter=f, replacement=data)
-            super()._save(data=existing_data)
-        except (KeyError, TypeError):
-            super()._save(data=data)
-
 
 class AutoMongoClient(pymongo.MongoClient):
     """Constructs a :class:`pymongo.MongoClient` directly from an alfred
