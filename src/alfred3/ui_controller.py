@@ -39,11 +39,35 @@ class Move:
     Template for saving data about participant movements.
     
     Attributes:
+        exp_title: Experiment title
+        exp_author: Experiment author
+        exp_version: Experiment version
+        exp_id: Experiment id
+        exp_session_id: Experiment session id
+
         move_number: A continuously increasing counter of moves. Starts
             at one.
         tree: The full hierarchy of sections, indicating the exact 
             position of the Move's *page* in the experiment.
         page_name: The name of the Move's page.
+        
+        show_time: Time when the page was shown in seconds since epoch.
+        hide_time: Time when the page was hidden in seconds since epoch.
+        duration: Duration in seconds, calculated as the difference 
+            hidetime - showtime.
+        
+        page_status_before_visit: Indicates the page's status before
+            the visit represented by the Move instance, e.g. 'open', or 
+            'closed'.
+        page_status_before_visit: Indicates the page's status after
+            the visit represented by the Move instance, e.g. 'open', or 
+            'closed'.
+        
+        leave_in_direction: Indicates the direction, in which the page 
+            was left (e.g. 'forward', 'backward', or 'jump').
+        previous_page: Name of the previous page
+        target_page: Name of the next page
+        
         section_allows_backward: Indicates, whether participants can move
             backward from the Move's page.
         section_allows_forward: Indicates, whether participants can move
@@ -52,18 +76,6 @@ class Move:
             jump from the Move's page.
         section_allows_jumpto: Indicates, whether participants can 
             jump to the Move's page.
-        show_time: Time when the page was shown in seconds since epoch.
-        hide_time: Time when the page was hidden in seconds since epoch.
-        duration: Duration in seconds, calculated as the difference 
-            hidetime - showtime.
-        page_status_before_visit: Indicates the page's status before
-            the visit represented by the Move instance, e.g. 'open', or 
-            'closed'.
-        page_status_before_visit: Indicates the page's status after
-            the visit represented by the Move instance, e.g. 'open', or 
-            'closed'.
-        leave_in_direction: Indicates the direction, in which the page 
-            was left (e.g. 'forward', 'backward', or 'jump').
     
     """
     exp_title: str = None
@@ -71,17 +83,22 @@ class Move:
     exp_version: str = None
     exp_id: str = None
     exp_session_id: str = None
+    
     move_number: int = None
     tree: str = None
     page_name: str = None
+    
     show_time: float = None
     hide_time: float = None
     duration: float = None
-    previous_page: str = None
+    
     page_status_before_visit: str = None
     page_status_after_visit: str = None
+    
     leave_in_direction: str = None
+    previous_page: str = None
     target_page: str = None
+    
     section_allows_forward: bool = None
     section_allows_backward: bool = None
     section_allows_jumpfrom: bool = None
@@ -503,7 +520,15 @@ class UserInterface:
             d["debug"] = self.exp.config.getboolean("general", "debug")
             if not page.has_been_shown:
                 name = page.name + "__debug_jumplist__"
-                jumplist = elm.JumpListElement(scope="exp", check_jumpto=False, check_jumpfrom=False, name=name, debugmode=True)
+                
+                jumplist = elm.JumpList(
+                    scope="exp", 
+                    check_jumpto=False, 
+                    check_jumpfrom=False, 
+                    name=name, 
+                    debugmode=True
+                    )
+
                 jumplist.should_be_shown = False
                 page += jumplist
                 d["jumplist"] = jumplist
