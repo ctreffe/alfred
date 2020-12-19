@@ -1,4 +1,5 @@
-"""Provides miscellaneous utilities for alfred experiments.
+"""
+Provides miscellaneous utilities for alfred experiments.
 
 .. versionadded:: 1.5
 
@@ -7,6 +8,12 @@
 """
 
 from emoji import emojize
+from typing import Any
+from .page import Page
+from .section import Section
+from .element import Element
+from .element import InputElement
+from .element import Label
 
 def icon(name: str, ml: int = 0, mr: int = 0) -> str:
     """Returns HTML code for displaying font-awesome icons.
@@ -36,3 +43,13 @@ def emoji(text: str) -> str:
     
     """
     return emojize(text, use_aliases=True)
+
+def is_section(obj: Any) -> bool: return isinstance(obj, Section)
+
+def is_page(obj: Any) -> bool: return isinstance(obj, Page)
+
+def is_element(obj: Any) -> bool: return isinstance(obj, Element)
+
+def is_input_element(obj: Any) -> bool: return isinstance(obj, InputElement)
+
+def is_label(obj: Any) -> bool: return isinstance(obj, Label)
