@@ -1,7 +1,29 @@
 # -*- coding:utf-8 -*-
 
 """
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
+This module contains alfred's page classes.
+
+Pages hold and organize elements. They receive, validate, and save 
+data.
+
+
+* Filling pages
+
+    + linear style
+
+    + object-oriented style
+
+* Accessing element. You can access the elements of a page by using 
+    dict-style square brackets and a number of specialized properties 
+    listed below.
+
+* Types of pages
+
+* Custom layout for individual pages
+
+
+
+.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
 from __future__ import absolute_import
 
@@ -317,12 +339,12 @@ class PageCore(ExpMember):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self.experiment.data_saver.main.agents and not self._experiment.config.getboolean(
+        if not self.exp.data_saver.main.agents and not self.exp.config.getboolean(
             "general", "debug"
         ):
             self.log.warning("No saving agents available.")
         data = self.experiment.data_manager.session_data
-        self._experiment.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
+        self.exp.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
     def __repr__(self):
         return f"Page(class='{type(self).__name__}', name='{self.name}')"
@@ -336,10 +358,6 @@ class WebPageInterface(with_metaclass(ABCMeta, object)):
         noch nicht gemachten user Eingaben unabhaengige und rechenintensive
         verbereitungen fuer das anzeigen des widgets aufrufen. z.B. generieren
         von grafiken"""
-        pass
-
-    @abstractproperty
-    def web_widget(self):
         pass
 
     @property
@@ -382,9 +400,26 @@ class CoreCompositePage(PageCore):
                 raise TypeError
             self.append(*elements)
     
-    def __getitem__(self, name):
-        return self.elements[name]
+    def __contains__(self, element): 
+        try:
+            return element.name in self.elements
+        except AttributeError:
+            return element in self.elements
+    
+    # necessary to make __getattr__ work with copying a page object
+    def __getstate__(self): return self.__dict__
 
+    # necessary to make __getattr__ work with copying a page object
+    def __setstate__(self, state): self.__dict__.update(state) 
+
+    def __getitem__(self, name): return self.elements[name]
+    
+    def __getattr__(self, name):
+        try:
+            return self.elements[name]
+        except KeyError:
+            raise AttributeError(f"{self} has no attribute '{name}'.")
+    
     @property
     def input_elements(self) -> dict:
         """Dict of all input elements on this page.
@@ -408,7 +443,7 @@ class CoreCompositePage(PageCore):
         return self.elements
     
     @property
-    def checked_elements(self) -> dict:
+    def updated_elements(self) -> dict:
         return {name: elm for name, elm in self.elements.items() if elm.exp is not None}
 
     @property
@@ -447,13 +482,8 @@ class CoreCompositePage(PageCore):
             if not elmnt.name:
                 elmnt.name = self.generate_element_name(elmnt)
 
-            if elmnt.name in self.__dict__:
-                raise ValueError(
-                    (
-                        f"Element name '{elmnt.name}' is also an attribute of {self}."
-                        "Please choose a different name."
-                    )
-                )
+            if elmnt.name in dir(self):
+                raise ValueError(f"Element name '{elmnt.name}' is also an attribute of {self}.")
 
             elmnt.added_to_page(self)
 
@@ -472,11 +502,6 @@ class CoreCompositePage(PageCore):
     def __iadd__(self, other):
         self.append(other)
         return self
-
-    # def __getattr__(self, name):
-    #     """Enables element access via dot notation."""
-    #     if name in self.element_dict:
-    #         return self.element_dict[name]
 
     @property
     def element_list(self):
@@ -569,7 +594,7 @@ class CoreCompositePage(PageCore):
         return [item for sublist in list_of_lists for item in sublist]
 
     def set_data(self, dictionary):
-        for elmnt in self._element_list:
+        for elmnt in self.input_elements.values():
             elmnt.set_data(dictionary)
 
     def custom_move(self):
@@ -590,9 +615,10 @@ class CoreCompositePage(PageCore):
 
             @exp.member
             class CustomMove(al.Page):
+                name = "custom_move"
                 
                 def custom_move(self):
-                    self.experiment.movement_manager.jump_by_name("third")
+                    self.exp.jump(to="third")
 
             exp += al.Page(name="second")
             exp += al.Page(name="third")
@@ -607,13 +633,13 @@ class CoreCompositePage(PageCore):
             class CustomMove(al.Page):
 
                 def on_exp_access(self):
-                    self += elm.TextEntryElement(name="text")
+                    self += elm.TextEntry(name="text")
                 
                 def custom_move(self):
                     if self.data.get("text) == "yes":
-                        self.experiment.movement_manager.jump_by_name("third")
+                        self.exp.jump(to="third")
                     else:
-                        return True    
+                        return True
 
             exp += al.Page(name="second")
             exp += al.Page(name="third")
@@ -705,8 +731,6 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         self._set_width()
         self._set_color()
 
-
-
     def _set_width(self):
         if self.experiment.config.getboolean("layout", "responsive"):
 
@@ -742,24 +766,6 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         elif self.experiment.config.get("layout", "background_color", fallback=False):
             c = self.experiment.config.get("layout", "background_color", fallback=False)
             self += elm.Style(code=f"body {{background-color: {c};}}")
-
-    @property
-    def web_widget(self):
-        html = ""
-
-        for elmnt in self._element_list:
-            if elmnt.web_widget != "" and elmnt.should_be_shown:
-                html = (
-                    html
-                    + (
-                        '<div class="row with-margin"><div id="elid-%s" class="element">'
-                        % elmnt.name
-                    )
-                    + elmnt.web_widget
-                    + "</div></div>"
-                )
-
-        return html
 
     @property
     def web_thumbnail(self):
@@ -980,6 +986,9 @@ class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
 class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
 
+class TimeoutForwardPage(WebTimeoutForwardPage): pass
+
+class TimeoutClosePage(WebTimeoutClosePage): pass
 
 class NoDataPage(Page):
     """This Page does not save any data except its tag and uid."""
@@ -1199,10 +1208,9 @@ class CustomSavingPage(Page, ABC):
 
 
 class DefaultFinalPage(Page):
-    name = "_final_page"
     title = "Experiment beendet"
 
     def on_exp_access(self):
         txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
-        self += elm.TextElement(text=txt, align="center")
+        self += elm.Text(text=txt, align="center")
         self += elm.WebExitEnabler()

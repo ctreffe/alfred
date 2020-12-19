@@ -86,8 +86,11 @@ def start():
         pass
         # script.log.debug("Error passed: " + traceback.format_exc())
     
+    config = script.config["exp_config"]
+    secrets = script.config["exp_secrets"]
+
     try:
-        script.exp_session = script.exp.start_session(session_id=session_id, config=script.config, **request.args)
+        script.exp_session = script.exp.create_session(session_id=session_id, config=config, secrets=secrets, **request.args)
     except Exception:
         script.log.exception("Expection during experiment generation.")
         abort(500)

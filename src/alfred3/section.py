@@ -30,6 +30,12 @@ class Section(ExpMember):
 
         if kwargs.get("shuffle", None):
             self.shuffle = kwargs.get("shuffle", False)
+    
+    def __contains__(self, member):
+        try:
+            return member.name in self.all_members or member.name in self.all_elements
+        except AttributeError:
+            return member in self.all_members or member in self.all_elements
 
     def __repr__(self):
         return f"Section(class='{type(self).__name__}', name='{self.name}')"
@@ -40,6 +46,12 @@ class Section(ExpMember):
     
     def __getitem__(self, name):
         return self.all_members[name]
+    
+    def __getattr__(self, name):
+        try:
+            return self.all_members[name]
+        except KeyError:
+            return AttributeError(f"{self} has no attribute '{name}'.")
 
     def shuffle_members(self):
         """Non-recursive shuffling of this section's members."""
@@ -65,10 +77,10 @@ class Section(ExpMember):
         return pages
     
     @property
-    def all_checked_elements(self) -> dict:
+    def all_updated_elements(self) -> dict:
         elements = {}
         for page in self.all_updated_pages.values():
-            elements.update(page.checked_elements)
+            elements.update(page.updated_elements)
         return elements
 
     @property
@@ -263,13 +275,9 @@ class Section(ExpMember):
 
     def append(self, *items):
         for item in items:
-            
-            try:
-                if hasattr(self, item.uid):
-                    raise ValueError((f"Uid of {item} is also an attribute of {self}." 
-                "Please choose a different uid."))
-            except KeyError:
-                pass
+
+            if item.name in dir(self):
+                raise ValueError(f"Name of {item} is also an attribute of {self}.")
             
             if item.name in self.members:
                 raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
@@ -347,7 +355,7 @@ class Section(ExpMember):
         pass
 
     def enter(self):
-        self.log.debug(f"Entering Section: {self}.")
+        self.log.debug(f"Entering {self}.")
         self.on_enter()
 
         if self.shuffle:
@@ -357,7 +365,7 @@ class Section(ExpMember):
             self.first_member.enter()
     
     def leave(self):
-        self.log.debug(f"Leaving Section: {self}.")
+        self.log.debug(f"Leaving {self}.")
         self.on_leave()
 
         for page in self.all_pages.values():
@@ -367,11 +375,11 @@ class Section(ExpMember):
             self.parent.leave()
     
     def resume(self):
-        self.log.debug(f"Resuming to Section: {self}.")
+        self.log.debug(f"Resuming to {self}.")
         self.on_resume()
     
     def hand_over(self):
-        self.log.debug(f"Section: {self} handing over to child section.")
+        self.log.debug(f"{self} handing over to child section.")
         self.on_hand_over()
     
     def on_resume(self):
@@ -459,6 +467,12 @@ class OnlyForwardSection(CommitInputSection):
     allow_jumpto: bool = False
 
 
+class HeadOpenSection(CommitInputSection): pass
+
+
+class SegmentedSection(OnlyForwardSection): pass
+
+
 class FinishedSection(Section):
 
     allow_forward: bool = False
@@ -478,18 +492,17 @@ class RootSection(Section):
     def __init__(self, experiment):
         super().__init__()
         self._experiment = experiment
-
-        self.content_section = Section(name="_content")
-        self.finished_section = FinishedSection(name="_finished_section")
-        self.final_page = DefaultFinalPage()
+        self.content = Section(name="_content")
+        self.finished_section = FinishedSection(name="__finished_section")
+        self.finished_section += DefaultFinalPage(name="_final_page")
 
         self._all_pages_list = None
         self._all_page_names = None
     
     def append_root_sections(self):
-        self += self.content_section
+        self += self.content
         self += self.finished_section
-
+    
     @property
     def all_page_names(self):
         """Improvised caching mechanism for the list of all page names."""
@@ -516,19 +529,17 @@ class RootSection(Section):
     
     @property
     def final_page(self):
-        return self._final_page
+        return self.finished_section._final_page
 
     @final_page.setter
     def final_page(self, page):
-        self._final_page = page
-        self._final_page += elm.HideNavigation()
+        page += elm.HideNavigation()
         self.finished_section.members = {}
-        self.finished_section += self.final_page
+        self.finished_section._final_page = page
     
     def __repr__(self):
-        section_class = type(self).__name__
         m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
-        return f"{section_class}(name='{self.name}', members=[{m}])"
+        return f"RootSection(name='{self.name}', members=[{m}])"
         
     
     @deprecated("1.5", "2.0", None, details="Use the simple setter for the attribute 'final_page' instead.")
