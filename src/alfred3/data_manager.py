@@ -47,6 +47,9 @@ class DataManager(object):
         self.log.add_queue_logger(self, __name__)
         
         self.client_data = {}
+
+        # the empty fields are initialized here below to enable name-
+        # checking for all experiment members on these names
         self.client_data["client_resolution_screen"] = None
         self.client_data["client_resolution_inner"] = None
         self.client_data["client_referrer"] = None
@@ -58,7 +61,6 @@ class DataManager(object):
         self.client_data["client_os_family"] = None
         self.client_data["client_os_name"] = None
         self.client_data["client_os_version"] = None
-
 
     @property
     def experiment(self):
@@ -216,10 +218,10 @@ class DataManager(object):
             eldata["value"] = self.exp.decrypt(eldata["value"])
             return data
     
-    def get_page_data(self, name):
+    def get_page_data(self, name: str) -> dict:
         return self.experiment.root_section.all_pages[name].data
     
-    def get_section_data(self, name):
+    def get_section_data(self, name: str) -> dict:
         return self.experiment.root_section.all_subsections[name].data
 
     def find_experiment_data_by_uid(self, uid):
