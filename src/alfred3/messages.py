@@ -1,5 +1,7 @@
 from builtins import object
 import threading
+import cmarkgfm
+from emoji import emojize
 
 
 class MessageManager(object):
@@ -13,7 +15,7 @@ class MessageManager(object):
         self._queue = []
         self._lock = threading.Lock()
 
-    def post_message(self, msg, title='', level=INFO):
+    def post_message(self, msg: str, title: str = '', level: str = INFO):
         self._lock.acquire()
         self._queue.append(Message(msg, title, level))
         self._lock.release()
@@ -34,7 +36,8 @@ class Message(object):
 
     @property
     def msg(self):
-        return self._msg
+        text = emojize(self._msg)
+        return cmarkgfm.github_flavored_markdown_to_html(text) 
 
     @property
     def level(self):
@@ -46,7 +49,8 @@ class Message(object):
 
     @property
     def title(self):
-        return self._title
+        text = emojize(self._title)
+        return cmarkgfm.github_flavored_markdown_to_html(text) 
 
     def __unicode__(self):
         return self.msg
