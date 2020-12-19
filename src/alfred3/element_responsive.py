@@ -2240,9 +2240,11 @@ class ImageElement(Element):
 
 
 class AlertElement(TextElement):
-    """Allows the display of customized alerts
+    """
+    Allows the display of customized alerts
 
-    Example:
+    Example::
+
         AlertElement(
         text="Text to be displayed in the alert",
         category="dark",
@@ -2282,7 +2284,8 @@ class RegEntryElement(TextEntryElement):
     Displays an input field, which only accepts inputs, matching a predefined
     regular expression.
 
-    Example:
+    Example::
+
         RegEntryElement(
         toplab="Only the input 'Try this' will be accepted.",
         reg_ex="Try this",
@@ -2299,6 +2302,8 @@ class RegEntryElement(TextEntryElement):
 
     Todo:
         * Add position
+        * Add base class args
+        * Add kwargs
 
     """
 
@@ -2326,15 +2331,16 @@ class RegEntryElement(TextEntryElement):
     def validate_data(self):
         super(RegEntryElement, self).validate_data()
 
-        if (
-            self._force_input
-            and self._should_be_shown
-            and self._input == ""
-            and not re.match(r"^%s$" % self._reg_ex, str(self._input))
-        ):
-            return False
+        if not self._should_be_shown:
+            return True
 
-        return True
+        if not self._force_input and self._input == "":
+            return True
+
+        if re.match(r"^%s$" % self._reg_ex, str(self._input)):
+            return True
+
+        return False
 
     @property
     def match_hint(self):
@@ -2345,9 +2351,7 @@ class RegEntryElement(TextEntryElement):
     @property
     def default_no_match_hint(self):
         name = f"corrective_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
 
     @property
     def corrective_hints(self):
@@ -2371,9 +2375,7 @@ class RegEntryElement(TextEntryElement):
     @property
     def default_no_input_hint(self):
         name = f"no_input{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
 
     @property
     def codebook_data_flat(self):
@@ -2396,7 +2398,8 @@ class NumberEntryElement(RegEntryElement):
     """
     Displays an input field, which only accepts numerical input.
 
-    Example:
+    Example::
+
         NumberEntryElement(
         toplab="Only numbers will be accepted.",
         decimals=2,
@@ -2446,8 +2449,12 @@ class NumberEntryElement(RegEntryElement):
     def validate_data(self):
         super(NumberEntryElement, self).validate_data()
 
-        if self._force_input and self._should_be_shown and self._input == "":
-            return False
+        if not self._should_be_shown:
+            return True
+
+        if not self._force_input and self._input == "":
+            return True
+
         try:
             f = float(self._input)
         except Exception:
@@ -2496,51 +2503,29 @@ class NumberEntryElement(RegEntryElement):
             super(NumberEntryElement, self).set_data({self.name: val})
 
     @property
-    def match_hint(self):
-        if self._match_hint:
-            return self._match_hint
-        return self.default_no_match_hint
-
-    @property
-    def default_no_match_hint(self):
-        name = f"corrective_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
-
-    @property
     def no_decimals_hint(self):
         name = f"no_decimals_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
 
     @property
     def decimals_hint(self):
         name = f"decimals_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
 
     @property
     def max_hint(self):
         name = f"max_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
 
     @property
     def min_hint(self):
         name = f"min_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
+
     @property
     def min_max_hint(self):
         name = f"min_max_{type(self).__name__}"
-        return self.experiment.config.get(
-            "hints", name
-        )
+        return self.experiment.config.get("hints", name)
 
     @property
     def corrective_hints(self):
@@ -2563,15 +2548,29 @@ class NumberEntryElement(RegEntryElement):
             ):
 
                 if 0 < self._decimals:
-                    hint = self.match_hint + " " + self.decimals_hint.replace("${dec}", str(self._decimals))
+                    hint = (
+                        self.match_hint
+                        + " "
+                        + self.decimals_hint.replace("${dec}", str(self._decimals))
+                    )
                 else:
                     hint = self.match_hint + " " + self.no_decimals_hint
                 if self._min is not None and self._max is not None:
-                    hint = hint + " " + self.min_max_hint.replace("${minimum}", str(self._min)).replace("${maximum}", str(self._max))
+                    hint = (
+                        hint
+                        + " "
+                        + self.min_max_hint.replace(
+                            "${minimum}", str(self._min)
+                        ).replace("${maximum}", str(self._max))
+                    )
                 elif self._min is not None:
-                    hint = hint + " " + self.min_hint.replace("${minimum}", str(self._min))
+                    hint = (
+                        hint + " " + self.min_hint.replace("${minimum}", str(self._min))
+                    )
                 elif self._max is not None:
-                    hint = hint + " " + self.max_hint.replace("${maximum}", str(self._max))
+                    hint = (
+                        hint + " " + self.max_hint.replace("${maximum}", str(self._max))
+                    )
                 return [hint]
 
             return []
