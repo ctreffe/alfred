@@ -552,7 +552,7 @@ class Element(ABC):
         if self.showif:
             conditions = []
             for name, condition in self.showif.items():
-                
+
                 # skip current page (showifs for current pages are checked elsewhere)
                 if name in self.page.all_input_elements:
                     continue
@@ -568,7 +568,7 @@ class Element(ABC):
         """Adds JavaScript to self for dynamic showif functionality."""
         pg = self.page.all_input_elements
         on_current_page = dict([cond for cond in self.showif.items() if cond[0] in pg])
-        
+
         if on_current_page:
 
             t = jinja_env.get_template("showif.js.j2")
@@ -590,16 +590,16 @@ class Element(ABC):
             experiment: The alfred experiment to which the element was
                 added.
         """
-        if self.name in experiment.root_section.all_checked_elements:
+
+        if self.name in experiment.root_section.all_updated_elements:
             raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
-        
+
         if self.name in experiment.data_manager.flat_session_data:
             raise AlfredError(f"Element name '{self.name}' conflicts with a protected name.")
-        
+
         self.experiment = experiment
         self.exp = experiment
         self.log.add_queue_logger(self, __name__)
-        
 
     def added_to_page(self, page):
         """Tells the element that it was added to a page. 
@@ -608,6 +608,8 @@ class Element(ABC):
 
         Args:
             page: The page to which the element was added.
+        
+        :meta private:
         """
         from . import page as pg
 
@@ -657,11 +659,18 @@ class Element(ABC):
 
     @property
     def inner_html(self) -> str:
-        """Renders :attr:`~alfred3.element_responsive.Element.element_template`
-        with :attr:`~alfred3.element_responsive.Element.template_data`
-        and returns the resulting html.
+        """
+        Renders the element template: :attr:`~.element_template`.
+        
+        Hands over the data returned by :attr:`~.template_data`, renders
+        the template and returns the resulting html code.
+        
+        If no `element_template` is defined, `None` is returned. Usually,
+        the inner html gets placed into the higher-level 
+        :attr: `.base_template`, when :attr:`Element.web_widget` gets called.
 
-        If no `element_template` is defined, `None` is returned.
+        Returns:
+            str: Inner html code for this element.
         """
         if self.element_template is not None:
             return self.element_template.render(self.template_data)
@@ -670,15 +679,15 @@ class Element(ABC):
 
     @property
     def web_widget(self) -> str:
-        """Returns the full html-code for the element's display on the
-        screen.
+        """
+        The element's rendered html code for display on a page.
 
         This is done by rendering the 
-        :attr:`~alfred3.element_responsive.Element.base_template` with
-        the :attr:`~alfred3.element_responsive.Element.template_data` 
-        and injecting the :attr:`~alfred3.element_responsive.Element.inner_html`
-        into it.
+        :attr:`~.base_template` with the :attr:`~.template_data` 
+        and injecting the :attr:`~.inner_html` into it.
 
+        Returns:
+            str: The full html code for this element.
         """
         d = self.template_data
         d["html"] = self.inner_html
@@ -852,9 +861,9 @@ class Stack(Row):
 
         from alfred3 import element_responsive as el
         
-        el1 = el.TextElement("text")
-        el2 = el.TextEntryElement(toplab="lab")
-        el3 = el.TextElement("long text")
+        el1 = el.Text("text")
+        el2 = el.TextEntry(toplab="lab")
+        el3 = el.Text("long text")
 
         row = el.Row(el.Stack(el1, el2), el3)
 
@@ -997,7 +1006,7 @@ class WebExitEnabler(JavaScript):
         super().__init__(code=code, priority=10)
 
 
-class TextElement(Element):
+class Text(Element):
     """Displays text.
 
     You can use GitHub-flavored Markdown syntax [#md]_ and common emoji 
@@ -1006,7 +1015,7 @@ class TextElement(Element):
 
     Example::
 
-        TextElement("**This is boldfaced** text. :blush:")
+        Text("**This is boldfaced** text. :blush:")
 
     Text can be entered directly through the `text` parameter, or
     it can be read from a file by specifying the 'path' parameter.
@@ -1016,13 +1025,13 @@ class TextElement(Element):
     Example::
 
         # Text element with responsive width
-        text = TextElement('Text display')
+        text = Text('Text display')
 
         # Text element that is always displayed as full-width
-        text = TextElement('Text display', width='full')
+        text = Text('Text display', width='full')
 
         # Text element with content read from file
-        text = TextElement(path='files/text.md')
+        text = Text(path='files/text.md')
         
     Args:
         text: Text to be displayed.
@@ -1033,7 +1042,7 @@ class TextElement(Element):
         path: Filepath to a textfile (relative to the experiment 
             directory).
         width: Element width. Usage is the same as in 
-            :class:`Element`, but the TextElement uses its own
+            :class:`Element`, but the Text element uses its own
             specific default, which ensures good readability in 
             most cases on different screen sizes.
         **element_args: Keyword arguments passed to the parent class
@@ -1107,12 +1116,13 @@ class TextElement(Element):
 
         return d
 
+
 class Hline(Element):
     element_class = "hline-element"
     inner_html = "<hr>"
 
 
-class CodeElement(TextElement):
+class CodeBlock(Text):
     """A convenience element for displaying highlighted code.
 
     Args:
@@ -1151,9 +1161,9 @@ class CodeElement(TextElement):
             return code
 
 
-class Label(TextElement):
-    """A child of TextElement, serving mainly as label for other 
-    elements.
+class Label(Text):
+    """
+    A child of Text element, serving mainly as label for other elements.
     """
 
     element_class = "label-element"
@@ -1408,9 +1418,6 @@ class InputElement(LabelledElement):
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
 
-        if not kwargs.get("name", False):
-            raise AlfredError(f"{type(self).__name__} must be initialized with a unique name.")
-
     @property
     def debug_value(self):
         name = f"{type(self).__name__}_default"
@@ -1497,7 +1504,6 @@ class InputElement(LabelledElement):
         data.update(self.codebook_data)
         return {self.name: data}
 
-
     def set_data(self, d):
         if not self.disabled:
             self._input = d.get(self.name, "")
@@ -1521,14 +1527,18 @@ class InputElement(LabelledElement):
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
+    def added_to_experiment(self, exp):
+        if not self.name:
+            raise AlfredError(f"{type(self).__name__} must have a unique name.")
+        super().added_to_experiment(exp)
 
-class DataElement(InputElement):
+class Data(InputElement):
     """
-    DataElement can be used to save data without any display.
+    Data can be used to save data without any display.
 
     Example::
 
-        DataElement(value="test", name="mydata")
+        Data(value="test", name="mydata")
     
     Args:
         value: The value that you want to save.
@@ -1540,12 +1550,17 @@ class DataElement(InputElement):
         if kwargs.pop("variable", False):
             raise ValueError("'variable' is not a valid parameter. Use 'value' instead.")
 
-        super(DataElement, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.value = value
         self.description = description
         self.should_be_shown = False
 
-class TextEntryElement(InputElement):
+
+class Value(Data):
+    pass
+
+
+class TextEntry(InputElement):
     """Provides a text entry field.
 
     Args:
@@ -1597,7 +1612,7 @@ class TextEntryElement(InputElement):
         return d
 
     def validate_data(self):
-        super(TextEntryElement, self).validate_data()
+        super().validate_data()
 
         if self._force_input and self._should_be_shown and self._input == "":
             return False
@@ -1614,7 +1629,7 @@ class TextEntryElement(InputElement):
         return data
 
 
-class TextAreaElement(TextEntryElement):
+class TextArea(TextEntry):
     element_class = "text-area-element"
     element_template = jinja_env.get_template("TextAreaElement.html.j2")
 
@@ -1692,7 +1707,7 @@ class ChoiceElement(InputElement, ABC):
         pass
 
 
-class SingleChoiceElement(ChoiceElement):
+class SingleChoice(ChoiceElement):
     """ 
     """
 
@@ -1740,12 +1755,13 @@ class SingleChoiceElement(ChoiceElement):
         return d
 
 
-class SingleChoiceButtons(SingleChoiceElement):
+class SingleChoiceButtons(SingleChoice):
     """
 
     "align" parameter has no effect in labels.
 
     Keyword Arguments:
+
         button_width: Can be used to manually define the width of 
             buttons. If you supply a single string, the same width will
             be applied to all buttons in the element. If you supply
@@ -1753,6 +1769,7 @@ class SingleChoiceButtons(SingleChoiceElement):
             can also supply a list of specific widths for each 
             individual button. You must specify a unit, e.g. '140px'. 
             Defaults to "equal".
+
         button_style: Can be used for quick color-styling, using 
             Bootstraps default color keywords: btn-primary, btn-secondary,
             btn-success, btn-info, btn-warning, btn-danger, btn-light, 
@@ -1764,9 +1781,11 @@ class SingleChoiceButtons(SingleChoiceElement):
             is shorter than the list of labels, the last style
             will be repeated for remaining buttons. Advanced user can
             supply their own CSS classes for button-styling.
+
         button_toolbar: A boolean switch to toggle whether buttons should
             be layoutet as a connected toolbar (*True*), or as separate
             neighbouring buttons (*False*, default).
+            
         button_round_corners: A boolean switch to toggle whether buttons
             should be displayed with additionally rounded corners 
             (*True*). Defaults to *False*.
@@ -1927,7 +1946,7 @@ class SingleChoiceBar(SingleChoiceButtons):
     button_round_corners = True
 
 
-class MultipleChoiceElement(ChoiceElement):
+class MultipleChoice(ChoiceElement):
     """Checkboxes, allowing users to select multiple options.
 
     Defining 'min', 'max' implies force_input.
@@ -1960,7 +1979,7 @@ class MultipleChoiceElement(ChoiceElement):
             self.default = [default]
         elif default is not None and not isinstance(default, list):
             raise ValueError(
-                "Default for MultipleChoiceElement must be a list of integers, indicating the default choices."
+                "Default for MultipleChoice must be a list of integers, indicating the default choices."
             )
         else:
             self.default = default
@@ -1970,9 +1989,7 @@ class MultipleChoiceElement(ChoiceElement):
         if self._select_hint:
             return self._select_hint
         else:
-            hint = string.Template(
-                self.experiment.config.get("hints", "select_MultipleChoiceElement")
-            )
+            hint = string.Template(self.experiment.config.get("hints", "select_MultipleChoice"))
             return hint.substitute(min=self.min, max=self.max)
 
     @property
@@ -2041,8 +2058,8 @@ class MultipleChoiceElement(ChoiceElement):
         return choices
 
 
-class MultipleChoiceButtons(MultipleChoiceElement, SingleChoiceButtons):
-    """Buttons, working as a MultipleChoiceElement.
+class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
+    """Buttons, working as a MultipleChoice.
     """
 
     element_class = "multiple-choice-buttons"
@@ -2144,10 +2161,8 @@ class DynamicJumpButtons(JumpButtons):
         # return cond1 and cond2
 
 
-
-
-class SelectOneElement(SingleChoiceElement):
-    element_class = "select-one-element"
+class SingleChoiceList(SingleChoice):
+    element_class = "single-choice-list-element"
     element_template = jinja_env.get_template("SelectElement.html.j2")
     type = "select_one"
 
@@ -2164,8 +2179,7 @@ class SelectOneElement(SingleChoiceElement):
         return d
 
 
-class SelectPageElement(SelectOneElement):
-
+class SelectPage(SingleChoiceList):
     def __init__(
         self,
         toplab: str = None,
@@ -2180,7 +2194,7 @@ class SelectPageElement(SelectOneElement):
         self.check_jumpto = check_jumpto
         self.check_jumpfrom = check_jumpfrom
         self.show_all_in_scope = show_all_in_scope
-    
+
     def _determine_scope(self) -> List[str]:
 
         if self.scope in ["experiment", "exp"]:
@@ -2193,7 +2207,7 @@ class SelectPageElement(SelectOneElement):
                 scope = list(target_section.all_pages.values())
             except AttributeError:
                 raise AlfredError("Parameter 'scope' must be a section or page name.")
-        
+
         choice_labels = []
         if not self.show_all_in_scope:
             for page in scope:
@@ -2202,9 +2216,9 @@ class SelectPageElement(SelectOneElement):
                     choice_labels.append(page.name)
         else:
             choice_labels = [page.name for page in scope]
-        
+
         return choice_labels
-    
+
     def define_choices(self) -> List[Choice]:
         choices = []
         for i, page_name in enumerate(self.choice_labels, start=1):
@@ -2223,7 +2237,7 @@ class SelectPageElement(SelectOneElement):
             choices.append(choice)
 
         return choices
-    
+
     def _jump_forbidden(self, page_name: str) -> bool:
         target_page = self.experiment.root_section.all_pages[page_name]
 
@@ -2240,9 +2254,9 @@ class SelectPageElement(SelectOneElement):
         # if not self.experiment.config.getboolean("general", "debug"):
         if not target_page.should_be_shown:
             forbidden = True
-        
+
         return forbidden
-    
+
     def _choice_label(self, page_name: str) -> str:
         target_page = self.experiment.root_section.all_pages[page_name]
         # shorten page title for nicer display
@@ -2262,11 +2276,11 @@ class SelectPageElement(SelectOneElement):
             checked = True
         else:
             checked = False
-        
+
         if self.experiment.config.getboolean("general", "debug"):
             current_page = self.experiment.movement_manager.current_page
             checked = i == (self.choice_labels.index(current_page.name) + 1)
-        
+
         return checked
 
     def prepare_web_widget(self):
@@ -2279,7 +2293,7 @@ class SelectPageElement(SelectOneElement):
             self._input = self.choice_labels.index(value) + 1
 
 
-class JumpListElement(Row):
+class JumpList(Row):
     def __init__(
         self,
         scope: str = "exp",
@@ -2297,35 +2311,35 @@ class JumpListElement(Row):
         name = kwargs.get("name", random_name)
         select_name = name + "_select"
         btn_name = name + "_btn"
-        select = SelectPageElement(
-            scope=scope, 
-            name=select_name, 
-            check_jumpto=check_jumpto, 
+        select = SelectPage(
+            scope=scope,
+            name=select_name,
+            check_jumpto=check_jumpto,
             check_jumpfrom=check_jumpfrom,
-            show_all_in_scope=show_all_in_scope
+            show_all_in_scope=show_all_in_scope,
         )
         btn = DynamicJumpButtons(
-            (label, select_name), 
+            (label, select_name),
             name=btn_name,
             button_style=button_style,
-            button_corners=button_corners
+            button_corners=button_corners,
         )
         super().__init__(select, btn, **kwargs)
 
         self.layout.width_sm = [10, 2]
         self.debugmode = debugmode
-    
+
     def prepare_web_widget(self):
         super().prepare_web_widget()
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
-   
 
-class SelectMultipleElement(MultipleChoiceElement):
-    element_class = "select-multiple-element"
+
+class MultipleChoiceList(MultipleChoice):
+    element_class = "multiple-choice-list-element"
     element_template = jinja_env.get_template("SelectElement.html.j2")
-    type = "select_multiple"
+    type = "multiple"
 
     def __init__(self, *choice_labels, toplab: str = None, size: int = None, **kwargs):
         super().__init__(*choice_labels, toplab=toplab, **kwargs)
@@ -2350,7 +2364,7 @@ class SelectMultipleElement(MultipleChoiceElement):
                 self._input[choice.name] = False
 
 
-class ImageElement(Element):
+class Image(Element):
     element_class = "image-element"
     element_template = jinja_env.get_template("ImageElement.html.j2")
 
@@ -2372,7 +2386,7 @@ class ImageElement(Element):
         super().added_to_experiment(experiment)
         if self.path:
             p = self.experiment.subpath(self.path)
-            url = self.experiment.user_interface_controller.add_static_file(p)
+            url = self.experiment.ui.add_static_file(p)
             self.src = url
         else:
             self.src = self.url
@@ -2409,7 +2423,23 @@ class MatPlotElement(Element):
 
     Args:
         fig (matplotlib.figure.Figure): The figure to display.
-        align: Alignment of the figure.
+        align: Alignment of the figure ('left', 'right', or 'center').
+            Defaults to 'center'.
+    
+    Examples:
+
+        Example usage is illustrated here. Note that the ``example_plot```
+        will only be displayed if it is added to a page.
+
+        >>> import alfred3 as al
+        >>> from matplotlib.figure import Figure
+
+        >>> fig = Figure()
+        >>> ax = fig.add_subplot()
+        >>> ax.plot(range(10))
+        >>> example_plot = al.MatPlot(fig=fig, name="example))
+        >>> example_plot
+        MatPlot(name="example")
 
     """
 
@@ -2425,9 +2455,7 @@ class MatPlotElement(Element):
         out = io.BytesIO()
         self.fig.savefig(out, format="svg")
         out.seek(0)
-        self.src = self.experiment.user_interface_controller.add_dynamic_file(
-            out, content_type="image/svg+xml"
-        )
+        self.src = self.exp.ui.add_dynamic_file(out, content_type="image/svg+xml")
 
     @property
     def template_data(self):
