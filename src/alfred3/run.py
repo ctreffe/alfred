@@ -177,6 +177,17 @@ class ExperimentRunner:
         browser.start()
 
     def auto_run(self, open_browser: bool = True, debug=False):
+        """
+        Automatically runs an alfred experiment.
+
+        Args:
+            open_browser: Indicates, whether alfred should try to open
+                a new browser window automatically.
+            debug: Indicates, whether the underlying flask app should be
+                run in debug mode.
+
+        """
+
         self.generate_session_id()
         self.configure_logging()
         self.create_experiment_app()
