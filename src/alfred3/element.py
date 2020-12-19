@@ -1,9 +1,73 @@
 # -*- coding:utf-8 -*-
-"""Provides element classes for adding content to pages.
+"""
+Provides element classes for adding content to pages.
 
-.. versionadded:: 1.5
+This is text
 
-.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
+.. csv-table:: Display Elements
+   :header: "Element Name", "Description"
+   :widths: 20, 80
+
+   :class:`.Text`           ,   "Displays text. Can render Markdown, html, and emoji shortcodes"
+   :class:`.CodeBlock`      ,   Displays code with syntax highlighting
+   :class:`.Image`          ,   Displays an image
+   :class:`.Audio`          ,   Plays sound
+   :class:`.Video`          ,   Displays a video
+   :class:`.MatPlot`        ,   Displays a :class:`matplotlib.figure.Figure` 
+   :class:`.Hline`          ,   Displays a horizontal line on the page
+   :class:`.ButtonLabels`   ,   Additional labels for :class:`.SingleChoiceButtons` or :class:`.MultipleChoiceButtons`
+   :class:`.BarLabels`      , Additional labels for :class:`.SingleChoiceBar` or :class:`MultipleChoiceBar`
+
+
+More tables
+
+.. csv-table:: Utility Elements
+   :header: "Element Name", "Description"
+   :widths: 20, 80
+
+   :class:`.Row`            ,   Aligns multiple elements horizontally in a row
+   :class:`.Stack`          ,   Stacks multiple elements in a row on top of each other. Think "multi-row-cell"
+   :class:`.VerticalSpace`  ,   Adds vertical space
+   :class:`.Style`          ,   Adds CSS code to a page
+   :class:`.JavaScript`     ,   Adds JavaScript code to a page
+   :class:`.HideNavigation` ,   Removes to navigation buttons from a page
+   :class:`.WebExitEnabler` ,   Turns of the "Do you really want to leave?" dialogue upon closing of a page
+   :class:`.Value`          ,   Saves a value to the experiment data without displaying anything
+   :class:`.Data`           ,   Alias for :class:`.Value`
+
+This is more text
+
+.. csv-table:: Input Elements
+   :header: "Element Name", "Description"
+   :widths: 20, 80
+
+   :class:`.TextEntry`              ,   A simple text entry field
+   :class:`.TextArea`               ,   A text area field for multiline input
+   :class:`.RegEntry`               ,   A TextEntry element with support for validating input with regular expressions
+   :class:`.NumberEntry`            ,   A TextEntry element that specializes on numbers
+   
+   :class:`.SingleChoice`           ,   "Radiobuttons, allowing selection of one out of several options"
+   :class:`.SingleChoiceList`       ,   "Dropdown list, allowing selection of one out of several options"
+   :class:`.SingleChoiceButtons`    ,   "Buttons, allowing selection of one out of several options"
+   :class:`.SingleChoiceBar`        ,   Toolbar of SingleChoiceButtons
+   
+   :class:`.MultipleChoice` ,   "Checkboxes, allowing selection of multiple options"
+   :class:`.MultipleChoiceButtons`  ,   "Buttons, allowing selection of multiple options"
+   :class:`.MultipleChoiceBar`      ,   Toolbar of MultipleChoiceButtons
+   :class:`.MultipleChoiceList`     ,   "Scrollable list, allowing selection of multiple options"
+
+
+.. csv-table:: Navigation Elements
+   :header: "Element Name", "Description"
+   :widths: 20, 80
+
+   :class:`.SubmittingButtons`  ,   Buttons which trigger the experiment to move forward on click
+   :class:`.JumpButtons`        ,   Buttons which trigger the experiment to jump to a specific page on click
+   :class:`.DynamicJumpButtons` ,   "JumpButtons, which get their target page dynamically from another element on the same page"
+   :class:`JumpList`            ,   Dropbown of pages for jumping
+
+
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
 
 import random
@@ -247,7 +311,9 @@ class Element(ABC):
         height: Vertical height. Supply a string with a unit, e.g.
             "80px".
         showif: A dictionary, defining conditions that must be met
-            for the element to be shown. See :attr:`showif` for details.
+            for the element to be shown. The conditions take the form of
+            key-value pairs, where each key is an element name and the 
+            value is the required input. See :attr:`showif` for details.
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
