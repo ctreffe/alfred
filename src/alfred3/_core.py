@@ -22,14 +22,19 @@ class ExpMember:
     name: str = None
     instance_level_logging: bool = False
     showif: dict = {}
+    
+    #: Name of the parent section. Used when a member is appended to 
+    #: the :class:`.Experiment`. If *None*, a member will be appended
+    #: to the "_content" section.
+    parent_name = None
 
     def __init__(
         self,
-        title=None,
+        title: str = None,
         name: str = None,
         subtitle=None,
         statustext=None,
-        showif: dict = None,
+        showif: dict = None
     ):
 
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
@@ -63,31 +68,38 @@ class ExpMember:
         if statustext is not None:
             self.statustext = statustext
         
-        if name is not None:
-            self.name = name
-        
-        # regardless of how name was assigned, check it
+        self._name_set_via = {}
+
         if self.name is not None:
-            check_name(self.name)
-            self._uid = self.name
-            self._tag = self.name
-        elif self.name is None:
-            raise AlfredError(f"{type(self).__name__} must have a unique name.")
-        
-        self._name_at_init = self.name
-
+            self.set_name(self.name, via="class")
 
         if name is not None:
-            if re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
-                self.name = name
-            else:
-                raise ValueError(
-                    (
-                        "Name must start with a letter and can include only"
-                        "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
-                    )
-                )
+            self.set_name(name, via="argument")
+        
+        
+    def set_name(self, name: str, via: str):
+        """
+        Helps organize the different ways a name can be set.
 
+        The ways are:
+
+        1. As a class variable when deriving a page as a new class
+        2. As an init argument when instantiating a class
+
+        If a name was set via class variable, the init argument 
+        can override it.
+
+        """
+        check_name(name)
+        self._uid = name
+        self._tag = name
+        self.name = name
+        self._name_set_via[via] = self.name
+
+        if len(self._name_set_via) > 1:
+            msg = f"Name of {self} was set via multiple methods. Current winner: '{self.name}', set via {via}."
+            self.log.debug(msg)
+        
     def _evaluate_showif(self) -> List[bool]:
         """Checks the showif conditions that refer to previous pages.
         
@@ -178,7 +190,10 @@ class ExpMember:
 
     @property
     def title(self):
-        return self._title
+        if self._title is not None:
+            return self._title
+        else:
+            return ""
 
     @title.setter
     def title(self, title):
@@ -201,17 +216,20 @@ class ExpMember:
         self._statustext = title
 
     def added_to_experiment(self, exp):
-        self.check_name(exp)
+        if not self.name:
+            raise AlfredError(f"{type(self).__name__} must have a unique name.")
+        self._check_name_uniqueness(exp)
         self._experiment = exp
 
-    def check_name(self, exp):
+    def _check_name_uniqueness(self, exp):
+
         if self.name in exp.root_section.all_updated_members:
             raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
-        if self.name != self._name_at_init:
+        if self.name != list(self._name_set_via.values())[-1]:
             raise AlfredError(f"{self}: Name must not be changed after assignment.")
 
-        if self.name in exp.__dict__:
+        if self.name in dir(exp):
             raise ValueError(
                 (
                     "The experiment has an attribute of the same name as"
