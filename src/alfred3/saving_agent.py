@@ -882,14 +882,12 @@ class SavingAgentController:
 
     def run_saving_agents(self, level: int, sync: bool = False):
         """Automatically gets experimental data, inserts the current
-        time in seconds since epoch as 'save_time' and saves with the
-        'main' saving agent group.
+        time in seconds since epoch as 'save_time' and saves data.
 
         Provided under this name mainly for backwards compatibility.
         
-        The methods :meth:`save_with_group` and :meth:`save_with_agent`
-        are the recommended replacements. They don't guess the intended
-        saving agent group and never don't modify the data.
+        The methods :meth:`save_with_all_agents` and 
+        :meth:`save_with_agent` are the recommended replacements. 
 
         Args:
             level (int): Level of saving task. If the task level is 
@@ -900,7 +898,7 @@ class SavingAgentController:
                 was completed. Defaults to False.
         """
 
-        data = self._experiment.data_manager.get_data()
+        data = self._experiment.data_manager.flat_session_data
         data["save_time"] = time.time()
 
         self.save_with_all_agents(data=data, level=level, sync=sync)
@@ -926,9 +924,9 @@ class DataSaver:
         
         self.experiment = experiment
         self.exp = experiment
+        self.mongo_manager = MongoManager(self.experiment)
         self.main = self._init_main_controller()
         self.unlinked = self._init_unlinked_controller()
-        self.mongo_manager = MongoManager(self.experiment)
     
     def _init_main_controller(self):
         exp = self.experiment
