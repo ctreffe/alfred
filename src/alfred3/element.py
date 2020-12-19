@@ -2397,29 +2397,100 @@ class Image(Element):
         d["src"] = self.src
         return d
 
-class MatPlotElement(Element):
-    """Displays a :class:`matplotlib.figure.Figure` object.
-    
-    Can be used for static and dynamic plotting.
 
+class Audio(Image):
+    element_class = "audio-element"
+    element_template = jinja_env.get_template("AudioElement.html.j2")
+
+    def __init__(
+        self,
+        path: Union[str, Path] = None,
+        url: str = None,
+        controls: bool = True,
+        autoplay: bool = False,
+        loop: bool = False,
+        align: str = "center",
+        **kwargs,
+    ):
+        super().__init__(path=path, url=url, align=align, **kwargs)
+        self.controls = controls
+        self.autoplay = autoplay
+        self.loop = loop
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["controls"] = self.controls
+        d["autoplay"] = self.autoplay
+        d["loop"] = self.loop
+
+        return d
+
+
+class Video(Audio):
+    """ 
+    Displays a video on the page.
+
+    .. note::
+        
+        You can specify a filepath or a url as the source, but not both
+        at the same time.
+
+    Args:
+        path: Path to the video (relative to the experiment)
+        url: Url to the video
+        allow_fullscreen: Boolean, indicating whether users can enable
+            fullscreen mode.
+        video_height: Video height in absolute pixels (without unit). 
+            Defaults to "auto".
+        video_width: Video width in absolute pixels (without unit). 
+            Defaults to "100%". It is recommended to use leave this
+            parameter at the default value and use the general element
+            parameter *width* for setting the width.
+        
+        **kwargs: The following keyword arguments are inherited from
+            :class:`.Audio`:
+
+            * controls
+            * autoplay
+            * loop
+
+    """
+    element_class = "video-element"
+    element_template = jinja_env.get_template("VideoElement.html.j2")
+
+    def __init__(
+        self,
+        path: Union[str, Path] = None,
+        url: str = None,
+        allow_fullscreen: bool = True,
+        video_height: str = "auto",
+        video_width: str = "100%",
+        **kwargs,
+    ):
+        super().__init__(path=path, url=url, **kwargs)
+        self.video_height = video_height
+        self.video_width = video_width
+        self.allow_fullscreen = allow_fullscreen
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["video_height"] = self.video_height
+        d["video_width"] = self.video_width
+        d["allow_fullscreen"] = self.allow_fullscreen
+
+        return d
+
+
+class MatPlot(Element):
+    """
+    Displays a :class:`matplotlib.figure.Figure` object.
+    
     .. note::
         When plotting in alfred, you need to use the Object-oriented 
         matplotlib API
         (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
-
-    Example plot (note that in general, the page would need to be added 
-    to an experiment instance at some point to be displayed)::
-        
-        from matplotlib.figure import Figure
-        from alfred3.page import Page
-        import alfred3.element_responsive as el
-
-        fig = Figure()
-        ax = fig.add_subplot()
-        ax.plot(range(10))
-
-        pg = Page()
-        pg += el.MatPlotElement(fig=fig)
 
     Args:
         fig (matplotlib.figure.Figure): The figure to display.
