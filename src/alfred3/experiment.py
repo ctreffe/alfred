@@ -624,7 +624,148 @@ class ExperimentSession:
         if p.is_absolute():
             return p
         else:
-            return self.path.resolve() / p
+            return self.path / p
+    
+    def read_csv_todict(self, path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[dict]:
+        """
+        Iterates over the rows in a .csv file, yielding dictionaries.
+
+        Args:
+            path: The path to the .csv file. Usually, you want this to
+                be a relative path to a file in a subdirectory of the
+                experiment directory.
+            encoding: Encoding of the .csv file. Defaults to 'utf-8'.
+            **kwargs: Further arguments passed on to :class:`csv.DictReader`
+
+        Yields:
+            dict: A dictionary in which the keys are the column names.
+        
+        Examples:
+
+            Consider the following csv-file, located at 
+            ``files/data.csv`` in your experiment directory::
+
+                col1    ,   col2    ,   col3
+                text_a  ,   text_b  ,   text_c
+                text_d  ,   text_e  ,   text_f
+
+
+            When building a page, usual usage would be::
+
+                import alfred3 as al
+                exp = al.Experiment()
+            
+                @exp.member
+                class CSVDemoPage(al.Page):     # this could also be a Section
+                    name = "csv_demo"
+            
+                    def on_exp_access(self):
+
+                        for row in self.exp.read_csv_todict("files/data.csv"):
+                            print(row)
+            
+            The output would be the following::
+
+                {"col1": "text_a", "col2": "text_b", "col3": "text_c"}  # first iteration
+                {"col1": "text_d", "col2": "text_e", "col3": "text_f"}  # second iteration
+            
+            If you need a full list of the rows, you can wrap the 
+            function call in ``list()``::
+
+                import alfred3 as al
+                exp = al.Experiment()
+            
+                @exp.member
+                class CSVDemoPage(al.Page):     # this could also be a Section
+                    name = "csv_demo"
+            
+                    def on_exp_access(self):
+
+                        data = list(self.exp.read_csv_todict("files/data.csv"))
+                        print(data)
+            
+            The output would be the following::
+
+                [{"col1": "text_a", "col2": "text_b", "col3": "text_c"},
+                {"col1": "text_d", "col2": "text_e", "col3": "text_f"}]
+
+        .. versionadded:: 2.0
+
+        """
+        p = self.subpath(path)
+        for row in util.read_csv_todict(p, encoding=encoding, **kwargs):
+            yield row
+    
+    def read_csv_tolist(self, path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[list]:
+        """
+        Iterates over the rows in a .csv file, yielding lists.
+
+        Args:
+            path: The path to the .csv file. Usually, you want this to
+                be a relative path to a file in a subdirectory of the
+                experiment directory.
+            encoding: Encoding of the .csv file. Defaults to 'utf-8'.
+            **kwargs: Further arguments passed on to :class:`csv.reader`
+
+        Yields:
+            list: A list of the values in one row.
+
+        Examples:
+
+            Consider the following csv-file::
+
+                col1    ,   col2    ,   col3
+                text_a  ,   text_b  ,   text_c
+                text_d  ,   text_e  ,   text_f
+
+
+            When building a page, usual usage would be::
+
+                import alfred3 as al
+                exp = al.Experiment()
+            
+                @exp.member
+                class CSVDemoPage(al.Page):     # this could also be a Section
+                    name = "csv_demo"
+            
+                    def on_exp_access(self):
+
+                        for row in self.exp.read_csv_tolist("files/data.csv"):
+                            print(row)
+            
+            The output would be the following::
+
+                ["col1", "col2", "col3"]        # first iteration yields column names
+                ["text_a", "text_b", "text_c"]  # second iteration
+                ["text_a", "text_b", "text_c"]  # third iteration
+            
+            If you need a full list of the rows, you can wrap the 
+            function call in ``list()``::
+
+                import alfred3 as al
+                exp = al.Experiment()
+            
+                @exp.member
+                class CSVDemoPage(al.Page):     # this could also be a Section
+                    name = "csv_demo"
+            
+                    def on_exp_access(self):
+
+                        data = list(self.exp.read_csv_tolist("files/data.csv"))
+                        print(data)
+            
+            The output would be the following::
+
+                [["col1", "col2", "col3"],     
+                ["text_a", "text_b", "text_c"],
+                ["text_a", "text_b", "text_c"]]
+        
+        .. versionadded:: 2.0
+
+        """
+        p = self.subpath(path)
+        for row in util.read_csv_tolist(p, encoding=encoding, **kwargs):
+            yield row
 
     @property
     def author(self) -> str:
@@ -655,7 +796,7 @@ class ExperimentSession:
     @property
     def path(self) -> Path:
         """Path: Path to the experiment directory"""
-        return Path(self.config.expdir)
+        return Path(self.config.expdir).resolve()
 
     @property
     def session_status(self):

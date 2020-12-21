@@ -7,8 +7,13 @@ Provides miscellaneous utilities for alfred experiments.
 
 """
 
+import csv
+from pathlib import Path
+
 from emoji import emojize
 from typing import Any
+from typing import Union
+from typing import Iterator
 from .page import Page
 from .section import Section
 from .element import Element
@@ -53,3 +58,15 @@ def is_element(obj: Any) -> bool: return isinstance(obj, Element)
 def is_input_element(obj: Any) -> bool: return isinstance(obj, InputElement)
 
 def is_label(obj: Any) -> bool: return isinstance(obj, Label)
+
+def read_csv_todict(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[dict]:
+    with open(path, "r", encoding=encoding) as csvfile:
+        reader = csv.DictReader(csvfile, **kwargs)
+        for row in reader:
+            yield row
+
+def read_csv_tolist(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[list]:
+    with open(path, "r", encoding=encoding) as csvfile:
+        reader = csv.reader(csvfile, **kwargs)
+        for row in reader:
+            yield row    
