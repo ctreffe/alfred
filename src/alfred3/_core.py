@@ -16,7 +16,6 @@ from . import alfredlog
 from ._helper import check_name
 from .exceptions import AlfredError
 
-import coolname
 
 class ExpMember:
     name: str = None
