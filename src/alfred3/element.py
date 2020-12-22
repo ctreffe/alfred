@@ -1625,6 +1625,8 @@ class InputElement(LabelledElement):
     elements.
 
     Args:
+        toplab: Label to be displayed above the main element widget. See
+            :class:`.LabelledElement`.
         no_input_corrective_hint: Hint to be displayed if force_input 
             set to True and no user input registered. Defaults to the
             experiment-wide value specified in config.conf.
@@ -1641,8 +1643,8 @@ class InputElement(LabelledElement):
             show up in the additional alfred-generated codebook. It has
             no effect on the display of the experiment.
         default: Default value.
-        **kwargs: Further keyword arguments that are passed on to the
-            parent class :class:`Element`.
+        **kwargs: Further keyword arguments are passed on to the
+            parent classes :class:`.LabelledElement` and :class:`Element`.
     
     Attributes:
         instruction_col_width: Width of the instruction area, using
@@ -1670,22 +1672,28 @@ class InputElement(LabelledElement):
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
+        
+        #: Detailed description of this element to be added to the 
+        #: automatically generated codebook
         self.description = description
 
         self._input = ""
-        self._force_input = force_input
+        self._force_input = force_input # documented in getter property
         self._no_input_corrective_hint = no_input_corrective_hint
-        self._default = default
+        self._default = default # documented in getter property
+
         #: Flag, indicating whether corrective hints regarding 
         #: this element should be shown.
         self.show_corrective_hints: bool = False
 
-        if disabled:
-            self.disabled = disabled
         #: A :class:`.MessageManager`, handling the corrective hints
         #: for this element.
         self.hint_manager = MessageManager(default_level="error")
 
+        #: A boolean flag, indicating whether the element is disabled
+        #: A disabled input element is shown and displays its input
+        #: value, but subjects cannot enter any data.
+        self.disabled: bool = disabled
 
         if default is not None:
             self._input = default
@@ -1704,12 +1712,21 @@ class InputElement(LabelledElement):
         return self.hint_manager.get_messages()
 
     @property
-    def debug_value(self):
+    def debug_value(self) -> str:
+        """
+        str: Value to be used as a default in debug mode.
+        
+        Only used, if there is no dedicated default for this element.
+        """
         name = f"{type(self).__name__}_default"
         return self.experiment.config.get("debug", name, fallback=None)
 
     @property
     def debug_enabled(self) -> bool:
+        """
+        bool: Boolean flag, indicating whether debug mode is enabled and
+        default values should be set.
+        """
         if self.experiment.config.getboolean("general", "debug"):
             if self.experiment.config.getboolean("debug", "set_default_values"):
                 return True
