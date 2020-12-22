@@ -955,34 +955,48 @@ class Row(Element):
 
 
 class Stack(Row):
-    """Stacks multiple elements on top of each other.
+    """
+    Stacks multiple elements on top of each other.
     
     Stacks are intended for use in Rows. They allow you to flexibly 
     arrange elements in a grid.
 
-    Here is an example, that will display two stacked elements next to
-    one other element::
-
-        from alfred3 import element_responsive as el
-        
-        el1 = el.Text("text")
-        el2 = el.TextEntry(toplab="lab")
-        el3 = el.Text("long text")
-
-        row = el.Row(el.Stack(el1, el2), el3)
-
-    The Arrangement will look like this::
-
-        |=========|========|
-        |   el1   |        |
-        |=========|  el3   |
-        |   el2   |        |
-        |=========|========|
-    
     Args:
         *elements: The elements to stack.
         **kwargs: Keyword arguments that are passend on to the parent 
-            class :class:`Row`.
+            class :class:`.Row`.
+    
+    Notes:
+        * CSS-class: ``stack-element``
+        
+        * Html element id: ``elid-<name>`` (<name> is the 
+          :attr:`.Element.name` attribute, defined at initialization.)
+
+    Examples:
+
+        A minimal experiment with a stack in a row::
+        
+            import alfred3 as al
+            exp = al.Experiment()
+        
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+        
+                def on_exp_access(self):
+                    el1 = al.Text("text")
+                    el2 = al.TextEntry(toplab="lab", name="example")
+                    el3 = al.Text("long text")
+        
+                    self += al.Row(al.Stack(el1, el2), el3)
+        
+        The arrangement will look like this::
+
+            |=========|========|
+            |   el1   |        |
+            |=========|  el3   |
+            |   el2   |        |
+            |=========|========|
 
     """
 
