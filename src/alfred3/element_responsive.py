@@ -2260,7 +2260,7 @@ class AlertElement(TextElement):
             dismissed by a click. If "False", AlertElement is not
             dismissible. Default = "False"
         **element_args: Keyword arguments passed to the parent class
-            :class:`Element`. Accepted keyword arguments are: name,
+            :class:`TextElement`. Accepted keyword arguments are: name,
             font_size, align, width, position, showif,
             instance_level_logging.
 
@@ -2391,7 +2391,7 @@ class RegEntryElement(TextEntryElement):
         d = super().template_data
         d["toplab"] = self.toplab
         d["input"] = self.input
-        
+
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
 
