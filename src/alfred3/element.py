@@ -1050,21 +1050,33 @@ class VerticalSpace(Element):
 
 
 class Style(Element):
-    """Adds CSS code to a page. 
+    """
+    Adds CSS code to a page. 
     
     CSS styling can be used to change the appearance of page or 
     individual elements. 
     
-    .. note:: 
-        A Style is added to a specific page, and thus only affects the 
+    Notes:
+        A style is added to a specific page, and thus only affects the 
         layout of that page. To change the appearance of the whole 
-        experiment, you can define your styles in a .css file and 
+        experiment, you can define your styles in a .css file in your
+        experiment directory and reference it in the *config.conf* in 
+        the option *style* of the section *layout*.
+    
+    See Also:
+        * How to reference a CSS file in the *config.conf*
+        * CSS classes and element IDs of alfred3 elements
+    
+    Todo:
+        * Insert reference
+
     """
 
     web_widget = None
     should_be_shown = False
 
     def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+        """Constructor method"""
         super().__init__()
         self.priority = priority
         self.code = code
@@ -1078,6 +1090,7 @@ class Style(Element):
 
     @property
     def css_code(self):
+        """:meta private: (documented at :class:`.Element`)"""
         if self.path:
             p = self.experiment.subpath(self.path)
 
@@ -1088,6 +1101,7 @@ class Style(Element):
 
     @property
     def css_urls(self):
+        """:meta private: (documented at :class:`.Element`)"""
         if self.url:
             return [(self.priority, self.url)]
         else:
