@@ -1383,6 +1383,7 @@ class Text(Element):
 
 
 class Hline(Element):
+    """A simple horizontal line."""
     element_class = "hline-element"
     inner_html = "<hr>"
 
