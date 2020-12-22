@@ -2254,10 +2254,15 @@ class AlertElement(TextElement):
 
     Args:
         category: Affects the appearance of alerts.
-                Values can be: "info", "success", "warning", "primary",
-                "secondory", "dark", "light", "danger".
-        dismiss: Boolean parameter. If "True", AlertElement can be dismissed by a click.
-                If "False", AlertElement is not dismissible. Default = "False"
+            Values can be: "info", "success", "warning", "primary",
+            "secondory", "dark", "light", "danger".
+        dismiss: Boolean parameter. If "True", AlertElement can be
+            dismissed by a click. If "False", AlertElement is not
+            dismissible. Default = "False"
+        **element_args: Keyword arguments passed to the parent class
+            :class:`Element`. Accepted keyword arguments are: name,
+            font_size, align, width, position, showif,
+            instance_level_logging.
 
     """
 
@@ -2281,8 +2286,8 @@ class AlertElement(TextElement):
 
 class RegEntryElement(TextEntryElement):
     """
-    Displays an input field, which only accepts inputs, matching a predefined
-    regular expression.
+    Displays an input field, which only accepts inputs, matching a
+    predefined regular expression.
 
     Example::
 
@@ -2294,16 +2299,16 @@ class RegEntryElement(TextEntryElement):
 
     Args:
         reg_ex: Regular expression to match with user input.
-        match_hint: Hint to be displayed if the user input doesn't match with the
-            regular expression.
-        no_input_corrective_hint: Hint to be displayed if force_input set to True and
-            no user input registered.
+        match_hint: Hint to be displayed if the user input doesn't
+            match with the regular expression.
+        no_input_corrective_hint: Hint to be displayed if force_input
+            set to True and no user input registered.
         input: User input
+        **kwargs: Further keyword arguments that are passed on to the
+            parent class :class:`TextEntryElement`.
 
     Todo:
         * Add position
-        * Add base class args
-        * Add kwargs
 
     """
 
@@ -2413,11 +2418,11 @@ class NumberEntryElement(RegEntryElement):
         min: Minimum accepted entry value.
         max: Maximum accepted entry value.
         input: User input
+        **kwargs: Further keyword arguments that are passed on to the
+            parent class :class:`RegEntryElement`.
 
     Todo:
         * Add position
-        * Add kwargs
-        * Add elements
 
     """
 
