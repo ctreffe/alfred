@@ -1178,10 +1178,17 @@ class JavaScript(Element):
 
 
 class WebExitEnabler(JavaScript):
-    """If added to a page, this element disables the 'Do you really want
-    to leave this page?' popup on that page."""
+    """
+    Removes the "Do you really want to leave?" popup upon closing a page.
+    
+    By default, subjects are asked to confirm their desire to leave a
+    running experiment. You can turn off this behavior by adding this
+    element to a page.
+
+    """
 
     def __init__(self):
+        """Constructor method"""
         code = "$(document).ready(function(){glob_unbind_leaving();});"
         super().__init__(code=code, priority=10)
 
