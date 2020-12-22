@@ -214,7 +214,8 @@ class MovementManager:
             self.log.debug(f"Validation of {self.current_page} failed. Aborting move.")
             return self._abort_move()
 
-        current_page._on_hiding_widget()
+        now = time.time()
+        current_page._on_hiding_widget(hide_time=now)
         page_status_before = current_page.is_closed
         self.log.debug(f"Moving from {self.current_page} to {to_page}, direction: '{direction}'.")
 
@@ -244,6 +245,7 @@ class MovementManager:
         else:
             current_page.section.move(direction=direction)
         
+        to_page._on_showing_widget(show_time=now)
         
         return self.current_index, self.index_of(to_page)
     

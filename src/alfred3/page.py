@@ -125,11 +125,16 @@ class PageCore(ExpMember):
     def has_been_shown(self) -> bool:
         return self._has_been_shown
 
-    def _on_showing_widget(self):
+    def _on_showing_widget(self, show_time: float = None):
         """
         Method for internal processes on showing Widget
+
+        Args:
+            show_time: Time of showing in seconds since epoch.
         """
-        self.show_times.append(time.time())
+        if show_time is None:
+            show_time = time.time()
+        self.show_times.append(show_time)
 
         if not self._has_been_shown:
             self.on_first_show()
@@ -187,11 +192,17 @@ class PageCore(ExpMember):
         """
         pass
 
-    def _on_hiding_widget(self):
+    def _on_hiding_widget(self, hide_time: float = None):
         """
         Method for internal processes on hiding Widget
+
+        Args:
+            hide_time: Time of hiding in seconds since epoch.
         """
-        self.hide_times.append(time.time())
+        if hide_time is None:
+            hide_time = time.time()
+        
+        self.hide_times.append(hide_time)
 
         if not self._has_been_hidden:
             self.on_first_hide()
@@ -649,6 +660,32 @@ class CoreCompositePage(PageCore):
         
         """
         return True
+
+    def durations(self) -> Iterator[float]:
+        """
+        Iterates over the visit durations for this page.
+
+        Yields:
+            float: Duration of a visit in seconds.
+        """
+        
+        if len(self.show_times) > len(self.hide_times):
+            now = time.time()
+        elif len(self.show_times) < len(self.hide_times):
+            self.log.error(f"{self} has fewer entries in show_times than in hide_times.")
+        
+        for show, hide in zip(self.show_times, self.hide_times + [now]):
+            yield hide - show
+    
+    def last_duration(self) -> float:
+
+        *_, last_duration = self.duration()
+        return last_duration
+    
+    def first_duration(self) -> float:
+
+        first_duration, *_ = self.durations()
+        return first_duration
 
 
 class WebCompositePage(CoreCompositePage, WebPageInterface):
