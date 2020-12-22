@@ -846,8 +846,9 @@ class Element:
             self.added_to_experiment(self.page.experiment)
 
 
-    def prepare(self):
-        """Wraps *prepare_web_widget* to allow for additional, generic
+    def _prepare_web_widget(self):
+        """
+        Wraps :meth:`.prepare_web_widget` to allow for additional, generic
         preparations that are the same for all elements.
         
         This is useful, because :meth:`.prepare_web_widget` is often 
@@ -1093,6 +1094,8 @@ class Row(Element):
         # docstring inherited
         for element in self.elements:
             element.prepare_web_widget()
+
+        super()._prepare_web_widget()
 
     @property
     def _cols(self) -> Iterator:

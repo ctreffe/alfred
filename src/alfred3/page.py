@@ -764,7 +764,7 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         self._on_showing_widget()
 
         for elmnt in self.elements.values():
-            elmnt.prepare()
+            elmnt._prepare_web_widget()
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
