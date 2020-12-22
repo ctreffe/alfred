@@ -97,6 +97,7 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
+from typing import Iterator
 from dataclasses import dataclass
 from uuid import uuid4
 
@@ -109,6 +110,7 @@ import cmarkgfm
 from emoji import emojize
 
 from . import alfredlog
+from .messages import MessageManager
 from .exceptions import AlfredError
 from ._helper import alignment_converter
 from ._helper import fontsize_converter
