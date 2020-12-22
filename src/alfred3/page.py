@@ -104,7 +104,15 @@ class PageCore(ExpMember):
         return self._is_closed
 
     @property
-    def should_be_shown(self):
+    def should_be_shown(self) -> bool:
+        """
+        bool: Boolean, indicating whether a page should be shown.
+
+        Evaluates the page's own settings, as well as the status of all
+        of its parent sections. The page is only shown, if all 
+        conditions evaluate to *True*.
+
+        """
         thispage = super().should_be_shown
         section = self.section.should_be_shown
         return thispage and section
