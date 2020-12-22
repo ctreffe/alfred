@@ -5,17 +5,11 @@
 
 Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
 """
-from __future__ import absolute_import
-
-from future import standard_library
-
-standard_library.install_aliases()
 import os
 import threading
 import time
 
 from abc import ABCMeta, abstractmethod
-from builtins import object, str
 from io import StringIO
 from pathlib import Path
 from uuid import uuid4
@@ -185,6 +179,7 @@ class MovementManager:
         current_page = self.current_page
 
         if not to_page.should_be_shown:
+            # Executed here first for possibility of early cancellation
         
             if direction == "forward":
                 self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'forward'.")
@@ -199,6 +194,7 @@ class MovementManager:
                 if self.experiment.config.getboolean("debug", "verbose"):
                     self.experiment.message_manager.post_message(f"{to_page} should not be shown. Jump was aborted.", level="info")
                 return self._abort_move()
+        
         
         # check section permissions for jumps
         if direction == "jump":
