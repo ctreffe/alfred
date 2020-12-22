@@ -1109,7 +1109,19 @@ class Style(Element):
 
 
 class HideNavigation(Style):
+    """
+    Removes the forward/backward/finish navigation buttons from a page.
+
+    See Also:
+        * Using :class:`.JumpButtons` and :class:`.JumpList`, you can add
+          custom navigation elements to a page.
+        
+        * By defining the :meth:`.Page.custom_move` method on a page,
+          you can implement highly customized movement behavior.
+    """
+
     def __init__(self):
+        """Constructor method"""
         super().__init__()
         self.code = "#page-navigation {display: none;}"
 
