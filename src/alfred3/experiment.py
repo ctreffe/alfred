@@ -255,11 +255,14 @@ class Experiment:
     @property
     def final_page(self):
         """
-        The experiment's final page.
+        page.Page: The experiment's final page.
 
         You can set this property to a Page class or Page instance 
         directly. For more complex final pages, we recommend the use
         of the :meth:`.as_final_page` decorator.
+
+        Returns:
+            page.Page: The experiment's final page.
 
         Examples:
 
