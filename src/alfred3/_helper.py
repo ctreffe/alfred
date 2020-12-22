@@ -13,10 +13,11 @@ import os
 import re
 import socket
 
-def fontsize_converter(font_argument):
+def fontsize_converter(font_argument) -> int:
     '''
-    FontsizeConverter checks any font arguments used in alfred and returns a fontsize variable compatible
-    with any element or page in alfred.
+    FontsizeConverter checks any font arguments used in alfred and 
+    returns a fontsize variable compatible with any element or page in 
+    alfred.
 
     '''
     if font_argument is None:
