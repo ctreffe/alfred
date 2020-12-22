@@ -1717,6 +1717,11 @@ class InputElement(LabelledElement):
 
     @property
     def default(self):
+        """
+        Default value of this element. 
+        
+        The data type can vary, depending on the element.
+        """
         if self._default is not None:
             return self._default
         elif self.debug_enabled:
@@ -1781,8 +1786,10 @@ class InputElement(LabelledElement):
     def input(self, value):
         self._input = value
 
+    
     @property
-    def data(self):
+    def data(self) -> dict:
+        """dict: Dictionary dictionary of element data."""
         data = {}
         data["value"] = self.input
         data.update(self.codebook_data)
@@ -1815,6 +1822,7 @@ class InputElement(LabelledElement):
         if not self.name:
             raise AlfredError(f"{type(self).__name__} must have a unique name.")
         super().added_to_experiment(exp)
+
 
 class Data(InputElement):
     """
