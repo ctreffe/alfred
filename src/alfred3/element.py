@@ -804,7 +804,8 @@ class Element(ABC):
 
 @dataclass
 class _RowCol:
-    """Just a little helper for handling columns inside a Row.
+    """
+    Just a little helper for handling columns inside a Row.
     
     :meta private:
     """
