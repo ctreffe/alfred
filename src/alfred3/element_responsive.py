@@ -2338,10 +2338,8 @@ class RegEntryElement(TextEntryElement):
 
         if not self._should_be_shown:
             return True
-
         if not self._force_input and self._input == "":
             return True
-
         if re.match(r"^%s$" % self._reg_ex, str(self._input)):
             return True
 
@@ -2393,6 +2391,7 @@ class RegEntryElement(TextEntryElement):
         d = super().template_data
         d["toplab"] = self.toplab
         d["input"] = self.input
+        
         if self.corrective_hints:
             d["corrective_hint"] = self.corrective_hints[0]
 
@@ -2453,13 +2452,10 @@ class NumberEntryElement(RegEntryElement):
 
     def validate_data(self):
         super(NumberEntryElement, self).validate_data()
-
         if not self._should_be_shown:
             return True
-
         if not self._force_input and self._input == "":
             return True
-
         try:
             f = float(self._input)
         except Exception:
@@ -2499,7 +2495,6 @@ class NumberEntryElement(RegEntryElement):
             return {self.name: ""}
 
     def set_data(self, d):
-
         if not self.disabled:
             val = d.get(self.name, "")
             if not isinstance(val, str):
