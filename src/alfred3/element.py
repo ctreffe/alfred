@@ -1009,11 +1009,32 @@ class Stack(Row):
 
 
 class VerticalSpace(Element):
-    """The easiest way to add vertical space to a page.
+    """
+    The easiest way to add vertical space to a page.
     
     Args:
         space: Desired space in any unit that is understood by a CSS
             margin (e.g. em, px, cm). Include the unit (e.g. '1em').
+    
+    Notes:
+        CSS-class: vertical-space-element
+    
+    Examples:
+
+        Example of vertical space added between two text elements::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    self += al.Text("Element 1")
+                    self += al.VerticalSpace("100px")
+                    self += al.Text("Element 2")
+
     """
 
     def __init__(self, space: str = "1em"):
@@ -1023,7 +1044,9 @@ class VerticalSpace(Element):
 
     @property
     def web_widget(self):
-        return f"<div style='margin-bottom: {self.space};'></div>"
+        """:meta private: (documented at :class:`.Element`)"""
+        # documented at baseclass
+        return f"<div class='vertical-space-element' style='margin-bottom: {self.space};'></div>"
 
 
 class Style(Element):
