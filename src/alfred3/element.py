@@ -816,21 +816,35 @@ class _RowCol:
 
 
 class Row(Element):
-    """Allows you to arrange up to 12 elements in a row.
-
-    .. versionadded:: 1.5
+    """
+    Allows you to arrange up to 12 elements in a row.
 
     The row will arrange your elements using Bootstrap 4's grid system
-    and breakpoints, making the arrangement responsive. You can 
-    customize the behavior of the row for five different screen sizes
-    (Bootstrap 4's default break points) with the width attributes of
-    its layout attribute.
+    and breakpoints, making the arrangement responsive to different
+    screen sizes. You can customize the behavior of the row for five 
+    different screen sizes (Bootstrap 4's default break points) with 
+    the width attributes of its layout attribute.
 
     If you don't specify breakpoints manually via the *layout* attribute, 
     the columns will default to equal width and wrap on breakpoints 
     automatically.
+    
+    Args:
+        elements: The elements that you want to arrange in a row.
+        valign_cols: List of vertical column alignments. Valid values 
+            are 'auto' (default), 'top', 'center', and 'bottom'. The
+            elements of the list correspond to the row's columns. See
+            :attr:`.RowLayout.valign_cols`
+        height: Custom row height (with unit, e.g. '100px').
+        elements_full_width: A switch, telling the row whether you wish
+            it to resize all elements in it to full-width (default: True).
+            This switch exists, because some elements might default to
+            a smaller width, but when using them in a Row, you usually
+            want them to span the full width of their column.
+    
+    Notes:
+        * CSS-class: row-element
 
-    .. note::
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
         column by assigning it a number of those units. A column of 
@@ -844,25 +858,28 @@ class Row(Element):
         See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
         for detailed documentation of how Bootstrap's breakpoints work.
     
-    .. note::
-        **Some information regarding the width attributes**
+    Examples:
+
+        A minimal experiment with a row::
+            
+            import alfred3 as al
+            exp = al.Experiment()
         
-        * If you specify fewer values than the number of columns in the 
-          width attributes, the columns with undefined width will take up 
-          equal portions of the remaining horizontal space.
-        * If a breakpoint is not specified manually, the values from the
-          next smaller breakpoint are inherited.
-    
-    Args:
-        elements: The elements that you want to arrange in a row.
-        height: Custom row height (with unit, e.g. '100px').
-        valign_cols: List of vertical column alignments. Valid values 
-            are 'auto' (default), 'top', 'center', and 'bottom'.
-        elements_full_width: A switch, telling the row whether you wish
-            it to resize all elements in it to full-width (default: True).
-            This switch exists, because some elements might default to
-            a smaller width, but when using them in a Row, you usually
-            want them to span the full width of their column.
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+        
+                def on_exp_access(self):
+                    el1 = al.Text("text")
+                    el2 = al.TextEntry(toplab="lab", name="example")
+        
+                    self += al.Row(el1, el2)
+        
+        The arrangement will look like this::
+
+            |=========|========|
+            |   el1   |  el2   |
+            |=========|========|
     
     """
     element_class = "row-element"
@@ -871,24 +888,35 @@ class Row(Element):
     def __init__(
         self,
         *elements: Element,
-        height: str = "auto",
         valign_cols: List[str] = None,
+        height: str = "auto",
         name: str = None,
         showif: dict = None,
         elements_full_width: bool = True,
     ):
         """Constructor method."""
         super().__init__(name=name, showif=showif)
-        self.elements = elements
+        
+        #: List of the elements in this row
+        self.elements: list = elements
 
-        #: An instance of :class:`~alfred3.element_responsive.RowLayout`, used for layouting.
-        #: You can use this attribute to finetune column widths.
+        #: An instance of :class:`.RowLayout`, 
+        #: used for layouting. You can use this attribute to finetune 
+        #: column widths via the width attributes 
+        #: (e.g. :attr:`.RowLayout.width_xs`)
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
 
-        self.height = height
-        self.elements_full_width = elements_full_width
+        #: Custom row height (with unit, e.g. '100px').
+        self.height: str = height
+
+        #: If *True*, all elements will take up the full horizontal
+        #: space of their column, regardless of the element's
+        #: :attr:`.Element.element_width` and :attr:`.Element.width`
+        #: attributes.
+        self.elements_full_width: bool = elements_full_width
 
     def added_to_page(self, page):
+        # docstring inherited
         super().added_to_page(page)
 
         for element in self.elements:
@@ -900,15 +928,14 @@ class Row(Element):
             if self.elements_full_width:
                 element.width = "full"
 
-    def prepare_web_widget(self):
-        super().prepare_web_widget()
+    def _prepare_web_widget(self):
+        # docstring inherited
         for element in self.elements:
             element.prepare_web_widget()
 
     @property
-    def cols(self) -> list:
-        """Returns a list of columns."""
-        out = []
+    def _cols(self) -> Iterator:
+        """Yields preprocessed ``_RowCol`` columns ."""
         for i, element in enumerate(self.elements):
             col = _RowCol(
                 breaks=self.layout.col_breaks(col=i),
@@ -916,13 +943,13 @@ class Row(Element):
                 element=element,
                 id=f"{self.name}_col{i+1}",
             )
-            out.append(col)
-        return out
+            yield col
 
     @property
     def template_data(self):
+        # docstring inherited
         d = super().template_data
-        d["columns"] = self.cols
+        d["columns"] = self._cols
         d["name"] = self.name
         return d
 
