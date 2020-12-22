@@ -74,7 +74,8 @@ class PageCore(ExpMember):
         super(PageCore, self).added_to_experiment(experiment)
         self.log.add_queue_logger(self, __name__)
 
-        if self.experiment.config.getboolean("general", "debug"):
+        debug = self.experiment.config.getboolean("general", "debug")
+        if debug and not self._minimum_display_time == 0:
             if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
                 self.log.debug("Minimum display time disabled (debug mode).")
                 self._minimum_display_time = 0
@@ -547,7 +548,7 @@ class CoreCompositePage(PageCore):
 
     @property
     def allow_closing(self):
-        return all([el.validate_data() for el in self.elements.values()])
+        return all([el.validate_data() for el in self.input_elements.values()])
 
     def close(self):
         self.close_page()
@@ -606,7 +607,6 @@ class CoreCompositePage(PageCore):
         for element in self.input_elements.values():
             yield element.corrective_hints
         
-
     def set_data(self, dictionary):
         for elmnt in self.input_elements.values():
             elmnt.set_data(dictionary)

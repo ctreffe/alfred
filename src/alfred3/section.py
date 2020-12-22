@@ -27,6 +27,10 @@ class Section(ExpMember):
 
         self.members = {}
         self._should_be_shown = True
+        
+        #: bool: Boolean flag, indicating whether the experiment session
+        #: is currently operating within this section
+        self.active: bool = False
 
         if kwargs.get("shuffle", None):
             self.shuffle = kwargs.get("shuffle", False)
@@ -355,15 +359,17 @@ class Section(ExpMember):
         pass
 
     def enter(self):
+        self.active = True
+        
         self.log.debug(f"Entering {self}.")
         self.on_enter()
 
         if self.shuffle:
             self.shuffle_members()
 
-        if isinstance(self.first_member, Section):
+        if isinstance(self.first_member, Section) and not self.first_member.active:
             self.first_member.enter()
-    
+        
     def leave(self):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
@@ -492,6 +498,7 @@ class RootSection(Section):
     def __init__(self, experiment):
         super().__init__()
         self._experiment = experiment
+        self.log.add_queue_logger(self, __name__)
         self.content = Section(name="_content")
         self.finished_section = FinishedSection(name="__finished_section")
         self.finished_section += DefaultFinalPage(name="_final_page")
@@ -537,10 +544,6 @@ class RootSection(Section):
         self.finished_section.members = {}
         self.finished_section._final_page = page
     
-    def __repr__(self):
-        m = ", ".join([f"{type(m).__name__}(name='{m.name}')" for m in self.members.values()])
-        return f"RootSection(name='{self.name}', members=[{m}])"
-        
     
     @deprecated("1.5", "2.0", None, details="Use the simple setter for the attribute 'final_page' instead.")
     def append_item_to_finish_section(self, item):

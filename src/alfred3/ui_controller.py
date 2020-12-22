@@ -26,6 +26,7 @@ from .static import js
 from .static import css
 from .static import img
 from . import element as elm
+from .exceptions import AlfredError
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
@@ -348,6 +349,15 @@ class MovementManager:
             self.jump(to=to)
         elif direction.startswith("jump"):
             self.jump(to=direction[5:]) # jump string has the form 'jump>pagename'
+    
+    def start(self):
+
+        if not self.current_page.should_be_shown:
+            raise AlfredError("Your must page must not be hidden.")
+        
+        self.exp.root_section.enter()
+        self.current_page._on_showing_widget(show_time=time.time())
+
 
 class UserInterface:
     instance_level_logging = False
@@ -694,5 +704,5 @@ class UserInterface:
         return url
 
     def start(self):
-        self.experiment.root_section.enter()
+        self.exp.movement_manager.start()
 

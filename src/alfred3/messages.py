@@ -27,7 +27,7 @@ class MessageManager:
     def get_messages(self):
         while True:
             try:
-                yield self._queue.get()
+                yield self._queue.get_nowait()
             except queue.Empty:
                 break
 

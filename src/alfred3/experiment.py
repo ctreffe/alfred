@@ -558,6 +558,7 @@ class ExperimentSession:
         #: *exception*, and *log*.
         self.log = QueuedLoggingInterface(base_logger="alfred3")
         self.log.queue_logger = logging.getLogger("exp." + self.exp_id)
+        self.log.session_id = self.session_id
 
         self._encryptor = self._set_encryptor()
 
