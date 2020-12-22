@@ -2273,25 +2273,18 @@ class MultipleChoice(ChoiceElement):
             hint = string.Template(self.experiment.config.get("hints", "select_MultipleChoice"))
             return hint.substitute(min=self.min, max=self.max)
 
-    @property
-    def corrective_hints(self):
-
-        if not self.show_corrective_hints:
-            return []
-
-        elif self._force_input and not self._input:
-            return [self.no_input_hint]
-
-        elif not self.validate_data():
-            return [self.select_hint]
-
     def validate_data(self):
-        if not self.force_input or not self._should_be_shown:
-            return True
-        elif self.min <= sum(list(self.input.values())) <= self.max:
-            return True
-        else:
-            return False
+        conditions = [True]
+        
+        if self.force_input and len(self.input) == 0:
+            self.hint_manager.post_message(self.no_input_hint)
+            conditions.append(False)
+        
+        if not (self.min <= sum(list(self.input.values())) <= self.max):
+            self.hint_manager.post_message(self.select_hint)
+            conditions.append(False)
+        
+        return all(conditions)
 
     @property
     def data(self):
