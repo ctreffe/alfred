@@ -2,12 +2,33 @@
 """
 Provides element classes for adding content to pages.
 
-This is text
+All elements are derived from the base :class:`.Element`. There are 
+currently four kinds of elements:
+
+- **Display elements** are used to present something
+- **Input elements** are used to allow subject input
+- **Action elements** trigger some kind of action, when they are 
+  interacted with.
+- **Utility elements** are used for different kinds of handy things
+
+  The following tables give an overview over all of these elements.
+
+
+.. csv-table:: Element bases
+    :header: "Element Name", "Description"
+    :widths: 20, 80
+
+    :class:`.Element`           , Basis for all elements
+    :class:`.LabelledElement`   , Basis for elements with labels
+    :class:`.InputElement`      , Basis for elements with user input
+    :class:`.RowLayout`         , Basis for horizontal layouting
+
 
 .. csv-table:: Display Elements
    :header: "Element Name", "Description"
    :widths: 20, 80
 
+   :class:`.Html`           ,   Displays html code
    :class:`.Text`           ,   "Displays text. Can render Markdown, html, and emoji shortcodes"
    :class:`.CodeBlock`      ,   Displays code with syntax highlighting
    :class:`.Image`          ,   Displays an image
@@ -18,8 +39,34 @@ This is text
    :class:`.ButtonLabels`   ,   Additional labels for :class:`.SingleChoiceButtons` or :class:`.MultipleChoiceButtons`
    :class:`.BarLabels`      , Additional labels for :class:`.SingleChoiceBar` or :class:`MultipleChoiceBar`
 
+.. csv-table:: Input Elements
+   :header: "Element Name", "Description"
+   :widths: 20, 80
 
-More tables
+   :class:`.TextEntry`              ,   A simple text entry field
+   :class:`.TextArea`               ,   A text area field for multiline input
+   :class:`.RegEntry`               ,   TextEntry with input validation via regular expressions
+   :class:`.NumberEntry`            ,   TextEntry that specializes on numbers
+   :class:`.SingleChoice`           ,   "Radiobuttons, allowing selection of one out of several options"
+   :class:`.SingleChoiceList`       ,   "Dropdown list, allowing selection of one out of several options"
+   :class:`.SingleChoiceButtons`    ,   "Buttons, allowing selection of one out of several options"
+   :class:`.SingleChoiceBar`        ,   Toolbar of SingleChoiceButtons
+   :class:`.MultipleChoice` ,   "Checkboxes, allowing selection of multiple options"
+   :class:`.MultipleChoiceButtons`  ,   "Buttons, allowing selection of multiple options"
+   :class:`.MultipleChoiceBar`      ,   Toolbar of MultipleChoiceButtons
+   :class:`.MultipleChoiceList`     ,   "Scrollable list, allowing selection of multiple options"
+
+
+.. csv-table:: Action Elements
+   :header: "Element Name", "Description"
+   :widths: 20, 80
+
+   :class:`.SubmittingButtons`  ,   Buttons which trigger the experiment to move forward on click
+   :class:`.JumpButtons`        ,   Buttons which trigger the experiment to jump to a specific page on click
+   :class:`.DynamicJumpButtons` ,   "JumpButtons, which get their target page dynamically from another element on the same page"
+   :class:`JumpList`            ,   Dropbown of pages for jumping
+
+
 
 .. csv-table:: Utility Elements
    :header: "Element Name", "Description"
@@ -31,40 +78,9 @@ More tables
    :class:`.Style`          ,   Adds CSS code to a page
    :class:`.JavaScript`     ,   Adds JavaScript code to a page
    :class:`.HideNavigation` ,   Removes to navigation buttons from a page
-   :class:`.WebExitEnabler` ,   Turns of the "Do you really want to leave?" dialogue upon closing of a page
+   :class:`.WebExitEnabler` ,   Turns the "Do you really want to leave?" dialogue upon closing of a page off
    :class:`.Value`          ,   Saves a value to the experiment data without displaying anything
    :class:`.Data`           ,   Alias for :class:`.Value`
-
-This is more text
-
-.. csv-table:: Input Elements
-   :header: "Element Name", "Description"
-   :widths: 20, 80
-
-   :class:`.TextEntry`              ,   A simple text entry field
-   :class:`.TextArea`               ,   A text area field for multiline input
-   :class:`.RegEntry`               ,   A TextEntry element with support for validating input with regular expressions
-   :class:`.NumberEntry`            ,   A TextEntry element that specializes on numbers
-   
-   :class:`.SingleChoice`           ,   "Radiobuttons, allowing selection of one out of several options"
-   :class:`.SingleChoiceList`       ,   "Dropdown list, allowing selection of one out of several options"
-   :class:`.SingleChoiceButtons`    ,   "Buttons, allowing selection of one out of several options"
-   :class:`.SingleChoiceBar`        ,   Toolbar of SingleChoiceButtons
-   
-   :class:`.MultipleChoice` ,   "Checkboxes, allowing selection of multiple options"
-   :class:`.MultipleChoiceButtons`  ,   "Buttons, allowing selection of multiple options"
-   :class:`.MultipleChoiceBar`      ,   Toolbar of MultipleChoiceButtons
-   :class:`.MultipleChoiceList`     ,   "Scrollable list, allowing selection of multiple options"
-
-
-.. csv-table:: Navigation Elements
-   :header: "Element Name", "Description"
-   :widths: 20, 80
-
-   :class:`.SubmittingButtons`  ,   Buttons which trigger the experiment to move forward on click
-   :class:`.JumpButtons`        ,   Buttons which trigger the experiment to jump to a specific page on click
-   :class:`.DynamicJumpButtons` ,   "JumpButtons, which get their target page dynamically from another element on the same page"
-   :class:`JumpList`            ,   Dropbown of pages for jumping
 
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
