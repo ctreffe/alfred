@@ -761,8 +761,6 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         return " ".join(out)
 
     def prepare_web_widget(self):
-        self._on_showing_widget()
-
         for elmnt in self.elements.values():
             elmnt._prepare_web_widget()
 
