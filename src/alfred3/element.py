@@ -1193,83 +1193,161 @@ class WebExitEnabler(JavaScript):
         super().__init__(code=code, priority=10)
 
 
+class Html(Element):
+    """
+    Displays html code on a page.
+
+    Args:
+        html: Html to be displayed.
+        path: Filepath to a file with html code (relative to the 
+            experiment directory).
+        **kwargs: Keyword arguments passed to the parent class
+            :class:`Element`.
+    
+    Notes:
+        * CSS-class: html-element
+
+        This works very similar to :class:`.Text`. The most notable 
+        difference is that the *Text* element expects markdown, and 
+        therefore generally renders input text in a ``<p>`` tag. This
+        is not always desirable for custom html, because it adds a 
+        margin at the bottom of the text.
+
+        The *Html* element renders neither markdown, nor emoji shortcodes.
+    
+    Examples:
+        Adding a simple div to the experiment::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    self += al.Html("<div id='mydiv'>Text in div</div>")
+
+    """
+
+    element_class = "html-element"
+    element_template = jinja_env.get_template("TextElement.html.j2")
+
+    def __init__(
+        self, html: str = None, path: Union[Path, str] = None, **element_args,
+    ):
+
+        """Constructor method."""
+        super().__init__(**element_args)
+
+        self.html_code = html if html is not None else ""
+        self.path = path
+
+        if self._html_code and self.path:
+            raise ValueError("You can only specify one of 'html' and 'path'.")
+
+    
+    @property
+    def html_code(self) -> str:
+        """str: The element's html code"""
+        if self.path:
+            return self.experiment.subpath(self.path).read_text()
+        else:
+            return self._html_code
+    
+    @html_code.setter
+    def html_code(self, html):
+        self._html_code = html
+    
+    @property
+    def template_data(self) -> dict:
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["text"] = self.html_code
+
+        return d
+
+
 class Text(Element):
     """Displays text.
 
-    You can use GitHub-flavored Markdown syntax [#md]_ and common emoji 
-    shortcodes [#emoji]_ . Additionally, you can use raw html for 
+    You can use `GitHub-flavored Markdown`_ syntax and common 
+    `emoji shortcodes`_ . Additionally, you can use raw html for 
     advanced formatting.
 
-    Example::
-
-        Text("**This is boldfaced** text. :blush:")
-
-    Text can be entered directly through the `text` parameter, or
-    it can be read from a file by specifying the 'path' parameter.
-    Note that you can only use one of these options, if you specify
-    both, the element will raise an error.
-
-    Example::
-
-        # Text element with responsive width
-        text = Text('Text display')
-
-        # Text element that is always displayed as full-width
-        text = Text('Text display', width='full')
-
-        # Text element with content read from file
-        text = Text(path='files/text.md')
-        
     Args:
         text: Text to be displayed.
-        text_width: Text width in px. **Deprecated** for responsive
-            design (v1.5). Use `element_width` instead, when using
-            the responsive design.
-        text_height: Element height in px.
         path: Filepath to a textfile (relative to the experiment 
             directory).
         width: Element width. Usage is the same as in 
             :class:`Element`, but the Text element uses its own
             specific default, which ensures good readability in 
             most cases on different screen sizes.
-        **element_args: Keyword arguments passed to the parent class
-            :class:`Element`. Accepted keyword arguments are: name, 
-            font_size, align, width, position, showif, 
-            instance_level_logging.
-    
-    Attributes:
         emojize: If True (default), emoji shortcodes in the text will
-            be converted to unicode.
+            be converted to unicode (i.e. emojis will be displayed).
+        **kwargs: Keyword arguments passed to the parent class
+            :class:`Element`.
+    
+    Notes:
+        CSS-class: text-element
+    
+    Examples:
+        A simple text element, including a 😊 (``:blush:``) emoji added to a 
+        page::
 
-    .. [#md] https://guides.github.com/features/mastering-markdown/
-    .. [#emoji] Overview of Shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    self += al.Text("This is text :blush:")
+
+    
+    .. _GitHub-flavored Markdown: https://guides.github.com/features/mastering-markdown/
+    .. _emoji shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
 
     element_class = "text-element"
     element_template = jinja_env.get_template("TextElement.html.j2")
-    emojize = True
-
+    
     def __init__(
-        self, text: str = None, path: Union[Path, str] = None, width: str = None, **element_args,
+        self, text: str = None, path: Union[Path, str] = None, width: str = None, emojize: bool = True, **kwargs,
     ):
 
         """Constructor method."""
-        super().__init__(width=width, **element_args)
+        super().__init__(width=width, **kwargs)
 
         self._text = text if text is not None else ""
-        self.path = path
+        
+        #: pathlib.Path: Path to a textfile, if specified in the init
+        self.path: Path = Path(path) if path is not None else path
+
+        #: bool: Boolean flag, indicating whether emoji shortcodes should be
+        #: interpreted
+        self.emojize: bool = emojize
 
         if self._text and self.path:
             raise ValueError("You can only specify one of 'text' and 'path'.")
 
     @property
-    def text(self):
+    def text(self) -> str:
+        """str: The text to be displayed"""
         if self.path:
             return self.experiment.subpath(self.path).read_text()
         else:
             return self._text
 
-    def render_text(self):
+    def render_text(self) -> str:
+        """
+        Renders the markdown and emoji shortcodes in :attr:`.text`
+
+        Returns:
+            str: Text rendered to html code
+        """
+        
         if self.emojize:
             text = emojize(self.text, use_aliases=True)
         else:
@@ -1281,7 +1359,8 @@ class Text(Element):
         self._text = text
 
     @property
-    def element_width(self):
+    def element_width(self) -> str:
+        """:meta private: (documented at :class:`.Element`)"""
         if self.width is not None:
             return " ".join(self.converted_width)
 
@@ -1296,10 +1375,9 @@ class Text(Element):
 
     @property
     def template_data(self) -> dict:
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["text"] = self.render_text()
-        # height = f"height: {self._text_height}px;" if self._text_height is not None else ""
-        # d["style"] += f"{height}"
 
         return d
 
