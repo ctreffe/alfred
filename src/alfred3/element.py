@@ -1127,16 +1127,24 @@ class HideNavigation(Style):
 
 
 class JavaScript(Element):
-    """Adds JavaScript to a page.
+    """
+    Adds JavaScript to a page.
     
     Javascript can be used to implement dynamic behavior on the client
     side.
+
+    See Also:
+        * CSS classes and IDs of alfred3 elements.
+    
+    Todo:
+        * Insert reference
     """
 
     web_widget = None
     should_be_shown = False
 
     def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+        """Constructor method"""
         super().__init__()
         self.priority = priority
         self.code = code
@@ -1150,6 +1158,7 @@ class JavaScript(Element):
 
     @property
     def js_code(self):
+        """:meta private: (documented at :class:`.Element`)"""
         if self.path:
             p = self.experiment.subpath(self.path)
 
@@ -1160,6 +1169,7 @@ class JavaScript(Element):
 
     @property
     def js_urls(self):
+        """:meta private: (documented at :class:`.Element`)"""
         if self.url:
             return [(self.priority, self.url)]
         else:
