@@ -916,7 +916,7 @@ class Element:
     def element_class(self) -> str:
         """
         Returns the name of the element's class. Used, e.g. as
-        CSS class name in the base element template.
+        CSS class name.
         """
         return type(self).__name__
 
