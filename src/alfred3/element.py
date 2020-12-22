@@ -135,11 +135,8 @@ class RowLayout:
     to the right and left (each taking up 2/12 of the available space), 
     and one wide column (taking up 8/12 of the space) in the middle. On
     "extra small" screens, the columns will be stacked vertically and 
-    each take up the full width::
+    each take up the full width.
         
-        layout = RowLayout(ncols=3) # 3 columns of equal width
-        layout.width_sm = [2, 8, 2] 
-
     You can define widths for five breakpoints individually, allowing
     for fine-grained control (see attributes).
 
@@ -150,38 +147,43 @@ class RowLayout:
         responsive: Boolean, indicating whether breakpoints should
             be responsive, or not.
 
-    Attributes:
-        ncols: Number of columns
-        responsive: Indicates whether breakpoints should be responsive, 
-            or not.
-        width_xs: List of column widths on screens of size 'xs' or 
-            bigger (<576px). Widths must be defined as integers between
-            1 and 12.
-        width_sm: List of column widths on screens of size 'sm' or 
-            bigger (>=576px). Widths must be defined as integers between
-            1 and 12.
-        width_md: List of column widths on screens of size 'md' or 
-            bigger (>=768px). Widths must be defined as integers between
-            1 and 12.
-        width_lg: List of column widths on screens of size 'lg' or 
-            bigger (>=992px). Widths must be defined as integers between
-            1 and 12.
-        width_xl: List of column widths on screens of size 'xl' or 
-            bigger (>=1200px). Widths must be defined as integers between
-            1 and 12.
+    Examples:
+
+        ::
+
+            layout = RowLayout(ncols=3) # 3 columns of equal width
+            layout.width_sm = [2, 8, 2] 
 
     """
 
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
         """Constructor method."""
+        #: Number of columns
         self.ncols: int = ncols
+
         self._valign_cols = valign_cols if valign_cols is not None else []
+        
+        #: Indicates whether breakpoints should be responsive, or not.
         self.responsive: bool = responsive
 
+        #: List of column widths on screens of size 'xs' or bigger 
+        #: (<576px). Content must be integers between 1 and 12.
         self.width_xs: List[int] = None
+        
+        #: List of column widths on screens of size 's' or bigger 
+        #: (>=576px). Content must be integers between 1 and 12.
         self.width_sm: List[int] = None
+
+        #: List of column widths on screens of size 'md' or bigger 
+        #: (>=768px). Content must be integers between 1 and 12.
         self.width_md: List[int] = None
+
+        #: List of column widths on screens of size 'lg' or bigger 
+        #: (>=992px). Content must be integers between 1 and 12.
         self.width_lg: List[int] = None
+
+        #: List of column widths on screens of size 'xl' or bigger 
+        #: (>=1200px). Content must be integers between 1 and 12.
         self.width_xl: List[int] = None
 
     def col_breaks(self, col: int) -> str:
@@ -254,18 +256,21 @@ class RowLayout:
 
         Each element of the list refers to one column. If it contains
         fewer elements than the number of columns, the last entry of
-        the list will be used as value for the unreferenced columns::
+        the list will be used as value for the unreferenced columns.
 
-            # all columns of this layout will be aligned to the bottom
-            # of the row
-            # (specified upon initialization)
-            layout1 = RowLayout(ncols=3, valign_cols=["bottom"])
+        Examples:
 
-            # the first column will be aligned top
-            # the 2nd and 3rd columns will be aligned bottom
-            # (specified after initialization)
-            layout2 = RowLayout(ncols=3)
-            layout2.valign_cols = ["top", "bottom"]
+            All columns of the following layout will be aligned to the 
+            bottom of the row (specified upon initialization)::
+
+                layout1 = RowLayout(ncols=3, valign_cols=["bottom"])
+
+            The first column of the following layout will be aligned top,
+            the 2nd and 3rd columns will be aligned bottom (specified after
+            initialization)::
+
+                layout2 = RowLayout(ncols=3)
+                layout2.valign_cols = ["top", "bottom"]
 
         """
 
@@ -274,8 +279,10 @@ class RowLayout:
             try:
                 n = self._valign_cols[i]
             except IndexError:
-                out.append("align-self-center")
-                continue
+                    try:
+                        n = self._valign_cols[i-1]
+                    except IndexError:
+                        n = "center"
 
             if not isinstance(n, str):
                 raise TypeError("Col position must be of type str.")
