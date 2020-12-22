@@ -8,6 +8,7 @@ Provides miscellaneous utilities for alfred experiments.
 """
 
 import csv
+import random
 from pathlib import Path
 
 from emoji import emojize
@@ -70,3 +71,6 @@ def read_csv_tolist(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -
         reader = csv.reader(csvfile, **kwargs)
         for row in reader:
             yield row    
+
+def random_condition(*conditions):
+    return random.choice(conditions)
