@@ -1388,15 +1388,25 @@ class Hline(Element):
 
 
 class CodeBlock(Text):
-    """A convenience element for displaying highlighted code.
+    """
+    A convenience element for displaying highlighted code.
 
     Args:
+        text: The code to be displayed.
+        path: path: Filepath to a textfile (relative to the experiment 
+            directory) from which to read code.
         lang: The programming language to highlight [#lang]_ . Defaults 
             to 'auto', which tries to auto-detect the right language. 
+        **kwargs: Keyword arguments are passed on to the parent elements
+            :class:`.Text` and :class:`.Element`
     
-    .. [#lang] see https://prismjs.com/index.html#supported-languages
+    Notes:
+        * CSS-class: code-element
+    
+    .. [#lang] See https://prismjs.com/index.html#supported-languages
         for an overview of possible language codes. Note though that 
         we may not support all possible languages.
+    
     """
 
     element_class = "code-element"
@@ -1416,6 +1426,7 @@ class CodeBlock(Text):
 
     @property
     def text(self):
+        """:meta private: (documented at :class:`.Element`)"""
         if self.path:
             text = self.experiment.subpath(self.path).read_text()
 
