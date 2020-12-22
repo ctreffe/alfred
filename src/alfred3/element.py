@@ -363,7 +363,6 @@ class Element(ABC):
 
     base_template: Template = jinja_env.get_template("Element.html.j2")
     element_template: Template = None
-    can_display_corrective_hints_in_line: bool = False
 
     def __init__(
         self,
@@ -390,7 +389,6 @@ class Element(ABC):
         self.width = width
         self.height = height
         self.position = position
-        self._show_corrective_hints = False
         self._element_width = None
         self._maximum_widget_width = None
 
@@ -499,18 +497,6 @@ class Element(ABC):
         Property **data** contains a dictionary with input data of element.
         """
         return {}
-
-    @property
-    def corrective_hints(self):
-        return []
-
-    @property
-    def show_corrective_hints(self):
-        return self._show_corrective_hints
-
-    @show_corrective_hints.setter
-    def show_corrective_hints(self, b):
-        self._show_corrective_hints = bool(b)
 
     @property
     def should_be_shown(self) -> bool:
@@ -1454,9 +1440,12 @@ class InputElement(LabelledElement):
             between 1 and 12 here to fine-tune the input area width.
     """
 
-    can_display_corrective_hints_in_line = True
-    disabled = False
-
+    #: Boolean flag, indicating whether the element's html template
+    #: has a dedicated container for corrective hints. If *False*, 
+    #: corrective hints regarding this element will be placed in the 
+    #: general page-wide conainer for such hints.
+    can_display_corrective_hints_in_line: bool = False
+    
     def __init__(
         self,
         toplab: str = None,
@@ -1474,15 +1463,32 @@ class InputElement(LabelledElement):
         self._force_input = force_input
         self._no_input_corrective_hint = no_input_corrective_hint
         self._default = default
+        #: Flag, indicating whether corrective hints regarding 
+        #: this element should be shown.
+        self.show_corrective_hints: bool = False
 
         if disabled:
             self.disabled = disabled
+        #: A :class:`.MessageManager`, handling the corrective hints
+        #: for this element.
+        self.hint_manager = MessageManager(default_level="error")
+
 
         if default is not None:
             self._input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+    
+    @property
+    def corrective_hints(self) -> Iterator[str]:
+        """
+        Shortcut for accessing the element's corrective hints.
+
+        Yields:
+            str: Corrective hint.
+        """
+        return self.hint_manager.get_messages()
 
     @property
     def debug_value(self):
@@ -1533,17 +1539,13 @@ class InputElement(LabelledElement):
         return d
 
     def validate_data(self):
-        return not self._force_input or not self._should_be_shown or bool(self._input)
-
-    @property
-    def corrective_hints(self):
-        if not self.show_corrective_hints:
-            return []
-        if self._force_input and not self._input:
-            return [self.no_input_hint]
-        else:
-            return super(InputElement, self).corrective_hints
-
+        if not self.should_be_shown:
+            return False
+        
+        elif self._force_input and not self._input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+        
     @property
     def no_input_hint(self):
         if self._no_input_corrective_hint:

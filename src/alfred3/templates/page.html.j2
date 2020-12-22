@@ -19,7 +19,9 @@ id="page-container">
 </div>
 
     <!-- Experimenter Messages -->
+    <!-- and corrective hints -->
     {% if messages %}
+    <div id="experimenter-messages">
     {% for message in messages %}
     <div class="alert alert-{{ message.level }}">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -29,16 +31,6 @@ id="page-container">
         {{ message.msg }}
     </div>
     {% endfor %}
-    {% endif %}
-
-    <!-- Corrective Hints -->
-    {% if corrective_hints %}
-    <div class="row alert alert-block" id="correctiveBar">
-        <ul>
-            {% for hint in corrective_hints %}
-            <li>{{ hint }}</li>
-            {% endfor %}
-        </ul>
     </div>
     {% endif %}
 

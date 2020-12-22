@@ -548,7 +548,8 @@ class UserInterface:
             d["statustext"] = page.statustext
         
         if not page.can_display_corrective_hints_in_line:
-            d["corrective_hints"] = page.corrective_hints
+            for hint in page.corrective_hints:
+                self.exp.post_message(hint, level="error")
         
         if page.section.allow_backward and not page is self.exp.movement_manager.first_page:
             d["backward_text"] = self.experiment.config.get("navigation", "backward")

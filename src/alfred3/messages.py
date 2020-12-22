@@ -1,31 +1,35 @@
 from builtins import object
 import threading
 import cmarkgfm
+import queue
 from emoji import emojize
 
 
-class MessageManager(object):
+class MessageManager:
+    """
+    Args:
+        default_level: Sets the default message level for this message
+            manager. Levels can be 'debug', 'info', 'warning', 'error',
+            'success', 'primary', 'secondary', 'dark', and 'light'.
+    """
 
-    INFO = 'info'
-    WARNING = 'warning'
-    ERROR = 'error'
-    SUCCESS = 'success'
-
-    def __init__(self):
-        self._queue = []
+    def __init__(self, default_level: str = "info"):
+        self._default_level = default_level
+        self._queue = queue.Queue()
         self._lock = threading.Lock()
 
-    def post_message(self, msg: str, title: str = '', level: str = INFO):
-        self._lock.acquire()
-        self._queue.append(Message(msg, title, level))
-        self._lock.release()
+    def post_message(self, msg: str, title: str = '', level: str = None):
+        if level is None:
+            level = self._default_level
+        msg = Message(msg, title, level)
+        self._queue.put(msg)
 
     def get_messages(self):
-        self._lock.acquire()
-        q = self._queue
-        self._queue = []
-        self._lock.release()
-        return q
+        while True:
+            try:
+                yield self._queue.get()
+            except queue.Empty:
+                break
 
 
 class Message(object):

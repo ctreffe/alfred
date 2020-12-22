@@ -35,6 +35,7 @@ from builtins import object, str
 from functools import reduce
 from pathlib import Path
 from typing import Union
+from typing import Iterator
 
 from future.utils import with_metaclass
 
@@ -583,15 +584,9 @@ class CoreCompositePage(PageCore):
         if not self.show_corrective_hints:
             return []
 
-        # get corrective hints for each element
-        list_of_lists = []
-
-        for elmnt in self._element_list:
-            if not elmnt.can_display_corrective_hints_in_line and elmnt.corrective_hints:
-                list_of_lists.append(elmnt.corrective_hints)
-
-        # flatten list
-        return [item for sublist in list_of_lists for item in sublist]
+        for element in self.input_elements.values():
+            yield element.corrective_hints
+        
 
     def set_data(self, dictionary):
         for elmnt in self.input_elements.values():
