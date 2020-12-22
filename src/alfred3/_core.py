@@ -266,7 +266,7 @@ class ExpMember:
             return out
 
     @property
-    def tree(self):
+    def tree(self) -> str:
         if not self.parent:
             return self.tag
 
@@ -276,7 +276,7 @@ class ExpMember:
             return self.tag
 
     @property
-    def short_tree(self):
+    def short_tree(self) -> str:
         return self.tree.replace("_root._content.", "")
 
     def allow_leaving(self, direction):
