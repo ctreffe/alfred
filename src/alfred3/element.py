@@ -307,14 +307,14 @@ class RowLayout:
         self._valign_cols = value
 
 
-class Element(ABC):
-    """Element baseclass. All elements are derived from this class.
+class Element:
+    """
+    Element baseclass, providing basic functionality for all elements.
 
     Args:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
-            final data set. If none is provided, a generic name will be
-            generated.
+            final data set.
         font_size: Font size for text in the element. Can be 'normal' 
             (default), 'big', 'huge', or an integer giving the desired 
             size in pt.
@@ -327,14 +327,18 @@ class Element(ABC):
         position: Horizontal position of the full element on the 
             page. Values can be 'left', 'center' (default), 'end',
             or any valid value for the justify-content `flexbox
-            utility`_.
+            utility`_. Takes effect only, when the element is not 
+            full-width.
         width: Defines the horizontal width of the element from 
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
             'wide', and 'full'. For more detailed control, you can 
             define the :attr:`.element_width` attribute.
-        height: Vertical height. Supply a string with a unit, e.g.
-            "80px".
+        height: Vertical height of the element's display area. Supply a 
+            string with a unit, e.g. "80px". Usually, the default is 
+            fine. For adding vertical space to a page, you should prefer 
+            the :class:`.VerticalSpace` element, as it is sematically
+            more clear.
         showif: A dictionary, defining conditions that must be met
             for the element to be shown. The conditions take the form of
             key-value pairs, where each key is an element name and the 
@@ -342,51 +346,22 @@ class Element(ABC):
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
-
-    Attributes:
-        element_width: A list of relative width definitions. The
-            list can contain up to 5 width definitions, given as
-            integers from 1 to 12. They refer to the five breakbpoints 
-            in `Bootstrap 4's 12-column-grid system`_, i.e. 
-            [xs, sm, md, lg, xl].
-
-            If there is no width defined for a certain screen size,
-            the next smaller entry is used. For example, the following
-            definition will lead to full width on extra small screens
-            and 8/12 widths on all larger widths::
-
-                element = Element()
-                element.element_width = [12, 8]
-
-            To make an element full-width on extra small and small 
-            screens and half-width on medium, large and extra large 
-            screens, follow this example::
-
-                element = Element()
-                element.element_width = [12, 12, 6]
-
-        experiment: The :class:`.Experiment` to which this element 
-            belongs.
-        log: A :class:`~.QueuedLoggingInterface`, you can use it to log 
-            messages with the standard logging methods 'debug', 'info', 
-            'warning', 'error', 'exception', and 'log'. It also offers 
-            direct access to the logger via :attr:`.log.queue_logger.`.
-        page: The element's parent page (i.e. the page on which it is
-            displayed). See :mod:`.page`.
-        showif: The showif dictionary. It must be of the form
-            ``{<element_name>: <value>}``. It can contain multiple 
-            conditions. You can use all key-value pairs that show up in
-            :attr:`.~DataManager.flat_session_data`, i.e. all variable 
-            names that show up in the final dataset. The element will 
-            only be shown if *all* conditions are met.
     
+    See Also:
+        * How to create a custom element
+
     .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
     .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
     .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
     
     """
 
+    #: Base template for the element, which will be used to hold the
+    #: rendered element template. Gets rendered by :attr:`.web_widget`
     base_template: Template = jinja_env.get_template("Element.html.j2")
+    
+    #: The element's specific, inner template. Gets rendered by 
+    #: :attr:`.inner_html`
     element_template: Template = None
 
     def __init__(
@@ -398,49 +373,145 @@ class Element(ABC):
         height: str = None,
         position: str = "center",
         showif: dict = None,
-        instance_level_logging: bool = False,
-        **kwargs,
+        instance_level_logging: bool = False
     ):
 
-        # general
-        self.name = name
-        self.page = None
-        self.experiment = None
-        self.exp = None
+        self.name: str = name # documented in getter property
 
-        # display settings
-        self.align = align
-        self.font_size = font_size
-        self.width = width
-        self.height = height
-        self.position = position
-        self._element_width = None
-        self._maximum_widget_width = None
+        #: The element's parent :class:`~.page.Page` (i.e. the page on which 
+        #: it is displayed).
+        self.page = None
+        
+        #: The :class:`.Experiment` to which this element belongs
+        self.exp = None
+        
+        #: Alias for :attr:`.exp`
+        self.experiment = None
+
+        #: Alignment of inner element (does not apply to labels)
+        self.align = align 
+        
+        #: Vertical height of the element
+        self.height = height 
+
+        self.font_size = font_size # documented in getter property
+        self.width = width  # documented in getter property
+        self.position = position # documented in getter property
+        self._element_width = None # documented in getter property
 
         # showifs and filters
-        self._enabled = True
-        self.showif = showif if showif else {}
+        self.showif = showif if showif else {} # documented in getter property
+        
+        #: Flag, indicating whether the element has a showif condition
+        #: that includes an element on the same page
         self._showif_on_current_page = False
-        self._should_be_shown = True
+        self._should_be_shown = True # documented in getter property
 
         # additional code
-        self._css_code = []
-        self._css_urls = []
-        self._js_code = []
-        self._js_urls = []
+        self._css_code = []     # documented in getter property
+        self._css_urls = []     # documented in getter property
+        self._js_code = []      # documented in getter property
+        self._js_urls = []      # documented in getter property
 
-        # logging
-        self.instance_level_logging = instance_level_logging
+        #: Boolean flag, indicating whether the element should spawn
+        #: its own logger, or use the class-specific logger.
+        #: Can be set to *True* to allow for very fine-grained logging.
+        #: In most cases, it is fine to leave it at the default (*False*)
+        self.instance_level_logging: bool = instance_level_logging
+
+        #: A :class:`~.QueuedLoggingInterface`, offering logging
+        #: through the methods *debug*, *info*, *warning*, *error*,
+        #: *exception*, and *log*.
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
-        # Catch unsupported keyword arguments
-        if kwargs != {}:
-            raise ValueError(f"Parameter '{list(kwargs.keys())[0]}' is not supported.")
-
-    # getters and setter start here ------------------------------------
 
     @property
-    def converted_width(self):
+    def showif(self) -> dict:
+        """ 
+        dict: Conditions that have to be met for the element to be shown.
+
+        The showif dictionary can contain multiple conditions as key-
+        value-pairs. The element will only be shown, if *all* conditions 
+        are met. You can use all names that show up in the main dataset. 
+        That includes:
+
+        * The names of all input elements that were shown before the 
+          current page 
+        * The names of all input elements *on* the current page
+        * The experiment metadata, including *exp_condition*, 
+          *exp_start_time*, and more. See :attr:`.Experiment.metadata`
+
+        .. note::
+            If you wish to implement more sophisticated conditions (e.g.
+            linking conditions with 'or' instead of 'and'), you can
+            do so by using if-statements in an *on_show* or 
+            *on_each_show* page-hook. 
+            
+            Those conditions will not work for elements on the same page
+            though. If you want to create complex showif conditions 
+            depending on elements on the same page, you have to 
+            implement them in JavaScript yourself. See :meth:`.add_js`
+            and :class:`.JavaScript` for information on how to add 
+            JavaScript.
+
+        Examples:
+
+            This is a simple showif based on experiment condition. The 
+            text element in this example will only be shown to subjects 
+            in the condition "one"::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    exp.condition = al.random_condition("one", "two")
+
+                @exp.member
+                class MyPage(al.Page):
+                    name = "my_page"
+
+                    def on_exp_access(self):
+                        self += al.Text("This is text", showif={"exp_condition": "one"})
+            
+            This is a more complex condition using the hook method. The 
+            text element on *page2* will only be show to subjects, if 
+            they spent more than 20 seconds on *page1*::
+
+                import alfred3 as al
+                exp = al.Experiment()
+                exp += al.Page(name="page1")
+
+                @exp.member
+                class SecondPage(al.Page):
+                    name = "page2"
+
+                    def on_first_show(self):
+                        if sum(self.exp.page1.durations) > 20:
+                            self += al.Text("This is text")
+            
+        See Also:
+            Page hooks
+        
+        Todo:
+            * Put link to page hooks explanation here.
+
+        """
+        return self._showif
+
+    @showif.setter
+    def showif(self, value: dict):
+        if not isinstance(value, dict):
+            raise TypeError("Showif must be of type 'dict'.")
+        self._showif = value
+
+    @property
+    def converted_width(self) -> List[str]:
+        """
+        list: List of bootstrap column widths at different screen sizes.
+
+        Converted from :attr:`.width`.
+        """
         if self.width == "narrow":
             return ["col-12", "col-sm-6", "col-md-3"]
         elif self.width == "medium":
@@ -451,7 +522,8 @@ class Element(ABC):
             return ["col-12"]
 
     @property
-    def width(self):
+    def width(self) -> str:
+        """str: Element width"""
         return self._width
 
     @width.setter
@@ -463,7 +535,13 @@ class Element(ABC):
         self._width = value
 
     @property
-    def position(self):
+    def position(self) -> str:
+        """
+        str: Position of the whole element on the page.
+        
+        Determines the element position, when an element is *not* 
+        full-width.
+        """
         return self._position
 
     @position.setter
@@ -476,7 +554,8 @@ class Element(ABC):
             self._position = value
 
     @property
-    def font_size(self):
+    def font_size(self) -> int:
+        """int: Font size"""
         return self._font_size
 
     @font_size.setter
@@ -484,7 +563,40 @@ class Element(ABC):
         self._font_size = fontsize_converter(value)
 
     @property
-    def element_width(self):
+    def element_width(self) -> str:
+        """ 
+        str: Returns a string of column width definitions. 
+
+        **Manually setting the width**
+        
+        The element width list can contain up to 5 width definitions, 
+        specified as integers from 1 to 12. The integers refer to the 
+        five breakbpoints in `Bootstrap 4's 12-column-grid system`_, i.e. 
+        [xs, sm, md, lg, xl]::
+
+            >>> element = Element()
+            >>> element.element_width = [12, 8, 8, 7, 6]
+            element.element_width
+            "col-12 col-sm-8 col-md-8 col-lg-7 col-xl-6"
+
+        **Width resultion order**
+
+        If there is no width defined for a certain screen size,
+        the next smaller entry is used. For example, the following
+        definition will lead to full width on extra small screens
+        and 8/12 widths on all larger widths::
+
+            element = Element()
+            element.element_width = [12, 8]
+
+        To make an element full-width on extra small and small 
+        screens and half-width on medium, large and extra large 
+        screens, follow this example::
+
+            element = Element()
+            element.element_width = [12, 12, 6]
+        
+        """
         if self.width is not None:
             return " ".join(self.converted_width)
 
@@ -496,13 +608,21 @@ class Element(ABC):
 
     @element_width.setter
     def element_width(self, value: List[int]):
+        try:
+            for v in value:
+                if not isinstance(v, int):
+                    raise TypeError("Element width must be set as a list of integers.")
+        except TypeError:
+            raise TypeError("Element width must be set as a list of integers.")
         self._element_width = value
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
-        Property **name** marks a general identifier for element, which is also used as variable name in experimental datasets.
-        Stored input data can be retrieved from dictionary returned by :meth:`.data_manager.DataManager.get_data`.
+        str: Unique identifier for the element.
+
+        The element name will be used to identify the corresponding
+        input in the final dataset.
         """
         return self._name
 
@@ -517,17 +637,13 @@ class Element(ABC):
         self._name = name
 
     @property
-    def data(self):
-        """
-        Property **data** contains a dictionary with input data of element.
-        """
-        return {}
-
-    @property
     def should_be_shown(self) -> bool:
-        """Boolean, indicating whether the element is meant to be shown.
+        """
+        bool: Boolean, indicating whether the element is meant to be shown.
         
-        Evaluates all *showif* conditions and can be set manually.
+        Evaluates all *showif* conditions. Can be set manually.
+        Returns *False*, if the element's parent 
+        page should not be shown.
         """
         cond1 = self._should_be_shown
         cond2 = all(self._evaluate_showif())
@@ -535,74 +651,98 @@ class Element(ABC):
         return cond1 and cond2 and cond3
 
     @should_be_shown.setter
-    def should_be_shown(self, b):
-        """
-        sets should_be_shown to b.
-
-        :type b: bool
-        """
+    def should_be_shown(self, b: bool):
         if not isinstance(b, bool):
             raise TypeError("should_be_shown must be an instance of bool")
         self._should_be_shown = b
 
-    @property
-    def page(self):
-        """The page to which the element belongs."""
-        return self._page
 
     @property
     def section(self):
+        """The direct parent section of this element's page."""
         return self.page.section
 
-    @page.setter
-    def page(self, value):
-        self._page = value
-
     @property
-    def tree(self):
-        """A string, giving the exact position of the element's page in 
-        the experiment. The tree is composed of the tags of all sections
-        and the page, separated by underscores. Example for the Page
-        with tag 'hello_world' in section 'main'::
+    def tree(self) -> str:
+        """
+        str: String, giving the exact position in the experiment.
         
-            root_main_hello_world
+        The tree is composed of the names of all sections
+        and the element's page dots. Example for an element that belongs
+        to a page "hello_world" that was added directly to the experiment::
+
+            _root._content.hello_world
+
+        ``_root`` and ``_content`` are basic sections that alfred always
+        includes in an experiment.
         
         """
         return self.page.tree
 
     @property
-    def short_tree(self):
+    def short_tree(self) -> str:
+        """
+        str: String, giving the exact position in the experiment.
+
+        This version of the tree omits the ``_root._content`` part that
+        is the same for all elements.
+        """
 
         return self.tree.replace("_root._content.", "")
 
     @property
     def css_code(self) -> List[Tuple[int, str]]:
-        """A list of tuples, which contain a priority and CSS code."""
+        """List[tuple]: A list of tuples, which contain a priority and CSS code."""
         return self._css_code
 
     @property
-    def css_urls(self):
-        """A list of tuples, which contain a priority and urls pointing 
+    def css_urls(self) -> List[Tuple[int, str]]:
+        """List[tuple]: A list of tuples, which contain a priority and an url pointing 
         to CSS code."""
         return self._css_urls
 
     @property
     def js_code(self) -> List[Tuple[int, str]]:
-        """A list of tuples, which contain a priority and Javascript."""
+        """List[tuple]: A list of tuples, which contain a priority and Javascript."""
         return self._js_code
 
     @property
     def js_urls(self) -> List[Tuple[int, str]]:
-        """A list of tuples, which contain a priority and urls pointing
+        """List[tuple]: A list of tuples, which contain a priority and an url pointing
         to JavaScript."""
         return self._js_urls
 
     @property
-    def web_thumbnail(self):
-        return None
+    def template_data(self) -> dict:
+        """
+        dict: Dictionary of data to be passed on to jinja templates.
 
-    @property
-    def template_data(self):
+        When deriving a new element class, you will often want to 
+        redefine this property to add template data. When doing so,
+        remember to retrieve the basic template data with ``super()``::
+
+            import alfred3 as al
+
+            class NewElement(al.Element):
+
+                @property
+                def template_data(self):
+                    d = super().template_data 
+                    d["my_value"] = "this is my value"
+                    
+                    return d    # don't forget to return the dictionary!
+
+        The call ``super().template_data`` applies the parent classes
+        code to the current object. That way, you only need to define
+        values that differ from the parent class. 
+
+        .. note::
+            Be aware that, by default, the same template data will be
+            passed to the respective templates when rendering 
+            :attr:`.inner_html` / :attr:`.element_template` and 
+            :attr:`.web_widget` / :attr:`.base_template`.
+        
+        """
         d = {}
         d["element_class"] = self.element_class
         d["name"] = self.name
@@ -622,8 +762,8 @@ class Element(ABC):
         """Checks the showif conditions that refer to previous pages.
         
         Returns:
-            A list of booleans, indicating for each condition whether
-            it is met or not.
+            list: A list of booleans, indicating for each condition, 
+            whether it is met or not.
         """
 
         if self.showif:
@@ -663,9 +803,14 @@ class Element(ABC):
         element's logging interface initializes its experiment-specific
         logging.
 
+        This is also the place where the element's name is checked for
+        experiment-wide uniqueness.
+
         Args:
             experiment: The alfred experiment to which the element was
                 added.
+        
+        :meta private:
         """
 
         if self.name in experiment.root_section.all_updated_elements:
@@ -693,31 +838,27 @@ class Element(ABC):
         if not isinstance(page, pg.PageCore):
             raise TypeError()
 
-        self._page = page
+        self.page = page
         if self.name is None:
             self.name = self.page.generate_element_name(self)
 
         if self.page.experiment and not self.experiment:
-            self.added_to_experiment(self._page.experiment)
+            self.added_to_experiment(self.page.experiment)
 
-    def set_data(self, data):
-        pass
-
-    def validate_data(self):
-        return True
 
     def prepare(self):
         """Wraps *prepare_web_widget* to allow for additional, generic
         preparations that are the same for all elements.
         
-        This is useful, because *prepare_web_widget* is often redefined
-        in derived elements.
+        This is useful, because :meth:`.prepare_web_widget` is often 
+        redefined in derived elements.
         """
         self._activate_showif_on_current_page()
         self.prepare_web_widget()
 
     def prepare_web_widget(self):
-        """Hook for computations for preparing an element's web widget.
+        """
+        Hook for computations for preparing an element's web widget.
         
         This method is supposed to be overridden by derived elements if
         necessary.
@@ -737,7 +878,7 @@ class Element(ABC):
     @property
     def inner_html(self) -> str:
         """
-        Renders the element template: :attr:`~.element_template`.
+        Renders the element template :attr:`~.element_template`.
         
         Hands over the data returned by :attr:`~.template_data`, renders
         the template and returns the resulting html code.
@@ -772,25 +913,40 @@ class Element(ABC):
 
     @property
     def element_class(self) -> str:
-        """Returns the name of the element's class. Used, e.g. as
+        """
+        Returns the name of the element's class. Used, e.g. as
         CSS class name in the base element template.
         """
         return type(self).__name__
 
     def add_css(self, code: str, priority: int = 10):
-        """Adds CSS to the element.
+        """
+        Adds CSS to the element.
+
+        This is most useful when writing new elements. To simply add
+        element-related CSS code to a page, usually the :class:`.CSS`
+        element is a better choice.
         
         Args:
             code: Css code
             priority: Can be used to influence the order in which code
                 is added to the page. Sorting is ascending, i.e. the 
                 lowest numbers appear closest to the top of the page.
+        
+        See Also:
+            The :class:`.CSS` element can be used to add generic CSS 
+            code to a page.
         
         """
         self._css_code.append((priority, code))
 
     def add_js(self, code: str, priority: int = 10):
-        """Adds Javascript to the element.
+        """
+        Adds Javascript to the element.
+
+        This is most useful when writing new elements. To simply add
+        element-related JavaScript code to a page, usually the 
+        :class:`.JavaScript` element is a better choice.
         
         Args:
             code: Css code
@@ -798,6 +954,10 @@ class Element(ABC):
                 is added to the page. Sorting is ascending, i.e. the 
                 lowest numbers appear closest to the top of the page.
         
+        See Also:
+            The :class:`.JavaScript` element can be used to add generic 
+            JavsScript code to a page.
+
         """
         self._js_code.append((priority, code))
 
