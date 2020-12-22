@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+### Removed
+
+- `layout.py`
+- `settings.py`
+- `ContentCore.get_page_data`: Use `ExperimentSession.values` or `ExperimentSession.get_page_data` instead.
+
+
+### Changed
+
 - new way to change final page
 
 
