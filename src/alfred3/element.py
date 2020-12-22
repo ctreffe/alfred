@@ -840,7 +840,7 @@ class Row(Element):
             want them to span the full width of their column.
     
     """
-
+    element_class = "row-element"
     element_template = jinja_env.get_template("Row.html.j2")
 
     def __init__(
@@ -933,6 +933,8 @@ class Stack(Row):
             class :class:`Row`.
 
     """
+
+    element_class = "stack-element"
 
     def __init__(self, *elements: Element, **kwargs):
         """Constructor method."""
