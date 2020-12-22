@@ -1729,7 +1729,10 @@ class InputElement(LabelledElement):
         self._default = value
 
     @property
-    def force_input(self):
+    def force_input(self) -> bool:
+        """
+        bool: If *True*, subjects *must* fill this element to proceed.
+        """
         return self._force_input
 
     @force_input.setter
