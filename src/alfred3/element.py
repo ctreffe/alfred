@@ -1428,22 +1428,33 @@ class CodeBlock(Text):
 
 class Label(Text):
     """
-    A child of Text element, serving mainly as label for other elements.
+    A child of the :class:`.Text` element, serving as label for other elements.
+
+    Notes:
+        * CSS-class: label-element
     """
 
     element_class = "label-element"
 
     def __init__(self, text, width="full", **kwargs):
         super().__init__(text=text, width=width, **kwargs)
+        
+        #: RowLayout: Layouting facility for controlling the column
+        #: breaks and vertical alignment of the label. Gets set by
+        #: :class:`.LabelledElement` automatically.
         self.layout: RowLayout = None
+        
+        #: Tells the label which column of the :attr:`.layout` it is
         self.layout_col: int = None
 
     @property
-    def col_breaks(self):
+    def col_breaks(self) -> str:
+        """The label's breakpoints for diferent screen sizes."""
         return self.layout.col_breaks(self.layout_col)
 
     @property
-    def vertical_alignment(self):
+    def vertical_alignment(self) -> str:
+        """The label's vertical alignment"""
         return self.layout.valign_cols[self.layout_col]
 
 
