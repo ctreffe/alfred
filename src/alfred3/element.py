@@ -1753,9 +1753,7 @@ class InputElement(LabelledElement):
         d["default"] = self.default
         d["input"] = self.input
         d["disabled"] = self.disabled
-
-        if self.corrective_hints:
-            d["corrective_hint"] = self.corrective_hints[0]
+        d["corrective_hints"] = self.hint_manager.get_messages()
 
         return d
 
