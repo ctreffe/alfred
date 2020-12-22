@@ -114,8 +114,8 @@ class PageCore(ExpMember):
 
         """
         thispage = super().should_be_shown
-        section = self.section.should_be_shown
-        return thispage and section
+        sections = [sec.should_be_shown for sec in self.uptree()]
+        return thispage and all(sections)
     
     @should_be_shown.setter
     def should_be_shown(self, value: bool):
