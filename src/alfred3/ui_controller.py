@@ -249,6 +249,26 @@ class MovementManager:
         
         to_page._on_showing_widget(show_time=now)
         
+        if not to_page.should_be_shown:
+            # executed here a second time, in case the to_page's 
+            # should_be_shown attribute was changed during any of the move
+            # functions
+        
+            if direction == "forward":
+                self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'forward'.")
+                return self._move(to_page=self.page_after(to_page), direction="forward")
+        
+            elif direction == "backward":
+                self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'backward'.")
+                return self._move(to_page=self.page_before(to_page), direction="backward")
+        
+            elif direction == "jump":
+                self.log.debug(f"{to_page} should not be shown. Aborting move.")
+                if self.experiment.config.getboolean("debug", "verbose"):
+                    self.experiment.message_manager.post_message(f"{to_page} should not be shown. Jump was aborted.", level="info")
+                return self._abort_move()
+        
+        
         return self.current_index, self.index_of(to_page)
     
     def forward(self):
