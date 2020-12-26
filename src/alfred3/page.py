@@ -139,7 +139,19 @@ class PageCore(ExpMember):
 
         if not self._has_been_shown:
             self.on_first_show()
-
+            
+            if self.exp.config.getboolean("general", "debug") and self is not self.exp.final_page:
+                name = self.name + "__debug_jumplist__"
+                jumplist = elm.JumpList(
+                    scope="exp", 
+                    check_jumpto=False, 
+                    check_jumpfrom=False, 
+                    name=name, 
+                    debugmode=True
+                    )
+                jumplist.should_be_shown = False
+                self += jumplist
+            
         self.on_showing_widget()
         self.on_showing()
         self.on_each_show()

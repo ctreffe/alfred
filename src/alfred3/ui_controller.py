@@ -554,22 +554,7 @@ class UserInterface:
         
         if self.exp.config.getboolean("general", "debug") and not page is self.exp.final_page:
             d["debug"] = self.exp.config.getboolean("general", "debug")
-            if not page.has_been_shown:
-                name = page.name + "__debug_jumplist__"
-                
-                jumplist = elm.JumpList(
-                    scope="exp", 
-                    check_jumpto=False, 
-                    check_jumpfrom=False, 
-                    name=name, 
-                    debugmode=True
-                    )
-
-                jumplist.should_be_shown = False
-                page += jumplist
-                d["jumplist"] = jumplist
-            else:
-                d["jumplist"] = page.elements[page.name + "__debug_jumplist__"]
+            d["jumplist"] = page.elements[page.name + "__debug_jumplist__"]
         
         page.prepare_web_widget()
 
