@@ -1,3 +1,4 @@
+<div class="{{ css_class_element }}" id="{{ name }}">
 {% for choice in choices %}
 <div class="form-check {% if not vertical %} form-check-inline {% endif %} {{ align }}" style="{{ height }} {{ fontsize }}">
   <input class="form-check-input" type="{{ choice.type }}" value="{{ choice.value }}" id="{{ choice.id }}"
@@ -7,3 +8,4 @@
   </label>
 </div>
 {% endfor %}
+</div>

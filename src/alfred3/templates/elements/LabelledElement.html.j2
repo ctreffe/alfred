@@ -1,6 +1,6 @@
 <!-- this row is the general widget container -->
-<div class="row element d-flex justify-content-{{ position }} {{ hide }} {{ element_class }} {{ align }}"
-    id="elid-{{ name }}">
+<div class="row element d-flex justify-content-{{ position }} {{ hide }} {{ css_class_container }} {{ align }}"
+    id="{{ name }}-container">
     
     <!-- this column is used to control the overall width of the widget -->
     <div class="{{ element_width }}">
@@ -25,7 +25,7 @@
             {% endif %}
 
             <!-- this is where the actual input field gets rendered -->
-            <div class="{{ input_breaks }} {{ input_valign }} {% if prexif or suffix %}input-group{% endif %}">
+            <div class="{{ input_breaks }} {{ input_valign }} {% if prexix or suffix %}input-group{% endif %}">
                 
                 {# Prefix #}
                 {% if prefix %}

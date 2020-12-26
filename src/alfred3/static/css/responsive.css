@@ -9,6 +9,19 @@ div.btn-group.choice-button-group>label.btn.choice-button:only-child {
     margin-right: 0;
 }
 
+div.btn-group.choice-button-group>label.btn.choice-button:first-child {
+    margin-left: 0;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:last-child {
+    margin-right: 0;
+}
+
+.changed-btns {
+    margin-left: 0!important;
+    margin-right: 0!important;
+}
+
 /* make button group separate */
 div.btn-group.choice-button-group>label.btn.choice-button {
     margin-right: .25rem;
@@ -41,17 +54,17 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     margin-top: 1rem;
 }
 
-.single-choice-buttons, .multiple-choice-buttons, .single-choice-bar, .multiple-choice-bar, .button-choice-labels, .bar-choice-labels {
+.SingleChoiceButtons-element, .MultipleChoiceButtons-element, .SingleChoiceBar-element, .MultipleChoiceBar-element, .ButtonChoiceLabels-element, .BarChoiceLabels-element {
     /* balancing the margins */
     margin-bottom: -0.5rem;
 }
 
-.single-choice-buttons .leftlab, .single-choice-buttons .rightlab, .multiple-choice-buttons .leftlab, .multiple-choice-buttons .rightlab, .single-choice-bar .leftlab, .single-choice-bar .rightlab, .multiple-choice-bar .leftlab, .multiple-choice-bar .rightlab, .button-choice-labels .leftlab, .button-choice-labels .rightlab, .bar-choice-labels .leftlab, .bar-choice-labels .rightlab {
+.SingleChoiceButtons-element .Leftlab-element, .SingleChoiceButtons-element .Rightlab-element, .MultipleChoiceButtons-element .Leftlab-element, .MultipleChoiceButtons-element .Rightlab-element, .SingleChoiceBar-element .Leftlab-element, .SingleChoiceBar-element .Rightlab-element, .MultipleChoiceBar-element .Leftlab-element, .MultipleChoiceBar-element .Rightlab-element, .ButtonChoiceLabels-element .Leftlab-element, .ButtonChoiceLabels-element .Rightlab-element, .BarChoiceLabels-element .Leftlab-element, .BarChoiceLabels-element .Rightlab-element {
     /* label spacing */
     margin-bottom: 0.5rem!important;
 }
 
-.bottomlab {
+.Bottomlab-element {
     margin-bottom: 0;
     margin-top: 0.25rem;
 }
@@ -69,21 +82,21 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     flex-direction: row;
 }
 
-.element.single-choice-element {
+.element.SingleChoice-element {
     padding-left: 0;
     padding-right: 0;
 }
 
-.input-element>label.leftlab, .input-element>label.rightlab {
+.input-element>label.Leftlab-element, .input-element>label.Rightlab-element {
     margin-bottom: 0;
     /* align-self: center; */
 }
 
-.input-element>label.leftlab>.label-element, .input-element>label.leftlab>.label-element>div {
+.input-element>label.Leftlab-element>.label-element, .input-element>label.Leftlab-element>.label-element>div {
     padding-right: 0;
 }
 
-.input-element>label.rightlab>.label-element, .input-element>label.rightlab>.label-element>div {
+.input-element>label.Rightlab-element>.label-element, .input-element>label.Rightlab-element>.label-element>div {
     padding-left: 0;
 }
 
@@ -103,7 +116,7 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     display: none !important;
 }
 
-.text-element {
+.Text-element {
     margin-bottom: 0;
 }
 
@@ -205,18 +218,13 @@ p.page-subtitle {
     z-index: 1000;
 }
 
-.progress {
-    height: 6px;
-    border-radius: 0;
-}
-
-.progress-text {
+.page-progress {
     font-size: 8pt;
 }
 
-.row-element .col-element:not(:last-child) {
+/* .Row-element-container .Col-element:not(:last-child) {
     padding-right: 0;
-}
+} */
 
 
 /* BREAKPOINTS */
@@ -232,19 +240,19 @@ p.page-subtitle {
 
 @media (max-width: 576px) {
 
-    .input-element>label.rightlab>.label-element, .input-element>label.rightlab>.label-element>div {
+    .input-element>label.Rightlab-element>.label-element, .input-element>label.Rightlab-element>.label-element>div {
         padding-left: 0.5rem;
     }
 
-    .responsive .rightlab > div {
+    .responsive .Rightlab-element > div {
         text-align: left!important;
     }
 
-    .responsive .leftlab > div {
+    .responsive .Leftlab-element > div {
         text-align: left!important;
     }
 
-    .responsive .single-choice-element > div {
+    .responsive .SingleChoice-element > div {
         text-align: left;
     }
     
