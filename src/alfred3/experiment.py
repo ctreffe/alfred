@@ -761,7 +761,7 @@ class ExperimentSession:
         return self.root_section.content.all_members
 
     @property
-    def all_section(self) -> dict:
+    def all_sections(self) -> dict:
         """dict: Dictionary of all sections in the experiment."""
         return self.root_section.content_section.all_subsections
 
