@@ -1875,57 +1875,209 @@ class LabelledElement(Element):
         return d
 
 
-class InputElement(LabelledElement):
-    """Base class for elements that allow data input.
 
-    This class handles the logic und layouting of instructions for input 
-    elements.
+class ProgressBar(LabelledElement):
+    """
+    Displays a progress bar.
 
     Args:
-        toplab: Label to be displayed above the main element widget. See
-            :class:`.LabelledElement`.
+        progress: Can be either "auto", or a number between 0 and 100.
+            If "auto", the progress is calculated from the current
+            progress of the experiment. If a number is supplied, that
+            number will be used as the progress to be displayed.
+        bar_height: Height of the progress bar. Supply a string with
+            unit, e.g. "6px".
+        show text: Indicates, whether the progress bar should include
+            text with the current progress.
+        striped: Indicates, whether the progress bar shoulb be striped.
+        style: Determines the color of the progress bar. Possible values
+            are "primary", "secondary", "info", "success", "warning",
+            "danger", "light", "dark".
+        animated: Determines, whether a striped progress bar should be
+            equipped with an animation.
+        round: Determines, whether the corners of the progress bar
+            should be round.
+    
+    See Also:
+        See :attr:`.ExperimentSession.progress_bar` for more information
+        on the experiment-wide progress bar.
+    
+    Notes:
+        If the argument *show_text* is *True*, the text's appearance
+        can be altered via CSS. It receives a class of 
+        ":attr:`.css_class_element`-text" and an id of
+        ":attr:`.name`-text". You can use the method :meth:`.add_css`
+        to append fitting CSS to the bar (see examples).
+    
+    Examples:
+
+        Overriding the default experiment-wide progress bar::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.setup
+            def setup(exp_session):
+                exp_session.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
+            
+            exp += al.Page(name="example_page")
+            
+        Adding a progress bar as an element to a page::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Example(al.Page):
+                name = "example_page"
+
+                def on_exp_access(self):
+                    self += al.ProgressBar()
+        
+        Altering the progress bar text's apperance, applied to the
+        experiment-wide progress bar. Note that the experiment-wide
+        progress bar *always* receives the name "*progress_bar_*"::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.setup
+            def setup(exp):
+                exp.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
+                exp.progress_bar.add_css("#progress_bar_ {font-size: 12pt;}")
+            
+            exp += al.Page(name="example_page")
+
+    """
+
+    element_template = jinja_env.get_template("ProgressBarElement.html.j2")
+
+    def __init__(self, progress: Union[str, float, int] = "auto", bar_height: str = "6px", show_text: bool = False, striped: bool = True, style: str = "primary", animated: bool = False, round_corners: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self._progress_setting = progress
+        
+        if not isinstance(progress, (str, float, int)):
+            raise TypeError
+        
+        self._progress: int = None
+        self._bar_height: str = bar_height
+        self._show_text: bool = show_text
+        self._striped: bool = striped
+        self._bar_style: str = style
+        self._animated: bool = animated
+        self._round_corners: bool = "border-radius: 0;" if round_corners == False else ""
+
+    def added_to_experiment(self, exp):
+        """:meta private: (documented at :class:`.Element`)"""
+        super().added_to_experiment(exp)
+
+        css = f".progress#{self.name}  {{height: {self._bar_height}; {self._round_corners}}}"
+        self.add_css(code=css)
+    
+    def _prepare_web_widget(self):
+        if self._progress_setting == "auto":
+            self._progress = self._calculate_progress()
+        elif isinstance(self._progress_setting, (int, float)):
+            self._progress = self._progress_setting
+        
+        self.prepare_web_widget()
+
+        try: 
+            self._activate_showif_on_current_page()
+        except AttributeError as e:
+            # special treatment for experiment-wide progress bar
+            # because that one only has an experiment, no page
+            if self.page is None and self.name == "progress_bar_":
+                pass
+            else:
+                raise e
+    
+    def _calculate_progress(self) -> float:
+        """ 
+        Calculates the current progress.
+
+        Returns:
+            float: Current progress
+        """
+        n_el = 0
+        for el in self.exp.root_section.all_input_elements.values():
+            if el.should_be_shown:
+                n_el += 1
+            elif el.showif or el.page.showif or el.section.showif:
+                n_el += 0.3
+
+        n_pg = len(self.experiment.root_section.visible("all_pages"))
+        shown_el = len(self.experiment.root_section.all_shown_input_elements)
+        shown_pg = len(self.experiment.root_section.all_shown_pages)
+        exact_progress = ((shown_el + shown_pg) / (n_el + n_pg)) * 100
+        
+        if not self.experiment.finished:
+            return min(round(exact_progress, 1), 95)
+        else:
+            return 100
+    
+    @property
+    def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["progress"] = self._progress
+        d["show_text"] = self._show_text
+        d["bar_height"] = self._bar_height
+        d["bar_style"] = f"bg-{self._bar_style}"
+        d["striped"] = "progress-bar-striped" if self._striped else ""
+        d["animated"] = "progress-bar-animated" if self._animated else ""
+        return d
+
+
+
+class InputElement(LabelledElement):
+    """
+    Base class for elements that allow data input.
+
+    Args:
+        toplab: String or instance of :class:`.Label`, which will be 
+            used to label the element. The other labels (leftlab,
+            rightlab, bottomlab) are supported aswell. Specify them
+            as keyword arguments, not positional arguments.
+        force_input: If `True`, users can only progress to the next page
+            if they enter data into this field. Note that a 
+            :class:`.NoValidationSection` or similar sections might
+            overrule this setting.
+        default: Default value. Type depends on the element type.
+        prefix: Prefix for the input field.
+        suffix: Suffix for the input field.
+        description: An additional description of the element. This will
+            show up in the alfred-generated codebook. It has
+            no effect on the display of the experiment, as it only 
+            serves as a descriptor for humans.
         no_input_corrective_hint: Hint to be displayed if force_input 
             set to True and no user input registered. Defaults to the
             experiment-wide value specified in config.conf.
-        instruction_width: Horizontal width of instructions. 
-            **Deprecated** for responsive design (v1.5+). Use 
-            `instruction_col_width` instead, when using the responsive 
-            design.
-        instruction_height: Minimum vertical size of instruction label.
-        force_input: If `True`, users can only progress to the next page
-            if they enter data into this field. **Note** that this works
-            only in HeadOpenSections and SegmentedSections, not in plain
-            Sections.
-        description: An additional description of the element. This will
-            show up in the additional alfred-generated codebook. It has
-            no effect on the display of the experiment.
-        default: Default value.
         **kwargs: Further keyword arguments are passed on to the
             parent classes :class:`.LabelledElement` and :class:`Element`.
     
-    Attributes:
-        instruction_col_width: Width of the instruction area, using
-            Bootstrap's 12-column-grid. You can assign an integer 
-            between 1 and 12 here to fine-tune the instruction width.
-        input_col_width: Width of the input area, using
-            Bootstrap's 12-column-grid. You can assign an integer 
-            between 1 and 12 here to fine-tune the input area width.
+    Notes:
+        The InputElement does not have its own display. It is used only
+        to inherit functionality.
+    
     """
 
     #: Boolean flag, indicating whether the element's html template
     #: has a dedicated container for corrective hints. If *False*, 
     #: corrective hints regarding this element will be placed in the 
     #: general page-wide conainer for such hints.
-    can_display_corrective_hints_in_line: bool = False
+    can_display_corrective_hints_in_line: bool = True
     
     def __init__(
         self,
         toplab: str = None,
         force_input: bool = False,
-        no_input_corrective_hint: str = None,
-        default=None,
+        default: Union[str, int, float] = None,
+        prefix: Union[str, Element] = None,
+        suffix: Union[str, Element] = None,
         description: str = None,
         disabled: bool = False,
+        no_input_corrective_hint: str = None,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
@@ -1938,6 +2090,8 @@ class InputElement(LabelledElement):
         self._force_input = force_input # documented in getter property
         self._no_input_corrective_hint = no_input_corrective_hint
         self._default = default # documented in getter property
+        self._prefix = prefix # documented in getter property
+        self._suffix = suffix # documented in getter property
 
         #: Flag, indicating whether corrective hints regarding 
         #: this element should be shown.
@@ -1958,6 +2112,47 @@ class InputElement(LabelledElement):
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
     
+    def _prepare_web_widget(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        super()._prepare_web_widget()
+        
+        try:
+            self._prefix._prepare_web_widget()
+        except AttributeError:
+            pass
+        
+        try:
+            self._suffix._prepare_web_widget()
+        except AttributeError:
+            pass
+    
+    def added_to_experiment(self, exp):
+        """:meta private: (documented at :class:`.Element`)"""
+        super().added_to_experiment(exp)
+        try:
+            self._prefix.added_to_experiment(exp)
+        except AttributeError:
+            pass
+        
+        try: 
+            self._suffix.added_to_experiment(exp)
+        except AttributeError:
+            pass
+    
+    def added_to_page(self, page):
+        """:meta private: (documented at :class:`.Element`)"""
+        super().added_to_page(page)
+
+        try:
+            self._prefix.added_to_page(page)
+        except AttributeError:
+            pass
+        
+        try:
+            self._suffix.added_to_page(page)
+        except AttributeError:
+            pass
+
     @property
     def corrective_hints(self) -> Iterator[str]:
         """
@@ -1969,11 +2164,18 @@ class InputElement(LabelledElement):
         return self.hint_manager.get_messages()
 
     @property
-    def debug_value(self) -> str:
+    def debug_value(self) -> Union[str, None]:
         """
-        str: Value to be used as a default in debug mode.
+        Union[str, None]: Value to be used as a default in debug mode.
         
-        Only used, if there is no dedicated default for this element.
+        This value is read from config.conf. Only used, if there is no 
+        dedicated default for this element.
+
+        Notes:
+            The property searches for an option of the form 
+            ``<element_class>_debug`` in the section *debug* of 
+            config.conf. If no option is found, the return value is
+            *None* 
         """
         name = f"{type(self).__name__}_default"
         return self.experiment.config.get("debug", name, fallback=None)
@@ -1990,9 +2192,9 @@ class InputElement(LabelledElement):
         return False
 
     @property
-    def default(self):
+    def default(self) -> Union[str, int, float]:
         """
-        Default value of this element. 
+        Union[str, int, float]: Default value of this element. 
         
         The data type can vary, depending on the element.
         """
@@ -2023,56 +2225,140 @@ class InputElement(LabelledElement):
 
     @property
     def template_data(self) -> dict:
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["default"] = self.default
+        d["prefix"] = self.prefix
+        d["suffix"] = self.suffix
         d["input"] = self.input
         d["disabled"] = self.disabled
-        d["corrective_hints"] = self.hint_manager.get_messages()
-
+        d["corrective_hints"] = list(self.hint_manager.get_messages())
         return d
 
-    def validate_data(self):
-        if not self.should_be_shown:
-            return False
-        
-        elif self._force_input and not self._input:
+    def validate_data(self) -> bool:
+        """
+        Method for validation of input to the element.
+
+        Returns:
+            bool: *True*, if the input is correct and subjects may 
+                proceed to the next page, *False*, if the input is not
+                in the correct form.
+        """
+
+        if self.force_input and not self.input:
             self.hint_manager.post_message(self.no_input_hint)
             return False
+        else: 
+            return True
         
     @property
-    def no_input_hint(self):
+    def no_input_hint(self) -> str:
+        """
+        str: Hint for subjects, if they left a *force_input* field empty.
+        """
         if self._no_input_corrective_hint:
             return self._no_input_corrective_hint
         return self.default_no_input_hint
 
     @property
-    def default_no_input_hint(self):
+    def default_no_input_hint(self) -> str:
+        """
+        str: Default hint if subject input is missing in *force_entry* elements.
+        
+        This value is read from config.conf. Only used, if there is no 
+        dedicated :attr:`.no_input_hint` for this element.
+
+        Notes:
+            The property searches for an option of the form 
+            ``<element_class>_debug`` in the section *debug* of 
+            config.conf. If no option is found, the return value is
+            "You need to enter something".
+        """
         name = f"no_input{type(self).__name__}"
         return self.experiment.config.get("hints", name, fallback="You need to enter something.")
 
     @property
-    def input(self):
+    def prefix(self):
+        """ 
+        Union[str, Element]: A string or element, serving as prefix.
+
+        If the prefix is an element, the getter returns its 
+        :attr:`.Element.inner_html`. If it is a string, the getter 
+        returns the text, wrapped in an appropriate html container.
+        """
+        try:
+            return self._prefix.inner_html
+        except AttributeError:
+            return self._render_input_group_text(self._prefix)
+    
+    @property
+    def suffix(self):
+        """ 
+        Union[str, Element]: A string or element, serving as suffix.
+
+        If the suffix is an element, the getter returns its 
+        :attr:`.Element.inner_html`. If it is a string, the getter 
+        returns the text, wrapped in an appropriate html container.
+        """
+        try:
+            return self._suffix.inner_html
+        except AttributeError:
+            return self._render_input_group_text(self._suffix)
+    
+    def _render_input_group_text(self, text: str) -> str:
+        if text is not None:
+            return f"<div class='input-group-text'>{text}</div>"
+        else:
+            return None
+
+    @property
+    def input(self) -> str:
+        """
+        str: Subject input to this element.
+        """
         return self._input
 
     @input.setter
     def input(self, value):
         self._input = value
 
-    
     @property
     def data(self) -> dict:
-        """dict: Dictionary dictionary of element data."""
+        """
+        dict: Dictionary of element data.
+        
+        Includes the subject :attr:`.input` and the element's 
+        :attr:`.codebook_data`.
+        """
         data = {}
         data["value"] = self.input
         data.update(self.codebook_data)
         return {self.name: data}
 
-    def set_data(self, d):
+    def set_data(self, d: dict):
+        """
+        Sets the :attr:`.input` data.
+
+        Args:
+            d: A dictionary with data.
+        
+        Notes:
+            The *d* dictionary will usually be a dictionary of all data
+            collected on a page.
+        """
         if not self.disabled:
-            self._input = d.get(self.name, "")
+            try:
+                self.input = d[self.name]
+            except KeyError:
+                self.log.debug(f"No data for {self} found in data dictionary. Moving on.")
+                pass
 
     @property
-    def codebook_data(self):
+    def codebook_data(self) -> dict:
+        """
+        dict: Information about the element in dictionary form.
+        """
+
         from alfred3 import page
 
         data = {}
@@ -2085,15 +2371,26 @@ class InputElement(LabelledElement):
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
         data["force_input"] = self._force_input
+        data["prefix"] = self._prefix
+        data["suffix"] = self._suffix
         data["default"] = self.default
         data["description"] = self.description
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
+    
+    def added_to_page(self, page):
+        """:meta private: (documented at :class:`.Element`)"""
+        from . import page as pg
 
-    def added_to_experiment(self, exp):
-        if not self.name:
-            raise AlfredError(f"{type(self).__name__} must have a unique name.")
-        super().added_to_experiment(exp)
+        if not isinstance(page, pg.PageCore):
+            raise TypeError()
+
+        self.page = page
+        if self.name is None:
+            raise ValueError(f"{self} is not named. Input elements must be named")
+
+        if self.page.experiment and not self.experiment:
+            self.added_to_experiment(self.page.experiment)
 
 
 class Data(InputElement):
@@ -2142,25 +2439,13 @@ class TextEntry(InputElement):
     def __init__(
         self,
         toplab: str = None,
-        prefix: str = None,
-        suffix: str = None,
         placeholder: str = None,
         **kwargs,
     ):
         """Constructor method."""
         super().__init__(toplab=toplab, **kwargs)
 
-        self._prefix = prefix
-        self._suffix = suffix
         self._placeholder = placeholder if placeholder is not None else ""
-
-    @property
-    def prefix(self):
-        return self._prefix
-
-    @property
-    def suffix(self):
-        return self._suffix
 
     @property
     def placeholder(self):
@@ -2170,8 +2455,6 @@ class TextEntry(InputElement):
     def template_data(self):
         d = super().template_data
         d["placeholder"] = self.placeholder
-        d["prefix"] = self.prefix
-        d["suffix"] = self.suffix
         return d
 
     def validate_data(self):
