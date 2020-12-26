@@ -347,7 +347,8 @@ class Experiment:
         members = {}
 
         for member_name, member in self.members.items():
-            member_inst = member() if isclass(member) else copy.copy(member)
+            member_inst = member() if isclass(member) else member
+            
             members[member_name] = member_inst
 
         for member_inst in members.values():
