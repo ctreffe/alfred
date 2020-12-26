@@ -1,8 +1,0 @@
-<div class="{{ element_class }}" style="{{ alignment }}">
-    <video {{ attributes }} playsinline controlsList="nodownload">
-        {% for url in urls %}
-        <source src="{{ url }}">
-        {% endfor %}
-        Your browser does not support the video tag.
-    </video>
-</div>
