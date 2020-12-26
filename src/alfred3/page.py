@@ -500,13 +500,11 @@ class CoreCompositePage(PageCore):
             if not isinstance(elmnt, (elm.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
-            if not elmnt.name:
-                elmnt.name = self.generate_element_name(elmnt)
-
+            elmnt.added_to_page(self)
+            
             if elmnt.name in dir(self):
                 raise ValueError(f"Element name '{elmnt.name}' is also an attribute of {self}.")
 
-            elmnt.added_to_page(self)
 
             if self.exp is not None and elmnt.exp is None:
                 elmnt.added_to_experiment(self.exp)
@@ -518,7 +516,7 @@ class CoreCompositePage(PageCore):
         c = element.__class__.__name__
         self._element_name_counter += 1
 
-        return f"P_{self.name}_{c}_{i}"
+        return f"{self.name}_{c}_{i}"
 
     def __iadd__(self, other):
         self.append(other)
