@@ -62,6 +62,7 @@ from .exceptions import AlfredError
 from .config import ExperimentConfig
 from .config import ExperimentSecrets
 from . import util
+from . import element as elm
 
 
 class Experiment:
@@ -251,7 +252,7 @@ class Experiment:
             return add_member
         else:
             return add_member(_member)
-
+    
     @property
     def final_page(self):
         """
