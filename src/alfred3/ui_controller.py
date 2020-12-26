@@ -586,7 +586,6 @@ class UserInterface:
             d["messages"] = messages
 
         # progress bar
-        d["progress"] = self.progress()
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
         if d["show_progress"]:
