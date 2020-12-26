@@ -29,7 +29,7 @@ $(document).ready(function () {
 
 // Responsive support for choice elements (switch to vertical layout on XS screens)
 const responsive_choices = function () {
-    if (window.screen.width < 576) {
+    if (window.screen.width <= 576) {
 
         $(".choice-button-group.btn-group").addClass("btn-group-vertical changed");
         $(".choice-button-group.btn-group").removeClass("btn-group");
