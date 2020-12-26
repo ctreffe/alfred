@@ -117,6 +117,8 @@ from ._helper import fontsize_converter
 from ._helper import is_url
 from ._helper import check_name
 
+#: jinja2.Environment, giving access to included jinja-templates.
+#: :meta private:
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 """jinja2.Environment, giving access to included jinja-templates."""
 
@@ -350,6 +352,10 @@ class Element:
     See Also:
         * How to create a custom element
 
+    Notes:
+        The Element does not have its own display. It is used only
+        to inherit functionality.
+
     .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
     .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
     .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
@@ -444,7 +450,7 @@ class Element:
         .. note::
             If you wish to implement more sophisticated conditions (e.g.
             linking conditions with 'or' instead of 'and'), you can
-            do so by using if-statements in an *on_show* or 
+            do so by using if-statements in an *on_first_show* or 
             *on_each_show* page-hook. 
             
             Those conditions will not work for elements on the same page
@@ -811,7 +817,6 @@ class Element:
             experiment: The alfred experiment to which the element was
                 added.
         
-        :meta private:
         """
 
         if self.name in experiment.root_section.all_updated_elements:
@@ -825,14 +830,14 @@ class Element:
         self.log.add_queue_logger(self, __name__)
 
     def added_to_page(self, page):
-        """Tells the element that it was added to a page. 
+        """
+        Tells the element that it was added to a page. 
         
         The page and the experiment are made available to the element.
 
         Args:
             page: The page to which the element was added.
         
-        :meta private:
         """
         from . import page as pg
 
@@ -1055,12 +1060,14 @@ class Row(Element):
             are 'auto' (default), 'top', 'center', and 'bottom'. The
             elements of the list correspond to the row's columns. See
             :attr:`.RowLayout.valign_cols`
-        height: Custom row height (with unit, e.g. '100px').
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
             This switch exists, because some elements might default to
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
+        name, showif, height, **kwargs: Passed on to the base class
+            :class:`.Element`
+        
     
     Notes:
         * CSS-class: row-element
@@ -1108,13 +1115,14 @@ class Row(Element):
         self,
         *elements: Element,
         valign_cols: List[str] = None,
+        elements_full_width: bool = True,
         height: str = "auto",
         name: str = None,
         showif: dict = None,
-        elements_full_width: bool = True,
+        **kwargs
     ):
         """Constructor method."""
-        super().__init__(name=name, showif=showif)
+        super().__init__(name=name, showif=showif, height=height, **kwargs)
         
         #: List of the elements in this row
         self.elements: list = elements
@@ -1124,9 +1132,6 @@ class Row(Element):
         #: column widths via the width attributes 
         #: (e.g. :attr:`.RowLayout.width_xs`)
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
-
-        #: Custom row height (with unit, e.g. '100px').
-        self.height: str = height
 
         #: If *True*, all elements will take up the full horizontal
         #: space of their column, regardless of the element's
@@ -1518,8 +1523,8 @@ class Text(Element):
         CSS-class: text-element
     
     Examples:
-        A simple text element, including a 😊 (``:blush:``) emoji added to a 
-        page::
+        A simple text element, including a 😊 (``:blush:``) emoji added 
+        to a page::
 
             import alfred3 as al
             exp = al.Experiment()
@@ -1693,15 +1698,20 @@ class Label(Text):
 
 
 class LabelledElement(Element):
-    """An intermediate Element class which provides support for labels.
+    """
+    An intermediate Element class which provides support for labels.
+
+    This class is used as a base class for all elements that come
+    equipped with labels.
     
     Args:
-        toplab, leftlab, rightlab, bottomlab: Strings or instances of
-            :class:`Label`, which will be used to label the element.
+        toplab, leftlab, rightlab, bottomlab: String or instance of
+            :class:`.Label`, which will be used to label the element.
         layout: A list of integers, specifying the allocation of 
             horizontal space between leftlab, main element widget and
             rightlab. Uses Bootstraps 12-column-grid, i.e. you can
             choose integers between 1 and 12.
+
     """
 
     base_template = jinja_env.get_template("LabelledElement.html.j2")
