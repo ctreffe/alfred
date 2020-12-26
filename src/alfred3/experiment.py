@@ -393,6 +393,7 @@ class Experiment:
                 exp_session.final_page = self.final_page()
             elif isinstance(self.final_page, page.PageCore):
                 exp_session.final_page = self.final_page
+        
 
         return exp_session
 
@@ -717,8 +718,7 @@ class ExperimentSession:
 
         Args:
             sync: If *True*, the experiment will only proceed after the
-                saving task was completed. Default is to hand the saving
-                to its own thread.
+                saving task was completed.
 
         .. warning::
            Note that a call to this function will NOT prompt a call to
@@ -817,7 +817,7 @@ class ExperimentSession:
         transformed to a :class:`pathlib.Path` object.
 
         Returns:
-            Path: Absolute path
+            pathlib.Path: Absolute path
 
         """
         p = Path(path).resolve()
