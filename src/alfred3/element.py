@@ -1730,26 +1730,26 @@ class LabelledElement(Element):
         # default for width
         if leftlab and rightlab:
             # for accessing the right col in layout.col_breaks for the input field
-            self.input_col = 1
-            self.layout = RowLayout(ncols=3)
-            self.layout.width_sm = layout if layout is not None else [2, 8, 2]
+            self._input_col = 1
+            self._layout = RowLayout(ncols=3)
+            self._layout.width_sm = layout if layout is not None else [2, 8, 2]
         elif leftlab:
             # for accessing the right col in layout.col_breaks for the input field
-            self.input_col = 1
-            self.layout = RowLayout(ncols=2)
-            self.layout.width_sm = layout if layout is not None else [3, 9]
+            self._input_col = 1
+            self._layout = RowLayout(ncols=2)
+            self._layout.width_sm = layout if layout is not None else [3, 9]
         elif rightlab:
             # for accessing the right col in layout.col_breaks for the input field
-            self.input_col = 0
-            self.layout = RowLayout(ncols=2)
-            self.layout.width_sm = layout if layout is not None else [9, 3]
+            self._input_col = 0
+            self._layout = RowLayout(ncols=2)
+            self._layout.width_sm = layout if layout is not None else [9, 3]
         else:
             # for accessing the right col in layout.col_breaks for the input field
-            self.input_col = 0
-            self.layout = RowLayout(ncols=1)
-            self.layout.width_sm = [12]
+            self._input_col = 0
+            self._layout = RowLayout(ncols=1)
+            self._layout.width_sm = [12]
 
-        self.layout.valign_cols = ["center" for el in range(self.layout.ncols)]
+        self._layout.valign_cols = ["center" for el in range(self._layout.ncols)]
 
         self.toplab = toplab
         self.leftlab = leftlab
@@ -1757,6 +1757,7 @@ class LabelledElement(Element):
         self.bottomlab = bottomlab
 
     def added_to_page(self, page):
+        """:meta private: (documented at :class:`.Element`)"""
         super().added_to_page(page)
 
         for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
@@ -1764,8 +1765,9 @@ class LabelledElement(Element):
                 getattr(self, lab).name = f"{self.name}_{lab}"
 
     def added_to_experiment(self, experiment):
+        """:meta private: (documented at :class:`.Element`)"""
         super().added_to_experiment(experiment)
-        self.layout.responsive = self.experiment.config.getboolean("layout", "responsive")
+        self._layout.responsive = self.experiment.config.getboolean("layout", "responsive")
 
         if self.toplab:
             self.toplab.added_to_experiment(experiment)
@@ -1781,7 +1783,7 @@ class LabelledElement(Element):
 
     @property
     def toplab(self):
-        """Label above of the main element widget."""
+        """.Label: Label above of the main element widget."""
         return self._toplab
 
     @toplab.setter
@@ -1795,7 +1797,7 @@ class LabelledElement(Element):
 
     @property
     def bottomlab(self):
-        """Label below of the main element widget."""
+        """.Label: Label below of the main element widget."""
         return self._bottomlab
 
     @bottomlab.setter
@@ -1809,43 +1811,43 @@ class LabelledElement(Element):
 
     @property
     def leftlab(self):
-        """Label to the left of the main element widget."""
+        """.Label: Label to the left of the main element widget."""
         return self._leftlab
 
     @leftlab.setter
     def leftlab(self, value: str):
         if isinstance(value, Label):
             self._leftlab = value
-            self._leftlab.layout = self.layout
+            self._leftlab.layout = self._layout
             self._leftlab.layout_col = 0
         elif isinstance(value, str):
             self._leftlab = Label(text=value, align="right")
-            self._leftlab.layout = self.layout
+            self._leftlab.layout = self._layout
             self._leftlab.layout_col = 0
         else:
             self._leftlab = None
 
     @property
     def rightlab(self):
-        """Label to the right of the main element widget."""
+        """.Label: Label to the right of the main element widget."""
         return self._rightlab
 
     @rightlab.setter
     def rightlab(self, value: str):
         if isinstance(value, Label):
             self._rightlab = value
-            self._rightlab.layout = self.layout
-            self._rightlab.layout_col = self.input_col + 1
+            self._rightlab.layout = self._layout
+            self._rightlab.layout_col = self._input_col + 1
         elif isinstance(value, str):
             self._rightlab = Label(text=value, align="left")
-            self._rightlab.layout = self.layout
-            self._rightlab.layout_col = self.input_col + 1
+            self._rightlab.layout = self._layout
+            self._rightlab.layout_col = self._input_col + 1
         else:
             self._rightlab = None
 
     @property
     def labels(self) -> str:
-        """Returns the labels in a single, nicely formatted string."""
+        """str: Returns the labels in a single, nicely formatted string."""
 
         labels = []
         if self.toplab:
@@ -1862,13 +1864,14 @@ class LabelledElement(Element):
 
     @property
     def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["toplab"] = self.toplab
         d["leftlab"] = self.leftlab
         d["rightlab"] = self.rightlab
         d["bottomlab"] = self.bottomlab
-        d["input_breaks"] = self.layout.col_breaks(col=self.input_col)
-        d["input_valign"] = self.layout.valign_cols[self.input_col]
+        d["input_breaks"] = self._layout.col_breaks(col=self._input_col)
+        d["input_valign"] = self._layout.valign_cols[self._input_col]
         return d
 
 
