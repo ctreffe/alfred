@@ -126,7 +126,6 @@ class Exporter:
 
     def export_codebook(self):
         data = self.exp.data_manager.codebook_data
-        fieldnames = DataManager.extract_fieldnames(data)
 
         version = self.exp.config.get("metadata", "version")
         csv_name = f"{DataManager.CODEBOOK_DATA}_{version}.csv"
@@ -149,6 +148,7 @@ class Exporter:
             
             data = existing_codebook
 
+        fieldnames = DataManager.extract_fieldnames(data)
         with open(path, "w", encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
             writer.writeheader()
