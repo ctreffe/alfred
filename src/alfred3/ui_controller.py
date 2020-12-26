@@ -537,6 +537,12 @@ class UserInterface:
         first_page = self.exp.movement_manager.first_page
         if page is first_page and self.experiment.config.getboolean("general", "save_client_info"):
             code["js_code"] += [(7, importlib.resources.read_text(js, "clientinfo.js"))]
+        
+        try:
+            code["css_code"] += self.exp.progress_bar.css_code
+            code["js_code"] += self.exp.progress_bar.js_code
+        except AttributeError:
+            pass
 
         return code
 
@@ -598,31 +604,15 @@ class UserInterface:
         d["progress"] = self.progress()
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
+        if d["show_progress"]:
+            self.exp.progress_bar._prepare_web_widget()
+            d["progress"] = self.exp.progress_bar.web_widget
 
         return self.template.render(d)
 
     def render_html(self, page_token):
         """Alias for render, provided for compatibility."""
         return self.render(page_token=page_token)
-
-    def progress(self):
-        n_el = 0
-        for el in self.exp.root_section.all_input_elements.values():
-            if el.should_be_shown:
-                n_el += 1
-            elif el.showif or el.page.showif or el.section.showif:
-                n_el += 0.3
-
-        n_pg = len(self.experiment.root_section.visible("all_pages"))
-        shown_el = len(self.experiment.root_section.all_shown_input_elements)
-        shown_pg = len(self.experiment.root_section.all_shown_pages)
-        exact_progress = ((shown_el + shown_pg) / (n_el + n_pg)) * 100
-        
-        if not self.experiment.finished:
-            return min(round(exact_progress, 1), 95)
-        else:
-            return 100
-
 
     @property
     def basepath(self):

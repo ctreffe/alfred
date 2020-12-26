@@ -574,6 +574,8 @@ class ExperimentSession:
 
         self.user_interface_controller = UserInterface(self)
         self.ui = self.user_interface_controller
+        
+        self.progress_bar = elm.ProgressBar() # documented in getter method
 
         # init logging message
         self.log.info(
@@ -584,7 +586,62 @@ class ExperimentSession:
                 f"Experiment version: {self.version}"
             )
         )
+    
+    @property
+    def progress_bar(self) -> elm.ProgressBar:
+        """
+        The experiment's progress bar.
 
+        There are two options in *config.conf* that control the progress
+        bar, both in the *layout* section:
+
+        * ``show_progress`` (true/false) toggles whether a progress bar 
+          is displayed at all
+        * ``fix_progress_top`` (true/false) toggles whether the progress 
+          bar  should stay at a fixed position at the top of the page, 
+          when subjects scroll down on a long page.
+        
+        The progress bar can be customized by redefining it with a
+        :class:`.element.ProgressBar` of your choosing.
+
+        See Also:
+            See :class:`.element.ProgressBar` for more information on
+            how to specify a custom progress bar.
+        
+        Notes:
+            The experiment-wide progress bar *always* receives a name
+            of "*progress_bar_*".
+
+        Examples:
+
+            Example of controlling the progress bar in the config.conf:
+
+            .. code-block:: ini
+
+                [layout]
+                show_progress = true
+                fix_progress_top = false
+            
+            Example of redefining the experiment-wide progress bar::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    exp.progress_bar = al.ProgressBar(show_text=True, bar_height="10px")
+
+        """
+        return self._progress_bar
+    
+    @progress_bar.setter
+    def progress_bar(self, bar: elm.ProgressBar):
+        if bar.name is not None:
+            raise AlfredError("If you redefine the progress bar, you can't set a custom name.")
+        bar.name = "progress_bar_"
+        bar.added_to_experiment(self)
+        self._progress_bar = bar
+    
     def start(self):
         """
         Starts the experiment.

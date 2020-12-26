@@ -9,12 +9,13 @@ id="page-container">
 <div class="progress-container {% if fix_progress_top %}progress-sticky{% endif %}" id="progress-container">
 
     {% if show_progress %}
-        <div class="progress">
+    {{ progress|safe }}
+        {# <div class="progress page-progress">
             <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ progress }}%;"
                 aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
                 <!-- <span class="progress-text">{{ progress }}%</span> -->
             </div>
-        </div>
+        </div> #}
         {% endif %}
 </div>
 
