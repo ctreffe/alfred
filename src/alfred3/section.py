@@ -161,7 +161,6 @@ class Section(ExpMember):
     def all_shown_pages(self) -> dict:
         return {name: page for name, page in self.all_pages.items() if page.has_been_shown}
     
-    
     @property
     def pages(self) -> dict:
         """Returns a flat dict of all pages in this section.
