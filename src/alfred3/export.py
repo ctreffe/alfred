@@ -54,9 +54,9 @@ class Exporter:
         self.exp = experiment
         self.csv_dir = self.exp.subpath(self.exp.config.get("general", "csv_directory"))
         self.delimiter = self.exp.config.get("general", "csv_delimiter")
-    
+
     def export(self, data_type):
-        
+        self.csv_dir.mkdir(parents=True, exist_ok=True)
         if data_type == DataManager.CODEBOOK_DATA:
             self.export_codebook()
         elif data_type == DataManager.HISTORY:
@@ -74,11 +74,19 @@ class Exporter:
 
         path = self.csv_dir / csv_name
         
-        with open(path, "a", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-            if not path.read_text():  
-                writer.writeheader()
-            writer.writerow(data)
+        try:
+            with open(path, "a", encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
+                if not path.read_text():  
+                    writer.writeheader()
+                writer.writerow(data)
+        except FileNotFoundError:
+            with open(path, "w", encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
+                if not path.read_text():  
+                    writer.writeheader()
+                writer.writerow(data)
+
     
     def export_history(self):
         csv_name = "move_history.csv"
