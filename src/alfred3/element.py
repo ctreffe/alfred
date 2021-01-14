@@ -2472,6 +2472,25 @@ class TextArea(TextEntry):
         return d
 
 
+class Button(InputElement):
+    element_template = jinja_env.get_template("ButtonElement.html.j2")
+
+    def __init__(self, label, **kwargs):
+        super().__init__(**kwargs)
+        self.label = label
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["label"] = self.label
+        return d
+    
+    def on_click(self):
+        pass
+    
+
+
+
 @dataclass
 class Choice:
     """Dataclass for managing choices."""
@@ -2991,7 +3010,7 @@ class SingleChoiceList(SingleChoice):
         return d
 
 
-class SelectPage(SingleChoiceList):
+class SelectPageList(SingleChoiceList):
     def __init__(
         self,
         toplab: str = None,
@@ -3123,7 +3142,7 @@ class JumpList(Row):
         name = kwargs.get("name", random_name)
         select_name = name + "_select"
         btn_name = name + "_btn"
-        select = SelectPage(
+        select = SelectPageList(
             scope=scope,
             name=select_name,
             check_jumpto=check_jumpto,
@@ -3146,6 +3165,60 @@ class JumpList(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
+
+# class ActionList(Element):
+
+#     def __init__(self, list_element, button_element):
+        # self.list_element = list_element
+        # self.button_element = button_element
+    
+
+
+# class JumpList2(SelectPageList):
+    # def __init__(
+    #     self,
+    #     scope: str = "exp",
+    #     label: str = "Jump",
+    #     check_jumpto: bool = True,
+    #     check_jumpfrom: bool = True,
+    #     debugmode: bool = False,
+    #     show_all_in_scope: bool = True,
+    #     button_style: Union[str, list] = "btn-dark",
+    #     button_corners: str = "normal",
+    #     **kwargs,
+    # ):
+    #     name = kwargs.get("name", "jumplist_" + uuid4().hex)
+    #     select_name = name + "_select"
+    #     btn_name = name + "_btn"
+    #     self.btn = DynamicJumpButtons(
+    #         (label, select_name),
+    #         name=btn_name,
+    #         button_style=button_style,
+    #         button_corners=button_corners,
+    #     )
+    #     self.btn.should_be_shown = False
+    #     self.btn.add_css(f"#choice1-{self.btn.name}-lab {{border-top-left-radius: 0; border-bottom-left-radius: 0;}}")
+    #     super().__init__(
+    #         scope=scope, 
+    #         name=select_name, 
+    #         # suffix="test",
+    #         check_jumpto=check_jumpto,
+    #         check_jumpfrom=check_jumpfrom,
+    #         show_all_in_scope=show_all_in_scope,
+    #         )
+        
+    # def _prepare_web_widget(self):
+    #     super()._prepare_web_widget()
+    #     self.btn._prepare_web_widget()
+    #     self.suffix = self.btn.inner_html
+    
+    # def added_to_page(self, page):
+    #     super().added_to_page(page)
+    #     self.btn.added_to_page(page)
+    
+    # def added_to_experiment(self, exp):
+    #     super().added_to_experiment(exp)
+    #     self.btn.added_to_experiment(exp)
 
 
 class MultipleChoiceList(MultipleChoice):

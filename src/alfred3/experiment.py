@@ -69,9 +69,10 @@ class Experiment:
     """ 
     Holds pages and section and creates experiment sessions.
 
-    Experiment members can be accessed via dictionary-style square
-    brackets and added with the augmented assigment operator ``+=`` 
-    (see exampples).
+    Experiment members can be added with the augmented assigment 
+    operator ``+=`` (see exampples). They can be accessed with the
+    dictionary-style square bracket syntac and with the attribute-style
+    dot syntax (see examples).
 
     The class acts as an organizing container for pages and section for
     orderly instantiation of the :class:`.ExperimentSession`.
@@ -86,6 +87,11 @@ class Experiment:
         {"page1": Page(class="Page", name="page1")}
         
         >>> exp["page1"]
+        Page(class="Page", name="page1")
+
+        Access a page with attribute syntax
+
+        >>> exp.page1
         Page(class="Page", name="page1")
     
     .. versionadded:: 2.0
