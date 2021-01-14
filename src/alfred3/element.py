@@ -124,7 +124,8 @@ jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 
 class RowLayout:
-    """Provides layouting functionality for responsive horizontal 
+    """
+    Provides layouting functionality for responsive horizontal 
     positioning of elements.
 
     Default behavior is to have equal-width columns with an automatic
@@ -189,11 +190,15 @@ class RowLayout:
         self.width_xl: List[int] = None
 
     def col_breaks(self, col: int) -> str:
-        """Returns the column breakpoints for a specific column as 
+        """
+        Returns the column breakpoints for a specific column as 
         strings for use as bootstrap classes.
         
         Args:
             col: Column index (starts at 0)
+        
+        Returns:
+            str: Column breakpoints for a specific column
         """
         xs = self.format_breaks(self.width_xs, "xs")[col]
         sm = self.format_breaks(self.width_sm, "sm")[col]
@@ -213,7 +218,8 @@ class RowLayout:
             return out
 
     def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
-        """Takes a list of column sizes (in integers from 1 to 12) and
+        """
+        Takes a list of column sizes (in integers from 1 to 12) and
         returns a corresponding list of formatted Bootstrap column 
         classes.
 
@@ -221,6 +227,9 @@ class RowLayout:
             breaks: List of integers, indicating the breakpoints.
             bp: Specifies the relevant bootstrap breakpoint. (xs, sm,
                 md, lg, or xl).
+        
+        Returns:
+            List[str]: List of ready-to-use bootstrap column classes
         """
         try:
             if len(breaks) > self.ncols:
@@ -250,7 +259,8 @@ class RowLayout:
 
     @property
     def valign_cols(self) -> List[str]:
-        """List[str]: Vertical column alignments. 
+        """
+        List[str]: Vertical column alignments. 
         
         Valid values are 'auto' (default), 'top', 'center', and 'bottom'.
         Can be specified upon initalization or modified as instance
@@ -1630,9 +1640,6 @@ class CodeBlock(Text):
         **kwargs: Keyword arguments are passed on to the parent elements
             :class:`.Text` and :class:`.Element`
     
-    Notes:
-        * CSS-class: code-element
-    
     .. [#lang] See https://prismjs.com/index.html#supported-languages
         for an overview of possible language codes. Note though that 
         we may not support all possible languages.
@@ -1668,10 +1675,8 @@ class CodeBlock(Text):
 
 class Label(Text):
     """
-    A child of the :class:`.Text` element, serving as label for other elements.
+    A utility class, serving as label for other elements.
 
-    Notes:
-        * CSS-class: label-element
     """
 
 
@@ -1875,7 +1880,6 @@ class LabelledElement(Element):
         return d
 
 
-
 class ProgressBar(LabelledElement):
     """
     Displays a progress bar.
@@ -2029,7 +2033,6 @@ class ProgressBar(LabelledElement):
         return d
 
 
-
 class InputElement(LabelledElement):
     """
     Base class for elements that allow data input.
@@ -2126,33 +2129,6 @@ class InputElement(LabelledElement):
         except AttributeError:
             pass
     
-    def added_to_experiment(self, exp):
-        """:meta private: (documented at :class:`.Element`)"""
-        super().added_to_experiment(exp)
-        try:
-            self._prefix.added_to_experiment(exp)
-        except AttributeError:
-            pass
-        
-        try: 
-            self._suffix.added_to_experiment(exp)
-        except AttributeError:
-            pass
-    
-    def added_to_page(self, page):
-        """:meta private: (documented at :class:`.Element`)"""
-        super().added_to_page(page)
-
-        try:
-            self._prefix.added_to_page(page)
-        except AttributeError:
-            pass
-        
-        try:
-            self._suffix.added_to_page(page)
-        except AttributeError:
-            pass
-
     @property
     def corrective_hints(self) -> Iterator[str]:
         """
@@ -2391,6 +2367,13 @@ class InputElement(LabelledElement):
 
         if self.page.experiment and not self.experiment:
             self.added_to_experiment(self.page.experiment)
+        
+        for fix in (self._prefix, self._suffix):
+            try:
+                fix.should_be_shown = False
+                self.page += fix
+            except AttributeError:
+                pass
 
 
 class Data(InputElement):
