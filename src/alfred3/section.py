@@ -4,8 +4,6 @@
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 """
 
-from deprecation import deprecated
-
 from . import element as elm
 from ._core import ExpMember
 from .page import PageCore, UnlinkedDataPage, DefaultFinalPage
@@ -543,12 +541,3 @@ class RootSection(Section):
         self.finished_section.members = {}
         self.finished_section._final_page = page
     
-    
-    @deprecated("1.5", "2.0", None, details="Use the simple setter for the attribute 'final_page' instead.")
-    def append_item_to_finish_section(self, item):
-        """
-        :param item: Element vom Typ Page oder Section
-
-        .. todo:: Ist diese Funktion überhaupt nötig, wenn die finishedSection in init bereits erstellt wird?
-        """
-        self.final_page = item

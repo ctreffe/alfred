@@ -4,7 +4,6 @@ import logging
 import traceback
 import re
 import os
-from deprecation import deprecated
 
 from uuid import uuid4
 from pathlib import Path
@@ -33,9 +32,10 @@ class Script:
     expdir = None
     config = None
 
-    @deprecated("1.2", "2.0")
     def set_generator(self, generator):
-        """Included for backwards compatibility from v1.2.0 onwards.
+        """
+        DEPRECATED
+        Included for backwards compatibility from v1.2.0 onwards.
         
         """
         # if the script.py contains generate_experiment directly, not as a class method
