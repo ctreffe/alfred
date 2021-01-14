@@ -43,7 +43,6 @@ from typing import Iterator
 
 import pymongo
 from cryptography.fernet import Fernet
-from deprecation import deprecated
 
 from . import alfredlog
 from .section import Section, RootSection
@@ -85,6 +84,8 @@ class Experiment:
         >>> exp += al.Page(name="page1")
         >>> exp.members
         {"page1": Page(class="Page", name="page1")}
+
+        Access a page with square bracket syntax.
         
         >>> exp["page1"]
         Page(class="Page", name="page1")
@@ -1216,32 +1217,6 @@ class ExperimentSession:
 
         d = self._encryptor.decrypt(d_bytes)
         return d.decode()
-
-    @deprecated(
-        "1.5", "2.0", __version__, "Use the attribute setter for :attr:`.final_page` instead."
-    )
-    def change_final_page(self, page):
-        msg = "change_final_page is deprecated. Use the attribute setter for :attr:`.final_page` instead."
-        self.log.warning(msg)
-        self.root_section.append_item_to_finish_section(page)
-
-    @deprecated("1.5", "2.0", __version__, "Use :attr:`.additional_data` instead.")
-    def set_additional_data(self, key: str, value):
-        """Shortcut for :meth:`DataManager.add_additional_data`.
-        """
-        self.log.warning(
-            "set_additional_data is deprecated. Use :attr:`.additional_data` instead."
-        )
-        self.data_manager.add_additional_data(key, value)
-
-    @deprecated("1.5", "2.0", __version__, "Use :attr:`.additional_data` instead.")
-    def get_additional_data(self, key: str):
-        """Shortcut for :meth:`DataManager.get_additional_data_by_key`.
-        """
-        self.log.warning(
-            "get_additional_data is deprecated. Use :attr:`.additional_data` instead."
-        )
-        return self.data_manager.get_additional_data_by_key(key)
 
     def forward(self):
         """
