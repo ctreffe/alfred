@@ -40,6 +40,19 @@ div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
     border-radius: 0.25rem;
 }
 
+div.input-group-append>div {
+    flex-grow: 1;
+    margin-left: 0!important;
+    margin-right: 0!important;
+}
+
+div.input-group-append>div>label {
+    border-top-left-radius: 0!important;
+    border-bottom-left-radius: 0!important;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+}
+
 .btn-group-vertical.choice-button-group>label.btn.choice-button:not(:last-child) {
     margin-bottom: 0.25rem;
     border-radius: 0.25rem;
