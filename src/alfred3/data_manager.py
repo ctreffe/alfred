@@ -455,6 +455,8 @@ class DataManager(object):
 
 def decrypt_recursively(data: Union[list, dict, int, float, str, bytes], key: bytes) -> Union[list, dict, int, float, str, bytes]:
     """
+    Used mainly for decrypting encrypted values in a nested dictionary.
+    Can also decrypt single values.
 
     The encryption/decryption mechanism is symmetric.
 
