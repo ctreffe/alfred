@@ -453,38 +453,34 @@ class DataManager(object):
 
             yield doc
 
-
-class DataDecryptor:
-    """Used for decrypting encrypted values in a nested dictionary.
-    
-    The encryption/decryption mechanism is symmetric. The decryptor 
-    needs to be initialized with a valid key.
-    
-    Use the method :meth:`decrypt` for decryption.
+def decrypt_recursively(data: Union[list, dict, int, float, str, bytes], key: bytes) -> Union[list, dict, int, float, str, bytes]:
     """
 
-    def __init__(self, key):
-        self.f = Fernet(key=key)
+    The encryption/decryption mechanism is symmetric.
 
-    def decrypt(self, data):
+    Returns:
+        Decrypted object of the same type as the input.
 
-        if isinstance(data, bytes):
-            try:
-                return self.f.decrypt(data)
-            except InvalidToken:
-                return data
+    """
+    f = Fernet(key=key)
 
-        if isinstance(data, (int, float, str)):
-            try:
-                original_type = type(data)
-                data_in_bytes = str(data).encode()
-                decrypted_value = original_type(self.f.decrypt(data_in_bytes).decode())
-                return decrypted_value
-            except InvalidToken:
-                return data
+    if isinstance(data, bytes):
+        try:
+            return f.decrypt(data)
+        except InvalidToken:
+            return data
 
-        elif isinstance(data, list):
-            return [self.decrypt(entry) for entry in data]
+    if isinstance(data, (int, float, str)):
+        try:
+            original_type = type(data)
+            data_in_bytes = str(data).encode()
+            decrypted_value = original_type(f.decrypt(data_in_bytes).decode())
+            return decrypted_value
+        except InvalidToken:
+            return data
 
-        elif isinstance(data, dict):
-            return {k: self.decrypt(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [decrypt_recursively(entry, key=key) for entry in data]
+
+    elif isinstance(data, dict):
+        return {k: decrypt_recursively(v, key=key) for k, v in data.items()}
