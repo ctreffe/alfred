@@ -135,14 +135,14 @@ class DataManager(object):
         return d
     
     @property
-    def codebook_data(self) -> List[dict]:
+    def codebook_data(self) -> Dict[dict]:
         exp = self.extract_codebook_data(self.session_data)
         unlinked = self.extract_codebook_data(self.unlinked_data)
 
-        return exp + unlinked
+        return {**exp, **unlinked}
     
     @staticmethod
-    def extract_codebook_data(exp_data: dict) -> List[dict]:
+    def extract_codebook_data(exp_data: dict) -> Dict[dict]:
         meta = {}
         meta["alfred_version"] = exp_data["alfred_version"]
         meta["exp_author"] = exp_data["exp_author"]
@@ -155,7 +155,7 @@ class DataManager(object):
             entry.pop("value", None)
             entry.update(meta)
         
-        return [value for value in codebook.values()]
+        return codebook
     
     @staticmethod
     def extract_fieldnames(data: Iterator) -> list:
