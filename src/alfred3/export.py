@@ -54,6 +54,7 @@ class Exporter:
         self.exp = experiment
         self.csv_dir = self.exp.subpath(self.exp.config.get("general", "csv_directory"))
         self.delimiter = self.exp.config.get("general", "csv_delimiter")
+        self.save_dir = self.exp.subpath(self.exp.config.get("local_saving_agent", "path"))
 
     def export(self, data_type):
         self.csv_dir.mkdir(parents=True, exist_ok=True)
@@ -68,26 +69,36 @@ class Exporter:
 
     def export_exp_data(self):
         csv_name = "exp_data.csv"
-        
-        data = self.exp.data_manager.flat_session_data
-        fieldnames = list(data.keys())
-
         path = self.csv_dir / csv_name
+
+        if path.exists() and path.read_text():
+            with open(path, "r", encoding="utf-8") as csvfile:
+                reader = csv.DictReader(csvfile, delimiter=self.delimiter)
+                
+                alldata = []
+                for row in reader:
+                    alldata.append(dict(row))
+            
+            sessiondata = self.exp.data_manager.flat_session_data
+            alldata.append(sessiondata)
+            fieldnames = DataManager.extract_ordered_fieldnames(alldata)
         
-        try:
-            with open(path, "a", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-                if not path.read_text():  
-                    writer.writeheader()
-                writer.writerow(data)
-        except FileNotFoundError:
             with open(path, "w", encoding="utf-8") as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-                if not path.read_text():  
-                    writer.writeheader()
-                writer.writerow(data)
+                writer.writeheader()
+                writer.writerows(alldata)
+        else:
+            existing_data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
+            sessiondata = self.exp.data_manager.session_data
+            alldata = existing_data + [sessiondata]
+            fieldnames = DataManager.extract_ordered_fieldnames(alldata)
+            
+            alldata = [DataManager.flatten(d) for d in alldata]
+            with open(path, "w", encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
+                writer.writeheader()
+                writer.writerows(alldata)
 
-    
     def export_history(self):
         csv_name = "move_history.csv"
         data = self.exp.data_manager.move_history

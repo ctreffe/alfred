@@ -158,12 +158,79 @@ class DataManager(object):
         return [value for value in codebook.values()]
     
     @staticmethod
-    def extract_fieldnames(data: dict) -> list:
+    def extract_fieldnames(data: Iterator) -> list:
+        """
+        Finds correct fieldnames for exporting multiple unlinked or
+        codebook datasets to a single csv file.
+
+        Args:
+            data: A list or other iterator, providing the individual
+                datasets
+        
+        Returns:
+            list: List of fieldnames
+        
+        Note:
+            The first scanned document determines the initial order of
+            the fieldnames. Subsequently found additional fieldnames
+            are simply appended.
+        """
         fieldnames = {}
         for element in data:
             fieldnames.update(element) 
         
         return list(fieldnames)
+    
+    @staticmethod
+    def extract_ordered_fieldnames(data: Iterator) -> list:
+        """ 
+        Finds correct (and correctly ordered) fieldnames for exporting 
+        multiple experiment datasets to a single csv file.
+
+        Args:
+            data: A list or other iterator providing the individual
+                datasets.
+
+        Returns:
+            list: List of fieldnames
+
+        Notes:
+            The fieldnames are ordered as follows:
+
+            1. Experiment metadata
+            2. Client info data
+            3. Element data (ordered alphabetically by element name)
+            4. Additional data
+
+        """
+        metadata = []
+        client_info = []
+        elements = {}
+
+        for dataset in data:
+            d = copy.copy(dataset)
+            els = d.pop("exp_data", {})
+            elements.update(els)
+            d.pop("exp_move_history", None)
+
+            d.pop("_id", None) # remove mongoDB doc ID, if there is one
+            
+            for entry in list(d.keys()):
+                if entry.startswith("client_"):
+                    d.pop(entry)
+                    client_info.append(entry)
+                else:
+                    metadata.append(entry)
+        
+        metadata = [name for name in metadata if name != "additional_data"]
+        
+        element_names = sorted(list(elements))
+        metadata = sorted(list(set(metadata)))
+        client_info = sorted(list(set(client_info)))
+
+        fieldnames = metadata + client_info + element_names + ["additional_data"]
+        return fieldnames
+
 
     @staticmethod
     def flatten(data: dict) -> dict:
@@ -174,6 +241,10 @@ class DataManager(object):
         additional_data = data.pop("additional_data", {})
 
         return {**data, **values, **additional_data}
+    
+    @staticmethod
+    def regularize(data: dict) -> dict:
+        pass
 
     @property
     def unlinked_data(self):
@@ -252,7 +323,7 @@ class DataManager(object):
 
         return worker(data, uid)
 
-    def mongo_exp_data(self, data_type: str = "exp_data"):
+    def mongo_exp_data(self, data_type: str = "exp_data") -> Iterator[dict]:
         cursor = self.iterate_mongo_data(
             exp_id=self.exp.exp_id, 
             data_type=data_type, 
@@ -263,9 +334,10 @@ class DataManager(object):
             self.log.warning("Can't access unlinked data (too few datasets for unlinking).")
             return []
         
-        return [self.flatten(dataset) for dataset in cursor]
-    
-    def local_exp_data(self, data_type: str = "exp_data"):
+        for dataset in cursor:
+            yield self.flatten(dataset)
+        
+    def local_exp_data(self, data_type: str = "exp_data") -> Iterator[dict]:
         if data_type == "exp_data":
             path = self.exp.config.get("local_saving_agent", "path")
         elif data_type == "unlinked_data":
@@ -277,12 +349,14 @@ class DataManager(object):
         if data_type == "unlinked" and len(cursor) < 15:
             self.log.warning("Can't access unlinked data (too few datasets for unlinking).")
             return []
+        
+        for dataset in cursor:
+            yield self.flatten(dataset)
 
-        return [self.flatten(dataset) for dataset in cursor]
-    
     @property
-    def all_exp_data(self):
-        return self.mongo_exp_data() + self.local_exp_data()
+    def all_exp_data(self) -> Iterator[dict]:
+        yield self.mongo_exp_data()
+        yield self.local_exp_data()
     
     @property
     def all_unlinked_data(self):
@@ -396,8 +470,7 @@ class DataDecryptor:
 
         if isinstance(data, bytes):
             try:
-                decrypted_value = self.f.decrypt(data)
-                return decrypted_value
+                return self.f.decrypt(data)
             except InvalidToken:
                 return data
 
@@ -411,13 +484,7 @@ class DataDecryptor:
                 return data
 
         elif isinstance(data, list):
-            derypted_list = []
-            for entry in data:
-                derypted_list.append(self.decrypt(entry))
-            return derypted_list
+            return [self.decrypt(entry) for entry in data]
 
         elif isinstance(data, dict):
-            decrypted_dict = {}
-            for k, v in data.items():
-                decrypted_dict[k] = self.decrypt(v)
-            return decrypted_dict
+            return {k: self.decrypt(v) for k, v in data.items()}
