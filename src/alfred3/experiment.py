@@ -99,20 +99,22 @@ class Experiment:
     
     """
 
-    _final_page = None
+    def __init__(self):
+        self._final_page = None
 
-    #: A dictionary of all pages and sections added to the experiment.
-    members: dict = {}
+        #: A dictionary of all pages and sections added to the experiment.
+        self.members: dict = {}
 
-    #: A list of function that will be called upon creation of an 
-    #: experiment session. They are added with the :meth:`.setup`
-    #: decorator
-    setup_functions: List[callable] = []
+        #: A list of function that will be called upon creation of an 
+        #: experiment session. They are added with the :meth:`.setup`
+        #: decorator
+        self.setup_functions: List[callable] = []
 
-    #: A list of function that will be called upon finishing an 
-    #: experiment session. They are added with the :meth:`.finish`
-    #: decorator
-    finish_functions: List[callable] = []
+        #: A list of function that will be called upon finishing an 
+        #: experiment session. They are added with the :meth:`.finish`
+        #: decorator
+        self.finish_functions: List[callable] = []
+
 
     def setup(self, func):
         """
@@ -384,7 +386,7 @@ class Experiment:
             * Take care of how the condition gets set.
 
         """
-        exp_session = ExperimentSession(session_id=session_id, config=config, **urlargs)
+        exp_session = ExperimentSession(session_id=session_id, config=config, secrets=secrets, **urlargs)
 
         for fun in self.setup_functions:
             fun(exp_session)
@@ -397,7 +399,7 @@ class Experiment:
 
         if self.final_page is not None:
             if isclass(self.final_page):
-                exp_session.final_page = self.final_page()
+                exp_session.final_page = self.final_page
             elif isinstance(self.final_page, page.PageCore):
                 exp_session.final_page = self.final_page
         
