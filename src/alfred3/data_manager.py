@@ -254,8 +254,8 @@ class DataManager(object):
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_id"] = self._experiment.exp_id
-        data["exp_version"] = "__unlinked__"
-        data["alfred_version"] = self.experiment.alfred_version
+        data["exp_version"] = self._experiment.version
+        data["alfred_version"] = self._experiment.alfred_version
         data["exp_type"] = self._experiment.type
         return data
     
