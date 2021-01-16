@@ -2527,6 +2527,82 @@ class TextArea(TextEntry):
         return d
 
 
+class RegEntry(TextEntry):
+    """
+    Displays an input field, which only accepts inputs, matching a
+    predefined regular expression.
+
+    Args:
+        pattern: Regular expression string to match with user input. We
+            recommend that you use raw literal strings prefaced by 'r' 
+            (see Examples). That removes the necessity for escaping some
+            characters twice and thus makes the regular expression
+            easier to read and write.
+        match_hint: Hint to be displayed if the user input doesn't
+            match with the regular expression.
+        **kwargs, toplab: Keyword arguments that are passed on to the
+            parent class :class:`.TextEntry`.
+
+    Examples:
+        
+        Example for a RegEntry element that will match any input:
+
+            >>> import alfred3 as al
+            >>> regentry = al.RegEntry("Enter text here", pattern=r".*", name="reg1")
+            >>> regentry
+            RegEntry(name='reg1')
+
+    """
+
+    def __init__(self, toplab: str = None, pattern: str = r".*", match_hint: str = None, **kwargs):
+        super().__init__(toplab=toplab, **kwargs)
+
+        self.pattern = re.compile(pattern)
+        self._match_hint = match_hint
+
+    def validate_data(self):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        if not self.should_be_shown:
+            return True
+        
+        elif not self.force_input:
+            return True
+        
+        elif not self.input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+        
+        elif not self.pattern.fullmatch(self.input):
+            self.hint_manager.post_message(self.match_hint)
+            return False
+
+    @property
+    def match_hint(self):
+        """
+        str: Hint to be displayed, if participant input does not match
+        the provided pattern.
+        """
+        if self._match_hint:
+            return self._match_hint
+        else:
+            return self.default_match_hint
+    
+    @property
+    def default_match_hint(self) -> str:
+        """
+        str: Default match hint for this element, extracted from config.conf
+        """
+        name = f"match_{type(self).__name__}"
+        return self.experiment.config.get("hints", name)
+    
+    @property
+    def codebook_data(self) -> dict:
+        """:meta private: (documented at :class:`.InputElement`)"""
+        d = super().codebook_data
+        d["regex_pattern"] = self.pattern.pattern
+        return d
+    
+
 @dataclass
 class Choice:
     """Dataclass for managing choices."""
