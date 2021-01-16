@@ -72,5 +72,22 @@ def read_csv_tolist(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -
         for row in reader:
             yield row    
 
-def random_condition(*conditions):
-    return random.choice(conditions)
+def random_condition(*conditions) -> str:
+    """
+    Returns a random condition based on the supplied arguments with 
+    equal probability of all conditions.
+
+    Args:
+        *conditions: A variable number of condition identifiers
+    
+    Returns:
+        str: One of the input arguments, chosen at random.
+    
+    Examples:
+        
+            >>> import alfred3 as al
+            >>> al.random_condition("A", "B")
+
+        The example returns either "A" or "B".
+    """
+    return str(random.choice(conditions))
