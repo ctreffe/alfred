@@ -5,7 +5,7 @@ from .experiment import Experiment
 
 from .section import Section
 from .section import NoValidationSection
-from .section import CommitInputSection
+from .section import RevisitSection
 from .section import OnlyForwardSection
 
 from .page import Page
