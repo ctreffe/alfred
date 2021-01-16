@@ -36,14 +36,14 @@ import os
 import random
 
 from typing import Union
+from typing import List, Iterator
 from pathlib import Path
 
 import click
 
 from .saving_agent import AutoMongoClient
 from .data_manager import DataManager
-# from .data_manager import CodeBookExporter
-# from .data_manager import ExpDataExporter
+from .data_manager import decrypt_recursively
 from .config import ExperimentConfig, ExperimentSecrets
 
 
@@ -61,87 +61,104 @@ class Exporter:
         if data_type == DataManager.CODEBOOK_DATA:
             self.export_codebook()
         elif data_type == DataManager.HISTORY:
-            self.export_history()
+            self.export_move_history()
         elif data_type == DataManager.UNLINKED_DATA:
             self.export_unlinked()
         else:
             self.export_exp_data()
+    
+    def _load(self, path: Union[str, Path]) -> list:
+        return self.load(path, self.delimiter)
 
+    @staticmethod
+    def load(path: Union[str, Path], delimiter: str) -> list:
+        with open(path, "r", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=delimiter)
+            existing_data = []
+            for row in reader:
+                existing_data.append(dict(row))
+        return existing_data
+    
+    def _write(self, data: Iterator[dict], fieldnames: List[str], path: Path):
+        self.write(data, fieldnames, path, self.delimiter)
+
+    @staticmethod
+    def write(data: Iterator[dict], fieldnames: List[str], path: Path, delimiter: str):
+        with open(path, "w", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=delimiter)
+            writer.writeheader()
+            writer.writerows(data)
+    
     def export_exp_data(self):
         csv_name = "exp_data.csv"
         path = self.csv_dir / csv_name
 
         if path.exists() and path.read_text():
-            with open(path, "r", encoding="utf-8") as csvfile:
-                reader = csv.DictReader(csvfile, delimiter=self.delimiter)
-                
-                alldata = []
-                for row in reader:
-                    alldata.append(dict(row))
-            
+            alldata = self._load(path)
             sessiondata = self.exp.data_manager.flat_session_data
             alldata.append(sessiondata)
-            fieldnames = DataManager.extract_ordered_fieldnames(alldata)
-        
-            with open(path, "w", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-                writer.writeheader()
-                writer.writerows(alldata)
+            
+            # get fieldnames from list of flat datasets
+            metadata = list(self.exp.data_manager.metadata.keys())
+            client_info = list(self.exp.data_manager.client_data.keys())
+            element_names = []
+            for row in alldata:
+                for colname in row:
+                    if not colname in metadata + client_info + ["additional_data"]:
+                        if not colname in element_names:
+                            element_names.append(colname)
+            fieldnames = metadata + client_info + sorted(element_names) + ["additional_data"]
         else:
             existing_data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
             sessiondata = self.exp.data_manager.session_data
             alldata = existing_data + [sessiondata]
             fieldnames = DataManager.extract_ordered_fieldnames(alldata)
-            
             alldata = [DataManager.flatten(d) for d in alldata]
-            with open(path, "w", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-                writer.writeheader()
-                writer.writerows(alldata)
+        self._write(alldata, fieldnames, path)
 
-    def export_history(self):
+    def export_move_history(self):
         csv_name = "move_history.csv"
         data = self.exp.data_manager.move_history
         fieldnames = DataManager.extract_fieldnames(data)
         path = self.csv_dir / csv_name
+
+        if path.exists() and path.read_text():
+            history = self._load(path)
+            history += data
+            fieldnames = DataManager.extract_fieldnames(history)
+        else:
+            existing_data = DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir)
+            history = []
+            for sessiondata in existing_data:
+                session_history = sessiondata.pop("exp_move_history", [])
+                history += session_history
+            history += data
+            fieldnames = DataManager.extract_fieldnames(history)
         
-        with open(path, "a", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-            if not path.read_text():  
-                writer.writeheader()
-            writer.writerows(data)
-    
+        self._write(history, fieldnames, path)
+
     def export_unlinked(self):
         csv_name = "unlinked.csv"
         agent = self.exp.data_saver.unlinked.agents["local_unlinked"]
         data = self.exp.data_manager.unlinked_data_with(agent)
         data = self.exp.data_manager.flatten(data)
         fieldnames = list(data.keys())
+        data = [data]
 
         path = self.csv_dir / csv_name
 
         if path.exists() and path.read_text():
-            with open(path, "r", encoding="utf-8") as csvfile:
-                reader = csv.DictReader(csvfile, delimiter=self.delimiter)
-                
-                ul_data = []
-                for row in reader:
-                    ul_data.append(dict(row))
-            
-            ul_data.append(data)
+            ul_data = self._load(path)
+            ul_data += data
             random.shuffle(ul_data)
             fieldnames = DataManager.extract_fieldnames(ul_data)
             data = ul_data
         
-            with open(path, "w", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-                writer.writeheader()
-                writer.writerows(data)
-        else:
-            with open(path, "w", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-                writer.writeheader()
-                writer.writerow(data)
+        if self.exp.config.getboolean("local_saving_agent_unlinked", "decrypt_csv_export"):
+            key = self.exp.secrets.get("encryption", "key").encode()
+            data = decrypt_recursively(data, key=key)
+
+        self._write(data, fieldnames, path)
 
     def export_codebook(self):
         data = self.exp.data_manager.codebook_data
@@ -155,23 +172,17 @@ class Exporter:
             with open(path, "r", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=self.delimiter)
                 
-                existing_codebook = []
+                existing_codebook = {}
                 for row in reader:
-                    existing_codebook.append(dict(row))
+                    r = dict(row)
+                    existing_codebook[r["name"]] = r
             
-            existing_names = [entry["name"] for entry in existing_codebook]
-
-            for element_info in data:
-                if element_info["name"] not in existing_names:
-                    existing_codebook.append(element_info)
-            
+            existing_codebook.update(data)
             data = existing_codebook
 
-        fieldnames = DataManager.extract_fieldnames(data)
-        with open(path, "w", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=self.delimiter)
-            writer.writeheader()
-            writer.writerows(data)
+        fieldnames = DataManager.extract_fieldnames(data.values())
+        fieldnames = DataManager.sort_codebook_fieldnames(fieldnames)
+        self._write(data.values(), fieldnames, path)
 
 def find_unique_name(directory, filename, exp_version=None, index: int = 1):
     filename = Path(filename)
