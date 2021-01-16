@@ -125,27 +125,27 @@ jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 class RowLayout:
     """
-    Provides layouting functionality for responsive horizontal 
+    Provides layouting functionality for responsive horizontal
     positioning of elements.
 
     Default behavior is to have equal-width columns with an automatic
     breakpoint on extra small screens (i.e. all columns get the bootstrap
     class 'col-sm' by default).
-    
+
     The layout's width attributes can be accessed an changed to customize
     appearance. In this example, we change the width of the columns on
     screens of "small" and bigger width, so that we have narrow columns
-    to the right and left (each taking up 2/12 of the available space), 
+    to the right and left (each taking up 2/12 of the available space),
     and one wide column (taking up 8/12 of the space) in the middle. On
-    "extra small" screens, the columns will be stacked vertically and 
+    "extra small" screens, the columns will be stacked vertically and
     each take up the full width.
-        
+
     You can define widths for five breakpoints individually, allowing
     for fine-grained control (see attributes).
 
     Args:
         ncols: Number of columns to arrange in a row.
-        valign_cols: List of vertical column alignments. Valid values 
+        valign_cols: List of vertical column alignments. Valid values
             are 'auto' (default), 'top', 'center', and 'bottom'.
         responsive: Boolean, indicating whether breakpoints should
             be responsive, or not.
@@ -155,7 +155,7 @@ class RowLayout:
         ::
 
             layout = RowLayout(ncols=3) # 3 columns of equal width
-            layout.width_sm = [2, 8, 2] 
+            layout.width_sm = [2, 8, 2]
 
     """
 
@@ -165,38 +165,38 @@ class RowLayout:
         self.ncols: int = ncols
 
         self._valign_cols = valign_cols if valign_cols is not None else []
-        
+
         #: Indicates whether breakpoints should be responsive, or not.
         self.responsive: bool = responsive
 
-        #: List of column widths on screens of size 'xs' or bigger 
+        #: List of column widths on screens of size 'xs' or bigger
         #: (<576px). Content must be integers between 1 and 12.
         self.width_xs: List[int] = None
-        
-        #: List of column widths on screens of size 's' or bigger 
+
+        #: List of column widths on screens of size 's' or bigger
         #: (>=576px). Content must be integers between 1 and 12.
         self.width_sm: List[int] = None
 
-        #: List of column widths on screens of size 'md' or bigger 
+        #: List of column widths on screens of size 'md' or bigger
         #: (>=768px). Content must be integers between 1 and 12.
         self.width_md: List[int] = None
 
-        #: List of column widths on screens of size 'lg' or bigger 
+        #: List of column widths on screens of size 'lg' or bigger
         #: (>=992px). Content must be integers between 1 and 12.
         self.width_lg: List[int] = None
 
-        #: List of column widths on screens of size 'xl' or bigger 
+        #: List of column widths on screens of size 'xl' or bigger
         #: (>=1200px). Content must be integers between 1 and 12.
         self.width_xl: List[int] = None
 
     def col_breaks(self, col: int) -> str:
         """
-        Returns the column breakpoints for a specific column as 
+        Returns the column breakpoints for a specific column as
         strings for use as bootstrap classes.
-        
+
         Args:
             col: Column index (starts at 0)
-        
+
         Returns:
             str: Column breakpoints for a specific column
         """
@@ -220,14 +220,14 @@ class RowLayout:
     def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
         """
         Takes a list of column sizes (in integers from 1 to 12) and
-        returns a corresponding list of formatted Bootstrap column 
+        returns a corresponding list of formatted Bootstrap column
         classes.
 
         Args:
             breaks: List of integers, indicating the breakpoints.
             bp: Specifies the relevant bootstrap breakpoint. (xs, sm,
                 md, lg, or xl).
-        
+
         Returns:
             List[str]: List of ready-to-use bootstrap column classes
         """
@@ -260,8 +260,8 @@ class RowLayout:
     @property
     def valign_cols(self) -> List[str]:
         """
-        List[str]: Vertical column alignments. 
-        
+        List[str]: Vertical column alignments.
+
         Valid values are 'auto' (default), 'top', 'center', and 'bottom'.
         Can be specified upon initalization or modified as instance
         attribute.
@@ -272,7 +272,7 @@ class RowLayout:
 
         Examples:
 
-            All columns of the following layout will be aligned to the 
+            All columns of the following layout will be aligned to the
             bottom of the row (specified upon initialization)::
 
                 layout1 = RowLayout(ncols=3, valign_cols=["bottom"])
@@ -291,10 +291,10 @@ class RowLayout:
             try:
                 n = self._valign_cols[i]
             except IndexError:
-                    try:
-                        n = self._valign_cols[i-1]
-                    except IndexError:
-                        n = "center"
+                try:
+                    n = self._valign_cols[i - 1]
+                except IndexError:
+                    n = "center"
 
             if not isinstance(n, str):
                 raise TypeError("Col position must be of type str.")
@@ -327,38 +327,38 @@ class Element:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
             final data set.
-        font_size: Font size for text in the element. Can be 'normal' 
-            (default), 'big', 'huge', or an integer giving the desired 
+        font_size: Font size for text in the element. Can be 'normal'
+            (default), 'big', 'huge', or an integer giving the desired
             size in pt.
-        align: Horizontal alignment of text in the element. Does not 
-            usually apply to labels. Think of it as an alignment that 
-            applies to the innermost layer of an element (while labels 
-            are generally located at outer layers). See 
+        align: Horizontal alignment of text in the element. Does not
+            usually apply to labels. Think of it as an alignment that
+            applies to the innermost layer of an element (while labels
+            are generally located at outer layers). See
             :class:`.LabelledElement` for more on labelled elements.
             Can be 'left' (default), 'center', 'right', or 'justify'.
-        position: Horizontal position of the full element on the 
+        position: Horizontal position of the full element on the
             page. Values can be 'left', 'center' (default), 'end',
             or any valid value for the justify-content `flexbox
-            utility`_. Takes effect only, when the element is not 
+            utility`_. Takes effect only, when the element is not
             full-width.
-        width: Defines the horizontal width of the element from 
+        width: Defines the horizontal width of the element from
             small screens upwards. It's always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
-            'wide', and 'full'. For more detailed control, you can 
+            'wide', and 'full'. For more detailed control, you can
             define the :attr:`.element_width` attribute.
-        height: Vertical height of the element's display area. Supply a 
-            string with a unit, e.g. "80px". Usually, the default is 
-            fine. For adding vertical space to a page, you should prefer 
+        height: Vertical height of the element's display area. Supply a
+            string with a unit, e.g. "80px". Usually, the default is
+            fine. For adding vertical space to a page, you should prefer
             the :class:`.VerticalSpace` element, as it is sematically
             more clear.
         showif: A dictionary, defining conditions that must be met
             for the element to be shown. The conditions take the form of
-            key-value pairs, where each key is an element name and the 
+            key-value pairs, where each key is an element name and the
             value is the required input. See :attr:`showif` for details.
         instance_level_logging: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
-    
+
     See Also:
         * How to create a custom element
 
@@ -369,14 +369,14 @@ class Element:
     .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
     .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
     .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
-    
+
     """
 
     #: Base template for the element, which will be used to hold the
     #: rendered element template. Gets rendered by :attr:`.web_widget`
     base_template: Template = jinja_env.get_template("Element.html.j2")
-    
-    #: The element's specific, inner template. Gets rendered by 
+
+    #: The element's specific, inner template. Gets rendered by
     #: :attr:`.inner_html`
     element_template: Template = None
 
@@ -389,45 +389,45 @@ class Element:
         height: str = None,
         position: str = "center",
         showif: dict = None,
-        instance_level_logging: bool = False
+        instance_level_logging: bool = False,
     ):
 
-        self.name: str = name # documented in getter property
+        self.name: str = name  # documented in getter property
 
-        #: The element's parent :class:`~.page.Page` (i.e. the page on which 
+        #: The element's parent :class:`~.page.Page` (i.e. the page on which
         #: it is displayed).
         self.page = None
-        
+
         #: The :class:`.Experiment` to which this element belongs
         self.exp = None
-        
+
         #: Alias for :attr:`.exp`
         self.experiment = None
 
         #: Alignment of inner element (does not apply to labels)
-        self.align = align 
-        
-        #: Vertical height of the element
-        self.height = height 
+        self.align = align
 
-        self.font_size = font_size # documented in getter property
+        #: Vertical height of the element
+        self.height = height
+
+        self.font_size = font_size  # documented in getter property
         self.width = width  # documented in getter property
-        self.position = position # documented in getter property
-        self._element_width = None # documented in getter property
+        self.position = position  # documented in getter property
+        self._element_width = None  # documented in getter property
 
         # showifs and filters
-        self.showif = showif if showif else {} # documented in getter property
-        
+        self.showif = showif if showif else {}  # documented in getter property
+
         #: Flag, indicating whether the element has a showif condition
         #: that includes an element on the same page
         self._showif_on_current_page = False
-        self._should_be_shown = True # documented in getter property
+        self._should_be_shown = True  # documented in getter property
 
         # additional code
-        self._css_code = []     # documented in getter property
-        self._css_urls = []     # documented in getter property
-        self._js_code = []      # documented in getter property
-        self._js_urls = []      # documented in getter property
+        self._css_code = []  # documented in getter property
+        self._css_urls = []  # documented in getter property
+        self._js_code = []  # documented in getter property
+        self._js_urls = []  # documented in getter property
 
         #: Boolean flag, indicating whether the element should spawn
         #: its own logger, or use the class-specific logger.
@@ -440,40 +440,39 @@ class Element:
         #: *exception*, and *log*.
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
-
     @property
     def showif(self) -> dict:
-        """ 
+        """
         dict: Conditions that have to be met for the element to be shown.
 
         The showif dictionary can contain multiple conditions as key-
-        value-pairs. The element will only be shown, if *all* conditions 
-        are met. You can use all names that show up in the main dataset. 
+        value-pairs. The element will only be shown, if *all* conditions
+        are met. You can use all names that show up in the main dataset.
         That includes:
 
-        * The names of all input elements that were shown before the 
-          current page 
+        * The names of all input elements that were shown before the
+          current page
         * The names of all input elements *on* the current page
-        * The experiment metadata, including *exp_condition*, 
+        * The experiment metadata, including *exp_condition*,
           *exp_start_time*, and more. See :attr:`.Experiment.metadata`
 
         .. note::
             If you wish to implement more sophisticated conditions (e.g.
             linking conditions with 'or' instead of 'and'), you can
-            do so by using if-statements in an *on_first_show* or 
-            *on_each_show* page-hook. 
-            
+            do so by using if-statements in an *on_first_show* or
+            *on_each_show* page-hook.
+
             Those conditions will not work for elements on the same page
-            though. If you want to create complex showif conditions 
-            depending on elements on the same page, you have to 
+            though. If you want to create complex showif conditions
+            depending on elements on the same page, you have to
             implement them in JavaScript yourself. See :meth:`.add_js`
-            and :class:`.JavaScript` for information on how to add 
+            and :class:`.JavaScript` for information on how to add
             JavaScript.
 
         Examples:
 
-            This is a simple showif based on experiment condition. The 
-            text element in this example will only be shown to subjects 
+            This is a simple showif based on experiment condition. The
+            text element in this example will only be shown to subjects
             in the condition "one"::
 
                 import alfred3 as al
@@ -489,9 +488,9 @@ class Element:
 
                     def on_exp_access(self):
                         self += al.Text("This is text", showif={"exp_condition": "one"})
-            
-            This is a more complex condition using the hook method. The 
-            text element on *page2* will only be show to subjects, if 
+
+            This is a more complex condition using the hook method. The
+            text element on *page2* will only be show to subjects, if
             they spent more than 20 seconds on *page1*::
 
                 import alfred3 as al
@@ -505,10 +504,10 @@ class Element:
                     def on_first_show(self):
                         if sum(self.exp.page1.durations) > 20:
                             self += al.Text("This is text")
-            
+
         See Also:
             Page hooks
-        
+
         Todo:
             * Put link to page hooks explanation here.
 
@@ -554,8 +553,8 @@ class Element:
     def position(self) -> str:
         """
         str: Position of the whole element on the page.
-        
-        Determines the element position, when an element is *not* 
+
+        Determines the element position, when an element is *not*
         full-width.
         """
         return self._position
@@ -580,14 +579,14 @@ class Element:
 
     @property
     def element_width(self) -> str:
-        """ 
-        str: Returns a string of column width definitions. 
+        """
+        str: Returns a string of column width definitions.
 
         **Manually setting the width**
-        
-        The element width list can contain up to 5 width definitions, 
-        specified as integers from 1 to 12. The integers refer to the 
-        five breakbpoints in `Bootstrap 4's 12-column-grid system`_, i.e. 
+
+        The element width list can contain up to 5 width definitions,
+        specified as integers from 1 to 12. The integers refer to the
+        five breakbpoints in `Bootstrap 4's 12-column-grid system`_, i.e.
         [xs, sm, md, lg, xl]::
 
             >>> element = Element()
@@ -605,13 +604,13 @@ class Element:
             element = Element()
             element.element_width = [12, 8]
 
-        To make an element full-width on extra small and small 
-        screens and half-width on medium, large and extra large 
+        To make an element full-width on extra small and small
+        screens and half-width on medium, large and extra large
         screens, follow this example::
 
             element = Element()
             element.element_width = [12, 12, 6]
-        
+
         """
         if self.width is not None:
             return " ".join(self.converted_width)
@@ -656,9 +655,9 @@ class Element:
     def should_be_shown(self) -> bool:
         """
         bool: Boolean, indicating whether the element is meant to be shown.
-        
+
         Evaluates all *showif* conditions. Can be set manually.
-        Returns *False*, if the element's parent 
+        Returns *False*, if the element's parent
         page should not be shown.
         """
         cond1 = self._should_be_shown
@@ -672,7 +671,6 @@ class Element:
             raise TypeError("should_be_shown must be an instance of bool")
         self._should_be_shown = b
 
-
     @property
     def section(self):
         """The direct parent section of this element's page."""
@@ -682,7 +680,7 @@ class Element:
     def tree(self) -> str:
         """
         str: String, giving the exact position in the experiment.
-        
+
         The tree is composed of the names of all sections
         and the element's page dots. Example for an element that belongs
         to a page "hello_world" that was added directly to the experiment::
@@ -691,7 +689,7 @@ class Element:
 
         ``_root`` and ``_content`` are basic sections that alfred always
         includes in an experiment.
-        
+
         """
         return self.page.tree
 
@@ -713,7 +711,7 @@ class Element:
 
     @property
     def css_urls(self) -> List[Tuple[int, str]]:
-        """List[tuple]: A list of tuples, which contain a priority and an url pointing 
+        """List[tuple]: A list of tuples, which contain a priority and an url pointing
         to CSS code."""
         return self._css_urls
 
@@ -733,7 +731,7 @@ class Element:
         """
         dict: Dictionary of data to be passed on to jinja templates.
 
-        When deriving a new element class, you will often want to 
+        When deriving a new element class, you will often want to
         redefine this property to add template data. When doing so,
         remember to retrieve the basic template data with ``super()``::
 
@@ -743,21 +741,21 @@ class Element:
 
                 @property
                 def template_data(self):
-                    d = super().template_data 
+                    d = super().template_data
                     d["my_value"] = "this is my value"
-                    
+
                     return d    # don't forget to return the dictionary!
 
         The call ``super().template_data`` applies the parent classes
         code to the current object. That way, you only need to define
-        values that differ from the parent class. 
+        values that differ from the parent class.
 
         .. note::
             Be aware that, by default, the same template data will be
-            passed to the respective templates when rendering 
-            :attr:`.inner_html` / :attr:`.element_template` and 
+            passed to the respective templates when rendering
+            :attr:`.inner_html` / :attr:`.element_template` and
             :attr:`.web_widget` / :attr:`.base_template`.
-        
+
         """
         d = {}
         d["css_class_element"] = self.css_class_element
@@ -777,9 +775,9 @@ class Element:
 
     def _evaluate_showif(self) -> List[bool]:
         """Checks the showif conditions that refer to previous pages.
-        
+
         Returns:
-            list: A list of booleans, indicating for each condition, 
+            list: A list of booleans, indicating for each condition,
             whether it is met or not.
         """
 
@@ -814,9 +812,9 @@ class Element:
 
     def added_to_experiment(self, experiment):
         """
-        Tells the element that it was added to an experiment. 
-        
-        The experiment is made available to the element, and the 
+        Tells the element that it was added to an experiment.
+
+        The experiment is made available to the element, and the
         element's logging interface initializes its experiment-specific
         logging.
 
@@ -826,7 +824,7 @@ class Element:
         Args:
             experiment: The alfred experiment to which the element was
                 added.
-        
+
         """
 
         if self.name in experiment.root_section.all_updated_elements:
@@ -841,13 +839,13 @@ class Element:
 
     def added_to_page(self, page):
         """
-        Tells the element that it was added to a page. 
-        
+        Tells the element that it was added to a page.
+
         The page and the experiment are made available to the element.
 
         Args:
             page: The page to which the element was added.
-        
+
         """
         from . import page as pg
 
@@ -861,13 +859,12 @@ class Element:
         if self.page.experiment and not self.experiment:
             self.added_to_experiment(self.page.experiment)
 
-
     def _prepare_web_widget(self):
         """
         Wraps :meth:`.prepare_web_widget` to allow for additional, generic
         preparations that are the same for all elements.
-        
-        This is useful, because :meth:`.prepare_web_widget` is often 
+
+        This is useful, because :meth:`.prepare_web_widget` is often
         redefined in derived elements.
         """
         self._activate_showif_on_current_page()
@@ -876,7 +873,7 @@ class Element:
     def prepare_web_widget(self):
         """
         Hook for computations for preparing an element's web widget.
-        
+
         This method is supposed to be overridden by derived elements if
         necessary.
         """
@@ -896,12 +893,12 @@ class Element:
     def inner_html(self) -> str:
         """
         Renders the element template :attr:`~.element_template`.
-        
+
         Hands over the data returned by :attr:`~.template_data`, renders
         the template and returns the resulting html code.
-        
+
         If no `element_template` is defined, `None` is returned. Usually,
-        the inner html gets placed into the higher-level 
+        the inner html gets placed into the higher-level
         :attr: `.base_template`, when :attr:`Element.web_widget` gets called.
 
         Returns:
@@ -920,8 +917,8 @@ class Element:
         """
         The element's rendered html code for display on a page.
 
-        This is done by rendering the 
-        :attr:`~.base_template` with the :attr:`~.template_data` 
+        This is done by rendering the
+        :attr:`~.base_template` with the :attr:`~.template_data`
         and injecting the :attr:`~.inner_html` into it.
 
         Returns:
@@ -934,11 +931,11 @@ class Element:
     @property
     def css_class_element(self) -> str:
         """
-        Returns the name of the element's CSS class. 
-        
-        On the webpage generated by alfred3, all elements reside in some 
-        sort of container which has a CSS class of the element's 
-        *css_class_element*. The name is composed as the element's class 
+        Returns the name of the element's CSS class.
+
+        On the webpage generated by alfred3, all elements reside in some
+        sort of container which has a CSS class of the element's
+        *css_class_element*. The name is composed as the element's class
         name, followed by ``-element``.
 
         Examples:
@@ -952,8 +949,8 @@ class Element:
                 >>> ex = Text("This is an example", name="example_text")
                 >>> ex.css_class_element
                 Text-element
-            
-            The html code generated by this element is structured as 
+
+            The html code generated by this element is structured as
             follows
 
             .. code-block:: html
@@ -965,7 +962,7 @@ class Element:
                   </div>
                   ...
                 </div>
-            
+
             Note that the element receives two CSS classes and two IDs,
             one each for the outer container and one for the innermost
             layer. The outer container includes the element's base
@@ -975,7 +972,7 @@ class Element:
 
         """
         return f"{type(self).__name__}-element"
-    
+
     @property
     def css_class_container(self) -> str:
         """
@@ -987,8 +984,6 @@ class Element:
             See :attr:`.css_class_element` for details.
         """
         return f"{self.css_class_element}-container"
-    
-
 
     def add_css(self, code: str, priority: int = 10):
         """
@@ -997,20 +992,20 @@ class Element:
         This is most useful when writing new elements. To simply add
         element-related CSS code to a page, usually the :class:`.CSS`
         element is a better choice.
-        
+
         Args:
             code: Css code
             priority: Can be used to influence the order in which code
-                is added to the page. Sorting is ascending, i.e. the 
+                is added to the page. Sorting is ascending, i.e. the
                 lowest numbers appear closest to the top of the page.
-        
+
         See Also:
-            * The :class:`.Style` element can be used to add generic CSS 
+            * The :class:`.Style` element can be used to add generic CSS
               code to a page.
-            * See :attr:`.Element.css_class_element` and 
+            * See :attr:`.Element.css_class_element` and
               :attr:`.Element.css_class_container` for information on
               element CSS classes and IDs.
-        
+
         """
         self._css_code.append((priority, code))
 
@@ -1019,19 +1014,19 @@ class Element:
         Adds Javascript to the element.
 
         This is most useful when writing new elements. To simply add
-        element-related JavaScript code to a page, usually the 
+        element-related JavaScript code to a page, usually the
         :class:`.JavaScript` element is a better choice.
-        
+
         Args:
             code: Css code
             priority: Can be used to influence the order in which code
-                is added to the page. Sorting is ascending, i.e. the 
+                is added to the page. Sorting is ascending, i.e. the
                 lowest numbers appear closest to the top of the page.
-        
+
         See Also:
-            * The :class:`.JavaScript` element can be used to add generic 
+            * The :class:`.JavaScript` element can be used to add generic
               JavsScript code to a page.
-            * See :attr:`.Element.css_class_element` and 
+            * See :attr:`.Element.css_class_element` and
               :attr:`.Element.css_class_container` for information on
               element CSS classes and IDs.
 
@@ -1043,7 +1038,7 @@ class Element:
 class _RowCol:
     """
     Just a little helper for handling columns inside a Row.
-    
+
     :meta private:
     """
 
@@ -1059,17 +1054,17 @@ class Row(Element):
 
     The row will arrange your elements using Bootstrap 4's grid system
     and breakpoints, making the arrangement responsive to different
-    screen sizes. You can customize the behavior of the row for five 
-    different screen sizes (Bootstrap 4's default break points) with 
+    screen sizes. You can customize the behavior of the row for five
+    different screen sizes (Bootstrap 4's default break points) with
     the width attributes of its layout attribute.
 
-    If you don't specify breakpoints manually via the *layout* attribute, 
-    the columns will default to equal width and wrap on breakpoints 
+    If you don't specify breakpoints manually via the *layout* attribute,
+    the columns will default to equal width and wrap on breakpoints
     automatically.
-    
+
     Args:
         elements: The elements that you want to arrange in a row.
-        valign_cols: List of vertical column alignments. Valid values 
+        valign_cols: List of vertical column alignments. Valid values
             are 'auto' (default), 'top', 'center', and 'bottom'. The
             elements of the list correspond to the row's columns. See
             :attr:`.RowLayout.valign_cols`
@@ -1080,48 +1075,49 @@ class Row(Element):
             want them to span the full width of their column.
         name, showif, height, **kwargs: Passed on to the base class
             :class:`.Element`
-        
-    
+
+
     Notes:
         * CSS-class: row-element
 
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
-        column by assigning it a number of those units. A column of 
-        width 12 will take up all available horizontal space, other 
+        column by assigning it a number of those units. A column of
+        width 12 will take up all available horizontal space, other
         columns will be placed below such a full-width column.
 
         You can define the column width for each of five breakpoints
         separately. The definition will be valid for screens of the
         respective size up to the next breakpoint.
 
-        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options 
+        See https://getbootstrap.com/docs/4.5/layout/grid/#grid-options
         for detailed documentation of how Bootstrap's breakpoints work.
-    
+
     Examples:
 
         A minimal experiment with a row::
-            
+
             import alfred3 as al
             exp = al.Experiment()
-        
+
             @exp.member
             class HelloWorld(al.Page):
                 name = "hello_world"
-        
+
                 def on_exp_access(self):
                     el1 = al.Text("text")
                     el2 = al.TextEntry(toplab="lab", name="example")
-        
+
                     self += al.Row(el1, el2)
-        
+
         The arrangement will look like this::
 
             |=========|========|
             |   el1   |  el2   |
             |=========|========|
-    
+
     """
+
     element_template = jinja_env.get_template("Row.html.j2")
 
     def __init__(
@@ -1132,17 +1128,17 @@ class Row(Element):
         height: str = "auto",
         name: str = None,
         showif: dict = None,
-        **kwargs
+        **kwargs,
     ):
         """Constructor method."""
         super().__init__(name=name, showif=showif, height=height, **kwargs)
-        
+
         #: List of the elements in this row
         self.elements: list = elements
 
-        #: An instance of :class:`.RowLayout`, 
-        #: used for layouting. You can use this attribute to finetune 
-        #: column widths via the width attributes 
+        #: An instance of :class:`.RowLayout`,
+        #: used for layouting. You can use this attribute to finetune
+        #: column widths via the width attributes
         #: (e.g. :attr:`.RowLayout.width_xs`)
         self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
 
@@ -1196,39 +1192,39 @@ class Row(Element):
 class Stack(Row):
     """
     Stacks multiple elements on top of each other.
-    
-    Stacks are intended for use in Rows. They allow you to flexibly 
+
+    Stacks are intended for use in Rows. They allow you to flexibly
     arrange elements in a grid.
 
     Args:
         *elements: The elements to stack.
-        **kwargs: Keyword arguments that are passend on to the parent 
+        **kwargs: Keyword arguments that are passend on to the parent
             class :class:`.Row`.
-    
+
     Notes:
         * CSS-class: ``stack-element``
-        
-        * Html element id: ``elid-<name>`` (<name> is the 
+
+        * Html element id: ``elid-<name>`` (<name> is the
           :attr:`.Element.name` attribute, defined at initialization.)
 
     Examples:
 
         A minimal experiment with a stack in a row::
-        
+
             import alfred3 as al
             exp = al.Experiment()
-        
+
             @exp.member
             class HelloWorld(al.Page):
                 name = "hello_world"
-        
+
                 def on_exp_access(self):
                     el1 = al.Text("text")
                     el2 = al.TextEntry(toplab="lab", name="example")
                     el3 = al.Text("long text")
-        
+
                     self += al.Row(al.Stack(el1, el2), el3)
-        
+
         The arrangement will look like this::
 
             |=========|========|
@@ -1239,7 +1235,6 @@ class Stack(Row):
 
     """
 
-
     def __init__(self, *elements: Element, **kwargs):
         """Constructor method."""
         super().__init__(*elements, **kwargs)
@@ -1249,14 +1244,14 @@ class Stack(Row):
 class VerticalSpace(Element):
     """
     The easiest way to add vertical space to a page.
-    
+
     Args:
         space: Desired space in any unit that is understood by a CSS
             margin (e.g. em, px, cm). Include the unit (e.g. '1em').
-    
+
     Notes:
         CSS-class: vertical-space-element
-    
+
     Examples:
 
         Example of vertical space added between two text elements::
@@ -1289,26 +1284,26 @@ class VerticalSpace(Element):
 
 class Style(Element):
     """
-    Adds CSS code to a page. 
-    
-    CSS styling can be used to change the appearance of page or 
-    individual elements. 
-    
+    Adds CSS code to a page.
+
+    CSS styling can be used to change the appearance of page or
+    individual elements.
+
     Notes:
-        A style is added to a specific page, and thus only affects the 
-        layout of that page. To change the appearance of the whole 
+        A style is added to a specific page, and thus only affects the
+        layout of that page. To change the appearance of the whole
         experiment, you can define your styles in a .css file in your
-        experiment directory and reference it in the *config.conf* in 
+        experiment directory and reference it in the *config.conf* in
         the option *style* of the section *layout*.
-    
+
     See Also:
         * How to reference a CSS file in the *config.conf*
-        * See :attr:`.Element.css_class_element` and 
+        * See :attr:`.Element.css_class_element` and
           :attr:`.Element.css_class_container` for information on
           element CSS classes and IDs.
         * The method :meth:`.Element.add_css` can be used to add CSS
           to a specific element.
-    
+
     Todo:
         * Insert reference
 
@@ -1357,7 +1352,7 @@ class HideNavigation(Style):
     See Also:
         * Using :class:`.JumpButtons` and :class:`.JumpList`, you can add
           custom navigation elements to a page.
-        
+
         * By defining the :meth:`.Page.custom_move` method on a page,
           you can implement highly customized movement behavior.
     """
@@ -1371,17 +1366,17 @@ class HideNavigation(Style):
 class JavaScript(Element):
     """
     Adds JavaScript to a page.
-    
+
     Javascript can be used to implement dynamic behavior on the client
     side.
 
     See Also:
-        * See :attr:`.Element.css_class_element` and 
+        * See :attr:`.Element.css_class_element` and
           :attr:`.Element.css_class_container` for information on
           element CSS classes and IDs.
         * The method :meth:`.Element.add_js` can be used to add JS
           to a specific element.
-    
+
     Todo:
         * Insert reference
     """
@@ -1425,7 +1420,7 @@ class JavaScript(Element):
 class WebExitEnabler(JavaScript):
     """
     Removes the "Do you really want to leave?" popup upon closing a page.
-    
+
     By default, subjects are asked to confirm their desire to leave a
     running experiment. You can turn off this behavior by adding this
     element to a page.
@@ -1444,22 +1439,22 @@ class Html(Element):
 
     Args:
         html: Html to be displayed.
-        path: Filepath to a file with html code (relative to the 
+        path: Filepath to a file with html code (relative to the
             experiment directory).
         **kwargs: Keyword arguments passed to the parent class
             :class:`Element`.
-    
+
     Notes:
         * CSS-class: html-element
 
-        This works very similar to :class:`.Text`. The most notable 
-        difference is that the *Text* element expects markdown, and 
+        This works very similar to :class:`.Text`. The most notable
+        difference is that the *Text* element expects markdown, and
         therefore generally renders input text in a ``<p>`` tag. This
-        is not always desirable for custom html, because it adds a 
+        is not always desirable for custom html, because it adds a
         margin at the bottom of the text.
 
         The *Html* element renders neither markdown, nor emoji shortcodes.
-    
+
     Examples:
         Adding a simple div to the experiment::
 
@@ -1478,7 +1473,10 @@ class Html(Element):
     element_template = jinja_env.get_template("TextElement.html.j2")
 
     def __init__(
-        self, html: str = None, path: Union[Path, str] = None, **element_args,
+        self,
+        html: str = None,
+        path: Union[Path, str] = None,
+        **element_args,
     ):
 
         """Constructor method."""
@@ -1490,7 +1488,6 @@ class Html(Element):
         if self._html_code and self.path:
             raise ValueError("You can only specify one of 'html' and 'path'.")
 
-    
     @property
     def html_code(self) -> str:
         """str: The element's html code"""
@@ -1498,11 +1495,11 @@ class Html(Element):
             return self.experiment.subpath(self.path).read_text()
         else:
             return self._html_code
-    
+
     @html_code.setter
     def html_code(self, html):
         self._html_code = html
-    
+
     @property
     def template_data(self) -> dict:
         """:meta private: (documented at :class:`.Element`)"""
@@ -1515,28 +1512,28 @@ class Html(Element):
 class Text(Element):
     """Displays text.
 
-    You can use `GitHub-flavored Markdown`_ syntax and common 
-    `emoji shortcodes`_ . Additionally, you can use raw html for 
+    You can use `GitHub-flavored Markdown`_ syntax and common
+    `emoji shortcodes`_ . Additionally, you can use raw html for
     advanced formatting.
 
     Args:
         text: Text to be displayed.
-        path: Filepath to a textfile (relative to the experiment 
+        path: Filepath to a textfile (relative to the experiment
             directory).
-        width: Element width. Usage is the same as in 
+        width: Element width. Usage is the same as in
             :class:`Element`, but the Text element uses its own
-            specific default, which ensures good readability in 
+            specific default, which ensures good readability in
             most cases on different screen sizes.
         emojize: If True (default), emoji shortcodes in the text will
             be converted to unicode (i.e. emojis will be displayed).
         **kwargs: Keyword arguments passed to the parent class
             :class:`Element`.
-    
+
     Notes:
         CSS-class: text-element
-    
+
     Examples:
-        A simple text element, including a 😊 (``:blush:``) emoji added 
+        A simple text element, including a 😊 (``:blush:``) emoji added
         to a page::
 
             import alfred3 as al
@@ -1549,22 +1546,27 @@ class Text(Element):
                 def on_exp_access(self):
                     self += al.Text("This is text :blush:")
 
-    
+
     .. _GitHub-flavored Markdown: https://guides.github.com/features/mastering-markdown/
     .. _emoji shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
 
     element_template = jinja_env.get_template("TextElement.html.j2")
-    
+
     def __init__(
-        self, text: str = None, path: Union[Path, str] = None, width: str = None, emojize: bool = True, **kwargs,
+        self,
+        text: str = None,
+        path: Union[Path, str] = None,
+        width: str = None,
+        emojize: bool = True,
+        **kwargs,
     ):
 
         """Constructor method."""
         super().__init__(width=width, **kwargs)
 
         self._text = text if text is not None else ""
-        
+
         #: pathlib.Path: Path to a textfile, if specified in the init
         self.path: Path = Path(path) if path is not None else path
 
@@ -1590,7 +1592,7 @@ class Text(Element):
         Returns:
             str: Text rendered to html code
         """
-        
+
         if self.emojize:
             text = emojize(self.text, use_aliases=True)
         else:
@@ -1627,6 +1629,7 @@ class Text(Element):
 
 class Hline(Element):
     """A simple horizontal line."""
+
     inner_html = "<hr>"
 
 
@@ -1636,19 +1639,18 @@ class CodeBlock(Text):
 
     Args:
         text: The code to be displayed.
-        path: path: Filepath to a textfile (relative to the experiment 
+        path: path: Filepath to a textfile (relative to the experiment
             directory) from which to read code.
-        lang: The programming language to highlight [#lang]_ . Defaults 
-            to 'auto', which tries to auto-detect the right language. 
+        lang: The programming language to highlight [#lang]_ . Defaults
+            to 'auto', which tries to auto-detect the right language.
         **kwargs: Keyword arguments are passed on to the parent elements
             :class:`.Text` and :class:`.Element`
-    
-    .. [#lang] See https://prismjs.com/index.html#supported-languages
-        for an overview of possible language codes. Note though that 
-        we may not support all possible languages.
-    
-    """
 
+    .. [#lang] See https://prismjs.com/index.html#supported-languages
+        for an overview of possible language codes. Note though that
+        we may not support all possible languages.
+
+    """
 
     def __init__(
         self,
@@ -1682,15 +1684,14 @@ class Label(Text):
 
     """
 
-
     def __init__(self, text, width="full", **kwargs):
         super().__init__(text=text, width=width, **kwargs)
-        
+
         #: RowLayout: Layouting facility for controlling the column
         #: breaks and vertical alignment of the label. Gets set by
         #: :class:`.LabelledElement` automatically.
         self.layout: RowLayout = None
-        
+
         #: Tells the label which column of the :attr:`.layout` it is
         self.layout_col: int = None
 
@@ -1711,11 +1712,11 @@ class LabelledElement(Element):
 
     This class is used as a base class for all elements that come
     equipped with labels.
-    
+
     Args:
         toplab, leftlab, rightlab, bottomlab: String or instance of
             :class:`.Label`, which will be used to label the element.
-        layout: A list of integers, specifying the allocation of 
+        layout: A list of integers, specifying the allocation of
             horizontal space between leftlab, main element widget and
             rightlab. Uses Bootstraps 12-column-grid, i.e. you can
             choose integers between 1 and 12.
@@ -1904,18 +1905,18 @@ class ProgressBar(LabelledElement):
             equipped with an animation.
         round: Determines, whether the corners of the progress bar
             should be round.
-    
+
     See Also:
         See :attr:`.ExperimentSession.progress_bar` for more information
         on the experiment-wide progress bar.
-    
+
     Notes:
         If the argument *show_text* is *True*, the text's appearance
-        can be altered via CSS. It receives a class of 
+        can be altered via CSS. It receives a class of
         ":attr:`.css_class_element`-text" and an id of
         ":attr:`.name`-text". You can use the method :meth:`.add_css`
         to append fitting CSS to the bar (see examples).
-    
+
     Examples:
 
         Overriding the default experiment-wide progress bar::
@@ -1926,9 +1927,9 @@ class ProgressBar(LabelledElement):
             @exp.setup
             def setup(exp_session):
                 exp_session.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
-            
+
             exp += al.Page(name="example_page")
-            
+
         Adding a progress bar as an element to a page::
 
             import alfred3 as al
@@ -1940,7 +1941,7 @@ class ProgressBar(LabelledElement):
 
                 def on_exp_access(self):
                     self += al.ProgressBar()
-        
+
         Altering the progress bar text's apperance, applied to the
         experiment-wide progress bar. Note that the experiment-wide
         progress bar *always* receives the name "*progress_bar_*"::
@@ -1952,20 +1953,30 @@ class ProgressBar(LabelledElement):
             def setup(exp):
                 exp.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
                 exp.progress_bar.add_css("#progress_bar_ {font-size: 12pt;}")
-            
+
             exp += al.Page(name="example_page")
 
     """
 
     element_template = jinja_env.get_template("ProgressBarElement.html.j2")
 
-    def __init__(self, progress: Union[str, float, int] = "auto", bar_height: str = "6px", show_text: bool = False, striped: bool = True, style: str = "primary", animated: bool = False, round_corners: bool = False, **kwargs):
+    def __init__(
+        self,
+        progress: Union[str, float, int] = "auto",
+        bar_height: str = "6px",
+        show_text: bool = False,
+        striped: bool = True,
+        style: str = "primary",
+        animated: bool = False,
+        round_corners: bool = False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self._progress_setting = progress
-        
+
         if not isinstance(progress, (str, float, int)):
             raise TypeError
-        
+
         self._progress: int = None
         self._bar_height: str = bar_height
         self._show_text: bool = show_text
@@ -1980,16 +1991,16 @@ class ProgressBar(LabelledElement):
 
         css = f".progress#{self.name}  {{height: {self._bar_height}; {self._round_corners}}}"
         self.add_css(code=css)
-    
+
     def _prepare_web_widget(self):
         if self._progress_setting == "auto":
             self._progress = self._calculate_progress()
         elif isinstance(self._progress_setting, (int, float)):
             self._progress = self._progress_setting
-        
+
         self.prepare_web_widget()
 
-        try: 
+        try:
             self._activate_showif_on_current_page()
         except AttributeError as e:
             # special treatment for experiment-wide progress bar
@@ -1998,9 +2009,9 @@ class ProgressBar(LabelledElement):
                 pass
             else:
                 raise e
-    
+
     def _calculate_progress(self) -> float:
-        """ 
+        """
         Calculates the current progress.
 
         Returns:
@@ -2017,12 +2028,12 @@ class ProgressBar(LabelledElement):
         shown_el = len(self.experiment.root_section.all_shown_input_elements)
         shown_pg = len(self.experiment.root_section.all_shown_pages)
         exact_progress = ((shown_el + shown_pg) / (n_el + n_pg)) * 100
-        
+
         if not self.experiment.finished:
             return min(round(exact_progress, 1), 95)
         else:
             return 100
-    
+
     @property
     def template_data(self):
         """:meta private: (documented at :class:`.Element`)"""
@@ -2064,7 +2075,9 @@ class Alert(Text):
 
     element_template = jinja_env.get_template("AlertElement.html.j2")
 
-    def __init__(self, text: str = "", category: str = "info", dismiss: bool = False, **element_args):
+    def __init__(
+        self, text: str = "", category: str = "info", dismiss: bool = False, **element_args
+    ):
         super().__init__(text=text, **element_args)
         self.category = category
         self.dismiss = dismiss
@@ -2084,12 +2097,12 @@ class InputElement(LabelledElement):
     Base class for elements that allow data input.
 
     Args:
-        toplab: String or instance of :class:`.Label`, which will be 
+        toplab: String or instance of :class:`.Label`, which will be
             used to label the element. The other labels (leftlab,
             rightlab, bottomlab) are supported aswell. Specify them
             as keyword arguments, not positional arguments.
         force_input: If `True`, users can only progress to the next page
-            if they enter data into this field. Note that a 
+            if they enter data into this field. Note that a
             :class:`.NoValidationSection` or similar sections might
             overrule this setting.
         default: Default value. Type depends on the element type.
@@ -2097,26 +2110,26 @@ class InputElement(LabelledElement):
         suffix: Suffix for the input field.
         description: An additional description of the element. This will
             show up in the alfred-generated codebook. It has
-            no effect on the display of the experiment, as it only 
+            no effect on the display of the experiment, as it only
             serves as a descriptor for humans.
-        no_input_corrective_hint: Hint to be displayed if force_input 
+        no_input_corrective_hint: Hint to be displayed if force_input
             set to True and no user input registered. Defaults to the
             experiment-wide value specified in config.conf.
         **kwargs: Further keyword arguments are passed on to the
             parent classes :class:`.LabelledElement` and :class:`Element`.
-    
+
     Notes:
         The InputElement does not have its own display. It is used only
         to inherit functionality.
-    
+
     """
 
     #: Boolean flag, indicating whether the element's html template
-    #: has a dedicated container for corrective hints. If *False*, 
-    #: corrective hints regarding this element will be placed in the 
+    #: has a dedicated container for corrective hints. If *False*,
+    #: corrective hints regarding this element will be placed in the
     #: general page-wide conainer for such hints.
     can_display_corrective_hints_in_line: bool = True
-    
+
     def __init__(
         self,
         toplab: str = None,
@@ -2130,25 +2143,25 @@ class InputElement(LabelledElement):
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
-        
-        #: Detailed description of this element to be added to the 
+
+        #: Detailed description of this element to be added to the
         #: automatically generated codebook
         self.description = description
 
         self._input = ""
-        self._force_input = force_input # documented in getter property
+        self._force_input = force_input  # documented in getter property
         self._no_input_corrective_hint = no_input_corrective_hint
-        self._default = default # documented in getter property
-        self._prefix = prefix # documented in getter property
-        self._suffix = suffix # documented in getter property
+        self._default = default  # documented in getter property
+        self._prefix = prefix  # documented in getter property
+        self._suffix = suffix  # documented in getter property
 
-        #: Flag, indicating whether corrective hints regarding 
+        #: Flag, indicating whether corrective hints regarding
         #: this element should be shown.
         self.show_corrective_hints: bool = False
 
         #: A :class:`.MessageManager`, handling the corrective hints
         #: for this element.
-        self.hint_manager = MessageManager(default_level="error")
+        self.hint_manager = MessageManager(default_level="danger")
 
         #: A boolean flag, indicating whether the element is disabled
         #: A disabled input element is shown and displays its input
@@ -2160,21 +2173,21 @@ class InputElement(LabelledElement):
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
-    
+
     def _prepare_web_widget(self):
         """:meta private: (documented at :class:`.Element`)"""
         super()._prepare_web_widget()
-        
+
         try:
             self._prefix._prepare_web_widget()
         except AttributeError:
             pass
-        
+
         try:
             self._suffix._prepare_web_widget()
         except AttributeError:
             pass
-    
+
     @property
     def corrective_hints(self) -> Iterator[str]:
         """
@@ -2189,15 +2202,15 @@ class InputElement(LabelledElement):
     def debug_value(self) -> Union[str, None]:
         """
         Union[str, None]: Value to be used as a default in debug mode.
-        
-        This value is read from config.conf. Only used, if there is no 
+
+        This value is read from config.conf. Only used, if there is no
         dedicated default for this element.
 
         Notes:
-            The property searches for an option of the form 
-            ``<element_class>_debug`` in the section *debug* of 
+            The property searches for an option of the form
+            ``<element_class>_debug`` in the section *debug* of
             config.conf. If no option is found, the return value is
-            *None* 
+            *None*
         """
         name = f"{type(self).__name__}_default"
         return self.experiment.config.get("debug", name, fallback=None)
@@ -2216,8 +2229,8 @@ class InputElement(LabelledElement):
     @property
     def default(self) -> Union[str, int, float]:
         """
-        Union[str, int, float]: Default value of this element. 
-        
+        Union[str, int, float]: Default value of this element.
+
         The data type can vary, depending on the element.
         """
         if self._default is not None:
@@ -2262,17 +2275,16 @@ class InputElement(LabelledElement):
         Method for validation of input to the element.
 
         Returns:
-            bool: *True*, if the input is correct and subjects may 
+            bool: *True*, if the input is correct and subjects may
                 proceed to the next page, *False*, if the input is not
                 in the correct form.
         """
-
         if self.force_input and not self.input:
             self.hint_manager.post_message(self.no_input_hint)
             return False
-        else: 
+        else:
             return True
-        
+
     @property
     def no_input_hint(self) -> str:
         """
@@ -2286,13 +2298,13 @@ class InputElement(LabelledElement):
     def default_no_input_hint(self) -> str:
         """
         str: Default hint if subject input is missing in *force_entry* elements.
-        
-        This value is read from config.conf. Only used, if there is no 
+
+        This value is read from config.conf. Only used, if there is no
         dedicated :attr:`.no_input_hint` for this element.
 
         Notes:
-            The property searches for an option of the form 
-            ``<element_class>_debug`` in the section *debug* of 
+            The property searches for an option of the form
+            ``<element_class>_debug`` in the section *debug* of
             config.conf. If no option is found, the return value is
             "You need to enter something".
         """
@@ -2301,32 +2313,32 @@ class InputElement(LabelledElement):
 
     @property
     def prefix(self):
-        """ 
+        """
         Union[str, Element]: A string or element, serving as prefix.
 
-        If the prefix is an element, the getter returns its 
-        :attr:`.Element.inner_html`. If it is a string, the getter 
+        If the prefix is an element, the getter returns its
+        :attr:`.Element.inner_html`. If it is a string, the getter
         returns the text, wrapped in an appropriate html container.
         """
         try:
             return self._prefix.inner_html
         except AttributeError:
             return self._render_input_group_text(self._prefix)
-    
+
     @property
     def suffix(self):
-        """ 
+        """
         Union[str, Element]: A string or element, serving as suffix.
 
-        If the suffix is an element, the getter returns its 
-        :attr:`.Element.inner_html`. If it is a string, the getter 
+        If the suffix is an element, the getter returns its
+        :attr:`.Element.inner_html`. If it is a string, the getter
         returns the text, wrapped in an appropriate html container.
         """
         try:
             return self._suffix.inner_html
         except AttributeError:
             return self._render_input_group_text(self._suffix)
-    
+
     def _render_input_group_text(self, text: str) -> str:
         if text is not None:
             return f"<div class='input-group-text'>{text}</div>"
@@ -2348,8 +2360,8 @@ class InputElement(LabelledElement):
     def data(self) -> dict:
         """
         dict: Dictionary of element data.
-        
-        Includes the subject :attr:`.input` and the element's 
+
+        Includes the subject :attr:`.input` and the element's
         :attr:`.codebook_data`.
         """
         data = {}
@@ -2363,7 +2375,7 @@ class InputElement(LabelledElement):
 
         Args:
             d: A dictionary with data.
-        
+
         Notes:
             The *d* dictionary will usually be a dictionary of all data
             collected on a page.
@@ -2399,7 +2411,7 @@ class InputElement(LabelledElement):
         data["description"] = self.description
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
-    
+
     def added_to_page(self, page):
         """:meta private: (documented at :class:`.Element`)"""
         from . import page as pg
@@ -2413,7 +2425,7 @@ class InputElement(LabelledElement):
 
         if self.page.experiment and not self.experiment:
             self.added_to_experiment(self.page.experiment)
-        
+
         for fix in (self._prefix, self._suffix):
             try:
                 fix.should_be_shown = False
@@ -2429,7 +2441,7 @@ class Data(InputElement):
     Example::
 
         Data(value="test", name="mydata")
-    
+
     Args:
         value: The value that you want to save.
     """
@@ -2454,13 +2466,10 @@ class TextEntry(InputElement):
     """Provides a text entry field.
 
     Args:
-        prefix: Prefix for the input field.
-        suffix: Suffix for the input field.
         placeholder: Placeholder text, displayed inside the input field.
-        default: Default value.
         **kwargs: Further keyword arguments that are passed on to the
             parent class :class:`InputElement`.
-        
+
     """
 
     element_template = jinja_env.get_template("TextEntryElement.html.j2")
@@ -2581,8 +2590,7 @@ class ChoiceElement(InputElement, ABC):
 
 
 class SingleChoice(ChoiceElement):
-    """ 
-    """
+    """"""
 
     type = "radio"
 
@@ -2634,20 +2642,20 @@ class SingleChoiceButtons(SingleChoice):
 
     Keyword Arguments:
 
-        button_width: Can be used to manually define the width of 
+        button_width: Can be used to manually define the width of
             buttons. If you supply a single string, the same width will
             be applied to all buttons in the element. If you supply
-            "auto", button width will be determined automatically. You 
-            can also supply a list of specific widths for each 
-            individual button. You must specify a unit, e.g. '140px'. 
+            "auto", button width will be determined automatically. You
+            can also supply a list of specific widths for each
+            individual button. You must specify a unit, e.g. '140px'.
             Defaults to "equal".
 
-        button_style: Can be used for quick color-styling, using 
+        button_style: Can be used for quick color-styling, using
             Bootstraps default color keywords: btn-primary, btn-secondary,
-            btn-success, btn-info, btn-warning, btn-danger, btn-light, 
-            btn-dark. You can also use the "outline" variant to get 
-            outlined buttons (eg. "btn-outline-secondary"). If you 
-            specify a single string, this style is applied to all 
+            btn-success, btn-info, btn-warning, btn-danger, btn-light,
+            btn-dark. You can also use the "outline" variant to get
+            outlined buttons (eg. "btn-outline-secondary"). If you
+            specify a single string, this style is applied to all
             buttons in the element. If you supply a list, you can define
             individual styles for each button. If you supply a list that
             is shorter than the list of labels, the last style
@@ -2657,9 +2665,9 @@ class SingleChoiceButtons(SingleChoice):
         button_toolbar: A boolean switch to toggle whether buttons should
             be layoutet as a connected toolbar (*True*), or as separate
             neighbouring buttons (*False*, default).
-            
+
         button_round_corners: A boolean switch to toggle whether buttons
-            should be displayed with additionally rounded corners 
+            should be displayed with additionally rounded corners
             (*True*). Defaults to *False*.
     """
 
@@ -2785,7 +2793,9 @@ class SingleChoiceButtons(SingleChoice):
             spec = f"margin-{m}: {n}; "
             spec += f"border-top-{m}-radius: 0; "
             spec += f"border-bottom-{m}-radius: 0;"
-            css = f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
+            css = (
+                f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
+            )
             self._css_code += [(7, css)]
 
     def _convert_alignment(self):
@@ -2865,15 +2875,15 @@ class MultipleChoice(ChoiceElement):
 
     def validate_data(self):
         conditions = [True]
-        
+
         if self.force_input and len(self.input) == 0:
             self.hint_manager.post_message(self.no_input_hint)
             conditions.append(False)
-        
+
         if not (self.min <= sum(list(self.input.values())) <= self.max):
             self.hint_manager.post_message(self.select_hint)
             conditions.append(False)
-        
+
         return all(conditions)
 
     @property
@@ -2923,8 +2933,7 @@ class MultipleChoice(ChoiceElement):
 
 
 class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
-    """Buttons, working as a MultipleChoice.
-    """
+    """Buttons, working as a MultipleChoice."""
 
     button_round_corners = False
 
@@ -2950,7 +2959,7 @@ class ButtonLabels(SingleChoiceButtons):
 
 
 class BarLabels(SingleChoiceBar):
-    """Disabled Button-Toolbar. Example usecase might be additional 
+    """Disabled Button-Toolbar. Example usecase might be additional
     labelling.
     """
 
@@ -2962,10 +2971,9 @@ class BarLabels(SingleChoiceBar):
 
 
 class SubmittingButtons(SingleChoiceButtons):
-    """SingleChoiceButtons that trigger submission of the current page 
+    """SingleChoiceButtons that trigger submission of the current page
     on click.
     """
-
 
     def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-info", **kwargs):
         super().__init__(*choice_labels, button_style=button_style, **kwargs)
@@ -3193,59 +3201,59 @@ class JumpList(Row):
             for el in self.elements:
                 el.disabled = False
 
+
 # class ActionList(Element):
 
 #     def __init__(self, list_element, button_element):
-        # self.list_element = list_element
-        # self.button_element = button_element
-    
+# self.list_element = list_element
+# self.button_element = button_element
 
 
 # class JumpList2(SelectPageList):
-    # def __init__(
-    #     self,
-    #     scope: str = "exp",
-    #     label: str = "Jump",
-    #     check_jumpto: bool = True,
-    #     check_jumpfrom: bool = True,
-    #     debugmode: bool = False,
-    #     show_all_in_scope: bool = True,
-    #     button_style: Union[str, list] = "btn-dark",
-    #     button_corners: str = "normal",
-    #     **kwargs,
-    # ):
-    #     name = kwargs.get("name", "jumplist_" + uuid4().hex)
-    #     select_name = name + "_select"
-    #     btn_name = name + "_btn"
-    #     self.btn = DynamicJumpButtons(
-    #         (label, select_name),
-    #         name=btn_name,
-    #         button_style=button_style,
-    #         button_corners=button_corners,
-    #     )
-    #     self.btn.should_be_shown = False
-    #     self.btn.add_css(f"#choice1-{self.btn.name}-lab {{border-top-left-radius: 0; border-bottom-left-radius: 0;}}")
-    #     super().__init__(
-    #         scope=scope, 
-    #         name=select_name, 
-    #         # suffix="test",
-    #         check_jumpto=check_jumpto,
-    #         check_jumpfrom=check_jumpfrom,
-    #         show_all_in_scope=show_all_in_scope,
-    #         )
-        
-    # def _prepare_web_widget(self):
-    #     super()._prepare_web_widget()
-    #     self.btn._prepare_web_widget()
-    #     self.suffix = self.btn.inner_html
-    
-    # def added_to_page(self, page):
-    #     super().added_to_page(page)
-    #     self.btn.added_to_page(page)
-    
-    # def added_to_experiment(self, exp):
-    #     super().added_to_experiment(exp)
-    #     self.btn.added_to_experiment(exp)
+# def __init__(
+#     self,
+#     scope: str = "exp",
+#     label: str = "Jump",
+#     check_jumpto: bool = True,
+#     check_jumpfrom: bool = True,
+#     debugmode: bool = False,
+#     show_all_in_scope: bool = True,
+#     button_style: Union[str, list] = "btn-dark",
+#     button_corners: str = "normal",
+#     **kwargs,
+# ):
+#     name = kwargs.get("name", "jumplist_" + uuid4().hex)
+#     select_name = name + "_select"
+#     btn_name = name + "_btn"
+#     self.btn = DynamicJumpButtons(
+#         (label, select_name),
+#         name=btn_name,
+#         button_style=button_style,
+#         button_corners=button_corners,
+#     )
+#     self.btn.should_be_shown = False
+#     self.btn.add_css(f"#choice1-{self.btn.name}-lab {{border-top-left-radius: 0; border-bottom-left-radius: 0;}}")
+#     super().__init__(
+#         scope=scope,
+#         name=select_name,
+#         # suffix="test",
+#         check_jumpto=check_jumpto,
+#         check_jumpfrom=check_jumpfrom,
+#         show_all_in_scope=show_all_in_scope,
+#         )
+
+# def _prepare_web_widget(self):
+#     super()._prepare_web_widget()
+#     self.btn._prepare_web_widget()
+#     self.suffix = self.btn.inner_html
+
+# def added_to_page(self, page):
+#     super().added_to_page(page)
+#     self.btn.added_to_page(page)
+
+# def added_to_experiment(self, exp):
+#     super().added_to_experiment(exp)
+#     self.btn.added_to_experiment(exp)
 
 
 class MultipleChoiceList(MultipleChoice):
@@ -3337,11 +3345,11 @@ class Audio(Image):
 
 
 class Video(Audio):
-    """ 
+    """
     Displays a video on the page.
 
     .. note::
-        
+
         You can specify a filepath or a url as the source, but not both
         at the same time.
 
@@ -3350,13 +3358,13 @@ class Video(Audio):
         url: Url to the video
         allow_fullscreen: Boolean, indicating whether users can enable
             fullscreen mode.
-        video_height: Video height in absolute pixels (without unit). 
+        video_height: Video height in absolute pixels (without unit).
             Defaults to "auto".
-        video_width: Video width in absolute pixels (without unit). 
+        video_width: Video width in absolute pixels (without unit).
             Defaults to "100%". It is recommended to use leave this
             parameter at the default value and use the general element
             parameter *width* for setting the width.
-        
+
         **kwargs: The following keyword arguments are inherited from
             :class:`.Audio`:
 
@@ -3365,6 +3373,7 @@ class Video(Audio):
             * loop
 
     """
+
     element_template = jinja_env.get_template("VideoElement.html.j2")
 
     def __init__(
@@ -3394,9 +3403,9 @@ class Video(Audio):
 class MatPlot(Element):
     """
     Displays a :class:`matplotlib.figure.Figure` object.
-    
+
     .. note::
-        When plotting in alfred, you need to use the Object-oriented 
+        When plotting in alfred, you need to use the Object-oriented
         matplotlib API
         (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
 
@@ -3404,7 +3413,7 @@ class MatPlot(Element):
         fig (matplotlib.figure.Figure): The figure to display.
         align: Alignment of the figure ('left', 'right', or 'center').
             Defaults to 'center'.
-    
+
     Examples:
 
         Example usage is illustrated here. Note that the ``example_plot```
@@ -3440,4 +3449,3 @@ class MatPlot(Element):
         d = super().template_data
         d["src"] = self.src
         return d
-
