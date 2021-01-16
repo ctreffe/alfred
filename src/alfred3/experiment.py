@@ -95,7 +95,6 @@ class Experiment:
         >>> exp.page1
         Page(class="Page", name="page1")
     
-    .. versionadded:: 2.0
     
     """
 
@@ -705,7 +704,7 @@ class ExperimentSession:
             if self.config.getboolean("debug", "disable_saving"):
                 return
 
-        self.save_data()
+        self.save_data(sync=True)
 
         if self.config.getboolean("general", "transform_data_to_csv"):
             exporter = Exporter(self)
@@ -898,7 +897,6 @@ class ExperimentSession:
                 [{"col1": "text_a", "col2": "text_b", "col3": "text_c"},
                 {"col1": "text_d", "col2": "text_e", "col3": "text_f"}]
 
-        .. versionadded:: 2.0
 
         """
         p = self.subpath(path)
@@ -969,7 +967,6 @@ class ExperimentSession:
                 ["text_a", "text_b", "text_c"],
                 ["text_a", "text_b", "text_c"]]
         
-        .. versionadded:: 2.0
 
         """
         p = self.subpath(path)
@@ -1047,7 +1044,6 @@ class ExperimentSession:
             :class:`.Value` element. For each Value element, alfred will 
             save an individual column to the final dataset.
         
-        .. versionadded:: 2.0
 
         """
         return self.data_manager.additional_data
@@ -1231,7 +1227,6 @@ class ExperimentSession:
             Refer to the documentation of :meth:`.Page.custom_move` for
             guidance on how to implement a custom movement method.
         
-        .. versionadded:: 2.0
 
         """
         self.movement_manager.forward()
@@ -1247,7 +1242,6 @@ class ExperimentSession:
             Refer to the documentation of :meth:`.Page.custom_move` for
             guidance on how to implement a custom movement method.
 
-        .. versionadded:: 2.0
 
         """
         self.movement_manager.forward()
@@ -1268,7 +1262,6 @@ class ExperimentSession:
             Refer to the documentation of :meth:`.Page.custom_move` for
             guidance on how to implement a custom movement method.
         
-        .. versionadded:: 2.0
 
         """
         self.movement_manager.jump(to)
@@ -1288,7 +1281,6 @@ class ExperimentSession:
         Returns:
             dict: Dictionary of input elements and their current values.
 
-        .. versionadded:: 2.0
         """
         return self.data_manager.values
 
@@ -1306,7 +1298,6 @@ class ExperimentSession:
         Returns:
             dict: Full dataset of the current experimental session.
         
-        .. versionadded:: 2.0
 
         """
         return self.data_manager.session_data
@@ -1330,7 +1321,6 @@ class ExperimentSession:
             Please refer to the documentation of :class:`.Move` for an
             explanation of the saved fields.
         
-        .. versionadded:: 2.0
         
         """
         return self.data_manager.move_history
@@ -1352,10 +1342,87 @@ class ExperimentSession:
         Returns:
             dict: A dict of information about the experiment.
 
-        .. versionadded:: 2.0
 
         """
         return self.data_manager.metadata
+
+    def client_data(self) -> dict:
+        """
+        dict: Dictionary of information about the client, such as:
+            
+            - browser
+            - operating system
+            - screen resolution
+            - device type
+            - (...)
+        
+        Returns:
+            dict: Dictionary of information about the client
+
+        """
+        return self.data_manager.client_data
+
+    @property
+    def all_exp_data(self) -> List[dict]:
+        """
+        list: List of all experiment datasets.
+
+        This allows you to access data collected in other experiment
+        sessions.
+
+        See Also:
+            :attr:`.all_unlinked_data` provides the same access to 
+            unlinked data.
+        
+        Examples:
+            Use *all_exp_data* to get a pandas.DataFrame object with
+            all experiment data::
+
+                import alfred3 as al
+                import pandas as pd
+
+                exp = al.Experiment()
+
+                @exp.member
+                class DemoPage(al.Page):
+                    name = "demo"
+
+                    def on_exp_access(self):
+                        df = pd.DataFrame(self.exp.all_exp_data)
+        
+        """
+        return list(self.data_manager.iter_exp_data())
+
+    @property
+    def all_unlinked_data(self) -> List[dict]:
+        """
+        list: List of all unlinked datasets.
+
+        This allows you to access data collected in other experiment
+        sessions.
+
+        See Also:
+            :attr:`.all_exp_data` provides the same access to the
+            experiment data.
+        
+        Examples:
+            Use *all_unlinked_data* to get a pandas.DataFrame object with
+            all experiment data::
+
+                import alfred3 as al
+                import pandas as pd
+
+                exp = al.Experiment()
+
+                @exp.member
+                class DemoPage(al.Page):
+                    name = "demo"
+
+                    def on_exp_access(self):
+                        df = pd.DataFrame(self.exp.all_unlinked_data)
+        
+        """
+        return list(self.data_manager.iter_exp_data(data_type="unlinked_data"))
 
     def get_page_data(self, name: str) -> dict:
         """
@@ -1382,7 +1449,6 @@ class ExperimentSession:
         Returns:
             dict: Data dictionary of a specific section.
         
-        .. versionadded:: 2.0
 
         """
         return self.data_manager.get_section_data(name=name)
@@ -1406,8 +1472,6 @@ class ExperimentSession:
                 'info' (default), 'warning', 'danger', 'success', 
                 'primary', 'secondary', 'dark', or 'light'.
         
-        .. versionadded:: 2.0
-
         """
         self.message_manager.post_message(msg, title, level)
     
@@ -1433,7 +1497,6 @@ class ExperimentSession:
             pymongo.database.Database: A database object. If no mongo 
             saving agent is present in the experiment, *None* is returned.
         
-        .. versionadded:: 2.0
 
         """
         try:
@@ -1454,7 +1517,6 @@ class ExperimentSession:
             mongo saving agent is present in the experiment, *None* is
             returned.
         
-        .. versionadded:: 2.0
 
         """
         try:
@@ -1475,7 +1537,6 @@ class ExperimentSession:
             unlinked mongo saving agent is present in the experiment, 
             *None* is returned.
         
-        .. versionadded:: 2.0
 
         """
         try:
@@ -1503,7 +1564,6 @@ class ExperimentSession:
             mongo saving agent is present in the experiment, *None* is
             returned.
         
-        .. versionadded:: 2.0
 
         """
         try:
