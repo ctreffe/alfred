@@ -63,7 +63,7 @@
 
             <!-- Experimenter Messages -->
             {% if corrective_hints %}
-            <div id="{{ name }}-corrective-hints">
+            <div class="col-12 mt-2" id="{{ name }}-corrective-hints">
             {% for hint in corrective_hints %}
             <div class="alert alert-{{ hint.level }}">
                 {% if hint.title %}

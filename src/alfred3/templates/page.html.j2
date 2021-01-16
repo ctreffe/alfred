@@ -54,7 +54,7 @@ id="page-container">
 
             {% for element in elements %}
 
-            {% if element.web_widget and element.should_be_shown %}
+            {% if element.should_be_shown %}
             {{ element.web_widget | safe }}
             {% endif %}
 

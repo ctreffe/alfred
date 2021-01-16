@@ -589,34 +589,6 @@ class CoreCompositePage(PageCore):
     def unlinked_data(self):
         return {}
     
-    @property
-    def can_display_corrective_hints_in_line(self):
-        return reduce(
-            lambda b, element: b and element.can_display_corrective_hints_in_line,
-            self._element_list,
-            True,
-        )
-
-    @property
-    def show_corrective_hints(self):
-        return self._show_corrective_hints
-
-    @show_corrective_hints.setter
-    def show_corrective_hints(self, b):
-        b = bool(b)
-        self._show_corrective_hints = b
-        for elmnt in self._element_list:
-            elmnt.show_corrective_hints = b
-
-    @property
-    def corrective_hints(self):
-        # only display hints if property is True
-        if not self.show_corrective_hints:
-            return []
-
-        for element in self.input_elements.values():
-            yield element.corrective_hints
-        
     def set_data(self, dictionary):
         for elmnt in self.input_elements.values():
             elmnt.set_data(dictionary)

@@ -911,6 +911,9 @@ class Element:
             return self.element_template.render(self.template_data)
         else:
             return None
+    
+    def render_inner_html(self, template_data: dict) -> str:
+        return self.element_template.render(template_data)
 
     @property
     def web_widget(self) -> str:
@@ -925,7 +928,7 @@ class Element:
             str: The full html code for this element.
         """
         d = self.template_data
-        d["html"] = self.inner_html
+        d["html"] = self.render_inner_html(d)
         return self.base_template.render(d)
 
     @property
@@ -2251,7 +2254,7 @@ class InputElement(LabelledElement):
         d["suffix"] = self.suffix
         d["input"] = self.input
         d["disabled"] = self.disabled
-        d["corrective_hints"] = list(self.hint_manager.get_messages())
+        d["corrective_hints"] = list(self.corrective_hints)
         return d
 
     def validate_data(self) -> bool:
