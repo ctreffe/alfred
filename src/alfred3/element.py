@@ -2472,25 +2472,6 @@ class TextArea(TextEntry):
         return d
 
 
-class Button(InputElement):
-    element_template = jinja_env.get_template("ButtonElement.html.j2")
-
-    def __init__(self, label, **kwargs):
-        super().__init__(**kwargs)
-        self.label = label
-
-    @property
-    def template_data(self):
-        d = super().template_data
-        d["label"] = self.label
-        return d
-    
-    def on_click(self):
-        pass
-    
-
-
-
 @dataclass
 class Choice:
     """Dataclass for managing choices."""
