@@ -2033,6 +2033,49 @@ class ProgressBar(LabelledElement):
         return d
 
 
+class Alert(Text):
+    """
+    Allows the display of customized alerts.
+
+    Args:
+        text: Alert text
+        category: Affects the appearance of alerts.
+            Values can be: "info", "success", "warning", "primary",
+            "secondory", "dark", "light", "danger".
+        dismiss: Boolean parameter. If "True", AlertElement can be
+            dismissed by a click. If "False", AlertElement is not
+            dismissible. Default = "False"
+        **element_args: Keyword arguments passed to the parent class
+            :class:`TextElement`. Accepted keyword arguments are: name,
+            font_size, align, width, position, showif,
+            instance_level_logging.
+
+    Examples:
+
+        >>> import alfred3 as al
+        >>> alert = al.AlertElement(text="Alert text", dismiss=True, name="al1")
+        >>> alert
+        Alert(name='al1')
+
+    """
+
+    element_template = jinja_env.get_template("AlertElement.html.j2")
+
+    def __init__(self, text: str = "", category: str = "info", dismiss: bool = False, **element_args):
+        super().__init__(text=text, **element_args)
+        self.category = category
+        self.dismiss = dismiss
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["category"] = self.category
+        d["role"] = "alert"
+        d["dismiss"] = self.dismiss
+
+        return d
+
+
 class InputElement(LabelledElement):
     """
     Base class for elements that allow data input.
