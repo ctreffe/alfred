@@ -93,14 +93,9 @@ class DataManager(object):
     def metadata(self):
         data = {}
         
-        data["type"] = self.EXP_DATA
-        data["alfred_version"] = self._experiment.alfred_version
-        data["session_status"] = self._experiment.session_status
-        
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_version"] = self._experiment.version
-        data["exp_type"] = self._experiment.type
         data["exp_start_time"] = self._experiment.start_time
         data["exp_start_timestamp"] = self._experiment.start_timestamp
         data["exp_save_time"] = time.time()
@@ -109,6 +104,9 @@ class DataManager(object):
         data["exp_condition"] = self._experiment.condition
         data["exp_id"] = self._experiment.exp_id
         data["exp_session_id"] = self._experiment.session_id
+        data["session_status"] = self._experiment.session_status
+        data["alfred_version"] = self._experiment.alfred_version
+        data["type"] = self.EXP_DATA
         
         return data
     
@@ -135,20 +133,31 @@ class DataManager(object):
         return d
     
     @property
-    def codebook_data(self) -> Dict[dict]:
+    def codebook_data(self) -> Dict[str, dict]:
+        """dict: Returns codebook data for the current session."""
         exp = self.extract_codebook_data(self.session_data)
         unlinked = self.extract_codebook_data(self.unlinked_data)
 
         return {**exp, **unlinked}
     
     @staticmethod
-    def extract_codebook_data(exp_data: dict) -> Dict[dict]:
+    def extract_codebook_data(exp_data: dict) -> Dict[str, dict]:
+        """ 
+        Extracts codebook data from a full experiment data dictionary.
+
+        Args:
+            exp_data: Full experiment data dictionary, like the one
+                returned by :attr:`.session_data`
+
+        Returns:
+            dict: A dictionary of dictionaries, containing detailed 
+                information about the used elements.
+        """
         meta = {}
         meta["alfred_version"] = exp_data["alfred_version"]
         meta["exp_author"] = exp_data["exp_author"]
         meta["exp_title"] = exp_data["exp_title"]
         meta["exp_version"] = exp_data["exp_version"]
-        meta["exp_type"] = exp_data["exp_type"]
 
         codebook = exp_data.pop("exp_data")
         for entry in codebook.values():
@@ -177,7 +186,9 @@ class DataManager(object):
         """
         fieldnames = {}
         for element in data:
-            fieldnames.update(element) 
+            el = copy.copy(element)
+            el.pop("_id", None) # remove mongoDB doc ID, if there is one
+            fieldnames.update(el) 
         
         return list(fieldnames)
     
@@ -189,7 +200,7 @@ class DataManager(object):
 
         Args:
             data: A list or other iterator providing the individual
-                datasets.
+                datasets. These need to be the full experiment datasets.
 
         Returns:
             list: List of fieldnames
@@ -230,6 +241,52 @@ class DataManager(object):
 
         fieldnames = metadata + client_info + element_names + ["additional_data"]
         return fieldnames
+    
+    @staticmethod
+    def sort_fieldnames(fieldnames: List[str], template: List[str]) -> List[str]:
+        """
+        Sorts the list fieldnames according to template.
+
+        If fieldnames contains more fields than template, the returned
+        list consists of a sorted part (the elements present in 
+        *template*) and an appended part (the other elements, appended
+        in their order of appearance in *fieldnames*).
+
+        Args:
+            fieldnames: List to sort
+            template: Template list, indicating the desired order of
+                the known elements in fieldnames.
+        
+        Returns:
+            list: Sorted list
+        
+        Raises:
+            ValueError: If either of the provided lists contain 
+                duplicate values.
+        """
+        if len(set(fieldnames)) != len(fieldnames):
+            raise ValueError("Input list must contain only unique elements")
+        
+        if len(set(template)) != len(template):
+            raise ValueError("Template list must contain only unique elements")
+
+        def find_position(name):
+            try:
+                return template.index(name)
+            except ValueError:
+                return len(template) + 1
+        return sorted(fieldnames, key=find_position)
+    
+    @classmethod
+    def sort_codebook_fieldnames(cls, fieldnames: List[str]) -> List[str]:
+
+        t1 = ["exp_title", "exp_author", "exp_version", "alfred_version"]
+        t2 = ["element_type", "name", "label_top", "label_left", "label_right", "label_bottom"]
+        t3 = ["force_input", "default", "placeholder", "prefix", "suffix", "description"]
+
+        template = t1 + t2 + t3
+
+        return cls.sort_fieldnames(fieldnames, template)
 
 
     @staticmethod
@@ -256,7 +313,6 @@ class DataManager(object):
         data["exp_id"] = self._experiment.exp_id
         data["exp_version"] = self._experiment.version
         data["alfred_version"] = self._experiment.alfred_version
-        data["exp_type"] = self._experiment.type
         return data
     
     @property
@@ -295,49 +351,37 @@ class DataManager(object):
     def get_section_data(self, name: str) -> dict:
         return self.experiment.root_section.all_subsections[name].data
 
-    def find_experiment_data_by_uid(self, uid):
-        data = self._experiment._root_section.data
-        return DataManager._find_by_uid(data, uid)
+    def iter_flat_mongo_data(self, data_type: str = "exp_data") -> Iterator[dict]:
+        """ 
+        Iterates over all datasets saved in the mongoDB associated with
+        the experiment via its mongo_saving_agent.
 
-    def find_additional_data_by_key_and_uid(self, key, uid):
-        data = self.additional_data[key]
-        return DataManager._find_by_uid(data, uid)
+        Args:
+            data_type: Can be one of 'exp_data', or 'unlinked_data'
 
-    @staticmethod
-    def _find_by_uid(data, uid):
-        def worker(data, uid):
-            if data["uid"] == uid:
-                return data
-            elif "subtree_data" in data:
-
-                for item in data["subtree_data"]:
-                    try:
-                        d = worker(item, uid)
-                        return d
-                    except Exception:
-                        if item == data["subtree_data"][-1]:
-                            raise AlfredError("did not find uuid in tree")
-                raise AlfredError("Custom Error")
-            else:
-                raise AlfredError("did not find uuid in tree")
-
-        return worker(data, uid)
-
-    def mongo_exp_data(self, data_type: str = "exp_data") -> Iterator[dict]:
+        Yields:
+            dict: Flattened experiment data.
+        """
         cursor = self.iterate_mongo_data(
             exp_id=self.exp.exp_id, 
             data_type=data_type, 
             secrets=self.exp.secrets
             )
         
-        if data_type == "unlinked" and len(cursor) < 15:
-            self.log.warning("Can't access unlinked data (too few datasets for unlinking).")
-            return []
-        
         for dataset in cursor:
             yield self.flatten(dataset)
         
-    def local_exp_data(self, data_type: str = "exp_data") -> Iterator[dict]:
+    def iter_flat_local_data(self, data_type: str = "exp_data") -> Iterator[dict]:
+        """ 
+        Iterates over all datasets saved via the experiment's
+        local_saving_agent.
+
+        Args:
+            data_type: Can be one of 'exp_data', or 'unlinked_data'
+
+        Yields:
+            dict: Flattened experiment data
+        """
         if data_type == "exp_data":
             path = self.exp.config.get("local_saving_agent", "path")
         elif data_type == "unlinked_data":
@@ -346,21 +390,24 @@ class DataManager(object):
         path = self.exp.subpath(path)
         cursor = self.iterate_local_data(data_type=data_type, directory=path)
 
-        if data_type == "unlinked" and len(cursor) < 15:
-            self.log.warning("Can't access unlinked data (too few datasets for unlinking).")
-            return []
-        
         for dataset in cursor:
             yield self.flatten(dataset)
 
-    @property
-    def all_exp_data(self) -> Iterator[dict]:
-        yield self.mongo_exp_data()
-        yield self.local_exp_data()
-    
-    @property
-    def all_unlinked_data(self):
-        return self.mongo_exp_data("unlinked") + self.local_exp_data("unlinked")
+    def iter_exp_data(self, data_type: str = "exp_data") -> Iterator[dict]:
+        """
+        Iterates over all datasets that can be found for this experiment.
+
+        Includes data saved via mongo_saving_agent and data saved via
+        local_saving_agent.
+
+        Args:
+            data_type: Can be one of 'exp_data', or 'unlinked_data'
+
+        Yields:
+            dict: Flattened experiment data
+        """
+        yield self.iter_flat_mongo_data(data_type=data_type)
+        yield self.iter_flat_local_data(data_type=data_type)
     
     @staticmethod
     def iterate_mongo_data(
@@ -372,7 +419,7 @@ class DataManager(object):
         .. versionadded:: 1.5
 
         Usage::
-            cursor = data_manager.collect_mongo_data(data_type="exp_dat")
+            cursor = data_manager.iterate_mongo_data(data_type="exp_dat")
             for doc in cursor:
                 ...
 
@@ -486,3 +533,6 @@ def decrypt_recursively(data: Union[list, dict, int, float, str, bytes], key: by
 
     elif isinstance(data, dict):
         return {k: decrypt_recursively(v, key=key) for k, v in data.items()}
+
+
+
