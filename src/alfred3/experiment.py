@@ -1005,25 +1005,18 @@ class ExperimentSession:
         return Path(self.config.expdir).resolve()
 
     @property
-    def session_status(self):
+    def session_status(self) -> str:
+        """
+        str: Session status for the current experiment.
+
+        Can be used to store information about the state of an 
+        experiment.
+        
+        """
         return self._session_status
 
     @session_status.setter
-    def session_status(self, status):
-        """Sets the session_status for the current experiment.
-
-        Args:
-            status (str): A string describing the current status of the
-                experiment.
-                
-        Todo:
-            Should updates to an experiment's status result in a saving
-            action? We could call the SavingAgentController from within
-            this method to save the dataset every time a status update
-            is performed.
-            ATTENTION: The status is currently not saved in Alfed but
-            exists only at runtime!
-        """
+    def session_status(self, status: str):
         if not isinstance(status, str):
             raise TypeError
         self._session_status = status
@@ -1062,23 +1055,32 @@ class ExperimentSession:
 
     @property
     def condition(self) -> str:
-        """str: Current experiment condition"""
+        """str: Experiment condition."""
         return self._condition
+    
+    @condition.setter
+    def condition(self, value: str):
+        if not isinstance(value, str):
+            raise ValueError("Condition must be a string")
 
-    def add_condition(self, s):
-        self._condition = self._condition + "." + s if self._condition else s
+        self._condition = value
 
     @property
-    def session(self):
+    def session(self) -> str:
         """
-        *read-only*
+        str: Experiment session.
 
-        :return: Current TestCondition (*str or unicode*)
+        This property can be used, e.g. for repeated measures designs
+        with multiple experiment sessions for each participant.
         """
         return self._session
+    
+    @session.setter
+    def session(self, value: str):
+        if not isinstance(value, str):
+            raise ValueError("Session must be a string")
 
-    def add_session(self, s):
-        self._session = self._session + "." + s if self._session else s
+        self._condition = value
 
     def append(self, *items):
         """
