@@ -448,7 +448,7 @@ class NoValidationSection(Section):
         return True
 
 
-class CommitInputSection(Section):
+class RevisitSection(Section):
     allow_forward: bool = True
     allow_backward: bool = True
     allow_jumpfrom: bool = True
@@ -463,14 +463,14 @@ class CommitInputSection(Section):
         self.exp.movement_manager.current_page.close()
 
 
-class OnlyForwardSection(CommitInputSection):
+class OnlyForwardSection(RevisitSection):
     allow_forward: bool = True
     allow_backward: bool = False
     allow_jumpfrom: bool = False
     allow_jumpto: bool = False
 
 
-class HeadOpenSection(CommitInputSection): pass
+class HeadOpenSection(RevisitSection): pass
 
 
 class SegmentedSection(OnlyForwardSection): pass
