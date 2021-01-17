@@ -17,6 +17,7 @@ from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Union, Tuple
 from uuid import uuid4
+from configparser import NoSectionError
 
 import pymongo
 import bson
@@ -80,7 +81,7 @@ _thread = threading.Thread(target=_save_looper, name="DataSaver")
 """Thread for executing the :func:`_save_looper` in the background."""
 
 _thread.daemon = True
-"""The significance of this flag is that the entire Python program exits 
+"""The entire Python program exits 
 when only daemon threads are left. (From threading documentation)"""
 
 _thread.start()
@@ -117,6 +118,8 @@ class SavingAgent(ABC):
         use: Set to false, if this saving agent should not be used.
     """
 
+    instance_level_logging = False
+
     def __init__(
         self, activation_level: int = 10, experiment=None, name: str = None, encrypt: bool = False
     ):
@@ -128,11 +131,9 @@ class SavingAgent(ABC):
             raise SavingAgentException(
                 "Saving Agents must be initialized with experiment instance."
             )
-
-        self.log = self._init_log()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
         self.name = name
-
         if name is None or name == "auto" or name == "":
             self.name = (
                 type(self).__name__ + "_" + time.strftime("%Y-%m-%d_t%H%M%S") + "_" + uuid4().hex
@@ -147,6 +148,7 @@ class SavingAgent(ABC):
                 )
             )
 
+        self.log.add_queue_logger(self, __name__)
         self._lock = threading.Lock()
         self._latest_save_time = None
         self._fallback_agents = []
@@ -156,6 +158,10 @@ class SavingAgent(ABC):
             raise ValueError(
                 f"Encryption was turned on for {self}, but the experiment does not have an encryption key. Turn encryption off in the saving agent configuration, or provide an encryption key in secrets.conf."
             )
+
+    @property
+    def experiment(self):
+        return self._experiment
 
     def append_fallback(self, *args):
         """Appends saving agents to the list of fallback saving agents. 
@@ -207,6 +213,10 @@ class SavingAgent(ABC):
                     initially, but succeed with at least one fallback
                     saving agent.
         """
+        if self._experiment.config.getboolean("general", "debug"):
+            if self._experiment.config.getboolean("debug", "disable_saving"):
+                self.log.debug(f"Saving disabled. 'save_data' was called on {self}, but not executed.")
+                return (True, "success")
 
         self._lock.acquire()
 
@@ -267,33 +277,6 @@ class SavingAgent(ABC):
         by all children of :class:`SavingAgent`.
         """
         pass
-
-    def _init_log(self):
-        loggername = self._prepare_logger_name()
-        log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
-        log.session_id = self._experiment.config.get("metadata", "session_id")
-
-        return log
-
-    def _prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self._experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)
-
 
 class LocalSavingAgent(SavingAgent):
     """A SavingAgent that writes data to a .json file on the disk.
@@ -385,8 +368,8 @@ class LocalSavingAgent(SavingAgent):
     def _save(self, data: dict):
         """Write data to file."""
         self._check_directory()
-        with open(self.file, "w") as outfile:
-            json.dump(data, outfile, indent=4, sort_keys=True)
+        with open(self.file, "w", encoding="utf-8") as outfile:
+            json.dump(data, outfile, indent=4, sort_keys=False, ensure_ascii=False)
 
     @property
     def file(self):
@@ -749,13 +732,20 @@ class SavingAgentController:
         experiment: An alfred experiment.
     """
 
+    instance_level_logging = False
+
     def __init__(self, experiment):
         """Constructor method."""
 
         self._agents = {}
         self._failure_agents = {}
         self._experiment = experiment
-        self.log = self._init_log()
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        self.log.add_queue_logger(self, __name__)
+    
+    @property
+    def experiment(self):
+        return self._experiment
 
     def append(self, saving_agent: SavingAgent):
         """Appends a saving agent to the controller."""
@@ -892,14 +882,12 @@ class SavingAgentController:
 
     def run_saving_agents(self, level: int, sync: bool = False):
         """Automatically gets experimental data, inserts the current
-        time in seconds since epoch as 'save_time' and saves with the
-        'main' saving agent group.
+        time in seconds since epoch as 'save_time' and saves data.
 
         Provided under this name mainly for backwards compatibility.
         
-        The methods :meth:`save_with_group` and :meth:`save_with_agent`
-        are the recommended replacements. They don't guess the intended
-        saving agent group and never don't modify the data.
+        The methods :meth:`save_with_all_agents` and 
+        :meth:`save_with_agent` are the recommended replacements. 
 
         Args:
             level (int): Level of saving task. If the task level is 
@@ -910,144 +898,126 @@ class SavingAgentController:
                 was completed. Defaults to False.
         """
 
-        data = self._experiment.data_manager.get_data()
+        data = self._experiment.data_manager.flat_session_data
         data["save_time"] = time.time()
 
         self.save_with_all_agents(data=data, level=level, sync=sync)
 
-    def _init_log(self):
-        loggername = self._prepare_logger_name()
-        log = alfredlog.QueuedLoggingInterface(base_logger=__name__, queue_logger=loggername)
-        log.session_id = self._experiment.config.get("metadata", "session_id")
 
-        return log
+class DataSaver:
+    """Manages an experiment's standard saving agent controllers.
+    """
 
-    def _prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
+    _LSA = "local_saving_agent"
+    _LSA_FB = ["fallback_local_saving_agent", "level2_fallback_local_saving_agent"]
+    _LSA_U = "local_saving_agent_unlinked"
+    _LSA_C = "local_saving_agent_codebook"
+    _F_LSA = "failure_local_saving_agent"
+    _MSA = "mongo_saving_agent"
+    _MSA_FB = ["fallback_mongo_saving_agent"]
+    _MSA_U = "mongo_saving_agent_unlinked"
+    _MSA_C = "mongo_saving_agent_codebook"
 
-        The name has the following format::
+    def __init__(self, experiment):
+        # Allows for session-specific saving of unlinked data.
+        self._unlinked_random_name_part = uuid4().hex
+        
+        self.experiment = experiment
+        self.exp = experiment
+        self.mongo_manager = MongoManager(self.experiment)
+        self.main = self._init_main_controller()
+        self.unlinked = self._init_unlinked_controller()
+    
+    def _init_main_controller(self):
+        exp = self.experiment
+        from alfred3.data_manager import DataManager
 
-            exp.exp_id.module_name.class_name
-        """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self._experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        return ".".join(name)
-
-
-class CodebookMixin:
-    @staticmethod
-    def _identify_duplicates_and_update(old_data: dict, new_data: dict) -> Tuple[int, dict]:
-        """Updates a nested dictionary with values from another nested dictionary.
-
-        If duplicate keys with different values are encountered, the keys
-        will be mutated to include the term '_duplicate' plus a counter
-        of duplicates. The value dicts will receive an additional field 
-        of ``"duplicate_identifier": True``.
-
-        Example::
-
-            a = {"exp_title": "test", 
-                "codebook": {
-                    "name1": {"instruction": "instr1"}
-                    },
-                }
+        sac_main = SavingAgentController(exp)
+        init_time = time.strftime("%Y-%m-%d_%H:%M:%S")
+        
+        # local saving agent
+        if exp.config.getboolean(self._LSA, "use"):
+            # init agent
+            agent_local = AutoLocalSavingAgent(config=exp.config[self._LSA], experiment=exp)
+            agent_local.filename = f"{init_time}_{agent_local.name}_{exp.session_id}.json"
             
-            b = {
-                "exp_title": "test",
-                "codebook": {
-                    "name1": {"instruction": "instr2", "desription": "desc"},
-                    "name2": {"instruction": "instr2"},
-                },
+            # append fallbacks to saving agent
+            for fb in self._LSA_FB:
+                if exp.config.getboolean(fb, "use"):
+                    fb_agent = AutoLocalSavingAgent(config=exp.config[fb], experiment=exp)
+                    fb_agent.filename = f"{init_time}_{fb_agent.name}_{exp.session_id}.json"
+                    agent_local.append_fallback(fb_agent)
+            
+            sac_main.append(agent_local) 
+
+        # failure local saving agent
+        if exp.config.getboolean(self._F_LSA, "use"):
+            agent_fail = AutoLocalSavingAgent(config=exp.config[self._F_LSA], experiment=exp)
+            agent_fail.filename = f"{init_time}_{agent_fail.name}_{exp.session_id}.json"
+            
+            sac_main.append_failure_agent(agent_fail)
+        
+        # filter dict for mongodb queries
+        mongodb_filter = {}
+        mongodb_filter["exp_id"] = exp.exp_id
+        mongodb_filter["type"] = DataManager.EXP_DATA
+        mongodb_filter["session_id"] = exp.session_id
+
+        # mongo saving agent from secrets.conf
+        if exp.secrets.getboolean(self._MSA, "use"):
+            agent_mongo = self.mongo_manager.init_agent(section=self._MSA, fallbacks=self._MSA_FB)
+            agent_mongo.identifier = mongodb_filter
+            
+            # append fallback mongo agent
+            for fb_agent in agent_mongo.fallback_agents:
+                fb_agent.identifier = mongodb_filter
+            
+            sac_main.append(agent_mongo)
+
+        # BW compatibility: mongo saving agent from config.conf
+        try:
+            if exp.config.getboolean(self._MSA, "use"):
+                agent_mongo_bw = self.mongo_manager.init_agent(
+                    section=self._MSA, fallbacks=self._MSA_FB, config_name="config"
+                )
+                agent_mongo_bw.identifier = mongodb_filter
+                for fb_agent in agent_mongo_bw.fallback_agents:
+                    fb_agent.identifier = mongodb_filter
+                msg = (
+                    "Initialized a MongoSavingAgent that was configured in config.conf. "
+                    "This is deprecated. Please configure your MongoSavingAgents in secrets.conf."
+                )
+                DeprecationWarning(msg)
+                exp.log.warning(msg)
+                sac_main.append(agent_mongo_bw)
+        except NoSectionError:
+            pass
+
+        return sac_main
+
+
+    def _init_unlinked_controller(self):
+        from alfred3.data_manager import DataManager
+        exp = self.experiment
+        sac_unlinked = SavingAgentController(exp)
+
+        if exp.config.getboolean(self._LSA_U, "use"):
+            agent_loc_unlnkd = AutoLocalSavingAgent(config=exp.config[self._LSA_U], experiment=exp)
+            agent_loc_unlnkd.filename = f"unlinked_{self._unlinked_random_name_part}.json"
+            sac_unlinked.append(agent_loc_unlnkd)
+
+        if exp.secrets.getboolean(self._MSA_U, "use"):
+            agent_mongo_unlinked = self.mongo_manager.init_agent(
+                section=self._MSA_U, fill_section=self._MSA
+            )
+            agent_mongo_unlinked.identifier = {
+                "exp_id": exp.exp_id,
+                "type": DataManager.UNLINKED_DATA,
+                "_id": agent_mongo_unlinked.doc_id,
             }
+            sac_unlinked.append(agent_mongo_unlinked)
 
-            counter, updated_data = duplicate_save_update(old_data=a, new_data=b)
-
-            # counter = 2
-            # updated_data =  { 'name1_duplicate1': {'duplicate_identifier': True, 'instruction': 'instr1'},
-                                'name1_duplicate2': {'desription': 'desc',
-                                                    'duplicate_identifier': True,
-                                                    'instruction': 'instr2'},
-                                'name2': {'instruction': 'instr2'}}
-
-
-
-        Returns:
-            A tuple containing the duplicate counter (total number of
-            affected key-value pairs in the updated dictionary) and the
-            updated dictionary.
-        """
-        duplicate_entries = 0
-
-        update_entries = []
-        for identifier, new_element in new_data.items():
-            try:
-                duplicate_elements = 0
-                old_element = old_data[identifier]
-                if not old_element == new_element:
-                    new_element["duplicate_identifier"] = True
-                    old_element["duplicate_identifier"] = True
-                    old_data.pop(identifier)
-
-                    duplicate_entries += 2
-                    duplicate_elements += 1
-
-                    entry2 = {f"{identifier}_duplicate{duplicate_elements}": new_element}
-
-                    update_entries.append({identifier: old_element})
-                    update_entries.append(entry2)
-            except KeyError:
-                update_entries.append({identifier: new_element})
-
-        for entry in update_entries:
-            old_data.update(entry)
-
-        return duplicate_entries, old_data
-
-
-class CodebookLocalSavingAgent(AutoLocalSavingAgent, CodebookMixin):
-    def _save(self, data: dict):
-
-        try:
-            with open(self.file, "r") as f:
-                existing_data = json.load(f)
-
-            _, updated_codebook = self._identify_duplicates_and_update(
-                old_data=existing_data["codebook"], new_data=data["codebook"]
-            )
-
-            existing_data["codebook"] = updated_codebook
-
-            super()._save(data=existing_data)
-        except FileNotFoundError:
-            super()._save(data=data)
-
-
-class CodebookMongoSavingAgent(AutoMongoSavingAgent, CodebookMixin):
-    def _save(self, data: dict):
-
-        f = self.identifier
-        existing_data = self._col.find_one(filter=f)
-        if existing_data:
-            self.doc_id = existing_data["_id"]
-
-        try:
-            _, updated_codebook = self._identify_duplicates_and_update(
-                old_data=existing_data["codebook"], new_data=data["codebook"]
-            )
-            existing_data["codebook"] = updated_codebook
-            # self.col.find_one_and_replace(filter=f, replacement=data)
-            super()._save(data=existing_data)
-        except (KeyError, TypeError):
-            super()._save(data=data)
-
+        return sac_unlinked
 
 class AutoMongoClient(pymongo.MongoClient):
     """Constructs a :class:`pymongo.MongoClient` directly from an alfred

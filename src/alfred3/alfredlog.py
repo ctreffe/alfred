@@ -185,13 +185,62 @@ class QueuedLoggingInterface:
     @property
     def queue_logger(self):
         return self._queue_logger
-
+    
     @queue_logger.setter
     def queue_logger(self, logger):
-        if not self.queue_logger:
-            self._queue_logger = logger
-        else:
-            raise ValueError("Queue logger is already set and can only be set once.")
+
+        if self.queue_logger is not None:
+            self.warning(
+                (
+                    "Queue logger already present. Overriding queue logger "
+                    f"{self.queue_logger} with {logger}."
+                )
+            )
+        
+        self._queue_logger = logger
+
+    def add_queue_logger(self, obj, module: str):
+        name = self.loggername(obj, module)
+        self.queue_logger = logging.getLogger(name)
+        self.session_id = obj.experiment.config.get("metadata", "session_id")
+        self.log_queued_messages()
+
+    def loggername(self, obj, module: str) -> str:
+        """Returns a logger name for use in :class:`~alfred3.alfredlog.QueueLoggingInterface.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.object_identifier
+        
+        The identifier is only added if the object has an attribute
+        *instance_level_logging* that is set to *True*. If the object
+        has a *name* attribute, that is used as the identifier. Else,
+        the object's *uid* is used.
+        
+        Args:
+            obj: The object for which a logger name should be generated.
+        """
+        # remove "alfred3" from module name
+        module_name = module.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        name.append(obj.experiment.exp_id)
+        name.append(".".join(module_name))
+        name.append(type(obj).__name__)
+
+        try:
+            if obj.instance_level_logging:
+                try:
+                    name.append(obj.name)
+                except AttributeError:
+                    name.append(obj.uid)
+
+        except AttributeError as e:
+            self.debug(f"Suppressed exception: {e}")
+
+        return ".".join(name)
 
     def _unpack_worker(self):
         while not self._queue.empty():
@@ -206,7 +255,7 @@ class QueuedLoggingInterface:
 
         if self._level:
             self.queue_logger.setLevel(self._level)
-        threading.Thread(target=self._unpack_worker).start()
+        threading.Thread(target=self._unpack_worker, name="alfredlog").start()
 
     def setLevel(self, level: str):
         """Sets a level for the queue logger. Since the level will be

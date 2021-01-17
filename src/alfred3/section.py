@@ -3,222 +3,263 @@
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 """
-from __future__ import absolute_import
 
-from builtins import str
-from builtins import range
-import logging
-
-from functools import reduce
-
-from ._core import ContentCore, Direction
-from .page import PageCore, HeadOpenSectionCantClose, UnlinkedDataPage
-from .exceptions import MoveError
+from . import element as elm
+from ._core import ExpMember
+from .page import PageCore, UnlinkedDataPage, DefaultFinalPage
+from .exceptions import MoveError, AlfredError
 from . import alfredlog
 from random import shuffle
 
-logger = logging.getLogger(__name__)
+class Section(ExpMember):
 
+    allow_forward: bool = True
+    allow_backward: bool = True
+    allow_jumpfrom: bool = True
+    allow_jumpto: bool = True
 
-class Section(ContentCore):
-    def __init__(self, **kwargs):
-        super(Section, self).__init__(**kwargs)
+    shuffle: bool = False
 
-        self._page_list = []
-        self._currentPageIndex = 0
+    def __init__(self, title: str = None, name: str = None, **kwargs):
+        super().__init__(title=title, name=name, **kwargs)
+
+        self.members = {}
         self._should_be_shown = True
+        
+        #: bool: Boolean flag, indicating whether the experiment session
+        #: is currently operating within this section
+        self.active: bool = False
 
-        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        if kwargs.get("shuffle", None):
+            self.shuffle = kwargs.get("shuffle", False)
+    
+    def __contains__(self, member):
+        try:
+            return member.name in self.all_members or member.name in self.all_elements
+        except AttributeError:
+            return member in self.all_members or member in self.all_elements
 
-    def __str__(self):
-        s = "Section (tag = " + self.tag + ", pages:[" + str(self._page_list) + "]"
-        return s
+    def __repr__(self):
+        return f"Section(class='{type(self).__name__}', name='{self.name}')"
 
     def __iadd__(self, other):
         self.append(other)
         return self
+    
+    def __getitem__(self, name):
+        return self.all_members[name]
+    
+    def __getattr__(self, name):
+        try:
+            return self.all_members[name]
+        except KeyError:
+            return AttributeError(f"{self} has no attribute '{name}'.")
+
+    def shuffle_members(self):
+        """Non-recursive shuffling of this section's members."""
+
+        members = list(self.members.items())
+        shuffle(members)
+        self.members = dict(members)
+    
+    @property
+    def all_updated_members(self) -> dict:
+        """ 
+        Returns a dict of all members that already have exp access.
+        """
+        return {name: m for name, m in self.all_members.items() if m.exp is not None}
+    
+    @property
+    def all_updated_pages(self) -> dict:
+        pages = {}
+        for name, member in self.all_updated_members.items():
+            if isinstance(member, PageCore):
+                pages[name] = member
+        
+        return pages
+    
+    @property
+    def all_updated_elements(self) -> dict:
+        elements = {}
+        for page in self.all_updated_pages.values():
+            elements.update(page.updated_elements)
+        return elements
 
     @property
-    def page_list(self):
-        return self._page_list
+    def all_members(self) -> dict:
+        """Returns a flat dict of all members in this section and its subsections.
+
+        The order is preserved, i.e. members are listed in this dict in 
+        the same order in which they appear in the experiment.
+        """
+        members = {}
+
+        for name, member in self.members.items():
+            members[name] = member
+            if isinstance(member, Section):
+                members.update(member.all_members)
+        
+        return members
 
     @property
-    def only_pages(self):
-        return [member for member in self.page_list if isinstance(member, PageCore)]
+    def last_member(self):
+        return list(self.members.values())[-1]
+    
+    @property
+    def first_member(self):
+        return list(self.members.values())[0]
 
+    @property
+    def all_subsections(self) -> dict:
+        """Returns a flat dict of all sections in this section and its subsections.
+
+        The order is preserved, i.e. sections are listed in this dict in 
+        the same order in which they appear in the experiment.
+        """
+        subsections = {}
+
+        for name, member in self.members.items():
+            if isinstance(member, Section):
+                subsections[name] = member
+                subsections.update(member.all_subsections)
+        
+        return subsections
+
+    @property
+    def subsections(self) -> dict:
+        """Returns a flat dict of all subsections in this section.
+
+        Subsections in subsections are not included. Use 
+        :attr:`.all_subsections` for that purpose.
+        """
+        return {name: sec for name, sec in self.members.items() if isinstance(sec, Section)}
+
+    @property
+    def all_pages(self) -> dict:
+        """Returns a flat dict of all pages in this section and its subsections.
+
+        The order is preserved, i.e. pages are listed in this dict in 
+        the same order in which they appear in the experiment.
+        """
+
+        pages = {}
+        for name, member in self.members.items():
+            if isinstance(member, PageCore):
+                pages[name] = member
+            elif isinstance(member, Section):
+                pages.update(member.all_pages)
+        
+        return pages
+    
+    @property
+    def all_closed_pages(self) -> dict:
+        return {name: page for name, page in self.all_pages.items() if page.is_closed}
+    
+    @property
+    def all_shown_pages(self) -> dict:
+        return {name: page for name, page in self.all_pages.items() if page.has_been_shown}
+    
+    @property
+    def pages(self) -> dict:
+        """Returns a flat dict of all pages in this section.
+
+        Pages in subsections are not included. Use :attr:`.all_pages`
+        for that purpose.
+        """
+        return {name: page for name, page in self.members.items() if isinstance(page, PageCore)}
+    
+    @property
+    def all_elements(self) -> dict:
+        """Returns a flat dict of all elements in this section.
+        
+        Recursive: Includes elements from pages in this section and all 
+        its subsections.
+        """
+
+        elements = {}
+        for page in self.all_pages.values():
+            elements.update(page.elements)
+        return elements
+    
+    @property
+    def all_input_elements(self) -> dict:
+        """Returns a flat dict of all input elements in this section.
+        
+        Recursive: Includes elements from pages in this section and all 
+        its subsections.
+        """
+
+        elements = {}
+        for page in self.all_pages.values():
+            elements.update(page.input_elements)
+        return elements
+    
+    @property
+    def all_shown_input_elements(self) -> dict:
+        """Returns a flat dict of all shown input elements in this section.
+        
+        Recursive: Includes elements from pages in this section and all 
+        its subsections.
+        """
+
+        elements = {}
+        for page in self.all_pages.values():
+            if page.has_been_shown:
+                elements.update(page.input_elements)
+        return elements
+    
     @property
     def data(self):
-        data = super(Section, self).data
-        data["subtree_data"] = []
-        for q_core in self._page_list:
-            if isinstance(q_core, UnlinkedDataPage):
-                continue
-            data["subtree_data"].append(q_core.data)
-
-        return data
-
-    def unlinked_data(self, encrypt):
-        data = {"tag": self.tag}
-        data["subtree_data"] = []
-        for q_core in self._page_list:
-            try:
-                data["subtree_data"].append(q_core.unlinked_data(encrypt=encrypt))
-            except AttributeError:
-                pass
-
-        return data
-
-    def unlinked_data_present(self):
-        """Returns *True*, if unlinked data was collected during the
-        experiment and *False*, if no unlinked data was collected.
-        """
-        present = False
-        for member in self._page_list:
-            if isinstance(member, UnlinkedDataPage):
-                present = True
-            elif isinstance(member, Section):
-                present = member.unlinked_data_present()
-
-        return present
-
-    @property
-    def codebook_data(self):
         data = {}
-        for member in self.page_list:
-            try:
-                data.update(member.codebook_data)
-            except AttributeError:
-                pass
+        for page in self.all_pages.values():
+            data.update(page.data)
         return data
-
+    
     @property
-    def current_page(self):
-        return (
-            self._page_list[self._currentPageIndex].current_page
-            if isinstance(self._page_list[self._currentPageIndex], Section)
-            else self._page_list[self._currentPageIndex]
-        )
-
+    def unlinked_data(self):
+        data = {}
+        for page in self.all_pages.values():
+            data.update(page.unlinked_data)
+        
+        return data
+    
     @property
-    def current_title(self):
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].current_title is not None
-        ):
-            return self._page_list[self._currentPageIndex].current_title
-
-        if (
-            isinstance(self._page_list[self._currentPageIndex], PageCore)
-            and self._page_list[self._currentPageIndex].title is not None
-        ):
-            return self._page_list[self._currentPageIndex].title
-
-        return self.title
-
-    @property
-    def current_subtitle(self):
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].current_subtitle is not None
-        ):
-            return self._page_list[self._currentPageIndex].current_subtitle
-
-        if (
-            isinstance(self._page_list[self._currentPageIndex], PageCore)
-            and self._page_list[self._currentPageIndex].subtitle is not None
-        ):
-            return self._page_list[self._currentPageIndex].subtitle
-
-        return self.subtitle
-
-    @property
-    def current_status_text(self):
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].current_status_text is not None
-        ):
-            return self._page_list[self._currentPageIndex].current_status_text
-
-        if (
-            isinstance(self._page_list[self._currentPageIndex], PageCore)
-            and self._page_list[self._currentPageIndex].statustext is not None
-        ):
-            return self._page_list[self._currentPageIndex].statustext
-
-        return self.statustext
-
-    @ContentCore.should_be_shown.getter  # pylint: disable=no-member
-    def should_be_shown(self):
-        """return true wenn should_be_shown nicht auf False gesetzt wurde und mindestens eine Frage angezeigt werden will"""
-        return super(Section, self).should_be_shown and reduce(
-            lambda b, q_core: b or q_core.should_be_shown, self._page_list, False
-        )
-
-    def allow_leaving(self, direction):
-        return self._page_list[self._currentPageIndex].allow_leaving(direction)
-
-    def enter(self):
-        self.log.debug(f"Entering Section {self.tag}")
-        if isinstance(self._core_page_at_index, Section):
-            self._core_page_at_index.enter()
-
-        self.on_enter()
-
-    def leave(self, direction):
-        assert self.allow_leaving(direction)
-        if isinstance(self._core_page_at_index, Section):
-            self._core_page_at_index.leave(direction)
-
-        self.on_leave()
-        self.log.debug(f"Leaving Section {self.tag} in direction {Direction.to_str(direction)}")
-
-    @property
-    def jumplist(self):
-        # return value: [([0,1], 'JumpText', corePage), ([1], 'JumpText', corePage), ...]
-
-        jumplist = []
-        if self.is_jumpable:
-            jumplist = [([], self.jumptext, self)]
-
-        for i in range(0, len(self._page_list)):
-            if isinstance(self._page_list[i], Section):
-                for jump_item in self._page_list[i].jumplist:
-                    assert len(jump_item) == 3
-                    jump_item[0].reverse()
-                    jump_item[0].append(i)
-                    jump_item[0].reverse()
-                    jumplist.append(jump_item)
-            elif isinstance(self._page_list[i], PageCore) and self._page_list[i].is_jumpable:
-                jumplist.append(([i], self._page_list[i].jumptext, self._page_list[i]))
-
-        return jumplist
-
-    def randomize(self, deep=False):
-        self.generate_unset_tags_in_subtree()
-        shuffle(self._page_list)
-
-        if deep:
-            for item in self._page_list:
-                if isinstance(item, Section):
-                    item.randomize(True)
+    def unlinked_element_data(self):
+        data = {}
+        for page in self.all_pages.values():
+            data.update(page.unlinked_element_data)
+        
+        return data
 
     def added_to_experiment(self, exp):
-        self._experiment = exp
-
-        for page in self._page_list:
-            page.added_to_experiment(self._experiment)
-
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
-
-        try:
-            self.experiment.page_controller.add_section(self)
-        except AttributeError:
-            if self.tag == "finishedSection" or self.tag == "rootSection":
-                pass
+        super().added_to_experiment(exp)
+        self.log.add_queue_logger(self, __name__)
         self.on_exp_access()
+        self.update_members_recursively()
+    
+    def update_members(self):
+        
+        for member in self.members.values():
+            if not member.experiment:
+                member.added_to_experiment(self.exp)
+            if not member.section:
+                member.added_to_section(self)
+    
+    def update_members_recursively(self):
+
+        self.update_members()
+
+        for member in self.members.values():
+            member.update_members_recursively()
+    
+    def generate_unset_tags_in_subtree(self):
+        for i, member in enumerate(self.members.values(), start=1):
+            
+            if member.tag is None:
+                member.tag = str(i)
+            
+            if isinstance(member, Section):
+                member.generate_unset_tags_in_subtree()
 
     def append_item(self, item):
 
@@ -235,169 +276,24 @@ class Section(ContentCore):
 
     def append(self, *items):
         for item in items:
-            if not isinstance(item, (PageCore, Section)):
-                raise TypeError("Can only add pages and section to section.")
-            self._page_list.append(item)
+
+            if item.name in dir(self):
+                raise ValueError(f"Name of {item} is also an attribute of {self}.")
+            
+            if item.name in self.members:
+                raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+
             item.added_to_section(self)
 
-            if self._experiment is not None:
-                item.added_to_experiment(self._experiment)
+            self.members[item.name] = item
+            
+            if self.experiment is not None:
+                item.added_to_experiment(self.experiment)
+                item.update_members_recursively()
+            
+            if not item.tag:
+                item.tag = str(len(self.members) + 1)
 
-            self.generate_unset_tags_in_subtree()
-
-    def generate_unset_tags_in_subtree(self):
-        for i in range(0, len(self._page_list)):
-            if self._page_list[i].tag is None:
-                self._page_list[i].tag = str(i + 1)
-
-            if isinstance(self._page_list[i], Section):
-                self._page_list[i].generate_unset_tags_in_subtree()
-
-    @property
-    def can_move_backward(self):
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].can_move_backward
-        ):
-            return True
-
-        return reduce(
-            lambda b, q_core: b or q_core.should_be_shown,
-            self._page_list[: self._currentPageIndex],
-            False,
-        )
-
-    @property
-    def can_move_forward(self):
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].can_move_forward
-        ):
-            return True
-
-        return reduce(
-            lambda b, q_core: b or q_core.should_be_shown,
-            self._page_list[self._currentPageIndex + 1 :],
-            False,
-        )
-
-    def move_forward(self):
-        self.log.debug(f"Section {self.tag}: move forward")
-
-        # test if moving is possible and leaving is allowed
-        if not (self.can_move_forward and self.allow_leaving(Direction.FORWARD)):
-            raise MoveError()
-
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].can_move_forward
-        ):
-            self._page_list[self._currentPageIndex].move_forward()
-
-        else:
-            # if current_page is QG: call leave
-            if isinstance(self._core_page_at_index, Section):
-                self._core_page_at_index.leave(Direction.FORWARD)
-            for index in range(self._currentPageIndex + 1, len(self._page_list)):
-                if self._page_list[index].should_be_shown:
-                    self._currentPageIndex = index
-                    if isinstance(self._page_list[index], Section):
-                        self._page_list[index].move_to_first()
-                        self._core_page_at_index.enter()
-                    break
-
-    def move_backward(self):
-
-        self.log.debug(f"Section {self.tag}: move backward")
-
-        if not (self.can_move_backward and self.allow_leaving(Direction.BACKWARD)):
-            raise MoveError()
-
-        if (
-            isinstance(self._page_list[self._currentPageIndex], Section)
-            and self._page_list[self._currentPageIndex].can_move_backward
-        ):
-            self._page_list[self._currentPageIndex].move_backward()
-
-        else:
-            # if current_page is QG: call leave
-            if isinstance(self._core_page_at_index, Section):
-                self._core_page_at_index.leave(Direction.BACKWARD)
-            for index in range(self._currentPageIndex - 1, -1, -1):
-                if self._page_list[index].should_be_shown:
-                    self._currentPageIndex = index
-                    if isinstance(self._page_list[index], Section):
-                        self._page_list[index].move_to_last()
-                        self._core_page_at_index.enter()
-                    break
-
-    def move_to_first(self):
-
-        self.log.debug(f"Section {self.tag}: move to first")
-
-        if not self.allow_leaving(Direction.JUMP):
-            raise MoveError()
-        if isinstance(self._core_page_at_index, Section):
-            self._core_page_at_index.leave(Direction.JUMP)
-        self._currentPageIndex = 0
-        if self._page_list[0].should_be_shown:
-            if isinstance(self._page_list[0], Section):
-                self._core_page_at_index.enter()
-                self._page_list[0].move_to_first()
-        else:
-            self.move_forward()
-
-    def move_to_last(self):
-
-        self.log.debug(f"Section {self.tag}: move to last")
-
-        if not self.allow_leaving(Direction.JUMP):
-            raise MoveError()
-        if isinstance(self._core_page_at_index, Section):
-            self._core_page_at_index.leave(Direction.JUMP)
-        self._currentPageIndex = len(self._page_list) - 1
-        if self._page_list[self._currentPageIndex].should_be_shown:
-            if isinstance(self._page_list[self._currentPageIndex], Section):
-                self._core_page_at_index.enter()
-                self._page_list[0].move_to_last()
-        else:
-            self.move_backward()
-
-    def move_to_position(self, pos_list):
-
-        if not self.allow_leaving(Direction.JUMP):
-            raise MoveError()
-
-        if (
-            not isinstance(pos_list, list)
-            or len(pos_list) == 0
-            or not reduce(lambda b, item: b and isinstance(item, int), pos_list, True)
-        ):
-            raise TypeError("pos_list must be an list of int with at least one item")
-
-        if not 0 <= pos_list[0] < len(self._page_list):
-            raise MoveError("pos_list enthaelt eine falsche postionsanganbe.")
-
-        if not self._page_list[pos_list[0]].should_be_shown:
-            raise MoveError("Die Angegebene Position kann nicht angezeigt werden")
-
-        if isinstance(self._page_list[pos_list[0]], PageCore) and 1 < len(pos_list):
-            raise MoveError("pos_list spezifiziert genauer als moeglich.")
-
-        if isinstance(self._core_page_at_index, Section):
-            self._core_page_at_index.leave(Direction.JUMP)
-
-        self._currentPageIndex = pos_list[0]
-        if isinstance(self._page_list[self._currentPageIndex], Section):
-            self._core_page_at_index.enter()
-            if len(pos_list) == 1:
-                self._page_list[self._currentPageIndex].move_to_first()
-            else:
-                self._page_list[self._currentPageIndex].move_to_position(pos_list[1:])
-
-    @property
-    def _core_page_at_index(self):
-        return self._page_list[self._currentPageIndex]
 
     def on_exp_access(self):
         """Hook for code that is meant to be executed as soon as a 
@@ -444,199 +340,204 @@ class Section(ContentCore):
         """
         pass
 
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
+    def on_move(self):
+        pass
+    
+    def on_forward(self):
+        pass
 
-        The name has the following format::
+    def on_backward(self):
+        pass
 
-            exp.exp_id.module_name.class_name.class_uid
+    def on_jumpfrom(self):
+        pass
+
+    def on_jumpto(self):
+        pass
+
+    def enter(self):
+        self.active = True
         
-        with *class_uid* only added, if 
-        :attr:`~Section.instance_level_logging` is set to *True*.
+        self.log.debug(f"Entering {self}.")
+        self.on_enter()
+
+        if self.shuffle:
+            self.shuffle_members()
+
+        if isinstance(self.first_member, Section) and not self.first_member.active:
+            self.first_member.enter()
+        
+    def leave(self):
+        self.log.debug(f"Leaving {self}.")
+        self.on_leave()
+
+        for page in self.all_pages.values():
+            page.close()
+        
+        if self is self.parent.last_member:
+            self.parent.leave()
+    
+    def resume(self):
+        self.log.debug(f"Resuming to {self}.")
+        self.on_resume()
+    
+    def hand_over(self):
+        self.log.debug(f"{self} handing over to child section.")
+        self.on_hand_over()
+    
+    def on_resume(self):
+        """ 
+        Hook for code to be executed on resuming this section.
+
+        Resuming takes place, when a child section is left and the
+        next page is a direct child of this section (self). Then this 
+        section (self) becomes the primary current section again, it
+        resumes its status.
         """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
-
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
-
-        if self.instance_level_logging:
-            name.append(self._uid)
-
-        return ".".join(name)
-
-
-class HeadOpenSection(Section):
-    def __init__(self, **kwargs):
-        super(HeadOpenSection, self).__init__(**kwargs)
-        self._maxPageIndex = 0
-
-    @property
-    def max_page_index(self):
-        return self._maxPageIndex
-
-    def allow_leaving(self, direction):
-        if direction != Direction.FORWARD:
-            return super(HeadOpenSection, self).allow_leaving(direction)
-
-        # direction is Direction.FORWARD
-
-        if isinstance(self._core_page_at_index, PageCore):
-            HeadOpenSection._set_show_corrective_hints(self._core_page_at_index, True)
-            return self._core_page_at_index.allow_closing and super(
-                HeadOpenSection, self
-            ).allow_leaving(direction)
-        else:  # currentCorePage is Group
-            if not self._core_page_at_index.can_move_forward:
-                HeadOpenSection._set_show_corrective_hints(self._core_page_at_index, True)
-                return HeadOpenSection._allow_closing_all_child_pages(
-                    self._core_page_at_index
-                ) and super(HeadOpenSection, self).allow_leaving(direction)
-            else:
-                return super(HeadOpenSection, self).allow_leaving(direction)
-
-    @property
-    def can_move_forward(self):
-        # wenn die aktuelle Fragengruppe oder Frage nicht geschlossen werden
-        # kann, return true. Dann kann die HeadOpenSection darauf reagieren und die
-        # Frage nochmal mit den corrective Hints anzeigen.
-        if (
-            isinstance(self._core_page_at_index, Section)
-            and not self._core_page_at_index.can_move_forward
-            and not HeadOpenSection._allow_closing_all_child_pages(self._core_page_at_index)
-        ):
-            return True
-        elif (
-            isinstance(self._core_page_at_index, PageCore)
-            and not self._core_page_at_index.allow_closing
-        ):
-            return True
-        else:
-            return super(HeadOpenSection, self).can_move_forward
-
-    @property
-    def jumplist(self):
-        """
-        .. todo:: Jumplist wird nicht richtig generiert
-
-        """
-        # return value: [([0,1], 'JumpText'), ([1], 'JumpText'), ...]
-
-        jumplist = []
-        for item in super(HeadOpenSection, self).jumplist:
-            if len(item[0]) == 0 or item[0][0] <= self.max_page_index:
-                jumplist.append(item)
-
-        return jumplist
-
-    def move_forward(self):
-        """
-        """
-        if self._maxPageIndex == self._currentPageIndex:
-            if isinstance(self._core_page_at_index, PageCore):
-                self._core_page_at_index.close_page()
-
-            elif (
-                not self._core_page_at_index.can_move_forward
-            ):  # self._core_page_at_index is instance of Section and at the last item
-                if not HeadOpenSection._allow_closing_all_child_pages(self._core_page_at_index):
-                    # TODO handle if not all pages are closable.
-                    self._core_page_at_index.append(HeadOpenSectionCantClose())
-
-                else:  # all child page at current index allow closing
-                    HeadOpenSection._close_child_pages(self._core_page_at_index)
-
-        super(HeadOpenSection, self).move_forward()
-        self._maxPageIndex = self._currentPageIndex
-
-    def move_to_last(self):
-        self._currentPageIndex = self._maxPageIndex
-
-        if self._page_list[self._currentPageIndex].should_be_shown:
-            if isinstance(self._page_list[self._currentPageIndex], Section):
-                self._page_list[self._currentPageIndex].move_to_last()
-            return
-        else:
-            self.move_backward()
-
-    def leave(self, direction):
-        if direction == Direction.FORWARD:
-            self.log.debug("Leaving HeadOpenSection direction forward. Closing last page.")
-            if isinstance(self._core_page_at_index, PageCore):
-                self._core_page_at_index.close_page()
-            else:
-                HeadOpenSection._close_child_pages(self._core_page_at_index)
-        super(HeadOpenSection, self).leave(direction)
-
-    @staticmethod
-    def _allow_closing_all_child_pages(section, L=None):
-        allow_closing = True
-        for item in section._page_list:
-            if isinstance(item, Section):
-                allow_closing = allow_closing and HeadOpenSection._allow_closing_all_child_pages(
-                    item, L
-                )
-            elif not item.allow_closing:  # item is instance of Page and does not allow closing
-                allow_closing = False
-                if L is not None:
-                    L.append(item)
-
-        return allow_closing
-
-    @staticmethod
-    def _close_child_pages(section):
-        for item in section._page_list:
-            if isinstance(item, PageCore):
-                item.close_page()
-            else:
-                HeadOpenSection._close_child_pages(item)
-
-    @staticmethod
-    def _set_show_corrective_hints(corePage, b):
-        if isinstance(corePage, PageCore):
-            corePage.show_corrective_hints = b
-        else:
-            section = corePage
-            for item in section._page_list:
-                HeadOpenSection._set_show_corrective_hints(item, b)
-
-
-class SegmentedSection(HeadOpenSection):
-    @property
-    def can_move_backward(self):
-        if isinstance(self._core_page_at_index, Section):
-            return self._core_page_at_index.can_move_backward
-        return False
-
-    def move_to_first(self):
         pass
 
-    def move_to_last(self):
+    def on_hand_over(self):
+        """
+        Hook for code to be executed when this section hands over.
+
+        Handover takes place, when a subsection of this section 
+        is entered.
+        """
         pass
 
-    def move_to_position(self, pos_list):
-        if self._currentPageIndex != pos_list[0]:
-            raise MoveError()
+    def forward(self):
+        self.on_forward()
+    
+    def backward(self):
+        self.on_backward()
+    
+    def jumpfrom(self):
+        self.on_jumpfrom()
+    
+    def jumpto(self):
+        self.on_jumpto()
+    
+    def move(self, direction: str):
+        self.on_move()
+        self.update_members()
 
-        super(SegmentedSection, self).move_to_position(pos_list)
+        if direction == "forward":
+            self.forward()
+        elif direction == "backward":
+            self.backward()
 
+    @staticmethod
+    def validate(page):
+        return page.validate()
+
+
+class NoValidationSection(Section):
+    """Section without movement restrictions.
+    
+    You can jump to and from this section, and inputs are not
+    validated.
+
+    """
+    allow_forward: bool = True
+    allow_backward: bool = True
+    allow_jumpfrom: bool = True
+    allow_jumpto: bool = True
+
+    @staticmethod
+    def validate(page):
+        return True
+
+
+class RevisitSection(Section):
+    allow_forward: bool = True
+    allow_backward: bool = True
+    allow_jumpfrom: bool = True
+    allow_jumpto: bool = True
+
+    def forward(self):
+        super().forward()
+        self.exp.movement_manager.current_page.close()
+    
+    def jumpfrom(self):
+        super().jumpfrom()
+        self.exp.movement_manager.current_page.close()
+
+
+class OnlyForwardSection(RevisitSection):
+    allow_forward: bool = True
+    allow_backward: bool = False
+    allow_jumpfrom: bool = False
+    allow_jumpto: bool = False
+
+
+class HeadOpenSection(RevisitSection): pass
+
+
+class SegmentedSection(OnlyForwardSection): pass
+
+
+class FinishedSection(Section):
+
+    allow_forward: bool = False
+    allow_backward: bool = False
+    allow_jumpfrom: bool = False
+    allow_jumpto: bool = True
+
+    def enter(self):
+        super().enter()
+        self.experiment.finish()
+
+
+class RootSection(Section):
+
+    name = "_root"
+
+    def __init__(self, experiment):
+        super().__init__()
+        self._experiment = experiment
+        self.log.add_queue_logger(self, __name__)
+        self.content = Section(name="_content")
+        self.finished_section = FinishedSection(name="__finished_section")
+        self.finished_section += DefaultFinalPage(name="_final_page")
+
+        self._all_pages_list = None
+        self._all_page_names = None
+    
+    def append_root_sections(self):
+        self += self.content
+        self += self.finished_section
+    
     @property
-    def jumplist(self):
-        """
-        .. todo:: Besser implementieren und überlegen, wann jumplist angezeigt werden soll und wann nicht. Lösung auf höherer Ebene?
-        .. todo:: Es zeigt sich, dass die implementierung nicht richtig durchdacht war
+    def all_page_names(self):
+        """Improvised caching mechanism for the list of all page names."""
 
-        """
-        jumplist = []
-        for item in super(HeadOpenSection, self).jumplist:
-            if len(item[0]) == 0 or item[0][0] == self._currentPageIndex:
-                jumplist.append(item)
+        if not self._all_page_names:
+            self._all_page_names = list(self.all_pages.keys())
 
-        # if len(jumplist) <= 1:
-        # jumplist = []
+        elif not len(self._all_page_names) == len(self.all_pages):
+            self._all_page_names = list(self.all_pages.keys())
+        
+        return self._all_page_names
+    
+    @property
+    def all_pages_list(self):
+        """Improvised caching mechanism for the list of all pages."""
 
-        return jumplist
+        if not self._all_pages_list:
+            self._all_pages_list = list(self.all_pages.values())
+
+        elif not len(self._all_pages_list) == len(self.all_pages):
+            self._all_pages_list = list(self.all_pages.values())
+        
+        return self._all_pages_list
+    
+    @property
+    def final_page(self):
+        return self.finished_section._final_page
+
+    @final_page.setter
+    def final_page(self, page):
+        page += elm.HideNavigation()
+        self.finished_section.members = {}
+        self.finished_section._final_page = page
+    

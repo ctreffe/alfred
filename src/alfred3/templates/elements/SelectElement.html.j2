@@ -1,0 +1,5 @@
+    <select {% if type == "multiple" %}multiple {% endif %} class="form-control input-field {{ css_class_element }}" id="{{ name }}" style="{{ fontsize }} {{ height }}" {% if size %}size="{{ size }}"{% endif %} name="{{ name }}">
+        {% for choice in choices %}
+        <option {% if choice.disabled %}disabled{% endif %} {% if choice.checked %}selected{% endif %} value="{{ choice.value }}" id="{{ choice.id }}">{{ choice.label }}</option>
+        {% endfor %}
+    </select>

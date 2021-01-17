@@ -10,13 +10,18 @@ _helper contains internal functions which are not to be called by framework user
 from urllib.parse import urlparse
 from cryptography.fernet import Fernet
 import os
+import re
+import socket
 
-def fontsize_converter(font_argument):
+def fontsize_converter(font_argument) -> int:
     '''
-    FontsizeConverter checks any font arguments used in alfred and returns a fontsize variable compatible
-    with any element or page in alfred.
+    FontsizeConverter checks any font arguments used in alfred and 
+    returns a fontsize variable compatible with any element or page in 
+    alfred.
 
     '''
+    if font_argument is None:
+        return None
 
     if font_argument == 'normal':
         font_argument = 12
@@ -137,4 +142,28 @@ def is_url(url=None):
         result = urlparse(url)
         return all([result.scheme, result.netloc, result.path])
     except:
+        return False
+
+
+def check_name(name):
+    if not re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
+
+        raise ValueError(
+            (
+                "Name must start with a letter and can include only "
+                "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
+                f"Name '{name}' does not match this pattern."
+            )
+        )
+
+
+def socket_checker(port):
+    try:
+        s = socket.socket()
+        s.bind(("127.0.0.1", port))
+        s.listen(1)
+        s.close()
+        return True
+    except Exception:
+        s.close()
         return False

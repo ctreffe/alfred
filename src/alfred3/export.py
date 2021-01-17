@@ -33,259 +33,192 @@ import csv
 import json
 import io
 import os
+import random
 
 from typing import Union
+from typing import List, Iterator
 from pathlib import Path
 
 import click
 
 from .saving_agent import AutoMongoClient
 from .data_manager import DataManager
-from .data_manager import find_unique_name
-from .data_manager import CodeBookExporter
-from .data_manager import ExpDataExporter
+from .data_manager import decrypt_recursively
 from .config import ExperimentConfig, ExperimentSecrets
 
 
-class MongoToCSV:
-    """Downloads alfred3 data from a MongoDB collection as defined in
-    a correspondig secrets.conf section.
+class Exporter:
 
-    The class expects to be run from an experiment directory and to be
-    able to infer the data_type from the provided *secrets_section*, though
-    you can manually provide either upon initialization.
+    def __init__(self, experiment):
+        self.experiment = experiment
+        self.exp = experiment
+        self.csv_dir = self.exp.subpath(self.exp.config.get("general", "csv_directory"))
+        self.delimiter = self.exp.config.get("general", "csv_delimiter")
+        self.save_dir = self.exp.subpath(self.exp.config.get("local_saving_agent", "path"))
 
-    The class grabs the *exp_id*, *version*, and *csv_directory* 
-    from the config.conf and the MongoDB credentials from secrets.conf,
-    both located in the experiment directory.
-
-    Standard usage:
+    def export(self, data_type):
+        self.csv_dir.mkdir(parents=True, exist_ok=True)
+        if data_type == DataManager.CODEBOOK_DATA:
+            self.export_codebook()
+        elif data_type == DataManager.HISTORY:
+            self.export_move_history()
+        elif data_type == DataManager.UNLINKED_DATA:
+            self.export_unlinked()
+        else:
+            self.export_exp_data()
     
-    1. Run the class from your experiment directory.
-    2. Initialize it with the name of your secrets.conf section that
-        contains the relevant MongoDB credentials.
-    3. Call :meth:`MongoToCSV.activate()`
-    4. Export data by calling :meth:`MongoToCSV.export()`
+    def _load(self, path: Union[str, Path]) -> list:
+        return self.load(path, self.delimiter)
+
+    @staticmethod
+    def load(path: Union[str, Path], delimiter: str) -> list:
+        with open(path, "r", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=delimiter)
+            existing_data = []
+            for row in reader:
+                existing_data.append(dict(row))
+        return existing_data
     
-    Args:
-        secrets_section: The name of a secrets.conf section, 
-            that contains credentials for a MongoDB with alfred3 data.
-        data_type: A string, indicating what kind of data should be 
-            exported.
-        expdir: Path to a directory containing an appropriate 
-            config.conf and secrets.conf.
+    def _write(self, data: Iterator[dict], fieldnames: List[str], path: Path):
+        self.write(data, fieldnames, path, self.delimiter)
+
+    @staticmethod
+    def write(data: Iterator[dict], fieldnames: List[str], path: Path, delimiter: str):
+        with open(path, "w", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=delimiter)
+            writer.writeheader()
+            writer.writerows(data)
     
-    Attributes:
-        data_type: The type of data to be downloaded. Accepted values
-            are "codebook", "unlinked", and "exp_data". On intialization,
-            the data type is inferred from the section name. If the name 
-            ends on "unlinked" or "codebook", that will be used as data 
-            type. Else, "exp_data" will be used.
-        expdir: The experiment directory.
-    """
+    def export_exp_data(self):
+        csv_name = "exp_data.csv"
+        path = self.csv_dir / csv_name
 
-    def __init__(
-        self, secrets_section: str, data_type: str = None, expdir: Union[str, Path] = None
-    ):
-
-        self.secrets_section = secrets_section
-
-        if secrets_section.endswith("unlinked"):
-            auto_data_type = "unlinked"
-        elif secrets_section.endswith("codebook"):
-            auto_data_type = "codebook"
+        if path.exists() and path.read_text():
+            alldata = self._load(path)
+            sessiondata = self.exp.data_manager.flat_session_data
+            alldata.append(sessiondata)
+            
+            # get fieldnames from list of flat datasets
+            metadata = list(self.exp.data_manager.metadata.keys())
+            client_info = list(self.exp.data_manager.client_data.keys())
+            element_names = []
+            for row in alldata:
+                for colname in row:
+                    if not colname in metadata + client_info + ["additional_data"]:
+                        if not colname in element_names:
+                            element_names.append(colname)
+            fieldnames = metadata + client_info + sorted(element_names) + ["additional_data"]
         else:
-            auto_data_type = "exp_data"
+            existing_data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
+            sessiondata = self.exp.data_manager.session_data
+            alldata = existing_data + [sessiondata]
+            fieldnames = DataManager.extract_ordered_fieldnames(alldata)
+            alldata = [DataManager.flatten(d) for d in alldata]
+        self._write(alldata, fieldnames, path)
 
-        self.data_type = data_type if data_type else auto_data_type
-        self.expdir = Path(expdir) if expdir else Path.cwd()
+    def export_move_history(self):
+        csv_name = "move_history.csv"
+        data = self.exp.data_manager.move_history
+        fieldnames = DataManager.extract_fieldnames(data)
+        path = self.csv_dir / csv_name
 
-    def activate(self):
-        secrets = ExperimentSecrets(expdir=self.expdir)
-        config = ExperimentConfig(expdir=self.expdir)
-
-        sec = secrets.combine_sections("mongo_saving_agent", self.secrets_section)
-
-        client = AutoMongoClient(sec)
-        db_name = sec.get("database")
-        col_name = sec.get("collection")
-
-        self.collection = client[db_name][col_name]
-        self.exp_id = config.get("metadata", "exp_id")
-        self.exp_version = config.get("metadata", "version")
-        self.out_dir = Path(config.get("general", "csv_directory"))
-        self.out_dir.mkdir(exist_ok=True, parents=True)
-
-    @property
-    def out_dir(self):
-        return self._out_dir
-
-    @out_dir.setter
-    def out_dir(self, out_dir):
-        if not out_dir.is_absolute():
-            self._out_dir = self.expdir / out_dir
+        if path.exists() and path.read_text():
+            history = self._load(path)
+            history += data
+            fieldnames = DataManager.extract_fieldnames(history)
         else:
-            self._out_dir = out_dir
+            existing_data = DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir)
+            history = []
+            for sessiondata in existing_data:
+                session_history = sessiondata.pop("exp_move_history", [])
+                history += session_history
+            history += data
+            fieldnames = DataManager.extract_fieldnames(history)
+        
+        self._write(history, fieldnames, path)
 
-    @property
-    def csv_name(self):
-        return find_unique_name(self.out_dir, self.data_type + ".csv")
+    def export_unlinked(self):
+        csv_name = "unlinked.csv"
+        agent = self.exp.data_saver.unlinked.agents["local_unlinked"]
+        data = self.exp.data_manager.unlinked_data_with(agent)
+        data = self.exp.data_manager.flatten(data)
+        fieldnames = list(data.keys())
+        data = [data]
 
-    def export(self, **kwargs):
-        if self.data_type == DataManager.CODEBOOK_DATA:
-            self.export_codebook(**kwargs)
-        else:
-            self.export_general(**kwargs)
+        path = self.csv_dir / csv_name
 
-    def export_codebook(self, **kwargs):
-        ex = CodeBookExporter()
+        if path.exists() and path.read_text():
+            ul_data = self._load(path)
+            ul_data += data
+            random.shuffle(ul_data)
+            fieldnames = DataManager.extract_fieldnames(ul_data)
+            data = ul_data
+        
+        if self.exp.config.getboolean("local_saving_agent_unlinked", "decrypt_csv_export"):
+            key = self.exp.secrets.get("encryption", "key").encode()
+            data = decrypt_recursively(data, key=key)
 
-        if not self.exp_version:
-            i = 1
-            for doc in self.collection.find(
-                {"exp_id": self.exp_id, "type": DataManager.CODEBOOK_DATA,}
-            ):
+        self._write(data, fieldnames, path)
 
-                outfile = self.out_dir / self.csv_name
-                ex.process(doc)
-                ex.write_to_file(str(outfile), **kwargs)
-                ex.reset()
-                i += 1
-        else:
-            ex.write_mongo_data_to_file(
-                collection=self.collection,
-                exp_id=self.exp_id,
-                exp_version=self.exp_version,
-                out_dir=self.out_dir,
-                csv_name=self.csv_name,
-                **kwargs,
-            )
+    def export_codebook(self):
+        data = self.exp.data_manager.codebook_data
 
-    def export_general(self, **kwargs):
-        ex = ExpDataExporter()
-        ex.write_mongo_data_to_file(
-            collection=self.collection,
-            exp_id=self.exp_id,
-            out_dir=self.out_dir,
-            csv_name=self.csv_name,
-            data_type=self.data_type,
-            **kwargs,
-        )
+        version = self.exp.config.get("metadata", "version")
+        csv_name = f"{DataManager.CODEBOOK_DATA}_{version}.csv"
 
+        path = self.csv_dir / csv_name
 
-class LocalToCSV:
-    """Collects alfred3 data from the file system and exports them
-    as .csv files.
+        if path.exists() and path.read_text():
+            with open(path, "r", encoding="utf-8") as csvfile:
+                reader = csv.DictReader(csvfile, delimiter=self.delimiter)
+                
+                existing_codebook = {}
+                for row in reader:
+                    r = dict(row)
+                    existing_codebook[r["name"]] = r
+            
+            existing_codebook.update(data)
+            data = existing_codebook
 
-    The class expects to be run from an experiment directory and to be
-    able to infer the data_type from the provided *config_section*, though
-    you can also manually provide the *data_type* and the *expdir* upon 
-    initialization.
+        fieldnames = DataManager.extract_fieldnames(data.values())
+        fieldnames = DataManager.sort_codebook_fieldnames(fieldnames)
+        self._write(data.values(), fieldnames, path)
 
-    The class grabs the *csv_directory* (output directory) and the input
-    directory from the config.conf located in the experiment directory 
-    (*expdir*).
+def find_unique_name(directory, filename, exp_version=None, index: int = 1):
+    filename = Path(filename)
+    name = filename.stem
+    ext = filename.suffix
+    exp_version = "_" + exp_version if exp_version else ""
 
-    Standard usage:
-    
-    1. Run the class from your experiment directory.
-    2. Initialize it with the name of your config.conf section that
-        defines the local saving agent whose data you want to export.
-    3. Call :meth:`LocalToCSV.activate()`
-    4. Export data by calling :meth:`LocalToCSV.export()`
-    
-    Args:
-        config_section: The name of a config.conf section, 
-            that defines the relevant LocalSavingAgent.
-        data_type: A string, indicating what kind of data should be 
-            exported.
-        expdir: Path to a directory containing an appropriate 
-            config.conf (usually an experiment directory).
-    
-    Attributes:
-        data_type: The type of data to be downloaded. Accepted values
-            are "codebook", "unlinked", and "exp_data". On intialization,
-            the data type is inferred from the section name. If the name 
-            ends on "unlinked" or "codebook", that will be used as data 
-            type. Else, "exp_data" will be used.
-        expdir: The experiment directory.
-    """
+    normal_name = name + exp_version + ext
+    idx_name = name + exp_version + f"_{index}" + ext
 
-    def __init__(
-        self, config_section: str, data_type: str = None, expdir: Union[str, Path] = None
-    ):
-        self.config_section = config_section
-        if config_section.endswith("unlinked"):
-            auto_data_type = "unlinked"
-        elif config_section.endswith("codebook"):
-            auto_data_type = "codebook"
-        else:
-            auto_data_type = "exp_data"
+    if not normal_name in os.listdir(directory):
+        return normal_name
+    elif not idx_name in os.listdir(directory):
+        return idx_name
+    else:
+        i = index + 1
+        return find_unique_name(directory=directory, filename=filename, index=i)
 
-        self.data_type = data_type if data_type else auto_data_type
-        self.expdir = Path(expdir) if expdir else Path.cwd()
+def find_data_directory(expdir, saving_agent):
+    config = ExperimentConfig(expdir=expdir)
+    path = Path(config.get(saving_agent, "path")).resolve()
+    if not path.is_absolute():
+        path = expdir.resolve() / path
+    return path
 
-    @property
-    def csv_name(self):
-        return self.data_type + ".csv"
+def find_csv_dir(expdir):
+    config = ExperimentConfig(expdir=expdir)
+    path = Path(config.get("general", "csv_directory")).resolve()
+    if not path.is_absolute():
+        path = expdir.resolve() / path
+    return path
 
-    @property
-    def out_dir(self):
-        return self._out_dir
-
-    @out_dir.setter
-    def out_dir(self, out_dir):
-        if not out_dir.is_absolute():
-            self._out_dir = self.expdir / out_dir
-        else:
-            self._out_dir = out_dir
-
-    @property
-    def in_dir(self):
-        return self._in_dir
-
-    @in_dir.setter
-    def in_dir(self, in_dir):
-        if not in_dir.is_absolute():
-            self._in_dir = self.expdir / in_dir
-        else:
-            self._in_dir = in_dir
-
-    def activate(self):
-        config = ExperimentConfig(expdir=self.expdir)
-        self.out_dir = Path(config.get("general", "csv_directory"))
-        self.in_dir = Path(config.get(self.config_section, "path"))
-        self.out_dir.mkdir(exist_ok=True, parents=True)
-
-    def export(self, **kwargs):
-        if self.data_type == DataManager.CODEBOOK_DATA:
-            self.export_codebook(**kwargs)
-        else:
-            self.export_general(**kwargs)
-
-    def export_codebook(self, **kwargs):
-        ex = CodeBookExporter()
-
-        # export all codebooks found in in_dir
-        for filename in os.listdir(self.in_dir):
-            in_file = Path(self.in_dir) / filename
-            try:
-                ex.write_local_data_to_file(in_file=in_file, out_dir=self.out_dir, **kwargs)
-            except (KeyError, IsADirectoryError):
-                pass
-            finally:
-                ex.reset()
-
-    def export_general(self, **kwargs):
-        ex = ExpDataExporter()
-        ex.write_local_data_to_file(
-            in_dir=self.in_dir,
-            out_dir=self.out_dir,
-            data_type=self.data_type,
-            csv_name=self.csv_name,
-            **kwargs,
-        )
-
+def find_csv_name(expdir, data_type):
+    directory = find_csv_dir(expdir)
+    filename = data_type + ".csv"
+    return find_unique_name(directory, filename)
 
 @click.command()
 @click.option(
@@ -319,13 +252,13 @@ class LocalToCSV:
     help="Here, you can manually specify a value that you want to insert for missing values",
     show_default=True,
 )
-@click.option(
-    "--remove_linebreaks",
-    default=False,
-    is_flag=True,
-    help="Indicates, whether linebreak characters should be deleted from the file. If you don't use this flag (the default), linebreaks will be replaced with spaces.",
-    show_default=True,
-)
+# @click.option(
+#     "--remove_linebreaks",
+#     default=False,
+#     is_flag=True,
+#     help="Indicates, whether linebreak characters should be deleted from the file. If you don't use this flag (the default), linebreaks will be replaced with spaces.",
+#     show_default=True,
+# )
 @click.option(
     "--delimiter",
     default=",",
@@ -343,42 +276,67 @@ def export_cli(data_type, src, directory, here, missings, remove_linebreaks, del
         data_type = DataManager.EXP_DATA
     data_type = DataManager.EXP_DATA if data_type is None else data_type
 
-    if here and data_type == DataManager.CODEBOOK_DATA:
-        wd = Path.cwd()
-        exporter = CodeBookExporter()
-        for filename in os.listdir(wd):
-            fp = wd / filename
-            exporter.write_local_data_to_file(
-                in_file=fp, out_dir=wd, delimiter=delimiter,
-            )
-            exporter.reset()
-        print(f"Export completed. Files are located in '{wd}'.")
+    
+    if src.startswith("local"):
+        if here:
+            datadir = Path.cwd()
+        elif directory:
+            datadir = find_data_directory(expdir=directory, saving_agent=src)
+        
+        data = DataManager.iterate_local_data(data_type=data_type, directory=datadir)
+    
+    elif src.startswith("mongo"):
+        exp_id = ExperimentConfig(expdir=directory).get("general", "exp_id")
+        secrets = ExperimentSecrets(expdir=directory)
 
-    elif here and data_type in [DataManager.EXP_DATA, DataManager.UNLINKED_DATA]:
-        wd = Path.cwd()
-        exporter = ExpDataExporter()
+        data = DataManager.iterate_mongo_data(exp_id=exp_id, data_type=data_type, secrets=secrets)
 
-        exporter.write_local_data_to_file(
-            in_dir=wd,
-            out_dir=wd,
-            data_type=data_type,
-            missings=missings,
-            remove_linebreaks=remove_linebreaks,
-            delimiter=delimiter,
-        )
-        print(f"Export completed. Files are located in '{wd}'.")
-    else:
+    data_list = [DataManager.flatten(dataset) for dataset in data]
+    fieldnames = list(data_list.keys())
 
-        if "mongo" in src:
-            exporter = MongoToCSV(secrets_section=src, data_type=data_type, expdir=directory)
-        elif "local" in src:
-            exporter = LocalToCSV(config_section=src, data_type=data_type, expdir=directory)
+    csv_name = find_csv_name(expdir=directory, data_type=data_type)
 
-        exporter.activate()
-        exporter.export(
-            missings=missings, remove_linebreaks=remove_linebreaks, delimiter=delimiter
-        )
-        print(f"Export completed. Files are located in '{str(exporter.out_dir)}'.")
+    writer = csv.DictWriter(csv_name, fieldnames=fieldnames, delimiter=delimiter)
+    writer.writeheader()
+    writer.writerows(data_list)
+        
+
+    # if here and data_type == DataManager.CODEBOOK_DATA:
+    #     wd = Path.cwd()
+    #     exporter = CodeBookExporter()
+    #     for filename in os.listdir(wd):
+    #         fp = wd / filename
+    #         exporter.write_local_data_to_file(
+    #             in_file=fp, out_dir=wd, delimiter=delimiter,
+    #         )
+    #         exporter.reset()
+    #     print(f"Export completed. Files are located in '{wd}'.")
+
+    # elif here and data_type in [DataManager.EXP_DATA, DataManager.UNLINKED_DATA]:
+    #     wd = Path.cwd()
+    #     exporter = ExpDataExporter()
+
+    #     exporter.write_local_data_to_file(
+    #         in_dir=wd,
+    #         out_dir=wd,
+    #         data_type=data_type,
+    #         missings=missings,
+    #         remove_linebreaks=remove_linebreaks,
+    #         delimiter=delimiter,
+    #     )
+    #     print(f"Export completed. Files are located in '{wd}'.")
+    # else:
+
+    #     if "mongo" in src:
+    #         exporter = MongoToCSV(secrets_section=src, data_type=data_type, expdir=directory)
+    #     elif "local" in src:
+    #         exporter = LocalToCSV(config_section=src, data_type=data_type, expdir=directory)
+
+    #     exporter.activate()
+    #     exporter.export(
+    #         missings=missings, remove_linebreaks=remove_linebreaks, delimiter=delimiter
+    #     )
+    #     print(f"Export completed. Files are located in '{str(exporter.out_dir)}'.")
 
 
 if __name__ == "__main__":

@@ -8,63 +8,55 @@
 from builtins import object
 import os.path
 import logging
+import re
 from uuid import uuid4
+from typing import List
 
 from . import alfredlog
+from ._helper import check_name
+from .exceptions import AlfredError
 
 
-class ContentCore(object):
+class ExpMember:
+    name: str = None
+    instance_level_logging: bool = False
+    showif: dict = {}
+    
+    #: Name of the parent section. Used when a member is appended to 
+    #: the :class:`.Experiment`. If *None*, a member will be appended
+    #: to the "_content" section.
+    parent_name = None
+
     def __init__(
         self,
-        tag=None,
-        uid=None,
-        tag_and_uid=None,
-        is_jumpable=True,
-        jumptext=None,
-        title=None,
+        title: str = None,
+        name: str = None,
         subtitle=None,
         statustext=None,
-        should_be_shown_filter_function=None,
-        instance_level_logging=False,
-        **kwargs,
+        showif: dict = None
     ):
 
-        if kwargs != {}:
-            raise ValueError("parameter '%s' is not supported." % list(kwargs.keys())[0])
+        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        self.members = {}
 
-        self._tag = None
-        self._uid = uid if uid is not None else uuid4().hex
-        self.instance_level_logging = instance_level_logging
+        
         self._should_be_shown = True
-        self._should_be_shown_filter_function = (
-            should_be_shown_filter_function
-            if should_be_shown_filter_function is not None
-            else lambda exp: True
-        )
-        self._parent_group = None
+
         self._experiment = None
-        self._jumptext = None
-        self._is_jumpable = False
+        self._parent_section = None
+        self._section = None
+        
         self._title = None
         self._subtitle = None
         self._statustext = None
         self._has_been_shown = False
         self._has_been_hidden = False
 
-        if tag is not None:
-            self.tag = tag
-
-        if tag_and_uid and (tag or uid):
-            raise ValueError("tag_and_uid cannot be set together with tag or uid!")
-
-        if tag_and_uid is not None:
-            self.tag = tag_and_uid
-            self._uid = tag_and_uid
-
-        if jumptext is not None:
-            self.jumptext = jumptext
-
-        self.is_jumpable = is_jumpable
+        # the following assignments allow for assignment via class variables
+        # during subclasses, but override the attributes, if given as
+        # init parameters
+        if showif is not None:
+            self.showif = showif
 
         if title is not None:
             self.title = title
@@ -74,6 +66,68 @@ class ContentCore(object):
 
         if statustext is not None:
             self.statustext = statustext
+        
+        self._name_set_via = {}
+
+        if self.name is not None:
+            self.set_name(self.name, via="class")
+
+        if name is not None:
+            self.set_name(name, via="argument")
+        
+        
+    def set_name(self, name: str, via: str):
+        """
+        Helps organize the different ways a name can be set.
+
+        The ways are:
+
+        1. As a class variable when deriving a page as a new class
+        2. As an init argument when instantiating a class
+
+        If a name was set via class variable, the init argument 
+        can override it.
+
+        """
+        check_name(name)
+        self._uid = name
+        self._tag = name
+        self.name = name
+        self._name_set_via[via] = self.name
+
+        if len(self._name_set_via) > 1:
+            msg = f"Name of {self} was set via multiple methods. Current winner: '{self.name}', set via {via}."
+            self.log.debug(msg)
+        
+    def _evaluate_showif(self) -> List[bool]:
+        """Checks the showif conditions that refer to previous pages.
+        
+        Returns:
+            A list of booleans, indicating for each condition whether
+            it is met or not.
+        """
+
+        if self.showif:
+            conditions = []
+            for name, condition in self.showif.items():
+                
+                # raise error if showif evaluates current page
+                if name in self.all_input_elements:
+                    raise AlfredError(f"Incorrent showif definition for {self}, using '{name}' (can't use a member's own elements).")
+
+                val = self.exp.data_manager.flat_session_data[name]
+                conditions.append(condition == val)
+
+            return conditions
+        else:
+            return [True]
+    
+    @property
+    def all_input_elements(self):
+        """
+        Redefined by pages and section.
+        """
+        return {}
 
     def get_page_data(self, page_uid=None):
         data = self._experiment.data_manager.find_experiment_data_by_uid(page_uid)
@@ -94,6 +148,10 @@ class ContentCore(object):
     @property
     def uid(self):
         return self._uid
+    
+    def visible(self, attr):
+        d = getattr(self, attr)
+        return {name: value for name, value in d.items() if value.should_be_shown}
 
     def set_should_be_shown_filter_function(self, f):
         """
@@ -114,7 +172,9 @@ class ContentCore(object):
         Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
         Otherwise False is returned
         """
-        return self._should_be_shown and self._should_be_shown_filter_function(self._experiment)
+        cond1 = self._should_be_shown
+        cond2 = all(self._evaluate_showif())
+        return cond1 and cond2
 
     @should_be_shown.setter
     def should_be_shown(self, b):
@@ -128,34 +188,11 @@ class ContentCore(object):
         self._should_be_shown = b
 
     @property
-    def data(self):
-        data = {"tag": self.tag, "uid": self.uid}
-
-        return data
-
-    @property
-    def is_jumpable(self):
-        return self._is_jumpable and self.jumptext is not None
-
-    @is_jumpable.setter
-    def is_jumpable(self, is_jumpable):
-        if not isinstance(is_jumpable, bool):
-            raise TypeError
-        self._is_jumpable = is_jumpable
-
-    @property
-    def jumptext(self):
-        return self._jumptext
-
-    @jumptext.setter
-    def jumptext(self, jumptext):
-        if not (isinstance(jumptext, str) or isinstance(jumptext, str)):
-            raise TypeError("jumptext must be an instance of str or unicode")
-        self._jumptext = jumptext
-
-    @property
     def title(self):
-        return self._title
+        if self._title is not None:
+            return self._title
+        else:
+            return ""
 
     @title.setter
     def title(self, title):
@@ -178,65 +215,70 @@ class ContentCore(object):
         self._statustext = title
 
     def added_to_experiment(self, exp):
+        if not self.name:
+            raise AlfredError(f"{type(self).__name__} must have a unique name.")
+        self._check_name_uniqueness(exp)
         self._experiment = exp
 
+    def _check_name_uniqueness(self, exp):
+
+        if self.name in exp.root_section.all_updated_members:
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+
+        if self.name != list(self._name_set_via.values())[-1]:
+            raise AlfredError(f"{self}: Name must not be changed after assignment.")
+
+        if self.name in dir(exp):
+            raise ValueError(
+                (
+                    "The experiment has an attribute of the same name as"
+                    f"the page '{self}'. Please choose a different page name."
+                )
+            )
+    
     @property
     def experiment(self):
         return self._experiment
+    
+    @property
+    def exp(self):
+        return self._experiment
 
-    def added_to_section(self, group):
-        self._parent_group = group
+    def added_to_section(self, section):
+        self._parent_section = section
+        self._section = section
+
+    @property
+    def section(self):
+        return self._section
 
     @property
     def parent(self):
-        return self._parent_group
+        return self._parent_section
+    
+    def uptree(self):
+        out = []
+        if self.parent:
+            out += [self.parent]
+            out += self.parent.uptree()
+            return out
+        else:
+            return out
 
     @property
-    def tree(self):
+    def tree(self) -> str:
         if not self.parent:
             return self.tag
 
         if self.parent.tree:
-            return self.parent.tree + "_" + self.tag
+            return self.parent.tree + "." + self.tag
         else:
             return self.tag
 
     @property
-    def short_tree(self):
-        return self.tree.replace("rootSection_", "")
+    def short_tree(self) -> str:
+        return self.tree.replace("_root._content.", "")
 
     def allow_leaving(self, direction):
         return True
 
-
-class Direction(object):
-    UNKNOWN = 0
-    FORWARD = 1
-    BACKWARD = 2
-    JUMP = 3
-
-    @staticmethod
-    def to_str(direction):
-        if direction == Direction.UNKNOWN:
-            return "unknown"
-        elif direction == Direction.FORWARD:
-            return "forward"
-        elif direction == Direction.BACKWARD:
-            return "backward"
-        elif direction == Direction.JUMP:
-            return "jump"
-        else:
-            raise ValueError("Unexpected Value")
-
-
-def package_path():
-    """
-    DEPRECATED
-
-    use alfred.settings.package_path instead
-    """
-
-    root = __file__
-    if os.path.islink(root):
-        root = os.path.realpath(root)
-    return os.path.dirname(os.path.abspath(root))

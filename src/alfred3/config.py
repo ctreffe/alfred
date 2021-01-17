@@ -7,9 +7,13 @@
 import os
 import platform
 import sys
+import importlib
+
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Union
+
+from . import files
 
 
 class ExperimentConfig(ConfigParser):
@@ -61,14 +65,13 @@ class ExperimentConfig(ConfigParser):
     global_config_name = "alfred.conf"
     exp_config_name = "config.conf"
 
-    def __init__(self, expdir: str, config_objects: list = None, *args, **kwargs):
+    def __init__(self, expdir: str = None, config_objects: list = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._config_objects = config_objects if config_objects is not None else []
 
         self._config_files = []
-        self._pkg_path = Path(__file__).resolve().parent
-        self.expdir = Path(expdir) if expdir else None
+        self.expdir = Path(expdir) if expdir is not None else Path.cwd()
         self._parse_alfred_config()
 
     def _collect_config_files(self):
@@ -92,21 +95,15 @@ class ExperimentConfig(ConfigParser):
         """Parse all config files from different locations.
         """
 
-        default = self._pkg_path / "files" / self.global_config_name
-        with open(default, encoding="utf-8") as f:
-            self.read_file(f)
+        with importlib.resources.path(files, self.global_config_name) as f:
+            self.read(f, encoding="utf-8")
 
         self._collect_config_files()
         self.read(self._config_files, encoding="utf-8")
 
         for obj in self._config_objects:
-            if type(obj) not in [str, dict]:
-                raise TypeError(
-                    (
-                        "The argument config_objects must be a list, containing only "
-                        + "strings and/or dictionaries."
-                    )
-                )
+            if not isinstance(obj, (str, dict)):
+                raise TypeError("Config objects must be list of strings or dictionaries.")
 
             try:
                 self.read_dict(obj)
@@ -127,6 +124,7 @@ class ExperimentConfig(ConfigParser):
         
         Returns:
             dict: A dictionary representation of the parser instance.
+        
         """
 
         return {section_name: dict(self[section_name]) for section_name in self.sections()}

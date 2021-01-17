@@ -1,0 +1,11 @@
+<div class="{{ css_class_container }}" id="{{ name }}-container">
+<div class="row element {{ css_class_element }} {{ hide }}" id="{{ name }}" style="{{ height }}">
+    {% for col in columns  %}
+
+    <div class="{{ col.breaks }} {{ col.vertical_position }} Col-element" id="{{ col.id }}">
+        {{ col.element.web_widget }}
+    </div>
+        
+    {% endfor %}
+</div>
+</div>

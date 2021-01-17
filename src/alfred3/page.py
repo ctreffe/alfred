@@ -1,41 +1,64 @@
 # -*- coding:utf-8 -*-
 
 """
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
+This module contains alfred's page classes.
+
+Pages hold and organize elements. They receive, validate, and save 
+data.
+
+
+* Filling pages
+
+    + linear style
+
+    + object-oriented style
+
+* Accessing element. You can access the elements of a page by using 
+    dict-style square brackets and a number of specialized properties 
+    listed below.
+
+* Types of pages
+
+* Custom layout for individual pages
+
+
+
+.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
 from __future__ import absolute_import
 
 import time
 import logging
+import string
 from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
+from pathlib import Path
+from typing import Union
+from typing import Iterator
 
 from future.utils import with_metaclass
 
-from . import element, settings, alfredlog
+from . import alfredlog
+from . import element as elm
 from . import saving_agent
-from ._core import ContentCore
+from ._core import ExpMember
 from ._helper import _DictObj
-from .element import Element, ExperimenterMessages, TextElement, WebElementInterface
 from .exceptions import AlfredError
 
 
-class PageCore(ContentCore):
+class PageCore(ExpMember):
     def __init__(
         self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
-        if settings.debugmode and settings.debug.disable_minimum_display_time:
-            self._minimum_display_time = 0
         self._minimum_display_time_msg = minimum_display_time_msg
 
         self._data = {}
         self._is_closed = False
         self._show_corrective_hints = False
-
-        # e.g.: alfred3.page.Page
-        self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+        self.show_times = []
+        self.hide_times = []
 
         super(PageCore, self).__init__(**kwargs)
 
@@ -44,18 +67,26 @@ class PageCore(ContentCore):
         self.values = _DictObj(values)
 
     def added_to_experiment(self, experiment):
+
         if not isinstance(self, WebPageInterface):
-            raise TypeError(
-                "%s must be an instance of %s"
-                % (self.__class__.__name__, WebPageInterface.__name__)
-            )
+            raise TypeError(f"{self} must be an instance of WebPageInterface.")
 
         super(PageCore, self).added_to_experiment(experiment)
+        self.log.add_queue_logger(self, __name__)
 
-        queue_logger_name = self.prepare_logger_name()
-        self.log.queue_logger = logging.getLogger(queue_logger_name)
-        self.log.session_id = self.experiment.config.get("metadata", "session_id")
-        self.log.log_queued_messages()
+        debug = self.experiment.config.getboolean("general", "debug")
+        if debug and not self._minimum_display_time == 0:
+            if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
+                self.log.debug("Minimum display time disabled (debug mode).")
+                self._minimum_display_time = 0
+
+    @property
+    def minimum_display_time_msg(self):
+        msg = self._minimum_display_time_msg
+        if msg is not None:
+            return msg
+        else:
+            return self.experiment.config.get("messages", "minimum_display_time")
 
         try:
             self.experiment.page_controller.add_page(self)
@@ -80,20 +111,53 @@ class PageCore(ContentCore):
         return self._is_closed
 
     @property
-    def data(self):
-        data = super(PageCore, self).data
-        data.update(self._data)
-        return data
+    def should_be_shown(self) -> bool:
+        """
+        bool: Boolean, indicating whether a page should be shown.
 
-    def _on_showing_widget(self):
+        Evaluates the page's own settings, as well as the status of all
+        of its parent sections. The page is only shown, if all 
+        conditions evaluate to *True*.
+
+        """
+        thispage = super().should_be_shown
+        sections = [sec.should_be_shown for sec in self.uptree()]
+        return thispage and all(sections)
+    
+    @should_be_shown.setter
+    def should_be_shown(self, value: bool):
+        self._should_be_shown = bool(value)
+
+    @property
+    def has_been_shown(self) -> bool:
+        return self._has_been_shown
+
+    def _on_showing_widget(self, show_time: float = None):
         """
         Method for internal processes on showing Widget
+
+        Args:
+            show_time: Time of showing in seconds since epoch.
         """
+        if show_time is None:
+            show_time = time.time()
+        self.show_times.append(show_time)
 
         if not self._has_been_shown:
-            self._data["first_show_time"] = time.time()
             self.on_first_show()
-
+            
+            if self.exp.config.getboolean("general", "debug") and self is not self.exp.final_page:
+                name = self.name + "__debug_jumplist__"
+                jumplist = elm.JumpList(
+                    scope="exp", 
+                    check_jumpto=False, 
+                    check_jumpfrom=False, 
+                    name=name, 
+                    debugmode=True
+                    )
+                jumplist.should_be_shown = False
+                self += jumplist
+            
         self.on_showing_widget()
         self.on_showing()
         self.on_each_show()
@@ -147,21 +211,27 @@ class PageCore(ContentCore):
         """
         pass
 
-    def _on_hiding_widget(self):
+    def _on_hiding_widget(self, hide_time: float = None):
         """
         Method for internal processes on hiding Widget
+
+        Args:
+            hide_time: Time of hiding in seconds since epoch.
         """
+        if hide_time is None:
+            hide_time = time.time()
+        
+        self.hide_times.append(hide_time)
+
         if not self._has_been_hidden:
             self.on_first_hide()
-            hide_time = time.time()
-            self._data["first_hide_time"] = hide_time
-            self._data["first_display_duration"] = hide_time - self._data["first_show_time"]
 
         self.on_hiding_widget()
         self.on_hiding()
         self.on_each_hide()
 
         self._has_been_hidden = True
+
         self.save_data()
 
     def on_hiding_widget(self):
@@ -222,7 +292,7 @@ class PageCore(ContentCore):
         this code only once, when submitting the data from a page. After
         a page is closed, there can be no more changes to subject input.
         This is the most important difference of :meth:`on_close` from
-        :meth:`on_first_hide`.
+        :meth:`on_first_hide` and :meth`on_each_hide`.
 
         *New in v1.4*
         """
@@ -253,19 +323,10 @@ class PageCore(ContentCore):
         if not self.allow_closing:
             raise AlfredError()
 
-        if "closing_time" not in self._data:
-            self._data["closing_time"] = time.time()
-        if (
-            "duration" not in self._data
-            and "first_show_time" in self._data
-            and "closing_time" in self._data
-        ):
-            self._data["duration"] = self._data["closing_time"] - self._data["first_show_time"]
-
         self.on_close()
         self._is_closed = True
-        self.save_data()
 
+    @property
     def allow_closing(self):
         return True
 
@@ -280,49 +341,26 @@ class PageCore(ContentCore):
         """
         return []
 
-    def allow_leaving(self, direction):
-        if (
-            "first_show_time" in self._data
-            and time.time() - self._data["first_show_time"] < self._minimum_display_time
-        ):
-            try:
-                msg = (
-                    self._minimum_display_time_msg
-                    if self._minimum_display_time_msg
-                    else self._experiment.settings.messages.minimum_display_time
-                )
-            except Exception:
-                msg = "Can't access minimum display time message"
-            self._experiment.message_manager.post_message(
-                msg.replace("${mdt}", str(self._minimum_display_time))
-            )
-            return False
-        return True
-
-    def prepare_logger_name(self) -> str:
-        """Returns a logger name for use in *self.log.queue_logger*.
-
-        The name has the following format::
-
-            exp.exp_id.module_name.class_name.class_uid
-        
-        with *class_uid* only added, if 
-        :attr:`~PageCore.instance_level_logging` is set to *True*.
+    def validate(self):
+        """Alias for 'allow_leaving'. Better description of what this
+        method does.
         """
-        # remove "alfred3" from module name
-        module_name = __name__.split(".")
-        module_name.pop(0)
 
-        name = []
-        name.append("exp")
-        name.append(self.experiment.exp_id)
-        name.append(".".join(module_name))
-        name.append(type(self).__name__)
+        return self.allow_leaving()
 
-        if self.instance_level_logging:
-            name.append(self._uid)
+    def allow_leaving(self):
+        if not self.allow_closing:
+            self.show_corrective_hints = True
+            return False
 
-        return ".".join(name)
+        # check minimum display time
+        mintime = self._minimum_display_time
+        if time.time() - self.show_times[0] < mintime:
+            msg = self.minimum_display_time_msg.replace("${mdt}", str(mintime))
+            self.exp.message_manager.post_message(msg)
+            return False
+
+        return True
 
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current experiment data.
@@ -340,12 +378,15 @@ class PageCore(ContentCore):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.sac_main.agents and not self._experiment.config.getboolean(
+        if not self.exp.data_saver.main.agents and not self.exp.config.getboolean(
             "general", "debug"
         ):
             self.log.warning("No saving agents available.")
-        data = self._experiment.data_manager.get_data()
-        self._experiment.sac_main.save_with_all_agents(data=data, level=level, sync=sync)
+        data = self.experiment.data_manager.session_data
+        self.exp.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
+
+    def __repr__(self):
+        return f"Page(class='{type(self).__name__}', name='{self.name}')"
 
     def __str__(self):
         """*New in v1.4.*"""
@@ -362,10 +403,6 @@ class WebPageInterface(with_metaclass(ABCMeta, object)):
         noch nicht gemachten user Eingaben unabhaengige und rechenintensive
         verbereitungen fuer das anzeigen des widgets aufrufen. z.B. generieren
         von grafiken"""
-        pass
-
-    @abstractproperty
-    def web_widget(self):
         pass
 
     @property
@@ -396,15 +433,79 @@ class CoreCompositePage(PageCore):
     def __init__(self, elements=None, **kwargs):
         super(CoreCompositePage, self).__init__(**kwargs)
 
+        self.elements = {}
+
         self._element_list = []
         self._element_dict = {}
         self._element_name_counter = 1
         self._thumbnail_element = None
+        
         if elements is not None:
             if not isinstance(elements, list):
                 raise TypeError
-            for elmnt in elements:
-                self.append(elmnt)
+            self.append(*elements)
+    
+    def __contains__(self, element): 
+        try:
+            return element.name in self.elements
+        except AttributeError:
+            return element in self.elements
+    
+    # necessary to make __getattr__ work with copying a page object
+    def __getstate__(self): return self.__dict__
+
+    # necessary to make __getattr__ work with copying a page object
+    def __setstate__(self, state): self.__dict__.update(state) 
+
+    def __getitem__(self, name): return self.elements[name]
+    
+    def __getattr__(self, name):
+        try:
+            return self.elements[name]
+        except KeyError:
+            raise AttributeError(f"{self} has no attribute '{name}'.")
+    
+    @property
+    def input_elements(self) -> dict:
+        """Dict of all input elements on this page.
+
+        Does not evaluate whether an input element should be shown or
+        not, because that might change over the course of an experiment.
+        """
+
+        input_elements = {}
+        for name, el in self.elements.items():
+            if isinstance(el, (elm.InputElement)):
+                input_elements[name] = el
+        return input_elements
+    
+    @property
+    def all_input_elements(self) -> dict:
+        return self.input_elements
+    
+    @property
+    def all_elements(self) -> dict:
+        return self.elements
+    
+    @property
+    def updated_elements(self) -> dict:
+        return {name: elm for name, elm in self.elements.items() if elm.exp is not None}
+
+    @property
+    def filled_input_elements(self) -> dict:
+        """Dict of all input elements on this page with non-empty data attribute.
+        """
+
+        return {name: el for name, el in self.input_elements.items() if el.input}
+    
+    @property
+    def all_parent_sections(self) -> dict:
+        
+        pass
+    
+    @property
+    def element_dict(self):
+        return self._element_dict
 
     def add_element(self, element):
 
@@ -420,31 +521,29 @@ class CoreCompositePage(PageCore):
 
     def append(self, *elements):
         for elmnt in elements:
-            if not isinstance(elmnt, Element):
+            if not isinstance(elmnt, (elm.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
-            exp_type = settings.experiment.type  # 'web' or 'qt-wk'
-
-            if exp_type == "web" and not isinstance(elmnt, WebElementInterface):
-                raise TypeError(
-                    "%s is not an instance of WebElementInterface" % type(elmnt).__name__
-                )
-
-            if isinstance(self, WebPageInterface) and not isinstance(elmnt, WebElementInterface):
-                raise TypeError(
-                    "%s is not an instance of WebElementInterface" % type(elmnt).__name__
-                )
-
-            if elmnt.name is None:
-                elmnt.name = ("%02d" % self._element_name_counter) + "_" + elmnt.__class__.__name__
-                self._element_name_counter = self._element_name_counter + 1
-
-            self._element_list.append(elmnt)
             elmnt.added_to_page(self)
+            
+            if elmnt.name in dir(self):
+                raise ValueError(f"Element name '{elmnt.name}' is also an attribute of {self}.")
 
-            if elmnt.name in self._element_dict:
-                raise ValueError("Element name must be unique on Page.")
-            self._element_dict[elmnt.name] = element
+            if elmnt.name in self.elements:
+                raise AlfredError(f"{self} already has an element of name '{elmnt.name}'.")
+
+
+            if self.exp is not None and elmnt.exp is None:
+                elmnt.added_to_experiment(self.exp)
+            
+            self.elements[elmnt.name] = elmnt
+    
+    def generate_element_name(self, element):
+        i = self._element_name_counter
+        c = element.__class__.__name__
+        self._element_name_counter += 1
+
+        return f"{self.name}_{c}_{i}"
 
     def __iadd__(self, other):
         self.append(other)
@@ -456,102 +555,252 @@ class CoreCompositePage(PageCore):
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
-        for element in self._element_list:
-            element.added_to_experiment(experiment)
         self.on_exp_access()
+        self.update_elements()
+    
+    def added_to_section(self, section):
+        super().added_to_section(section)
+        self.update_elements()
+    
+    def update_members_recursively(self):
+        self.update_elements()
+    
+    def update_elements(self):
+        if self.exp and self.section and self.tree.startswith("_root"):
+            for element in self.elements.values():
+                if not element.exp:
+                    element.added_to_experiment(self.experiment)
 
     @property
     def allow_closing(self):
-        return reduce(lambda b, element: element.validate_data() and b, self._element_list, True)
+        return all([el.validate_data() for el in self.input_elements.values()])
+
+    def close(self):
+        self.close_page()
 
     def close_page(self):
         super(CoreCompositePage, self).close_page()
 
-        for elmnt in self._element_list:
-            elmnt.enabled = False
+        for elmnt in self.elements.values():
+            if isinstance(elmnt, elm.InputElement):
+                elmnt.disabled = True
+
+        debug_jumplist = self.elements.get(self.name + "__debug_jumplist__")
+        if debug_jumplist:
+            for elmnt in debug_jumplist.elements:
+                elmnt.disabled = False
 
     @property
     def data(self):
-        data = super(CoreCompositePage, self).data
-        for elmnt in self._element_list:
-            data.update(elmnt.data)
-
-        data["tree"] = self.short_tree
-
-        return data
-
-    @property
-    def codebook_data(self):
-        data = {}
-        for el in self._element_list:
-            try:
-                data.update(el.codebook_data)
-            except AttributeError:
-                pass
-        return data
+        if not self.has_been_shown:
+            return {}
+        else:
+            data = {}
+            for element in self.input_elements.values():
+                data.update(element.data)
+            return data
 
     @property
-    def can_display_corrective_hints_in_line(self):
-        return reduce(
-            lambda b, element: b and element.can_display_corrective_hints_in_line,
-            self._element_list,
-            True,
-        )
-
-    @property
-    def show_corrective_hints(self):
-        return self._show_corrective_hints
-
-    @show_corrective_hints.setter
-    def show_corrective_hints(self, b):
-        b = bool(b)
-        self._show_corrective_hints = b
-        for elmnt in self._element_list:
-            elmnt.show_corrective_hints = b
-
-    @property
-    def corrective_hints(self):
-        # only display hints if property is True
-        if not self.show_corrective_hints:
-            return []
-
-        # get corrective hints for each element
-        list_of_lists = []
-
-        for elmnt in self._element_list:
-            if not elmnt.can_display_corrective_hints_in_line and elmnt.corrective_hints:
-                list_of_lists.append(elmnt.corrective_hints)
-
-        # flatten list
-        return [item for sublist in list_of_lists for item in sublist]
-
+    def unlinked_data(self):
+        return {}
+    
     def set_data(self, dictionary):
-        for elmnt in self._element_list:
+        for elmnt in self.input_elements.values():
             elmnt.set_data(dictionary)
+
+    def custom_move(self):
+        """
+        Hook for defining a page's own movement behavior. 
+        
+        Use the :class:`.MovementManager`s movement methods to define
+        your own behavior. The available methods are
+
+        - forward
+        - backward
+        - jump_by_name
+        - jump_by_index
+
+        Example::
+
+            exp = al.Experiment()
+
+            @exp.member
+            class CustomMove(al.Page):
+                name = "custom_move"
+                
+                def custom_move(self):
+                    self.exp.jump(to="third")
+
+            exp += al.Page(name="second")
+            exp += al.Page(name="third")
+
+
+        You can work with different conditions and fall back to 
+        alfred3's movement system by returning *True*::
+            
+            exp = al.Experiment()
+
+            @exp.member
+            class CustomMove(al.Page):
+
+                def on_exp_access(self):
+                    self += elm.TextEntry(name="text")
+                
+                def custom_move(self):
+                    if self.data.get("text) == "yes":
+                        self.exp.jump(to="third")
+                    else:
+                        return True
+
+            exp += al.Page(name="second")
+            exp += al.Page(name="third")
+        
+        """
+        return True
+
+    def durations(self) -> Iterator[float]:
+        """
+        Iterates over the visit durations for this page.
+
+        Yields:
+            float: Duration of a visit in seconds.
+        """
+        
+        if len(self.show_times) > len(self.hide_times):
+            now = time.time()
+        elif len(self.show_times) < len(self.hide_times):
+            self.log.error(f"{self} has fewer entries in show_times than in hide_times.")
+        
+        for show, hide in zip(self.show_times, self.hide_times + [now]):
+            yield hide - show
+    
+    def last_duration(self) -> float:
+
+        *_, last_duration = self.duration()
+        return last_duration
+    
+    def first_duration(self) -> float:
+
+        first_duration, *_ = self.durations()
+        return first_duration
 
 
 class WebCompositePage(CoreCompositePage, WebPageInterface):
-    def prepare_web_widget(self):
-        for elmnt in self._element_list:
-            elmnt.prepare_web_widget()
+    def __init__(self, title: str = None, name: str = None, *args, **kwargs):
+        super().__init__(title=title, name=name, *args, **kwargs)
+
+        self._fixed_width = None
+        if kwargs.get("fixed_width"):
+            self.fixed_width = kwargs.get("fixed_width")
+
+        self._responsive_width = None
+        if kwargs.get("responsive_width"):
+            self.responsive_width = kwargs.get("responsive_width")
+
+        self._header_color = None
+        if kwargs.get("header_color"):
+            self.header_color = kwargs.get("header_color")
+
+        self._background_color = None
+        if kwargs.get("background_color"):
+            self.background_color = kwargs.get("background_color")
 
     @property
-    def web_widget(self):
-        html = ""
+    def fixed_width(self):
+        return self._fixed_width
 
-        for elmnt in self._element_list:
-            if elmnt.web_widget != "" and elmnt.should_be_shown:
-                html = (
-                    html
-                    + (
-                        '<div class="row with-margin"><div id="elid-%s" class="element">'
-                        % elmnt.name
-                    )
-                    + elmnt.web_widget
-                    + "</div></div>"
-                )
+    @fixed_width.setter
+    def fixed_width(self, value):
+        self._fixed_width = value
 
-        return html
+    @property
+    def responsive_width(self):
+        return self._responsive_width
+
+    @responsive_width.setter
+    def responsive_width(self, value):
+        self._responsive_width = value
+
+    @property
+    def header_color(self):
+        return self._header_color
+
+    @header_color.setter
+    def header_color(self, value):
+        self._header_color = value
+
+    @property
+    def background_color(self):
+        return self._background_color
+
+    @background_color.setter
+    def background_color(self, value):
+        self._background_color = value
+
+    def _parse_responsive_width(self, width):
+        return [x.strip() for x in width.split(",")]
+
+    def _responsive_media_query(self, width):
+        if len(width) > 4:
+            raise ValueError("The option 'responsive_width' can only define up to four widths.")
+
+        if len(width) < 4:
+            for _ in range(4 - len(width)):
+                width.append(width[-1])
+
+        screen_size = [576, 768, 992, 1200]
+        t = string.Template(
+            "@media (min-width: ${screen}px) {.responsive-width { width: ${w}%; max-width: none;}}"
+        )
+        out = []
+        for i, w in enumerate(width):
+            out.append(t.substitute(screen=screen_size[i], w=w))
+        return " ".join(out)
+
+    def prepare_web_widget(self):
+        for elmnt in self.elements.values():
+            elmnt._prepare_web_widget()
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self._set_width()
+        self._set_color()
+
+    def _set_width(self):
+        if self.experiment.config.getboolean("layout", "responsive"):
+
+            if self.responsive_width:
+                w = self._parse_responsive_width(self.responsive_width)
+                self += elm.Style(code=self._responsive_media_query(w))
+
+            elif self.experiment.config.get("layout", "responsive_width"):
+                config_width = self.experiment.config.get("layout", "responsive_width")
+                w = self._parse_responsive_width(config_width)
+                self += elm.Style(code=self._responsive_media_query(w))
+
+        elif not self.fixed_width:
+            w = self.experiment.config.get("layout", "fixed_width")
+            self += elm.Style(code=f".fixed-width {{ width: {w}; }}")
+            self += elm.Style(code=f".min-width {{ min-width: {w}; }}")
+
+        else:
+            self += elm.Style(code=f".fixed-width {{ width: {self.fixed_width}; }}")
+            self += elm.Style(code=f".min-width {{ min-width: {self.fixed_width}; }}")
+
+    def _set_color(self):
+        if self.header_color:
+            self += elm.Style(code=f".logo-bg {{background-color: {self.header_color};}}")
+
+        elif self.experiment.config.get("layout", "header_color", fallback=False):
+            c = self.experiment.config.get("layout", "header_color", fallback=False)
+            self += elm.Style(code=f".logo-bg {{background-color: {c};}}")
+
+        if self.background_color:
+            self += elm.Style(code=f"body {{background-color: {self.background_color};}}")
+
+        elif self.experiment.config.get("layout", "background_color", fallback=False):
+            c = self.experiment.config.get("layout", "background_color", fallback=False)
+            self += elm.Style(code=f"body {{background-color: {c};}}")
 
     @property
     def web_thumbnail(self):
@@ -574,19 +823,19 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
     @property
     def css_code(self):
-        return reduce(lambda l, element: l + element.css_code, self._element_list, [])
+        return reduce(lambda l, element: l + element.css_code, self.elements.values(), [])
 
     @property
     def css_urls(self):
-        return reduce(lambda l, element: l + element.css_urls, self._element_list, [])
+        return reduce(lambda l, element: l + element.css_urls, self.elements.values(), [])
 
     @property
     def js_code(self):
-        return reduce(lambda l, element: l + element.js_code, self._element_list, [])
+        return reduce(lambda l, element: l + element.js_code, self.elements.values(), [])
 
     @property
     def js_urls(self):
-        return reduce(lambda l, element: l + element.js_urls, self._element_list, [])
+        return reduce(lambda l, element: l + element.js_urls, self.elements.values(), [])
 
 
 class CompositePage(WebCompositePage):
@@ -595,6 +844,10 @@ class CompositePage(WebCompositePage):
 
 class Page(WebCompositePage):
     pass
+
+
+class WidePage(Page):
+    responsive_width = "85, 75, 75, 70"
 
 
 class PagePlaceholder(PageCore, WebPageInterface):
@@ -609,7 +862,7 @@ class PagePlaceholder(PageCore, WebPageInterface):
 
     @property
     def data(self):
-        data = super(PageCore, self).data
+        data = {}
         data.update(self._ext_data)
         return data
 
@@ -630,34 +883,6 @@ class PagePlaceholder(PageCore, WebPageInterface):
         pass
 
 
-class DemographicPage(CompositePage):
-    def __init__(
-        self, instruction=None, age=True, sex=True, course_of_studies=True, semester=True, **kwargs
-    ):
-        super(DemographicPage, self).__init__(**kwargs)
-
-        if instruction:
-            self.append(element.TextElement(instruction))
-        self.append(element.TextElement("Bitte gib deine persönlichen Datein ein."))
-        if age:
-            self.append(element.TextEntryElement("Dein Alter: ", name="age"))
-
-        if sex:
-            self.append(element.TextEntryElement("Dein Geschlecht: ", name="sex"))
-
-        if course_of_studies:
-            self.append(
-                element.TextEntryElement(
-                    instruction="Dein Studiengang: ", name="course_of_studies"
-                )
-            )
-
-        if semester:
-            self.append(
-                element.TextEntryElement(instruction="Dein Fachsemester ", name="semester")
-            )
-
-
 class AutoHidePage(CompositePage):
     def __init__(self, on_hiding=False, on_closing=True, **kwargs):
         super(AutoHidePage, self).__init__(**kwargs)
@@ -675,64 +900,12 @@ class AutoHidePage(CompositePage):
             self.should_be_shown = False
 
 
-class ExperimentFinishPage(CompositePage):
-    def on_showing_widget(self):
-        if "first_show_time" not in self._data:
-            exp_title = TextElement("Informationen zur Session:", font="big")
+class NoNavigationPage(Page):
+    """A normal page, but all navigation buttons are removed."""
 
-            exp_infos = (
-                '<table style="border-style: none"><tr><td width="200">Experimentname:</td><td>'
-                + self._experiment.name
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Experimenttyp:</td><td>"
-                + self._experiment.type
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Experimentversion:</td><td>"
-                + self._experiment.version
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Experiment-ID:</td><td>"
-                + self._experiment.exp_id
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Session-ID:</td><td>"
-                + self._experiment.session_id
-                + "</td></tr>"
-            )
-            exp_infos = (
-                exp_infos
-                + "<tr><td>Log-ID:</td><td>"
-                + self._experiment.session_id[:6]
-                + "</td></tr>"
-            )
-            exp_infos = exp_infos + "</table>"
-
-            exp_info_element = TextElement(exp_infos)
-
-            self.append(exp_title, exp_info_element, ExperimenterMessages())
-
-        super(ExperimentFinishPage, self).on_showing_widget()
-
-
-class HeadOpenSectionCantClose(CompositePage):
-    def __init__(self, **kwargs):
-        super(HeadOpenSectionCantClose, self).__init__(**kwargs)
-
-        self.append(
-            element.TextElement(
-                "Nicht alle Fragen konnten Geschlossen werden. Bitte korrigieren!!!<br /> Das hier wird noch besser implementiert"
-            )
-        )
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self += elm.Style("#page-navigation {display: none;}")
 
 
 ####################
@@ -747,12 +920,14 @@ class WebTimeoutMixin(object):
         self._end_link = "unset"
         self._run_timeout = True
         self._timeout = timeout
-        if settings.debugmode and settings.debug.reduce_countdown:
-            self._timeout = int(settings.debug.reduced_countdown_time)
 
     def added_to_experiment(self, experiment):
         super(WebTimeoutMixin, self).added_to_experiment(experiment)
         self._end_link = self._experiment.user_interface_controller.add_callable(self.callback)
+
+        if self._experiment.config.getboolean("general", "debug"):
+            if self._experiment.config.getboolean("debug", "reduce_countdown"):
+                self._timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
 
     def callback(self, *args, **kwargs):
         self._run_timeout = False
@@ -808,7 +983,7 @@ class WebTimeoutMixin(object):
 
 class WebTimeoutForwardMixin(WebTimeoutMixin):
     def on_timeout(self, *args, **kwargs):
-        self._experiment.user_interface_controller.move_forward()
+        self.experiment.movement_manager.forward()
 
 
 class WebTimeoutCloseMixin(WebTimeoutMixin):
@@ -846,16 +1021,14 @@ class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
 class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
     pass
 
+class TimeoutForwardPage(WebTimeoutForwardPage): pass
+
+class TimeoutClosePage(WebTimeoutClosePage): pass
 
 class NoDataPage(Page):
     """This Page does not save any data except its tag and uid."""
 
-    @property
-    def data(self):
-        # Pages must always return tag and uid!
-        data = {"tag": self.tag, "uid": self.uid}
-
-        return data
+    data = {}
 
 
 class UnlinkedDataPage(NoDataPage):
@@ -919,18 +1092,17 @@ class UnlinkedDataPage(NoDataPage):
             raise ValueError(
                 "The argument 'encrypt' must take one of the following values: 'agent', 'always', 'never'."
             )
-
-    def unlinked_data(self, encrypt):
-        data = {"tag": self.tag, "uid": self.uid}
-        for elmnt in self._element_list:
-            if encrypt:
-                data.update(elmnt.encrypted_data)
-            else:
-                data.update(elmnt.data)
-
-        data["tree"] = self.short_tree
-        return data
-
+    
+    @property
+    def unlinked_data(self):
+        if not self.has_been_shown:
+            return {}
+        else:
+            data = {}
+            for element in self.input_elements.values():
+                data.update(element.data)
+            return data
+    
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current unlinked data.
         
@@ -947,22 +1119,23 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if not self._experiment.sac_unlinked.agents and not self._experiment.config.getboolean(
-            "general", "debug"
+        if (
+            not self._experiment.data_saver.unlinked.agents
+            and not self._experiment.config.getboolean("general", "debug")
         ):
             self.log.warning("No saving agent for unlinked data available.")
 
-        for agent in self._experiment.sac_unlinked.agents.values():
-
+        for agent in self._experiment.data_saver.unlinked.agents.values():
+            
             if self.encrypt == "agent":
-                encrypt = agent.encrypt
-            if self.encrypt == "always":
-                encrypt = True
-            if self.encrypt == "never":
-                encrypt = False
+                data = self.experiment.data_manager.unlinked_data_with(agent)
+            elif self.encrypt == "always":
+                data = self.experiment.data_manager.unlinked_data
+                data = self.experiment.data_manager.encrypt_values(data)
+            elif self.encrypt == "never":
+                data = self.experiment.data_manager.unlinked_data
 
-            data = self._experiment.data_manager.get_unlinked_data(encrypt=encrypt)
-            self._experiment.sac_unlinked.save_with_agent(
+            self.exp.data_saver.unlinked.save_with_agent(
                 data=data, name=agent.name, level=level, sync=sync
             )
 
@@ -1023,10 +1196,10 @@ class CustomSavingPage(Page, ABC):
 
     def _check_for_duplicate_agents(self):
         comparison = []
-        comparison += list(self._experiment.sac_main.agents.values())
-        comparison += list(self._experiment.sac_unlinked.agents.values())
+        comparison += list(self._experiment.data_saver.main.agents.values())
+        comparison += list(self._experiment.data_saver.unlinked.agents.values())
 
-        for pg in self._experiment.page_controller.pages():
+        for pg in self._experiment.root_section.all_pages.values():
             if pg == self:
                 continue
             try:
@@ -1066,9 +1239,17 @@ class CustomSavingPage(Page, ABC):
             raise ValueError("The porperty 'custom_page_data' must return a dictionary.")
 
         if self.save_to_main:
-            self._experiment.sac_main.save_with_all_agents(level=level, sync=sync)
+            self._experiment.data_saver.main.save_with_all_agents(level=level, sync=sync)
 
         self.saving_agent_controller.save_with_all_agents(
             data=self.custom_save_data, level=level, sync=sync
         )
 
+
+class DefaultFinalPage(Page):
+    title = "Experiment beendet"
+
+    def on_exp_access(self):
+        txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
+        self += elm.Text(text=txt, align="center")
+        self += elm.WebExitEnabler()

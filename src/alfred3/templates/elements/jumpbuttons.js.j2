@@ -1,0 +1,5 @@
+$("#{{ id }}").click(function() {
+    $("#alt-submit").attr("name", "move");
+    $("#alt-submit").val("jump>{{ target }}");
+    $("#form").submit();
+})

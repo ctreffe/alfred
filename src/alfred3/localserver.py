@@ -1,6 +1,9 @@
 from builtins import map, object
 from builtins import callable as builtins_callable
 import logging
+import traceback
+import re
+import os
 
 from uuid import uuid4
 from pathlib import Path
@@ -17,28 +20,23 @@ from flask import (
     send_from_directory,
 )
 from uuid import uuid4
-from ..config import ExperimentConfig, ExperimentSecrets
-from .. import alfredlog
-import re, os
+from .config import ExperimentConfig, ExperimentSecrets
+from . import alfredlog
 
 
 class Script:
 
-    experiment = None
+    exp = None
+    generate_experiment = None
+    exp_session = None
     expdir = None
     config = None
 
-    def generate_experiment(self, config=None):  # pylint: disable=method-hidden
-        """Hook for the ``generate_experiment`` function extracted from 
-        the user's script.py. It is meant to be replaced in ``run.py``.
-        """
-
-        return ""
-
     def set_generator(self, generator):
-        """Included for backwards compatibility from v1.2.0 onwards.
+        """
+        DEPRECATED
+        Included for backwards compatibility from v1.2.0 onwards.
         
-        TODO: Remove in v2.0.0
         """
         # if the script.py contains generate_experiment directly, not as a class method
         if builtins_callable(generator):
@@ -76,20 +74,30 @@ def start():
     # pylint: disable=unsubscriptable-object
     exp_id = script.config["exp_config"].get("metadata", "exp_id")
     session_id = script.config["exp_config"].get("metadata", "session_id")
+    # session_id = uuid4().hex
     log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
     log.session_id = session_id
     script.log = log
 
     # generate experiment
     try:
-        script.experiment = script.generate_experiment(config=script.config)
+        script.exp = script.generate_experiment()
+    except TypeError:
+        pass
+        # script.log.debug("Error passed: " + traceback.format_exc())
+    
+    config = script.config["exp_config"]
+    secrets = script.config["exp_secrets"]
+
+    try:
+        script.exp_session = script.exp.create_session(session_id=session_id, config=config, secrets=secrets, **request.args)
     except Exception:
         script.log.exception("Expection during experiment generation.")
         abort(500)
 
     # start experiment
     try:
-        script.experiment.start()
+        script.exp_session.start()
     except Exception:
         log.exception("Exception during experiment startup.")
         abort(500)
@@ -98,11 +106,7 @@ def start():
 
     session["page_tokens"] = []
 
-    # html = exp.user_interface_controller.render_html() # Deprecated Command? Breaks Messages
-    resp = make_response(redirect(url_for("experiment")))
-    resp.cache_control.no_cache = True
-
-    return resp
+    return redirect(url_for("experiment"))
 
 
 @app.route("/experiment", methods=["GET", "POST"])
@@ -111,8 +115,6 @@ def experiment():
         if request.method == "POST":
 
             move = request.values.get("move", None)
-            directjump = request.values.get("directjump", None)
-            par = request.values.get("par", None)
             page_token = request.values.get("page_token", None)
 
             try:
@@ -122,31 +124,28 @@ def experiment():
             except ValueError:
                 return redirect(url_for("experiment"))
 
-            kwargs = request.values.to_dict()
-            kwargs.pop("move", None)
-            kwargs.pop("directjump", None)
-            kwargs.pop("par", None)
+            data = request.values.to_dict()
+            data.pop("move", None)
+            data.pop("directjump", None)
+            data.pop("par", None)
+            data.pop("page_token", None)
 
-            script.experiment.user_interface_controller.update_with_user_input(kwargs)
-            if move is None and directjump is None and par is None and kwargs == {}:
+            script.exp_session.movement_manager.current_page.set_data(data)
+
+            if move is None and not data:
                 pass
-            elif directjump and par:
-                posList = list(map(int, par.split(".")))
-                script.experiment.user_interface_controller.move_to_position(posList)
-            elif move == "started":
-                pass
-            elif move == "forward":
-                script.experiment.user_interface_controller.move_forward()
-            elif move == "backward":
-                script.experiment.user_interface_controller.move_backward()
-            elif move == "jump" and par and re.match(r"^\d+(\.\d+)*$", par):
-                posList = list(map(int, par.split(".")))
-                script.experiment.user_interface_controller.move_to_position(posList)
+            elif move:
+                script.exp_session.movement_manager.move(direction=move)
             else:
                 abort(400)
+
             return redirect(url_for("experiment"))
 
         elif request.method == "GET":
+            url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
+            if url_pagename:
+                script.exp_session.movement_manager.jump_by_name(name=url_pagename)
+
             page_token = str(uuid4())
 
             # this block extracts the list "page_tokens", if it exists in the session
@@ -160,18 +159,18 @@ def experiment():
             token_list.append(page_token)
             session["page_tokens"] = token_list
 
-            html = script.experiment.user_interface_controller.render_html(page_token)
+            html = script.exp_session.user_interface_controller.render_html(page_token)
             resp = make_response(html)
             resp.cache_control.no_cache = True
             return resp
     except Exception:
-        script.log.exception("")
+        script.log.exception("Exception during experiment execution.")
         abort(500)
 
 
 @app.route("/staticfile/<identifier>")
 def staticfile(identifier):
-    path, content_type = script.experiment.user_interface_controller.get_static_file(identifier)
+    path, content_type = script.exp_session.user_interface_controller.get_static_file(identifier)
     dirname, filename = os.path.split(path)
     resp = make_response(send_from_directory(dirname, filename, mimetype=content_type))
     return resp
@@ -179,7 +178,7 @@ def staticfile(identifier):
 
 @app.route("/dynamicfile/<identifier>")
 def dynamicfile(identifier):
-    strIO, content_type = script.experiment.user_interface_controller.get_dynamic_file(identifier)
+    strIO, content_type = script.exp_session.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
     resp.cache_control.no_cache = True
     return resp
@@ -187,7 +186,8 @@ def dynamicfile(identifier):
 
 @app.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
-    f = script.experiment.user_interface_controller.get_callable(identifier)
+    f = script.exp_session.user_interface_controller.get_callable(identifier)
+    
     if request.content_type == "application/json":
         values = request.get_json()
     else:
@@ -199,3 +199,6 @@ def callable(identifier):
         resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
     return resp
+
+# @app.route("/None")
+# def none(): pass

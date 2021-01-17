@@ -1,0 +1,89 @@
+<!-- this row is the general widget container -->
+<div class="row element d-flex justify-content-{{ position }} {{ hide }} {{ css_class_container }} {{ align }}"
+    id="{{ name }}-container">
+    
+    <!-- this column is used to control the overall width of the widget -->
+    <div class="{{ element_width }}">
+
+        <!-- this row contains the components of an input element (i.e. labels and input fields) -->
+        <div class="row input-element">
+            
+            <!-- if there is a toplab, it is rendered here -->
+            {% if toplab %}
+            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
+            <label class="{{ input_breaks }} toplab" for="{{ name }}">
+                {{ toplab.web_widget }}
+            </label>
+            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
+            {% endif %}
+            
+            <!-- if there is a left label, it is rendered here -->
+            {% if leftlab %}
+            <label class="{{ leftlab.col_breaks }} {{ leftlab.vertical_alignment }} leftlab" for="{{ name }}">
+                {{ leftlab.web_widget }}
+            </label>
+            {% endif %}
+
+            <!-- this is where the actual input field gets rendered -->
+            <div class="{{ input_breaks }} {{ input_valign }} {% if prexix or suffix %}input-group{% endif %}">
+                
+                {# Prefix #}
+                {% if prefix %}
+                <div class="input-group-prepend">
+                    {{ prefix }}
+                </div>
+                {% endif %}
+
+                <!-- This is where the element HTML is injected -->
+                {{ html | safe}}
+
+                {# Suffix #}
+                {% if suffix %}
+                <div class="input-group-append">
+                    {{ suffix }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- if there is a right label, it is rendered here -->
+            {% if rightlab %}
+            <label class="{{ rightlab.col_breaks }} {{ rightlab.vertical_alignment }} rightlab" for="{{ name }}">
+                {{ rightlab.web_widget }}
+            </label>
+            {% endif %}
+
+            <!-- if there is a bottom, it is rendered here -->
+            {% if bottomlab %}
+            {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
+            <label class="{{ input_breaks }} bottomlab" for="{{ name }}">
+                {{ bottomlab.web_widget }}
+            </label>
+            {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
+            {% endif %}
+
+            <!-- Experimenter Messages -->
+            {% if corrective_hints %}
+            <div class="col-12 mt-2" id="{{ name }}-corrective-hints">
+            {% for hint in corrective_hints %}
+            <div class="alert alert-{{ hint.level }}">
+            <div class="row">
+            <div class="col-1 text-center" style="font-size: 18pt;">
+            <i class="fas fa-arrow-alt-circle-up"></i>
+            </div>
+            <div class="col corrective-hint">
+                {% if hint.title %}
+                <strong>{{hint.title}}</strong> <br>
+                {% endif %}
+                {{ hint.msg }}
+            </div>
+            </div>
+            </div>
+            {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+
+
+    </div>
+</div>
