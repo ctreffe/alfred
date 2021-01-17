@@ -66,10 +66,17 @@
             <div class="col-12 mt-2" id="{{ name }}-corrective-hints">
             {% for hint in corrective_hints %}
             <div class="alert alert-{{ hint.level }}">
+            <div class="row">
+            <div class="col-1 text-center" style="font-size: 18pt;">
+            <i class="fas fa-arrow-alt-circle-up"></i>
+            </div>
+            <div class="col corrective-hint">
                 {% if hint.title %}
                 <strong>{{hint.title}}</strong> <br>
                 {% endif %}
                 {{ hint.msg }}
+            </div>
+            </div>
             </div>
             {% endfor %}
             </div>
