@@ -4,6 +4,10 @@
     height: 30px;
 }
 
+.corrective-hint>p:last-child, .Alert-element>p:last-child {
+    margin-bottom: 0;
+}
+
 div.btn-group.choice-button-group>label.btn.choice-button:only-child {
     margin-left: 0;
     margin-right: 0;
@@ -61,10 +65,6 @@ div.input-group-append>div>label {
 .btn-group-vertical.choice-button-group>label.btn.choice-button:not(:first-child) {
     margin-top: 0.25rem;
     border-radius: 0.25rem;
-}
-
-.corrective-hint {
-    margin-top: 1rem;
 }
 
 .SingleChoiceButtons-element, .MultipleChoiceButtons-element, .SingleChoiceBar-element, .MultipleChoiceBar-element, .ButtonChoiceLabels-element, .BarChoiceLabels-element {
