@@ -2506,14 +2506,6 @@ class TextEntry(InputElement):
         d["placeholder"] = self.placeholder
         return d
 
-    def validate_data(self):
-        super().validate_data()
-
-        if self._force_input and self._should_be_shown and self._input == "":
-            return False
-
-        return True
-
     @property
     def codebook_data(self):
         data = super().codebook_data
