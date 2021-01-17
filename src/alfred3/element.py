@@ -2560,8 +2560,10 @@ class RegEntry(TextEntry):
     def __init__(self, toplab: str = None, pattern: str = r".*", match_hint: str = None, **kwargs):
         super().__init__(toplab=toplab, **kwargs)
 
-        self.pattern = re.compile(pattern)
-        self._match_hint = match_hint
+        #: Compiled regular expression pattern to be matched on
+        #: participant input to this element
+        self.pattern: re.Pattern = re.compile(pattern)
+        self._match_hint = match_hint # documented in getter property
 
     def validate_data(self):
         """:meta private: (documented at :class:`.InputElement`)"""
