@@ -621,7 +621,7 @@ class ExperimentSession:
         
         Notes:
             The experiment-wide progress bar *always* receives a name
-            of "*progress_bar_*".
+            of ``progress_bar_``.
 
         Examples:
 
@@ -648,7 +648,7 @@ class ExperimentSession:
     @progress_bar.setter
     def progress_bar(self, bar: elm.ProgressBar):
         if bar.name is not None:
-            raise AlfredError("If you redefine the progress bar, you can't set a custom name.")
+            raise AlfredError("If you redefine the progress bar, you can't set a custom name. It's fixed to 'progress_bar_'.")
         bar.name = "progress_bar_"
         bar.added_to_experiment(self)
         self._progress_bar = bar
