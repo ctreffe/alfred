@@ -2568,7 +2568,7 @@ class RegEntry(TextEntry):
         if not self.should_be_shown:
             return True
         
-        elif not self.force_input:
+        elif not self.force_input and self.input == "":
             return True
         
         elif not self.input:
