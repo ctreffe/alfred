@@ -1,0 +1,20 @@
+﻿Variable;Meaning
+alfred_version;Alfred version used for collecting the data set.
+exp_author;Experiment author
+exp_condition;Indicates the experimental condition (if any)
+exp_finished;Indicates, whether the experiment was finished (True/False).
+exp_id;Unique experiment ID.
+exp_session;
+exp_title;Experiment title
+exp_version;Experiment version
+save_time;Time of data saving in seconds since Epoch
+session_id;Unique session ID
+session_status;A status indicator for the session
+start_time;Time of experiment start in seconds since Epoch
+start_timestamp;Timestamp of experiment start in the format '%Y-%m-%d_t%H%M%S'
+uid;Unique, session-specific ID of the root Section
+<page>.first_display_duration;Duration of first display of the page in seconds since Epoch. (first_hide_time - first_show_time)
+<page>.first_hide_time;Time of first hiding of the page in seconds since Epoch
+<page>.first_show_time;Time of first display of a page in seconds since Epoch
+<page>.closing_time;Time of page closing in seconds since Epoch
+<page>.duration;Full duration of the page being open in seconds since Epoch (closing_time - first_show_time)

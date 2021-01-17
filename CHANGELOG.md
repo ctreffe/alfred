@@ -73,7 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 With this version, alfred3 gains some powerful new features. This is the overview:
 
 * The `UnlinkedDataPage` can be used to safely collect data that cannot be linked to any specific experiment session.
-* Alfred3 now automatically generates a comprehensive raw codebook that describes your data set.
+* Alfred3 now automatically generates a comprehensive, machine-readable codebook that describes your data set.
 * Alfred3 now offers functionality for transforming locally collected data from .json to .csv format (both automatically at the end of each session, and manually via a command line interface).
 * New hooks for pages and sections make it easier to tidily organize experiment code.
 
@@ -90,12 +90,13 @@ Alfred now automatically generates a raw codebook from your experiment. The code
 
 #### Automatic transformation of local data to .csv
 
-Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through two options in config.conf:
+Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through the following options in config.conf:
 
 ``` ini
 [general]
 transform_data_to_csv = true # controls, whether to transform data or not
 csv_directory = data # the .csv files will be placed in this directory
+csv_delimiter = ; # Controls the delimiter. Default is semicolon.
 ```
 
 #### Command line interface for exporting alfred3 data

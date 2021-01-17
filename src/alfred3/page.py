@@ -88,6 +88,12 @@ class PageCore(ExpMember):
         else:
             return self.experiment.config.get("messages", "minimum_display_time")
 
+        try:
+            self.experiment.page_controller.add_page(self)
+        except AttributeError:
+            if self.parent.tag == "finishedSection":
+                pass
+
     @property
     def show_thumbnail(self):
         return True
@@ -381,6 +387,12 @@ class PageCore(ExpMember):
 
     def __repr__(self):
         return f"Page(class='{type(self).__name__}', name='{self.name}')"
+
+    def __str__(self):
+        """*New in v1.4.*"""
+        title = self.title if self.title is not None else "<None>"
+        tag = self.tag if self.tag is not None else "<None>"
+        return f"<Page of class '{type(self).__name__}', title: '{title}', tag: '{tag}', uid: '{self.uid}'>"
 
 
 class WebPageInterface(with_metaclass(ABCMeta, object)):
@@ -1205,6 +1217,10 @@ class CustomSavingPage(Page, ABC):
                 raise ValueError("A SavingAgent added to a CustomSavingPage must be unique")
 
     def append_saving_agents(self, *args):
+        """Appends saving agents to this page.
+        
+        These saving agents will be used to save the page's data.
+        """
         for agent in args:
             self.saving_agent_controller.append(agent)
         self._check_for_duplicate_agents()
