@@ -517,12 +517,15 @@ class CoreCompositePage(PageCore):
             if elmnt.name in dir(self):
                 raise ValueError(f"Element name '{elmnt.name}' is also an attribute of {self}.")
 
+            if elmnt.name in self.elements:
+                raise AlfredError(f"{self} already has an element of name '{elmnt.name}'.")
+
 
             if self.exp is not None and elmnt.exp is None:
                 elmnt.added_to_experiment(self.exp)
             
             self.elements[elmnt.name] = elmnt
-
+    
     def generate_element_name(self, element):
         i = self._element_name_counter
         c = element.__class__.__name__
