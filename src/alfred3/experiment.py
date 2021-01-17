@@ -1228,7 +1228,6 @@ class ExperimentSession:
         See Also:
             Refer to the documentation of :meth:`.Page.custom_move` for
             guidance on how to implement a custom movement method.
-        
 
         """
         self.movement_manager.forward()
@@ -1243,7 +1242,6 @@ class ExperimentSession:
         See Also:
             Refer to the documentation of :meth:`.Page.custom_move` for
             guidance on how to implement a custom movement method.
-
 
         """
         self.movement_manager.forward()
@@ -1263,7 +1261,6 @@ class ExperimentSession:
         See Also:
             Refer to the documentation of :meth:`.Page.custom_move` for
             guidance on how to implement a custom movement method.
-        
 
         """
         self.movement_manager.jump(to)
@@ -1299,7 +1296,6 @@ class ExperimentSession:
 
         Returns:
             dict: Full dataset of the current experimental session.
-        
 
         """
         return self.data_manager.session_data
