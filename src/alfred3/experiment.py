@@ -662,6 +662,9 @@ class ExperimentSession:
         url route is called.
 
         """
+        if not self.all_members:
+            raise AlfredError("There are no pages in your experiment.")
+
         if self.start_time:
             msg = "ExperimentSession.start() was called. The experiment was already running. Leaving method."
             self.log.warning(msg)
