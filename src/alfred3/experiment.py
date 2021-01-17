@@ -53,7 +53,7 @@ from .alfredlog import QueuedLoggingInterface
 from ._helper import _DictObj
 from .data_manager import DataManager
 from .export import Exporter
-from .saving_agent import DataSaver
+from .saving_agent import DataSaver, MongoSavingAgent
 from .ui_controller import UserInterface
 from .ui_controller import MovementManager
 from .exceptions import SavingAgentException
@@ -1344,6 +1344,7 @@ class ExperimentSession:
         """
         return self.data_manager.metadata
 
+    @property
     def client_data(self) -> dict:
         """
         dict: Dictionary of information about the client, such as:
@@ -1389,7 +1390,12 @@ class ExperimentSession:
                         df = pd.DataFrame(self.exp.all_exp_data)
         
         """
-        return list(self.data_manager.iter_exp_data())
+        mongodata = self.data_manager.iter_flat_mongo_data()
+        localdata = self.data_manager.iter_flat_local_data()
+        if self.config.getboolean("general", "runs_on_mortimer"):
+            return list(mongodata)
+        else:
+            return list(mongodata) + list(localdata)
 
     @property
     def all_unlinked_data(self) -> List[dict]:
@@ -1420,7 +1426,12 @@ class ExperimentSession:
                         df = pd.DataFrame(self.exp.all_unlinked_data)
         
         """
-        return list(self.data_manager.iter_exp_data(data_type="unlinked_data"))
+        mongodata = self.data_manager.iter_flat_mongo_data(data_type="unlinked")
+        localdata = self.data_manager.iter_flat_local_data(data_type="unlinked")
+        if self.config.getboolean("general", "runs_on_mortimer"):
+            return list(mongodata)
+        else:
+            return list(mongodata) + list(localdata)
 
     def get_page_data(self, name: str) -> dict:
         """
@@ -1497,10 +1508,10 @@ class ExperimentSession:
         
 
         """
-        try:
-            return self.data_saver.main.agents["mongo_saving_agent"].db
-        except KeyError:
-            return None
+        for agent in self.data_saver.main.agents.values():
+            if isinstance(agent, MongoSavingAgent):
+                return agent.db
+        return None
     
     @property
     def db_main(self):
@@ -1517,10 +1528,10 @@ class ExperimentSession:
         
 
         """
-        try:
-            return self.data_saver.main.agents["mongo_saving_agent"].col
-        except KeyError:
-            return None
+        for agent in self.data_saver.main.agents.values():
+            if isinstance(agent, MongoSavingAgent):
+                return agent.db.col
+        return None
     
     @property
     def db_unlinked(self):
@@ -1537,10 +1548,10 @@ class ExperimentSession:
         
 
         """
-        try:
-            return self.data_saver.unlinked.agents["mongo_saving_agent_unlinked"].col
-        except KeyError:
-            return None
+        for agent in self.data_saver.unlinked.agents.values():
+            if isinstance(agent, MongoSavingAgent):
+                return agent.db.col
+        return None
     
     @property
     def db_misc(self):
@@ -1564,7 +1575,7 @@ class ExperimentSession:
         
 
         """
-        try:
-            return self.data_saver.main.agents["mongo_saving_agent"].db["misc"]
-        except KeyError:
-            return None
+        for agent in self.data_saver.main.agents.values():
+            if isinstance(agent, MongoSavingAgent):
+                return agent.db["misc"]
+        return None

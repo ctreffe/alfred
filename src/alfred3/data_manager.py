@@ -293,6 +293,7 @@ class DataManager(object):
     def flatten(data: dict) -> dict:
         eldata = data.pop("exp_data")
         data.pop("exp_move_history", None)
+        data.pop("_id", None)
         values = {name: elmnt["value"] for name, elmnt in eldata.items()}
         
         additional_data = data.pop("additional_data", {})
@@ -392,22 +393,6 @@ class DataManager(object):
 
         for dataset in cursor:
             yield self.flatten(dataset)
-
-    def iter_exp_data(self, data_type: str = "exp_data") -> Iterator[dict]:
-        """
-        Iterates over all datasets that can be found for this experiment.
-
-        Includes data saved via mongo_saving_agent and data saved via
-        local_saving_agent.
-
-        Args:
-            data_type: Can be one of 'exp_data', or 'unlinked_data'
-
-        Yields:
-            dict: Flattened experiment data
-        """
-        yield self.iter_flat_mongo_data(data_type=data_type)
-        yield self.iter_flat_local_data(data_type=data_type)
     
     @staticmethod
     def iterate_mongo_data(
