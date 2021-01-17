@@ -2104,7 +2104,12 @@ class InputElement(LabelledElement):
         force_input: If `True`, users can only progress to the next page
             if they enter data into this field. Note that a
             :class:`.NoValidationSection` or similar sections might
-            overrule this setting.
+            overrule this setting. 
+            
+            A general, experiment-wide setting for force_input can be 
+            placed in the config.conf (section "general"). That setting
+            is used by default and can be overruled here for individual
+            elements.
         default: Default value. Type depends on the element type.
         prefix: Prefix for the input field.
         suffix: Suffix for the input field.
@@ -2133,7 +2138,7 @@ class InputElement(LabelledElement):
     def __init__(
         self,
         toplab: str = None,
-        force_input: bool = False,
+        force_input: bool = None,
         default: Union[str, int, float] = None,
         prefix: Union[str, Element] = None,
         suffix: Union[str, Element] = None,
@@ -2248,8 +2253,14 @@ class InputElement(LabelledElement):
     def force_input(self) -> bool:
         """
         bool: If *True*, subjects *must* fill this element to proceed.
+
+        A general, experiment-wide setting for force_input can be placed
+        in the config.conf (section "general").
         """
-        return self._force_input
+        if self._force_input is None:
+            return self.exp.config.getboolean("general", "force_input")
+        else:
+            return self._force_input
 
     @force_input.setter
     def force_input(self, value: bool):
