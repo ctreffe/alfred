@@ -2606,7 +2606,216 @@ class RegEntry(TextEntry):
         d = super().codebook_data
         d["regex_pattern"] = self.pattern.pattern
         return d
+
+
+class NumberEntry(TextEntry):
+    """
+    Displays an input field which only accepts numerical input.
+
+    Args:
+        decimals: Accepted number of decimals (0 as default).
+        min: Minimum accepted entry value.
+        max: Maximum accepted entry value.
+        decimal_signs: Tuple of accepted decimal signs. Defaults to 
+            (",", "."), i.e. by default, both a comma and a dot are
+            interpreted as decimal signs.
+        match_hint: Specialized match hint for this element. You can 
+            use the placeholders ``${min}``, ``${max}`` ``${ndecimals}``,
+            and ``${decimal_signs}``. To customize the match hint for 
+            all NumberEntry elements, change the respective setting
+            in the config.conf.
+        **kwargs, toplab: Further keyword arguments that are passed on 
+            to the parent class :class:`TextEntry`.
+
+    Examples:
+
+        >>> import alfred3 as al
+        >>> numentry = al.NumberEntry("enter here", name="num1")
+        >>> numentry
+        NumberEntry(name='num1')
+
+    """
+
+    def __init__(
+        self,
+        toplab: str = None,
+        ndecimals: int = 0,
+        min: Union[int, float] = None,
+        max: Union[int, float] = None,
+        decimal_signs: Union[str, tuple] = (",", "."),
+        match_hint: str = None,
+        **kwargs,
+    ):
+        super().__init__(toplab=toplab, **kwargs)
+
+        self.ndecimals: int = ndecimals # documented in getter property
+        self.decimal_signs: Tuple[str] = decimal_signs # documented in getter property
+        self.min = min # documented in getter property
+        self.max = max # documented in getter property
+        self._match_hint = match_hint # documented in getter property
     
+    @property
+    def ndecimals(self) -> int:
+        """int: Number of allowed decimal places."""
+        return self._ndecimals
+    
+    @ndecimals.setter
+    def ndecimals(self, value: int):
+        if not isinstance(value, int) or not value >= 0:
+            raise ValueError("Number of decimals must be an integer >= 0.")
+        else:
+            self._ndecimals = value
+    
+    @property
+    def decimal_signs(self) -> Union[str, tuple]:
+        """Union[str, tuple]: Interpreted decimal signs."""
+        return self._decimal_signs
+    
+    @decimal_signs.setter
+    def decimal_signs(self, value: Union[str, tuple]):
+        msg = "Decimals signs must be a string or a tuple of strings."
+        if not isinstance(value, (str, tuple)):
+            raise ValueError(msg)
+        
+        if isinstance(value, tuple):
+            for val in value:
+                if not isinstance(val, str):
+                    raise ValueError(msg)
+        
+        self._decimal_signs = value
+
+    @property
+    def min(self) -> Union[int, float]:
+        """Minimum value that is accepted by this element."""
+        return self._min
+    
+    @min.setter
+    def min(self, value: Union[int, float]):
+        if value is None:
+            self._min = None
+        elif not isinstance(value, (int, float)):
+            raise ValueError("Minimum must be a number.")
+        else:
+            self._min = value
+    
+    @property
+    def max(self) -> Union[int, float]:
+        """Maximum value that is accepted by this element."""
+        return self._max
+    
+    @max.setter
+    def max(self, value: Union[int, float]):
+        if value is None:
+            self._max = None
+        elif not isinstance(value, (int, float)):
+            raise ValueError("Maximum must be a number.")
+        else:
+            self._max = value
+    
+    @property
+    def match_hint(self):
+        """
+        str: Hint to be displayed, if participant input does not match
+        the provided pattern.
+        """
+        if self._match_hint:
+            hint = self._match_hint
+        else:
+            hint = self.default_match_hint
+        
+        signs = " ".join([f"<code>{sign}</code>" for sign in self.decimal_signs])
+
+        hint = hint.replace("${min}", str(self.min))
+        hint = hint.replace("${max}", str(self.max))
+        hint = hint.replace("${decimal_signs}", signs)
+        hint = hint.replace("${ndecimals}", str(self.ndecimals))
+
+        return hint
+    
+    @property
+    def default_match_hint(self) -> str:
+        """
+        str: Default match hint for this element, extracted from config.conf
+
+        This property combines all match hints related to the 
+        NumberEntry element and returns them as a single string.
+        """
+        name = f"{type(self).__name__}"
+
+        c = self.experiment.config
+        hints = []
+        hints.append(c.get("hints", "match_" + name))
+
+        if self.min is not None:
+            hints.append(c.get("hints", "min_" + name))
+        
+        if self.max is not None:
+            hints.append(c.get("hints", "max_" + name))
+        
+        hints.append(c.get("hints", "ndecimals_" + name))
+        
+        if self.ndecimals > 0 and self.decimal_signs is not None:
+            hints.append(c.get("hints", "decimal_signs_" + name))
+        
+        return " ".join(hints)
+    
+    @property
+    def input(self):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        return self._input
+    
+    @input.setter
+    def input(self, value: str):
+        value = str(value)
+        for sign in self.decimal_signs:
+            value = value.replace(sign, ".")
+        self._input = value
+
+    def validate_data(self):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        if not self.should_be_shown:
+            return True
+        
+        if not self.force_input and self.input == "":
+            return True
+        
+        elif not self.input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+        
+        try:
+            in_number = float(self.input)
+        except ValueError:
+            self.hint_manager.post_message(self.match_hint)
+            return False
+
+        validate = True
+        decimals = self.input.split(".")[-1] if "." in self.input else ""
+        if self.min and in_number < self.min:
+            self.hint_manager.post_message(self.match_hint)
+            validate = False
+        
+        elif self.max and in_number > self.max:
+            self.hint_manager.post_message(self.match_hint)
+            validate = False
+        
+        elif len(decimals) > self.ndecimals:
+            self.hint_manager.post_message(self.match_hint)
+            validate = False
+        return validate
+        
+    
+    @property
+    def codebook_data(self):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        data = super().codebook_data
+
+        data["ndecimals"] = self.ndecimals
+        data["decimal_signs"] = " ".join(self.decimal_signs)
+        data["min"] = self.min
+        data["max"] = self.max
+
+        return data
 
 @dataclass
 class Choice:
