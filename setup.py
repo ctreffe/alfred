@@ -36,7 +36,6 @@ setuptools.setup(
         "cryptography>=2.9",
         "jinja2>=2.11",
         "Flask>=1.1",
-        "xmltodict>=0.12",
         "thesmuggler==1.0.1",
         "dload==0.6",
         "Click>=7.0",
