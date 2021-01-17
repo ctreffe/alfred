@@ -30,6 +30,7 @@ currently four kinds of elements:
 
    :class:`.Html`           ,   Displays html code
    :class:`.Text`           ,   "Displays text. Can render Markdown, html, and emoji shortcodes"
+   :class:`.Alert`          ,   Displays text in alert boxes
    :class:`.CodeBlock`      ,   Displays code with syntax highlighting
    :class:`.Image`          ,   Displays an image
    :class:`.Audio`          ,   Plays sound
