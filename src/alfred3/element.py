@@ -1079,8 +1079,7 @@ class Row(Element):
 
 
     Notes:
-        * CSS-class: row-element
-
+        
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
         column by assigning it a number of those units. A column of
@@ -1201,12 +1200,6 @@ class Stack(Row):
         *elements: The elements to stack.
         **kwargs: Keyword arguments that are passend on to the parent
             class :class:`.Row`.
-
-    Notes:
-        * CSS-class: ``stack-element``
-
-        * Html element id: ``elid-<name>`` (<name> is the
-          :attr:`.Element.name` attribute, defined at initialization.)
 
     Examples:
 
@@ -3503,6 +3496,7 @@ class ButtonLabels(SingleChoiceButtons):
 
     @property
     def data(self):
+        """:meta private: (documented at :class:`.InputElement`)"""
         return {}
 
 
@@ -3856,6 +3850,7 @@ class SelectPageList(SingleChoiceList):
         self.choices = self.define_choices()
 
     def set_data(self, d):
+        """:meta private: (documented at :class:`.InputElement`)"""
         value = d.get(self.name)
         if value:
             self._input = self.choice_labels.index(value) + 1
