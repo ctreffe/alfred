@@ -2451,11 +2451,19 @@ class Data(InputElement):
             final data set.
     
     Examples:
+
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    self += al.Data(value="test", name="myvalue")
         
-        >>> import alfred3 as al
-        >>> data = al.Data(value="test", name="mydata")
-        >>> data
-        Data(name='mydata')
     """
 
     def __init__(self, value: Union[str, int, float], name: str):
@@ -3418,7 +3426,7 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
             Counting starts at 1.
         **kwargs: Further keyword arguments are passed on to 
             the parent classes :class:`.SingleChoiceButtons` (button
-            styling arguments) and class :class:`.ChoiceElement`.
+            styling arguments) and :class:`.ChoiceElement`.
 
     Examples:
         Multiple choice buttons with three options::
@@ -3434,8 +3442,9 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
                     self += al.MultipleChoiceButtons("Yes", "No", "Maybe", name="m1")
 
     """
-    # Documented at :class:`.SingleChoiceButtons`
-    button_round_corners: bool = False 
+
+    def __init__(self, *choice_labels, button_round_corners: bool = False, **kwargs):
+        super().__init__(*choice_labels, button_round_corners=button_round_corners, **kwargs)
 
 
 class MultipleChoiceBar(MultipleChoiceButtons):
@@ -3537,7 +3546,6 @@ class BarLabels(ButtonLabels):
     button_toolbar = True
 
 
-
 class SubmittingButtons(SingleChoiceButtons):
     """
     SingleChoiceButtons that trigger submission of the current page
@@ -3607,7 +3615,9 @@ class JumpButtons(SingleChoiceButtons):
 
                 def on_exp_access(self):
                     self += al.JumpButtons(
-                        ("jump to demo2", "demo2"), ("jump to demo3", "demo3"), name="jump1"
+                        ("jump to demo2", "demo2"), 
+                        ("jump to demo3", "demo3"), 
+                        name="jump1"
                         )
 
             @exp.member
@@ -3681,7 +3691,7 @@ class DynamicJumpButtons(JumpButtons):
             page.
         
         **kwargs: Keyword arguments are passed on to the parent class 
-            :class:`.SingleChoiceButtons`.
+            :class:`.JumpButtons`.
     
     Attributes:
         targets (str): List of target page names.
@@ -3729,27 +3739,153 @@ class DynamicJumpButtons(JumpButtons):
 
 
 class SingleChoiceList(SingleChoice):
+    """
+    A dropdown list, allowing selection of one option.
+
+    The same documentation applies, as for :class:`.SingleChoice`.
+
+    Notes:
+        The SingleChoiceList's default value defaults to "1" due to its
+        design. A typical way to remove meaning from this default is
+        to make the fist choice a no-choice option (see examples).
+    
+    Examples:
+        A single choice list with a no-choice option as first option::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceList(
+                        "-no selection-", "choi1", "choi2", "choi3",
+                         name="sel1"
+                         )
+
+    """
+
+    # Documented at :class:`.Element`
     element_template = jinja_env.get_template("SelectElement.html.j2")
+    
+    # Documented at :class:`.SingleChoice`
     type = "select_one"
 
-    def __init__(
-        self, *choice_labels, toplab: str = None, size: int = None, default: int = 1, **kwargs
-    ):
+    def __init__(self, *choice_labels, toplab: str = "", default: int = 1, **kwargs):
         super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
+
+
+class MultipleChoiceList(MultipleChoice):
+    """
+    A :class:`.MultipleChoice` element, displayed as list.
+
+    Args:
+        *choice_labels: Variable numbers of choice labels. See 
+            :class:`.ChoiceElement` for details.
+        size: The vertical height of the list. The unit is the number
+            of choices to be displayed without scrolling. Note that some
+            browsers do not adhere to this unit exactly.
+        **kwargs: Further keyword arguments are passed on to 
+            the parent class :`.MultipleChoice`.
+
+    Examples:
+        Minimal example::
+            
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
+
+    """
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+    
+    # Documented at :class:`.SingleChoice`
+    type = "multiple"
+
+    def __init__(self, *choice_labels, size: int = None, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
         self.size = size
 
     @property
     def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["size"] = self.size
         return d
 
+    def set_data(self, d):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        name_map = {str(choice.value): choice.name for choice in self.choices}
+        val = d.get(self.name, None)
+        val_name = name_map[val]
+
+        for choice in self.choices:
+            if choice.name == val_name:
+                self.input[choice.name] = True
+            else:
+                self.input[choice.name] = False
+
 
 class SelectPageList(SingleChoiceList):
+    """
+    A :class:`.SingleChoiceList`, automatically filled with page names.
+
+    Args:
+        scope: Can be 'exp', or a section name. If *scope* is 'exp', all
+            pages in the experiment are listed as choices. If *scope* is
+            a section name, all pages in that section are listed.
+        include_self: Whether to include the current page in the list,
+            if it is in scope.
+        check_jumpto: If *True* (default), pages that cannot be jumped 
+            to will be marked as disabled options. The evaluation is
+            based on the :attr:`.Section.allow_jumpto` attribute of
+            each page's direct parent section (and only that section).
+        check_jumpfrom: If *True*, the element will check, if the 
+            current page can be left via jump. If not, all pages in the
+            list will be marked as disabled options.
+        show_all_in_scope: If *True* (default), all pages in the scope 
+            will be shown, including those that cannot be jumped to.
+        **kwargs, toplab: Keyword arguments are passend on to the parent
+            class :class:`.SingleChoiceList`
+    
+    Notes:
+        This is mostly a utility element for the implementation of
+        :class:`.JumpList`.
+
+    Examples:
+
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo1(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    self += al.SelectPageList(name="select_page")
+
+            @exp.member()
+            class Target(al.Page):
+                name = "demo2"
+
+    """
+
+
     def __init__(
         self,
         toplab: str = None,
         scope: str = "exp",
+        include_self: bool = False,
         check_jumpto: bool = True,
         check_jumpfrom: bool = True,
         show_all_in_scope: bool = True,
@@ -3760,32 +3896,46 @@ class SelectPageList(SingleChoiceList):
         self.check_jumpto = check_jumpto
         self.check_jumpfrom = check_jumpfrom
         self.show_all_in_scope = show_all_in_scope
+        self.include_self = include_self
 
     def _determine_scope(self) -> List[str]:
+        """
+        Determines, which pages belong to the scope of the element *and*
+        should appear in the dropdown.
+
+        Returns:
+            List[str]: List of page names that are in the elements scope
+                and should be shown in the dropdown.
+        """
 
         if self.scope in ["experiment", "exp"]:
             scope = list(self.experiment.root_section.members["_content"].all_pages.values())
-        elif self.scope == "section":
-            scope = list(self.page.section.all_pages.values())
         else:
             try:
-                target_section = self.experiment.root_section.all_members[self.scope]
+                target_section = self.experiment.root_section.all_sections[self.scope]
                 scope = list(target_section.all_pages.values())
             except AttributeError:
-                raise AlfredError("Parameter 'scope' must be a section or page name.")
+                raise AlfredError("Parameter 'scope' must be a section name or 'exp'.")
 
         choice_labels = []
         if not self.show_all_in_scope:
             for page in scope:
-                jumpto_allowed = all([parent.allow_jumpto for parent in page.uptree()])
-                if jumpto_allowed and page.should_be_shown:
+                if page.section.allow_jumpto and page.should_be_shown:
                     choice_labels.append(page.name)
         else:
             choice_labels = [page.name for page in scope]
+        
+        if not self.include_self:
+            try:
+                choice_labels.remove(self.name)
+            except ValueError:
+                self.log.debug("ValueError ignored.")
+                pass
 
         return choice_labels
 
     def define_choices(self) -> List[Choice]:
+        """:meta private: (documented at :class:`.ChoiceElement`)"""
         choices = []
         for i, page_name in enumerate(self.choice_labels, start=1):
             choice = Choice()
@@ -3805,25 +3955,36 @@ class SelectPageList(SingleChoiceList):
         return choices
 
     def _jump_forbidden(self, page_name: str) -> bool:
+        """
+        Returns:
+            bool: True, if jumping to the target page or from the 
+            current page is forbidden. Also True, if the target page
+            should not be shown.
+        """
         target_page = self.experiment.root_section.all_pages[page_name]
 
-        forbidden = False
+        conditions = [True] # list of conditions. True means that jumping is allowed
 
         # disable choice if the target page can't be jumped to
         if self.check_jumpto:
-            forbidden = not (target_page.section.allow_jumpto)
+            jump_allowed = target_page.section.allow_jumpto
+            conditions.append(jump_allowed)
 
         # disable choice if self can't be jumped from
         if self.check_jumpfrom:
-            forbidden = not (self.page.section.allow_jumpfrom)
+            jump_allowed = self.page.section.allow_jumpfrom
+            conditions.append(jump_allowed)
 
-        # if not self.experiment.config.getboolean("general", "debug"):
-        if not target_page.should_be_shown:
-            forbidden = True
+        conditions.append(target_page.should_be_shown)
 
-        return forbidden
+        return not all(conditions)
 
     def _choice_label(self, page_name: str) -> str:
+        """
+        Returns:
+            str: A shortened version of the *page* name, if its length
+            exceeds 35 characters.
+        """
         target_page = self.experiment.root_section.all_pages[page_name]
         # shorten page title for nicer display
         page_title = target_page.title
@@ -3833,6 +3994,19 @@ class SelectPageList(SingleChoiceList):
         return f"{page_title} (name='{page_name}')"
 
     def _determine_check(self, i: int) -> bool:
+        """
+        For a given choice option, this method determines, whether it
+        should be marked as checked by default.
+
+        If the experiment is started in debug mode, the current page is 
+        marked as checked.
+
+        Returns:
+            bool: *True*, if the choice option with index *i* should be
+            checked.
+    
+        """
+
         # set default value
         if self.default == i:
             checked = True
@@ -3850,6 +4024,7 @@ class SelectPageList(SingleChoiceList):
         return checked
 
     def prepare_web_widget(self):
+        """:meta private: (documented at :class:`.Element`)"""
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
 
@@ -3861,16 +4036,70 @@ class SelectPageList(SingleChoiceList):
 
 
 class JumpList(Row):
+    """
+    Allows participants to select a page from a dropdown menu and jump 
+    to it.
+
+    Args:
+        scope: Can be 'exp', or a section name. If *scope* is 'exp', all
+            pages in the experiment are listed as choices. If *scope* is
+            a section name, all pages in that section are listed.
+        include_self: Whether to include the current page in the list,
+            if it is in scope.
+        check_jumpto: If *True* (default), pages that cannot be jumped 
+            to will be marked as disabled options. The evaluation is
+            based on the :attr:`.Section.allow_jumpto` attribute of
+            each page's direct parent section (and only that section).
+        check_jumpfrom: If *True*, the element will check, if the 
+            current page can be left via jump. If not, all pages in the
+            list will be marked as disabled options.
+        show_all_in_scope: If *True* (default), all pages in the scope 
+            will be shown, including those that cannot be jumped to.
+        label: Label to display on the jump button.
+        button_style: Style of the jump button. See 
+            :class:`.SingleChoiceButtons` for more details on this 
+            argument.
+        button_round_corners: Boolean, determining whether the button 
+            should have rounded corners.
+        debugmode: Boolean switch, telling the JumpList whether it 
+            should operate in debug mode.
+        **kwargs, toplab: Keyword arguments are passend on to the parent
+            class :class:`.SingleChoiceList`
+    
+    Notes:
+        Different from other input-type elements, the JumpList does not
+        have to be named.
+    
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo1(al.Page):
+                name = "demo2"
+
+                def on_exp_access(self):
+                    self += al.JumpList()
+
+            @exp.member
+            class Demo2(al.Page):
+                name = "demo2"
+
+    """
+
     def __init__(
         self,
         scope: str = "exp",
-        label: str = "Jump",
+        include_self: bool = False,
         check_jumpto: bool = True,
         check_jumpfrom: bool = True,
-        debugmode: bool = False,
         show_all_in_scope: bool = True,
+        label: str = "Jump",
         button_style: Union[str, list] = "btn-dark",
-        button_corners: str = "normal",
+        button_round_corners: bool = False,
+        debugmode: bool = False,
         **kwargs,
     ):
 
@@ -3880,6 +4109,7 @@ class JumpList(Row):
         btn_name = name + "_btn"
         select = SelectPageList(
             scope=scope,
+            include_self=include_self,
             name=select_name,
             check_jumpto=check_jumpto,
             check_jumpfrom=check_jumpfrom,
@@ -3889,7 +4119,7 @@ class JumpList(Row):
             (label, select_name),
             name=btn_name,
             button_style=button_style,
-            button_corners=button_corners,
+            button_round_corners=button_round_corners,
         )
         super().__init__(select, btn, **kwargs)
 
@@ -3897,94 +4127,41 @@ class JumpList(Row):
         self.debugmode = debugmode
 
     def prepare_web_widget(self):
+        """:meta private: (documented at :class:`.Element`)"""
         super().prepare_web_widget()
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
 
 
-# class ActionList(Element):
-
-#     def __init__(self, list_element, button_element):
-# self.list_element = list_element
-# self.button_element = button_element
-
-
-# class JumpList2(SelectPageList):
-# def __init__(
-#     self,
-#     scope: str = "exp",
-#     label: str = "Jump",
-#     check_jumpto: bool = True,
-#     check_jumpfrom: bool = True,
-#     debugmode: bool = False,
-#     show_all_in_scope: bool = True,
-#     button_style: Union[str, list] = "btn-dark",
-#     button_corners: str = "normal",
-#     **kwargs,
-# ):
-#     name = kwargs.get("name", "jumplist_" + uuid4().hex)
-#     select_name = name + "_select"
-#     btn_name = name + "_btn"
-#     self.btn = DynamicJumpButtons(
-#         (label, select_name),
-#         name=btn_name,
-#         button_style=button_style,
-#         button_corners=button_corners,
-#     )
-#     self.btn.should_be_shown = False
-#     self.btn.add_css(f"#choice1-{self.btn.name}-lab {{border-top-left-radius: 0; border-bottom-left-radius: 0;}}")
-#     super().__init__(
-#         scope=scope,
-#         name=select_name,
-#         # suffix="test",
-#         check_jumpto=check_jumpto,
-#         check_jumpfrom=check_jumpfrom,
-#         show_all_in_scope=show_all_in_scope,
-#         )
-
-# def _prepare_web_widget(self):
-#     super()._prepare_web_widget()
-#     self.btn._prepare_web_widget()
-#     self.suffix = self.btn.inner_html
-
-# def added_to_page(self, page):
-#     super().added_to_page(page)
-#     self.btn.added_to_page(page)
-
-# def added_to_experiment(self, exp):
-#     super().added_to_experiment(exp)
-#     self.btn.added_to_experiment(exp)
-
-
-class MultipleChoiceList(MultipleChoice):
-    element_template = jinja_env.get_template("SelectElement.html.j2")
-    type = "multiple"
-
-    def __init__(self, *choice_labels, toplab: str = None, size: int = None, **kwargs):
-        super().__init__(*choice_labels, toplab=toplab, **kwargs)
-        self.size = size
-
-    @property
-    def template_data(self):
-        d = super().template_data
-        d["size"] = self.size
-        return d
-
-    def set_data(self, d):
-        self._input = {}
-        name_map = {str(choice.value): choice.name for choice in self.choices}
-        val = d.get(self.name, None)
-        val_name = name_map[val]
-
-        for choice in self.choices:
-            if choice.name == val_name:
-                self._input[choice.name] = True
-            else:
-                self._input[choice.name] = False
-
-
 class Image(Element):
+    """
+    Displays an image.
+
+    Args:
+        path: Path to the image. Can be relative to the experiment 
+            directory, or absolute.
+        url: URL to the image.
+        **kwargs: Further keyword arguments are passed on to the parent 
+            class :class:`.Element`.
+    
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    pylogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Python_logo_and_wordmark.svg/1920px-Python_logo_and_wordmark.svg.png"
+                    
+                    self += al.Image(url=pylogo)
+    """    
+
+    # Documented at :class:`.Element`
     element_template = jinja_env.get_template("ImageElement.html.j2")
 
     def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
@@ -4002,6 +4179,12 @@ class Image(Element):
         self.src = None
 
     def added_to_experiment(self, experiment):
+        """ 
+        The image is added to the dict of static files, if a path is
+        provided.
+
+        :meta private: (documented at :class:`.Element`)
+        """
         super().added_to_experiment(experiment)
         if self.path:
             p = self.experiment.subpath(self.path)
@@ -4012,6 +4195,7 @@ class Image(Element):
 
     @property
     def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["src"] = self.src
         return d
@@ -4105,30 +4289,15 @@ class MatPlot(Element):
     """
     Displays a :class:`matplotlib.figure.Figure` object.
 
-    .. note::
-        When plotting in alfred, you need to use the Object-oriented
-        matplotlib API
-        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
-
     Args:
         fig (matplotlib.figure.Figure): The figure to display.
         align: Alignment of the figure ('left', 'right', or 'center').
             Defaults to 'center'.
-
-    Examples:
-
-        Example usage is illustrated here. Note that the ``example_plot```
-        will only be displayed if it is added to a page.
-
-        >>> import alfred3 as al
-        >>> from matplotlib.figure import Figure
-
-        >>> fig = Figure()
-        >>> ax = fig.add_subplot()
-        >>> ax.plot(range(10))
-        >>> example_plot = al.MatPlot(fig=fig, name="example))
-        >>> example_plot
-        MatPlot(name="example")
+    
+    Notes:
+        When plotting in alfred, you need to use the Object-oriented
+        matplotlib API
+        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
 
     """
 

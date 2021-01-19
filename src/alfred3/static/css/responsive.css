@@ -90,6 +90,10 @@ div.input-group-append>div>label {
     margin-bottom: .5rem;
 }
 
+.JumpList-element .choice-button-group>.btn {
+    margin-bottom: 0;
+}
+
 .element {
     display: flex;
     flex-direction: row;
