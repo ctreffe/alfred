@@ -2939,6 +2939,8 @@ class SingleChoice(ChoiceElement):
     Radio buttons for choosing a single option.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See 
+            :class:`.ChoiceElement` for details.
         **kwargs: Refer to the parent class :class:`.ChoiceElement` for 
             a documentation of other possible initialization arguments. 
         default: The *default* argument of single choice elements is an 
