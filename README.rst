@@ -29,22 +29,22 @@ must be named ``script.py``::
     exp = al.Experiment()
     exp += al.Page("Hello, world!", name="hello_world") 
 
-The script can be run by executing the following commands from a terminal 
-from within the project directory::
+To run the script, open a terminal and change the working directory to
+your experiment directory::
 
-    $ cd <path/to/project/directory>
+    $ cd path/to/experiment
+
+Next, simply execute the folling command in the terminal::
+
     $ python3 -m alfred3.run
 
-The first line changes the current working directory to the project
-directory (the directory in which your *script.py* is located). The second 
-line runs the experiment. If you have the *Google Chrome* browser 
-installed on your machine, a browser window with the experiment opens 
-automatically. Otherwise, open any webbrowser and visit 
-``http://127.0.0.1:5000/start`` to start the experiment.
+If you have *Google Chrome* installed on your machine, a browser window 
+with the experiment opens automatically. Otherwise, open any webbrowser 
+and visit ``http://127.0.0.1:5000/start`` to start the experiment.
 
 Of course, this "Hello, world" experiment does not contain much content:
 Only a single page with a heading. To learn how to add content to an 
-experiment, visit our tutorials:
+experiment, visit our tutorials: (to be filled)
 
 Citation
 --------
