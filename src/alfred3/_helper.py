@@ -145,7 +145,11 @@ def is_url(url=None):
         return False
 
 
-def check_name(name):
+def check_name(name: str):
+
+    if name in ["exp", "experiment"]:
+        raise ValueError(f"{name} cannot be chosen as a name.")
+
     if not re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
 
         raise ValueError(
