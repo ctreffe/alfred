@@ -1624,7 +1624,11 @@ class Text(Element):
 class Hline(Element):
     """A simple horizontal line."""
 
-    inner_html = "<hr>"
+    def __init__(self):
+        super().__init__()
+
+    def render_inner_html(self):
+        return "<hr>"
 
 
 class CodeBlock(Text):
