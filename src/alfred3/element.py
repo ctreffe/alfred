@@ -62,7 +62,7 @@ currently four kinds of elements:
    :header: "Element Name", "Description"
    :widths: 20, 80
 
-   :class:`.SubmittingButtons`  ,   Buttons which trigger the experiment to move forward on click
+   :class:`.SubmittingButtons`  ,   Buttons which trigger the current page to submit on click
    :class:`.JumpButtons`        ,   Buttons which trigger the experiment to jump to a specific page on click
    :class:`.DynamicJumpButtons` ,   "JumpButtons, which get their target page dynamically from another element on the same page"
    :class:`JumpList`            ,   Dropbown of pages for jumping
@@ -118,8 +118,7 @@ from ._helper import fontsize_converter
 from ._helper import is_url
 from ._helper import check_name
 
-#: jinja2.Environment, giving access to included jinja-templates.
-#: :meta private:
+#: jinja Environment giving access to included jinja-templates.
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
 
 
@@ -377,7 +376,7 @@ class Element:
     base_template: Template = jinja_env.get_template("Element.html.j2")
 
     #: The element's specific, inner template. Gets rendered by
-    #: :attr:`.inner_html`
+    #: :meth:`.render_inner_html`
     element_template: Template = None
 
     def __init__(
@@ -752,9 +751,7 @@ class Element:
 
         .. note::
             Be aware that, by default, the same template data will be
-            passed to the respective templates when rendering
-            :attr:`.inner_html` / :attr:`.element_template` and
-            :attr:`.web_widget` / :attr:`.base_template`.
+            passed to :attr:`.element_template` and :attr:`.base_template`.
 
         """
         d = {}
@@ -890,36 +887,50 @@ class Element:
     # abstract attributes start here -----------------------------------
 
     @property
-    def inner_html(self) -> str:
+    def _inner_html(self) -> str:
+        """
+        Shortcut for rendering the element template on its own with
+        the template data.
+
+        Notes:
+            This should not be used together with :attr:`.web_widget`,
+            because it will lead to :attr:`.template_data` being called
+            twice. Calling the template data twice will empty all 
+            corrective hints, causing them to not be displayed at all.
+
+        """
+        return self.render_inner_html(self.template_data)
+
+    def render_inner_html(self, template_data: dict) -> str:
         """
         Renders the element template :attr:`~.element_template`.
 
-        Hands over the data returned by :attr:`~.template_data`, renders
-        the template and returns the resulting html code.
+        Args:
+            template_data: A dictionary of data for rendering the 
+                template.
 
-        If no `element_template` is defined, `None` is returned. Usually,
-        the inner html gets placed into the higher-level
-        :attr: `.base_template`, when :attr:`Element.web_widget` gets called.
+        Notes:
+            If no `element_template` is defined, `None` is returned. Usually,
+            the inner html gets placed into the higher-level
+            :attr: `.base_template`, when :attr:`Element.web_widget` gets called.
 
         Returns:
             str: Inner html code for this element.
         """
         if self.element_template is not None:
-            return self.element_template.render(self.template_data)
+            return self.element_template.render(template_data)
         else:
             return None
-
-    def render_inner_html(self, template_data: dict) -> str:
-        return self.element_template.render(template_data)
 
     @property
     def web_widget(self) -> str:
         """
         The element's rendered html code for display on a page.
 
-        This is done by rendering the
-        :attr:`~.base_template` with the :attr:`~.template_data`
-        and injecting the :attr:`~.inner_html` into it.
+        Notes:
+            This function gets the :attr:`.template_data`, and uses it 
+            to first call :meth:`.render_inner_html`, and then render
+            the :attr:`.base_template`.
 
         Returns:
             str: The full html code for this element.
@@ -1073,9 +1084,7 @@ class Row(Element):
             This switch exists, because some elements might default to
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
-        name, showif, height, **kwargs: Passed on to the base class
-            :class:`.Element`
-
+        **kwargs: Passed on to the base class :class:`.Element`
 
     Notes:
 
@@ -1108,12 +1117,38 @@ class Row(Element):
                     el2 = al.TextEntry(toplab="lab", name="example")
 
                     self += al.Row(el1, el2)
+        
+        The arrangement will look like this::
+
+            |======================|=====================|
+            |   el1                |  el2                |
+            |======================|=====================|
+        
+        An example with customized widths, where we redefine the 
+        "sm" breakpoint::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    el1 = al.Text("text")
+                    el2 = al.TextEntry(toplab="lab", name="example")
+
+                    row = al.Row(el1, el2)
+                    row.layout.width_sm = [2, 10]
+
+                    self += row
 
         The arrangement will look like this::
 
-            |=========|========|
-            |   el1   |  el2   |
-            |=========|========|
+            |===========|===============================|
+            |   el1     |  el2                          |
+            |===========|===============================|
+
 
     """
 
@@ -1148,7 +1183,7 @@ class Row(Element):
         self.elements_full_width: bool = elements_full_width
 
     def added_to_page(self, page):
-        # docstring inherited
+        """:meta private: (documented at :class:`.Element`)"""
         super().added_to_page(page)
 
         for element in self.elements:
@@ -1161,7 +1196,7 @@ class Row(Element):
                 element.width = "full"
 
     def _prepare_web_widget(self):
-        # docstring inherited
+        """:meta private: (documented at :class:`.Element`)"""
         for element in self.elements:
             element.prepare_web_widget()
 
@@ -1181,7 +1216,7 @@ class Row(Element):
 
     @property
     def template_data(self):
-        # docstring inherited
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["columns"] = self._cols
         d["name"] = self.name
@@ -1215,8 +1250,9 @@ class Stack(Row):
                     el1 = al.Text("text")
                     el2 = al.TextEntry(toplab="lab", name="example")
                     el3 = al.Text("long text")
-
-                    self += al.Row(al.Stack(el1, el2), el3)
+                    
+                    stack = al.Stack(el1, el2)
+                    self += al.Row(stack, el3)
 
         The arrangement will look like this::
 
@@ -1241,9 +1277,6 @@ class VerticalSpace(Element):
     Args:
         space: Desired space in any unit that is understood by a CSS
             margin (e.g. em, px, cm). Include the unit (e.g. '1em').
-
-    Notes:
-        CSS-class: vertical-space-element
 
     Examples:
 
@@ -1282,6 +1315,15 @@ class Style(Element):
     CSS styling can be used to change the appearance of page or
     individual elements.
 
+    Args:
+        code: CSS code.
+        url: Url to CSS code.
+        path: Path to a .css file.
+        priority: Controls the order in which CSS files are placed on a
+            page. Lower numbers are included first. Can be useful, if
+            you have trouble with overriding rules. In everyday use, 
+            it's fine to stick with the default.
+
     Notes:
         A style is added to a specific page, and thus only affects the
         layout of that page. To change the appearance of the whole
@@ -1297,8 +1339,37 @@ class Style(Element):
         * The method :meth:`.Element.add_css` can be used to add CSS
           to a specific element.
 
-    Todo:
-        * Insert reference
+    Examples:
+        Minimal example, turning the color of a specific text element 
+        red. The element is selected by its id::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    self += al.Text("Element 1", name="test_el")
+                    self += al.Style(code="#test_el {color: red;}")
+        
+        Minimal example, turning the color of all text elements on a
+        specific page red. The elements are selected by their class::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    self += al.Style(code=".Text-element {color: red;}")
+                    
+                    self += al.Text("Element 1", name="test_el1")
+                    self += al.Text("Element 2", name="test_el2")
+                    
 
     """
 
@@ -1343,11 +1414,32 @@ class HideNavigation(Style):
     Removes the forward/backward/finish navigation buttons from a page.
 
     See Also:
+
+        * With :class:`.NoNavigationPage`, you can achieve the same 
+          result. As a rule of thump, use the HideNavigation element,
+          if you want to affect the display of navigation elements
+          dynamically, and the NoNavigationPage, if the page in question
+          will always be displayed with navigation elements.
+
         * Using :class:`.JumpButtons` and :class:`.JumpList`, you can add
           custom navigation elements to a page.
 
         * By defining the :meth:`.Page.custom_move` method on a page,
           you can implement highly customized movement behavior.
+    
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.HideNavigation()
+
     """
 
     def __init__(self):
@@ -1363,15 +1455,49 @@ class JavaScript(Element):
     Javascript can be used to implement dynamic behavior on the client
     side.
 
+    Args:
+        code: Javascript code.
+        url: Url to Javascript code.
+        path: Path to a .js file.
+        priority: Controls the order in which Javascript code is placed 
+            on a page. Lower numbers are included first. Can be useful, 
+            if you have trouble with overriding code. In everyday use, 
+            it's fine to stick with the default.
+    
+    Notes:
+        You can use the jquery API (version 3.5.1 as of 2021-01-20).
+
     See Also:
         * See :attr:`.Element.css_class_element` and
           :attr:`.Element.css_class_container` for information on
           element CSS classes and IDs.
         * The method :meth:`.Element.add_js` can be used to add JS
           to a specific element.
+    
+    Examples:
 
-    Todo:
-        * Insert reference
+            In this example, we use JavaScript to create a text element
+            that will lead to automatic submission of the current page,
+            when a change to its input is detected::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class HelloWorld(al.Page):
+                    name = "hello_world"
+
+                    def on_exp_access(self):
+                        
+                        js_code = '''
+                        $( '#test_el' ).on('change', function() {
+                            $( '#form' ).submit();
+                        };)
+                        '''
+                        
+                        self += al.JavaScript(code=js_code)
+                        self += al.Text("Element 1", name="test_el")
+
     """
 
     web_widget = None
@@ -1418,6 +1544,20 @@ class WebExitEnabler(JavaScript):
     running experiment. You can turn off this behavior by adding this
     element to a page.
 
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.WebExitEnabler()
+              
+
     """
 
     def __init__(self):
@@ -1438,8 +1578,6 @@ class Html(Element):
             :class:`Element`.
 
     Notes:
-        * CSS-class: html-element
-
         This works very similar to :class:`.Text`. The most notable
         difference is that the *Text* element expects markdown, and
         therefore generally renders input text in a ``<p>`` tag. This
@@ -1459,7 +1597,7 @@ class Html(Element):
                 name = "hello_world"
 
                 def on_exp_access(self):
-                    self += al.Html("<div id='mydiv'>Text in div</div>")
+                    self += al.Html(html="<div id='mydiv'>Text in div</div>")
 
     """
 
@@ -1503,10 +1641,11 @@ class Html(Element):
 
 
 class Text(Element):
-    """Displays text.
+    """
+    Displays text.
 
     You can use `GitHub-flavored Markdown`_ syntax and common
-    `emoji shortcodes`_ . Additionally, you can use raw html for
+    `emoji shortcodes`_ . Additionally, you can use html for
     advanced formatting.
 
     Args:
@@ -1521,9 +1660,6 @@ class Text(Element):
             be converted to unicode (i.e. emojis will be displayed).
         **kwargs: Keyword arguments passed to the parent class
             :class:`Element`.
-
-    Notes:
-        CSS-class: text-element
 
     Examples:
         A simple text element, including a 😊 (``:blush:``) emoji added
@@ -1884,12 +2020,36 @@ class MatPlot(Element):
 
 
 class Hline(Element):
-    """A simple horizontal line."""
+    """
+    A simple horizontal line.
+    
+    Examples:
+        Two text elements, separated by a horizontal line::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.Text(text="Text 1")
+                    self += al.Hline()
+                    self += al.Text(text="Text 2")
+              
+    """
 
     def __init__(self):
         super().__init__()
 
-    def render_inner_html(self):
+    def render_inner_html(self, template_data: dict) -> str:
+        """
+        A redefined render_inner_html method still needs to accept the
+        *template_data* argument, even if it does not use it.
+
+        :meta private: (documented at :class:`.Element`)
+        """
         return "<hr>"
 
 
@@ -1901,14 +2061,26 @@ class CodeBlock(Text):
         text: The code to be displayed.
         path: path: Filepath to a textfile (relative to the experiment
             directory) from which to read code.
-        lang: The programming language to highlight [#lang]_ . Defaults
+        lang: The programming language to highlight. Defaults
             to 'auto', which tries to auto-detect the right language.
+            See https://prismjs.com/index.html#supported-languages
+            for an overview of possible language codes. Note that
+            we may currently not support all possible languages.
         **kwargs: Keyword arguments are passed on to the parent elements
             :class:`.Text` and :class:`.Element`
 
-    .. [#lang] See https://prismjs.com/index.html#supported-languages
-        for an overview of possible language codes. Note though that
-        we may not support all possible languages.
+    Examples:
+        ::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.CodeBlock(text="console.log('test');", lang="javascript")
 
     """
 
@@ -1977,6 +2149,10 @@ class LabelledElement(Element):
             horizontal space between leftlab, main element widget and
             rightlab. Uses Bootstraps 12-column-grid, i.e. you can
             choose integers between 1 and 12.
+
+    Notes:
+        The labelled element is not supposed to be included on a page on
+        its own - it is meant for easy derivation of new elements.
 
     """
 
@@ -2584,12 +2760,12 @@ class InputElement(LabelledElement):
         """
         Union[str, Element]: A string or element, serving as prefix.
 
-        If the prefix is an element, the getter returns its
-        :attr:`.Element.inner_html`. If it is a string, the getter
+        If the prefix is an element, the getter returns only its
+        inner html. If it is a string, the getter
         returns the text, wrapped in an appropriate html container.
         """
         try:
-            return self._prefix.inner_html
+            return self._prefix._inner_html
         except AttributeError:
             return self._render_input_group_text(self._prefix)
 
@@ -2598,12 +2774,12 @@ class InputElement(LabelledElement):
         """
         Union[str, Element]: A string or element, serving as suffix.
 
-        If the suffix is an element, the getter returns its
-        :attr:`.Element.inner_html`. If it is a string, the getter
+        If the suffix is an element, the getter returns only its
+        inner html. If it is a string, the getter
         returns the text, wrapped in an appropriate html container.
         """
         try:
-            return self._suffix.inner_html
+            return self._suffix._inner_html
         except AttributeError:
             return self._render_input_group_text(self._suffix)
 
@@ -2702,9 +2878,9 @@ class InputElement(LabelledElement):
                 pass
 
 
-class Data(InputElement):
+class Value(InputElement):
     """
-    Data elements can be used to save data without any display.
+    Value elements can be used to save data without any display.
 
     Args:
         value: The value that you want to save.
@@ -2724,7 +2900,7 @@ class Data(InputElement):
                 name = "demo1"
 
                 def on_exp_access(self):
-                    self += al.Data(value="test", name="myvalue")
+                    self += al.Value("test", name="myvalue")
 
     """
 
@@ -2737,9 +2913,8 @@ class Data(InputElement):
         self.should_be_shown = False
 
 
-class Value(Data):
-    """Alias for :class:`.Data`."""
-
+class Data(Value):
+    """Alias for :class:`.Value`."""
     pass
 
 
@@ -2749,8 +2924,21 @@ class TextEntry(InputElement):
 
     Args:
         placeholder: Placeholder text, displayed inside the input field.
-        **kwargs, toplab: Further keyword arguments that are passed on to the
+        **kwargs: Further keyword arguments that are passed on to the
             parent class :class:`.InputElement`.
+
+    Examples:
+        ::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.TextEntry(toplab="Enter here", name="el1")
 
     """
 
@@ -2795,6 +2983,19 @@ class TextArea(TextEntry):
         nrows: Initial height of the text area in number of rows.
         **kwargs, toplab: Further keyword arguments that are passed on to the
             parent class :class:`.TextEntry`.
+
+    Examples:
+        ::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.TextArea(toplab="Enter here", name="el1")
 
     """
 
