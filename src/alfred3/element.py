@@ -121,7 +121,6 @@ from ._helper import check_name
 #: jinja2.Environment, giving access to included jinja-templates.
 #: :meta private:
 jinja_env = Environment(loader=PackageLoader(__name__, "templates/elements"))
-"""jinja2.Environment, giving access to included jinja-templates."""
 
 
 class RowLayout:
@@ -909,7 +908,7 @@ class Element:
             return self.element_template.render(self.template_data)
         else:
             return None
-    
+
     def render_inner_html(self, template_data: dict) -> str:
         return self.element_template.render(template_data)
 
@@ -1079,7 +1078,7 @@ class Row(Element):
 
 
     Notes:
-        
+
         In Bootstrap's grid, the horizontal space is divided into 12
         equally wide units. You can define the horizontal width of a
         column by assigning it a number of those units. A column of
@@ -1621,6 +1620,269 @@ class Text(Element):
         return d
 
 
+class Image(Element):
+    """
+    Displays an image.
+
+    Args:
+        path: Path to the image. Can be relative to the experiment
+            directory, or absolute.
+        url: URL to the image.
+        **kwargs: Further keyword arguments are passed on to the parent
+            class :class:`.Element`.
+
+    Notes:
+        You can specify *either* a path, or a url, but not both.
+
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    pylogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Python_logo_and_wordmark.svg/1920px-Python_logo_and_wordmark.svg.png"
+
+                    self += al.Image(url=pylogo)
+
+    """
+
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("ImageElement.html.j2")
+
+    def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
+        super().__init__(**kwargs)
+
+        self.path = path
+        if url is not None and not is_url(url):
+            raise ValueError("Supplied value is not a valid url.")
+        else:
+            self.url = url
+
+        if path and url:
+            raise ValueError("You can only specify one of 'path' and 'url'.")
+
+        self.src = None
+
+    def added_to_experiment(self, experiment):
+        """
+        The image is added to the dict of static files, if a path is
+        provided.
+
+        :meta private: (documented at :class:`.Element`)
+        """
+        super().added_to_experiment(experiment)
+        if self.path:
+            p = self.experiment.subpath(self.path)
+            url = self.experiment.ui.add_static_file(p)
+            self.src = url
+        else:
+            self.src = self.url
+
+    @property
+    def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["src"] = self.src
+        return d
+
+
+class Audio(Image):
+    """
+    Allows playing audio files.
+
+    Args:
+        path: Path to the audio file. Can be relative to the experiment
+            directory, or absolute.
+        url: URL to the audio file.
+        controls: If *True*, alfred will display controls like a pause/
+            play button for participants to use (default: *True*).
+        autoplay: If *True*, the audio file will start to play
+            automatically (default: *False*).
+        loop: If *True*, the audio file will start playing from the
+            beginning again, once the end is reached (default: *False*).
+        **kwargs: Further keyword arguments are passed on to the parent
+            class :class:`.Element`.
+
+    Notes:
+        You can specify *either* a path, or a url, but not both.
+
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    demo_audio = "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_1MG.mp3"
+
+                    self += al.Audio(url=demo_audio)
+
+    """
+
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("AudioElement.html.j2")
+
+    def __init__(
+        self,
+        path: Union[str, Path] = None,
+        url: str = None,
+        controls: bool = True,
+        autoplay: bool = False,
+        loop: bool = False,
+        align: str = "center",
+        **kwargs,
+    ):
+        super().__init__(path=path, url=url, align=align, **kwargs)
+        self.controls = controls
+        self.autoplay = autoplay
+        self.loop = loop
+
+    @property
+    def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["controls"] = self.controls
+        d["autoplay"] = self.autoplay
+        d["loop"] = self.loop
+
+        return d
+
+
+class Video(Audio):
+    """
+    Displays a video on the page.
+
+    Args:
+        path: Path to the video (relative to the experiment)
+        url: Url to the video
+        allow_fullscreen: Boolean, indicating whether users can enable
+            fullscreen mode.
+        video_height: Video height in absolute pixels (without unit).
+            Defaults to "auto".
+        video_width: Video width in absolute pixels (without unit).
+            Defaults to "100%". It is recommended to use leave this
+            parameter at the default value and use the general element
+            parameter *width* for setting the width.
+        **kwargs: Further keyword arguments are passed on to the parent
+            class :class:`.Audio`.
+
+    Notes:
+        You can specify *either* a path, or a url, but not both.
+
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    demo_video = "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4"
+
+                    self += al.Video(url=demo_video)
+
+    """
+
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("VideoElement.html.j2")
+
+    def __init__(
+        self,
+        path: Union[str, Path] = None,
+        url: str = None,
+        allow_fullscreen: bool = True,
+        video_height: str = "auto",
+        video_width: str = "100%",
+        **kwargs,
+    ):
+        super().__init__(path=path, url=url, **kwargs)
+        self.video_height = video_height
+        self.video_width = video_width
+        self.allow_fullscreen = allow_fullscreen
+
+    @property
+    def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["video_height"] = self.video_height
+        d["video_width"] = self.video_width
+        d["allow_fullscreen"] = self.allow_fullscreen
+
+        return d
+
+
+class MatPlot(Element):
+    """
+    Displays a :class:`matplotlib.figure.Figure` object.
+
+    Args:
+        fig (matplotlib.figure.Figure): The figure to display.
+        **kwargs: Further keyword arguments are passed on to the parent
+            class :class:`.Element`.
+
+    Notes:
+        When plotting in alfred, you need to use the Object-oriented
+        matplotlib API
+        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
+
+    Examples:
+        Minimal example::
+
+            from matplotlib.figure import Figure
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+
+                    # build an example plot
+                    fig = Figure()
+                    ax = fig.add_subplot()
+                    ax.plot(range(10))
+
+                    # add plot to page
+                    self += al.MatPlot(fig=fig)
+
+    """
+
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("ImageElement.html.j2")
+
+    def __init__(self, fig, align: str = "center", **kwargs):
+        super().__init__(align=align, **kwargs)
+        self.fig = fig
+        self.src = None
+
+    def prepare_web_widget(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        out = io.BytesIO()
+        self.fig.savefig(out, format="svg")
+        out.seek(0)
+        self.src = self.exp.ui.add_dynamic_file(out, content_type="image/svg+xml")
+
+    @property
+    def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["src"] = self.src
+        return d
+
+
 class Hline(Element):
     """A simple horizontal line."""
 
@@ -2099,9 +2361,9 @@ class InputElement(LabelledElement):
         force_input: If `True`, users can only progress to the next page
             if they enter data into this field. Note that a
             :class:`.NoValidationSection` or similar sections might
-            overrule this setting. 
-            
-            A general, experiment-wide setting for force_input can be 
+            overrule this setting.
+
+            A general, experiment-wide setting for force_input can be
             placed in the config.conf (section "general"). That setting
             is used by default and can be overruled here for individual
             elements.
@@ -2449,7 +2711,7 @@ class Data(InputElement):
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
             final data set.
-    
+
     Examples:
 
         Minimal example::
@@ -2463,13 +2725,13 @@ class Data(InputElement):
 
                 def on_exp_access(self):
                     self += al.Data(value="test", name="myvalue")
-        
+
     """
 
     def __init__(self, value: Union[str, int, float], name: str):
         """Constructor method."""
         super().__init__(name=name)
-        
+
         #: The value that you want to save.
         self.value: Union[str, int, float] = value
         self.should_be_shown = False
@@ -2477,6 +2739,7 @@ class Data(InputElement):
 
 class Value(Data):
     """Alias for :class:`.Data`."""
+
     pass
 
 
@@ -2532,8 +2795,9 @@ class TextArea(TextEntry):
         nrows: Initial height of the text area in number of rows.
         **kwargs, toplab: Further keyword arguments that are passed on to the
             parent class :class:`.TextEntry`.
-    
+
     """
+
     element_template = jinja_env.get_template("TextAreaElement.html.j2")
 
     def __init__(self, toplab: str = None, nrows: int = 5, **kwargs):
@@ -2555,7 +2819,7 @@ class RegEntry(TextEntry):
 
     Args:
         pattern: Regular expression string to match with user input. We
-            recommend that you use raw literal strings prefaced by 'r' 
+            recommend that you use raw literal strings prefaced by 'r'
             (see Examples). That removes the necessity for escaping some
             characters twice and thus makes the regular expression
             easier to read and write.
@@ -2565,7 +2829,7 @@ class RegEntry(TextEntry):
             parent class :class:`.TextEntry`.
 
     Examples:
-        
+
         Example for a RegEntry element that will match any input:
 
             >>> import alfred3 as al
@@ -2581,20 +2845,20 @@ class RegEntry(TextEntry):
         #: Compiled regular expression pattern to be matched on
         #: participant input to this element
         self.pattern: re.Pattern = re.compile(pattern)
-        self._match_hint = match_hint # documented in getter property
+        self._match_hint = match_hint  # documented in getter property
 
     def validate_data(self):
         """:meta private: (documented at :class:`.InputElement`)"""
         if not self.should_be_shown:
             return True
-        
+
         elif not self.force_input and self.input == "":
             return True
-        
+
         elif not self.input:
             self.hint_manager.post_message(self.no_input_hint)
             return False
-        
+
         elif not self.pattern.fullmatch(self.input):
             self.hint_manager.post_message(self.match_hint)
             return False
@@ -2609,7 +2873,7 @@ class RegEntry(TextEntry):
             return self._match_hint
         else:
             return self.default_match_hint
-    
+
     @property
     def default_match_hint(self) -> str:
         """
@@ -2617,7 +2881,7 @@ class RegEntry(TextEntry):
         """
         name = f"match_{type(self).__name__}"
         return self.experiment.config.get("hints", name)
-    
+
     @property
     def codebook_data(self) -> dict:
         """:meta private: (documented at :class:`.InputElement`)"""
@@ -2634,15 +2898,15 @@ class NumberEntry(TextEntry):
         decimals: Accepted number of decimals (0 as default).
         min: Minimum accepted entry value.
         max: Maximum accepted entry value.
-        decimal_signs: Tuple of accepted decimal signs. Defaults to 
+        decimal_signs: Tuple of accepted decimal signs. Defaults to
             ``(",", ".")``, i.e. by default, both a comma and a dot are
             interpreted as decimal signs.
-        match_hint: Specialized match hint for this element. You can 
+        match_hint: Specialized match hint for this element. You can
             use the placeholders ``${min}``, ``${max}``, ``${ndecimals}``,
-            and ``${decimal_signs}``. To customize the match hint for 
+            and ``${decimal_signs}``. To customize the match hint for
             all NumberEntry elements, change the respective setting
             in the config.conf.
-        **kwargs, toplab: Further keyword arguments that are passed on 
+        **kwargs, toplab: Further keyword arguments that are passed on
             to the parent class :class:`TextEntry`.
 
     Examples:
@@ -2666,47 +2930,47 @@ class NumberEntry(TextEntry):
     ):
         super().__init__(toplab=toplab, **kwargs)
 
-        self.ndecimals: int = ndecimals # documented in getter property
-        self.decimal_signs: Tuple[str] = decimal_signs # documented in getter property
-        self.min = min # documented in getter property
-        self.max = max # documented in getter property
-        self._match_hint = match_hint # documented in getter property
-    
+        self.ndecimals: int = ndecimals  # documented in getter property
+        self.decimal_signs: Tuple[str] = decimal_signs  # documented in getter property
+        self.min = min  # documented in getter property
+        self.max = max  # documented in getter property
+        self._match_hint = match_hint  # documented in getter property
+
     @property
     def ndecimals(self) -> int:
         """int: Number of allowed decimal places."""
         return self._ndecimals
-    
+
     @ndecimals.setter
     def ndecimals(self, value: int):
         if not isinstance(value, int) or not value >= 0:
             raise ValueError("Number of decimals must be an integer >= 0.")
         else:
             self._ndecimals = value
-    
+
     @property
     def decimal_signs(self) -> Union[str, tuple]:
         """Union[str, tuple]: Interpreted decimal signs."""
         return self._decimal_signs
-    
+
     @decimal_signs.setter
     def decimal_signs(self, value: Union[str, tuple]):
         msg = "Decimals signs must be a string or a tuple of strings."
         if not isinstance(value, (str, tuple)):
             raise ValueError(msg)
-        
+
         if isinstance(value, tuple):
             for val in value:
                 if not isinstance(val, str):
                     raise ValueError(msg)
-        
+
         self._decimal_signs = value
 
     @property
     def min(self) -> Union[int, float]:
         """Union[int, float]: Minimum value that is accepted by this element."""
         return self._min
-    
+
     @min.setter
     def min(self, value: Union[int, float]):
         if value is None:
@@ -2715,12 +2979,12 @@ class NumberEntry(TextEntry):
             raise ValueError("Minimum must be a number.")
         else:
             self._min = value
-    
+
     @property
     def max(self) -> Union[int, float]:
         """Union[int, float]: Maximum value that is accepted by this element."""
         return self._max
-    
+
     @max.setter
     def max(self, value: Union[int, float]):
         if value is None:
@@ -2729,7 +2993,7 @@ class NumberEntry(TextEntry):
             raise ValueError("Maximum must be a number.")
         else:
             self._max = value
-    
+
     @property
     def match_hint(self):
         """
@@ -2740,7 +3004,7 @@ class NumberEntry(TextEntry):
             hint = self._match_hint
         else:
             hint = self.default_match_hint
-        
+
         signs = " ".join([f"<code>{sign}</code>" for sign in self.decimal_signs])
 
         hint = hint.replace("${min}", str(self.min))
@@ -2749,13 +3013,13 @@ class NumberEntry(TextEntry):
         hint = hint.replace("${ndecimals}", str(self.ndecimals))
 
         return hint
-    
+
     @property
     def default_match_hint(self) -> str:
         """
         str: Default match hint for this element, extracted from config.conf
 
-        This property combines all match hints related to the 
+        This property combines all match hints related to the
         NumberEntry element and returns them as a single string.
         """
         name = f"{type(self).__name__}"
@@ -2766,22 +3030,22 @@ class NumberEntry(TextEntry):
 
         if self.min is not None:
             hints.append(c.get("hints", "min_" + name))
-        
+
         if self.max is not None:
             hints.append(c.get("hints", "max_" + name))
-        
+
         hints.append(c.get("hints", "ndecimals_" + name))
-        
+
         if self.ndecimals > 0 and self.decimal_signs is not None:
             hints.append(c.get("hints", "decimal_signs_" + name))
-        
+
         return " ".join(hints)
-    
+
     @property
     def input(self):
         """:meta private: (documented at :class:`.InputElement`)"""
         return self._input
-    
+
     @input.setter
     def input(self, value: str):
         value = str(value)
@@ -2793,14 +3057,14 @@ class NumberEntry(TextEntry):
         """:meta private: (documented at :class:`.InputElement`)"""
         if not self.should_be_shown:
             return True
-        
+
         if not self.force_input and self.input == "":
             return True
-        
+
         elif not self.input:
             self.hint_manager.post_message(self.no_input_hint)
             return False
-        
+
         try:
             in_number = float(self.input)
         except ValueError:
@@ -2812,17 +3076,16 @@ class NumberEntry(TextEntry):
         if self.min and in_number < self.min:
             self.hint_manager.post_message(self.match_hint)
             validate = False
-        
+
         elif self.max and in_number > self.max:
             self.hint_manager.post_message(self.match_hint)
             validate = False
-        
+
         elif len(decimals) > self.ndecimals:
             self.hint_manager.post_message(self.match_hint)
             validate = False
         return validate
-        
-    
+
     @property
     def codebook_data(self):
         """:meta private: (documented at :class:`.InputElement`)"""
@@ -2834,6 +3097,7 @@ class NumberEntry(TextEntry):
         data["max"] = self.max
 
         return data
+
 
 @dataclass
 class Choice:
@@ -2856,7 +3120,7 @@ class ChoiceElement(InputElement, ABC):
 
     Args:
         *choice_labels: Variable number of strings or suitable elements
-            to be used as choice labels. The number of labels determines 
+            to be used as choice labels. The number of labels determines
             the number of choices. We don't enforce harsh restrictions
             on the types of elements that can be used as choice labels,
             so it is up to you to make sensible choices. A common case
@@ -2864,13 +3128,14 @@ class ChoiceElement(InputElement, ABC):
         vertical: Boolean switch, indicating whether the choices should
             be listed vertically. Defaults to *False*, i.e. horizontal
             display.
-        **kwargs, align: Further keyword arguments that are passed on to 
+        **kwargs, align: Further keyword arguments that are passed on to
             the parent class :class:`.InputElement`.
-    
+
     """
+
     # Documented at :class:`.Element`
     element_template = jinja_env.get_template("ChoiceElement.html.j2")
-    
+
     #: Choice type (e.g. "radio" for radio inputs and "checkbox")
     #: for multiple choice inputs
     type: str = None
@@ -2890,7 +3155,7 @@ class ChoiceElement(InputElement, ABC):
 
         self.choice_labels = choice_labels
         self.vertical = vertical
-        
+
         #: List of choices that belong to this element.
         self.choices: List[Choice] = None
 
@@ -2898,7 +3163,7 @@ class ChoiceElement(InputElement, ABC):
         """
         If choice labels are element instances, they are added to the
         page to enable their full functionality.
-        
+
         :meta private: (documented at :class:`.InputElement`)
         """
         super().added_to_page(page)
@@ -2939,12 +3204,12 @@ class SingleChoice(ChoiceElement):
     Radio buttons for choosing a single option.
 
     Args:
-        *choice_labels: Variable numbers of choice labels. See 
+        *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        **kwargs: Refer to the parent class :class:`.ChoiceElement` for 
-            a documentation of other possible initialization arguments. 
-        default: The *default* argument of single choice elements is an 
-            integer, indicating which choice should be selected by 
+        **kwargs: Refer to the parent class :class:`.ChoiceElement` for
+            a documentation of other possible initialization arguments.
+        default: The *default* argument of single choice elements is an
+            integer, indicating which choice should be selected by
             default. Counting of choices starts at 1.
 
     Examples:
@@ -2952,11 +3217,11 @@ class SingleChoice(ChoiceElement):
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-                
+
                 def on_exp_access(self):
                     self += al.SingleChoice("Yes", "No", name="c1")
 
@@ -3008,13 +3273,269 @@ class SingleChoice(ChoiceElement):
         return d
 
 
+class MultipleChoice(ChoiceElement):
+    """
+    Checkboxes for choosing multiple options.
+
+    Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
+        min, max: Minimum (maximum) number of choices that need to be
+            selected, if any are selected (does not imply
+            *force_input=True*).
+        select_hint: Hint to be displayed, if the requirement of
+            minimum or maximum number of selected fields is not reached.
+            Defaults to the experiment-wide value specified in
+            config.conf.
+        default: Can be a single integer, or a list of integers which
+            indicate the choices that should be selected by default.
+            Counting starts at 1.
+        **kwargs: Further keyword arguments are passed on to the parent
+            class :class:`.ChoiceElement`.
+
+    Examples:
+        A multiple choice element with three options::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo_page"
+
+                def on_exp_access(self):
+                    self += al.MultipleChoice("Yes", "No", "Maybe", name="m1")
+
+    """
+
+    type = "checkbox"
+
+    def __init__(
+        self,
+        *choice_labels,
+        min: int = None,
+        max: int = None,
+        select_hint: str = None,
+        default: Union[int, List[int]] = None,
+        **kwargs,
+    ):
+        super().__init__(*choice_labels, **kwargs)
+
+        self._input = {}
+
+        #: See documentation of initialization arguments
+        self.min: int = min if min is not None else 0
+
+        #: See documentation of initialization arguments
+        self.max: int = max if max is not None else len(self.choice_labels)
+
+        self._select_hint = select_hint  # documented in getter method
+
+        if isinstance(default, int):
+            self.default = [default]
+        elif default is not None and not isinstance(default, list):
+            raise ValueError(
+                "Default for MultipleChoice must be a list of integers, indicating the default choices."
+            )
+        else:
+            self.default = default
+
+    @property
+    def input(self) -> dict:
+        """
+        Dict[str, bool]: Dictionary of subject inputs.
+
+        Contains the choice labels as keys and their selection status
+        (*True* for selected choices, *False* otherwise) as values.
+        """
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
+
+    @property
+    def select_hint(self) -> str:
+        """
+        str: Hint for participants. Displayed, if the number of selected
+        choices does not fulfill the requirements of the *min* and *max*
+        number.
+        """
+        if self._select_hint:
+            return self._select_hint
+        else:
+            hint = string.Template(self.experiment.config.get("hints", "select_MultipleChoice"))
+            return hint.substitute(min=self.min, max=self.max)
+
+    def validate_data(self) -> bool:
+        """:meta private: (documented at :class:`.InputElement`)"""
+        if self.force_input and len(self.input):
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+        elif not (self.min <= sum(list(self.input.values())) <= self.max):
+            return False
+        else:
+            return True
+
+    @property
+    def data(self) -> dict:
+        """
+        Data dictionary with transformed participant input.
+
+        Input is turned into a single value which fits the structure of
+        other input element data dictionaries.
+
+        :meta private: (documented at :class:`.InputElement`)
+        """
+        data = {}
+        vals = [str(i) for i, (name, checked) in enumerate(self.input.items()) if checked]
+        data["value"] = ",".join(vals)
+        data.update(self.codebook_data)
+        return {self.name: data}
+
+    def set_data(self, d):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        for choice in self.choices:
+            value = d.get(choice.name, None)
+            if value:
+                self._input[choice.name] = True
+            else:
+                self._input[choice.name] = False
+
+    def define_choices(self):
+        """:meta private: (documented at :class:`.ChoiceElement`)"""
+        choices = []
+        for i, label in enumerate(self.choice_labels, start=1):
+            choice = Choice()
+
+            if isinstance(label, Element):
+                choice.label = label.web_widget
+            else:
+                if self.emojize:
+                    label = emojize(str(label), use_aliases=True)
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+            choice.type = "checkbox"
+            choice.value = i
+            choice.id = f"{self.name}_choice{i}"
+            choice.name = choice.id
+            choice.label_id = f"{choice.id}-lab"
+            choice.css_class = f"choice-button choice-button-{self.name}"
+
+            if self.debug_enabled:
+                choice.checked = True if i <= self.max else False
+            elif self.input:
+                choice.checked = True if self.input[choice.name] is True else False
+            elif self.default:
+                choice.checked = True if i in self.default else False
+
+            choices.append(choice)
+        return choices
+
+
+class SingleChoiceList(SingleChoice):
+    """
+    A dropdown list, allowing selection of one option.
+
+    The same documentation applies, as for :class:`.SingleChoice`.
+
+    Notes:
+        The SingleChoiceList's default value defaults to "1" due to its
+        design. A typical way to remove meaning from this default is
+        to make the fist choice a no-choice option (see examples).
+
+    Examples:
+        A single choice list with a no-choice option as first option::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceList(
+                        "-no selection-", "choi1", "choi2", "choi3",
+                         name="sel1"
+                         )
+
+    """
+
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+
+    # Documented at :class:`.SingleChoice`
+    type = "select_one"
+
+    def __init__(self, *choice_labels, toplab: str = "", default: int = 1, **kwargs):
+        super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
+
+
+class MultipleChoiceList(MultipleChoice):
+    """
+    A :class:`.MultipleChoice` element, displayed as list.
+
+    Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
+        size: The vertical height of the list. The unit is the number
+            of choices to be displayed without scrolling. Note that some
+            browsers do not adhere to this unit exactly.
+        **kwargs: Further keyword arguments are passed on to
+            the parent class :`.MultipleChoice`.
+
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
+
+    """
+
+    # Documented at :class:`.Element`
+    element_template = jinja_env.get_template("SelectElement.html.j2")
+
+    # Documented at :class:`.SingleChoice`
+    type = "multiple"
+
+    def __init__(self, *choice_labels, size: int = None, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
+        self.size = size
+
+    @property
+    def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
+        d = super().template_data
+        d["size"] = self.size
+        return d
+
+    def set_data(self, d):
+        """:meta private: (documented at :class:`.InputElement`)"""
+        name_map = {str(choice.value): choice.name for choice in self.choices}
+        val = d.get(self.name, None)
+        val_name = name_map[val]
+
+        for choice in self.choices:
+            if choice.name == val_name:
+                self.input[choice.name] = True
+            else:
+                self.input[choice.name] = False
+
+
 class SingleChoiceButtons(SingleChoice):
     """
-    A prettier :class:`.SingleChoice` element with buttons instead of 
+    A prettier :class:`.SingleChoice` element with buttons instead of
     radio inputs.
 
     Args:
-        *choice_labels: Variable numbers of choice labels. See 
+        *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
 
         button_width: Can be used to manually define the width of
@@ -3036,29 +3557,29 @@ class SingleChoiceButtons(SingleChoice):
             is shorter than the list of labels, the last style
             will be repeated for remaining buttons. Advanced user can
             supply their own CSS classes for button-styling.
-        
+
         button_round_corners: A boolean switch to toggle whether buttons
-            should be displayed with  rounded corners (*True*). Defaults 
-            to *True*. 
-        
-        **kwargs: Further keyword arguments that are passed on to 
+            should be displayed with  rounded corners (*True*). Defaults
+            to *True*.
+
+        **kwargs: Further keyword arguments that are passed on to
             the parent class :class:`.ChoiceElement`.
-    
+
     Notes:
-        
+
         - The *align* parameter does not affect the alignment of choice
           labels.
-    
+
     Examples:
         A single choice button element with three choices::
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-                
+
                 def on_exp_access(self):
                     self += al.SingleChoiceButtons("Yes", "No", "maybe", name="b1")
 
@@ -3066,14 +3587,14 @@ class SingleChoiceButtons(SingleChoice):
 
     element_template = jinja_env.get_template("ChoiceButtons.html.j2")
 
-    #: A boolean switch to toggle whether buttons should be layoutet as 
+    #: A boolean switch to toggle whether buttons should be layoutet as
     #: a connected toolbar (*True*), or as separate neighbouring buttons
     #: (*False*, default).
     button_toolbar: bool = False
-    
+
     #: CSS class for the button group
     button_group_class: str = "choice-button-group"
-    
+
     def __init__(
         self,
         *choice_labels,
@@ -3230,203 +3751,44 @@ class SingleChoiceBar(SingleChoiceButtons):
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-                
+
                 def on_exp_access(self):
                     self += al.SingleChoiceBar("Yes", "No", "Maybe", name="b1")
     """
 
     # Documented at :class:`.SingleChoiceButtons`
     button_group_class = "choice-button-bar"
-    
+
     # Documented at :class:`.SingleChoiceButtons`
     button_toolbar = True
 
 
-class MultipleChoice(ChoiceElement):
-    """
-    Checkboxes for choosing multiple options.
-
-    Args:
-        *choice_labels: Variable numbers of choice labels. See 
-            :class:`.ChoiceElement` for details.
-        min, max: Minimum (maximum) number of choices that need to be
-            selected, if any are selected (does not imply 
-            *force_input=True*).
-        select_hint: Hint to be displayed, if the requirement of 
-            minimum or maximum number of selected fields is not reached.
-            Defaults to the experiment-wide value specified in 
-            config.conf.
-        default: Can be a single integer, or a list of integers which 
-            indicate the choices that should be selected by default. 
-            Counting starts at 1.
-        **kwargs: Further keyword arguments are passed on to the parent 
-            class :class:`.ChoiceElement`.
-    
-    Examples:
-        A multiple choice element with three options::
-
-            import alfred3 as al
-            exp = al.Experiment()
-            
-            @exp.member
-            class Demo(al.Page):
-                name = "demo_page"
-                
-                def on_exp_access(self):
-                    self += al.MultipleChoice("Yes", "No", "Maybe", name="m1")
-        
-    """
-
-    type = "checkbox"
-
-    def __init__(
-        self,
-        *choice_labels,
-        min: int = None,
-        max: int = None,
-        select_hint: str = None,
-        default: Union[int, List[int]] = None,
-        **kwargs,
-    ):
-        super().__init__(*choice_labels, **kwargs)
-
-        self._input = {}
-        
-        #: See documentation of initialization arguments
-        self.min: int = min if min is not None else 0
-        
-        #: See documentation of initialization arguments
-        self.max: int = max if max is not None else len(self.choice_labels)
-        
-        self._select_hint = select_hint # documented in getter method
-
-        if isinstance(default, int):
-            self.default = [default]
-        elif default is not None and not isinstance(default, list):
-            raise ValueError(
-                "Default for MultipleChoice must be a list of integers, indicating the default choices."
-            )
-        else:
-            self.default = default
-    
-    @property
-    def input(self) -> dict:
-        """
-        Dict[str, bool]: Dictionary of subject inputs.
-        
-        Contains the choice labels as keys and their selection status 
-        (*True* for selected choices, *False* otherwise) as values.
-        """
-        return self._input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
-    def select_hint(self) -> str:
-        """
-        str: Hint for participants. Displayed, if the number of selected 
-        choices does not fulfill the requirements of the *min* and *max*
-        number.
-        """
-        if self._select_hint:
-            return self._select_hint
-        else:
-            hint = string.Template(self.experiment.config.get("hints", "select_MultipleChoice"))
-            return hint.substitute(min=self.min, max=self.max)
-
-    def validate_data(self) -> bool:
-        """:meta private: (documented at :class:`.InputElement`)"""
-        if self.force_input and len(self.input):
-            self.hint_manager.post_message(self.no_input_hint)
-            return False
-        elif not (self.min <= sum(list(self.input.values())) <= self.max):
-            return False
-        else:
-            return True
-
-    @property
-    def data(self) -> dict:
-        """
-        Data dictionary with transformed participant input.
-        
-        Input is turned into a single value which fits the structure of 
-        other input element data dictionaries.
-        
-        :meta private: (documented at :class:`.InputElement`)
-        """
-        data = {}
-        vals = [str(i) for i, (name, checked) in enumerate(self.input.items()) if checked]
-        data["value"] = ",".join(vals)
-        data.update(self.codebook_data)
-        return {self.name: data}
-
-    def set_data(self, d):
-        """:meta private: (documented at :class:`.InputElement`)"""
-        for choice in self.choices:
-            value = d.get(choice.name, None)
-            if value:
-                self._input[choice.name] = True
-            else:
-                self._input[choice.name] = False
-
-    def define_choices(self):
-        """:meta private: (documented at :class:`.ChoiceElement`)"""
-        choices = []
-        for i, label in enumerate(self.choice_labels, start=1):
-            choice = Choice()
-
-            if isinstance(label, Element):
-                choice.label = label.web_widget
-            else:
-                if self.emojize:
-                    label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
-            choice.type = "checkbox"
-            choice.value = i
-            choice.id = f"{self.name}_choice{i}"
-            choice.name = choice.id
-            choice.label_id = f"{choice.id}-lab"
-            choice.css_class = f"choice-button choice-button-{self.name}"
-
-            if self.debug_enabled:
-                choice.checked = True if i <= self.max else False
-            elif self.input:
-                choice.checked = True if self.input[choice.name] is True else False
-            elif self.default:
-                choice.checked = True if i in self.default else False
-
-            choices.append(choice)
-        return choices
-
-
 class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
     """
-    A prettier :class:`.MultipleChoice` element with buttons instead of 
+    A prettier :class:`.MultipleChoice` element with buttons instead of
     checkbox inputs.
 
     To make them distinct from single choice buttons, multiple choice
     buttons don't have rounded corners by default.
 
     Args:
-        *choice_labels: Variable numbers of choice labels. See 
+        *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
         min, max: Minimum (maximum) number of choices that need to be
-            selected, if any are selected (does not imply 
+            selected, if any are selected (does not imply
             *force_input=True*).
-        select_hint: Hint to be displayed, if the requirement of 
+        select_hint: Hint to be displayed, if the requirement of
             minimum or maximum number of selected fields is not reached.
-            Defaults to the experiment-wide value specified in 
+            Defaults to the experiment-wide value specified in
             config.conf.
-        default: Can be a single integer, or a list of integers which 
-            indicate the choices that should be selected by default. 
+        default: Can be a single integer, or a list of integers which
+            indicate the choices that should be selected by default.
             Counting starts at 1.
-        **kwargs: Further keyword arguments are passed on to 
+        **kwargs: Further keyword arguments are passed on to
             the parent classes :class:`.SingleChoiceButtons` (button
             styling arguments) and :class:`.ChoiceElement`.
 
@@ -3435,11 +3797,11 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-                
+
                 def on_exp_access(self):
                     self += al.MultipleChoiceButtons("Yes", "No", "Maybe", name="m1")
 
@@ -3459,33 +3821,34 @@ class MultipleChoiceBar(MultipleChoiceButtons):
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-                
+
                 def on_exp_access(self):
                     self += al.MultipleChoiceBar("Yes", "No", "Maybe", name="b1")
-    
+
     """
+
     # Documented at :class:`.SingleChoiceButtons
     button_group_class: str = "choice-button-bar"
-    
+
     # Documented at :class:`.SingleChoiceButtons
     button_toolbar: bool = True
-    
+
     # Documented at :class:`.SingleChoiceButtons
     button_round_corners: bool = False
 
 
 class ButtonLabels(SingleChoiceButtons):
     """
-    Disabled buttons to use for labelling. 
-    
+    Disabled buttons to use for labelling.
+
     Args:
-        *choice_labels: Variable numbers of choice labels. See 
+        *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        **kwargs: Further keyword arguments are passed on to 
+        **kwargs: Further keyword arguments are passed on to
             the parent class :class:`.SingleChoiceButtons`.
 
     Examples:
@@ -3517,12 +3880,12 @@ class ButtonLabels(SingleChoiceButtons):
 
 class BarLabels(ButtonLabels):
     """
-    Disabled button bar to use for labelling. 
-    
+    Disabled button bar to use for labelling.
+
     Args:
-        *choice_labels: Variable numbers of choice labels. See 
+        *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        **kwargs: Further keyword arguments are passed on to 
+        **kwargs: Further keyword arguments are passed on to
             the parent class :class:`.ButtonLabels`.
 
     Examples:
@@ -3541,9 +3904,10 @@ class BarLabels(ButtonLabels):
                     self += al.SingleChoiceBar("choice1", "choice2", name="b1")
 
     """
+
     # Documented at :class:`.SingleChoiceButtons`
     button_group_class = "choice-button-bar"
-    
+
     # Documented at :class:`.SingleChoiceButtons`
     button_toolbar = True
 
@@ -3553,11 +3917,11 @@ class SubmittingButtons(SingleChoiceButtons):
     SingleChoiceButtons that trigger submission of the current page
     on click.
 
-    The arguments are the same as for the parent class 
+    The arguments are the same as for the parent class
     :class:`.SingleChoiceButtons`.
 
     Examples:
-        Using submitting buttons together with the 
+        Using submitting buttons together with the
         :class:`.HideNavigation` element::
 
             import alfred3 as al
@@ -3595,13 +3959,13 @@ class JumpButtons(SingleChoiceButtons):
 
     Args:
         *choice_labels: Tuples of the form ``("label", "target_name")``,
-            where "label" is the text that will be displayed and 
-            "target_name" is the name of the page that the experiment 
+            where "label" is the text that will be displayed and
+            "target_name" is the name of the page that the experiment
             will jump to on click of the button.
-        
-        **kwargs: Keyword arguments are passed on to the parent class 
+
+        **kwargs: Keyword arguments are passed on to the parent class
             :class:`.SingleChoiceButtons`.
-    
+
     Attributes:
         targets (str): List of target page names.
 
@@ -3617,25 +3981,25 @@ class JumpButtons(SingleChoiceButtons):
 
                 def on_exp_access(self):
                     self += al.JumpButtons(
-                        ("jump to demo2", "demo2"), 
-                        ("jump to demo3", "demo3"), 
+                        ("jump to demo2", "demo2"),
+                        ("jump to demo3", "demo3"),
                         name="jump1"
                         )
 
             @exp.member
             class Demo2(al.Page):
                 name = "demo2"
-            
+
             @exp.member
             class Demo3(al.Page):
                 name = "demo3"
-        
+
         Jump buttons with target page taken from the input on a previous
         page, using the :meth:`.Page.on_first_show` hook::
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo1(al.Page):
                 name = "demo1"
@@ -3650,7 +4014,7 @@ class JumpButtons(SingleChoiceButtons):
                 def on_first_show(self):
                     target = self.exp.values.get("text1")
                     self += al.JumpButtons(("jump to target", target), name="jump1")
-            
+
             @exp.member
             class Demo3(al.Page):
                 name = "demo3"
@@ -3682,19 +4046,19 @@ class JumpButtons(SingleChoiceButtons):
 
 class DynamicJumpButtons(JumpButtons):
     """
-    JumpButtons, where the target pages depend on the input to 
+    JumpButtons, where the target pages depend on the input to
     other elements on the same page.
 
     Args:
         *choice_labels: Tuples of the form ``("label", "element_name")``,
-            where "label" is the text that will be displayed and 
+            where "label" is the text that will be displayed and
             "element_name" is the name of the element on the *same page*,
             whose input value will be inserted as the name of the target
             page.
-        
-        **kwargs: Keyword arguments are passed on to the parent class 
+
+        **kwargs: Keyword arguments are passed on to the parent class
             :class:`.JumpButtons`.
-    
+
     Attributes:
         targets (str): List of target page names.
 
@@ -3715,12 +4079,13 @@ class DynamicJumpButtons(JumpButtons):
             @exp.member
             class Demo2(al.Page):
                 name = "demo2"
-            
+
             @exp.member
             class Demo3(al.Page):
                 name = "demo3"
 
     """
+
     # Documented at :class:`.JumpButtons`
     js_template = jinja_env.get_template("dynamic_jumpbuttons.js.j2")
 
@@ -3740,102 +4105,6 @@ class DynamicJumpButtons(JumpButtons):
         # return cond1 and cond2
 
 
-class SingleChoiceList(SingleChoice):
-    """
-    A dropdown list, allowing selection of one option.
-
-    The same documentation applies, as for :class:`.SingleChoice`.
-
-    Notes:
-        The SingleChoiceList's default value defaults to "1" due to its
-        design. A typical way to remove meaning from this default is
-        to make the fist choice a no-choice option (see examples).
-    
-    Examples:
-        A single choice list with a no-choice option as first option::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo"
-
-                def on_exp_access(self):
-                    self += al.SingleChoiceList(
-                        "-no selection-", "choi1", "choi2", "choi3",
-                         name="sel1"
-                         )
-
-    """
-
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("SelectElement.html.j2")
-    
-    # Documented at :class:`.SingleChoice`
-    type = "select_one"
-
-    def __init__(self, *choice_labels, toplab: str = "", default: int = 1, **kwargs):
-        super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
-
-
-class MultipleChoiceList(MultipleChoice):
-    """
-    A :class:`.MultipleChoice` element, displayed as list.
-
-    Args:
-        *choice_labels: Variable numbers of choice labels. See 
-            :class:`.ChoiceElement` for details.
-        size: The vertical height of the list. The unit is the number
-            of choices to be displayed without scrolling. Note that some
-            browsers do not adhere to this unit exactly.
-        **kwargs: Further keyword arguments are passed on to 
-            the parent class :`.MultipleChoice`.
-
-    Examples:
-        Minimal example::
-            
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo"
-
-                def on_exp_access(self):
-                    self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
-
-    """
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("SelectElement.html.j2")
-    
-    # Documented at :class:`.SingleChoice`
-    type = "multiple"
-
-    def __init__(self, *choice_labels, size: int = None, **kwargs):
-        super().__init__(*choice_labels, **kwargs)
-        self.size = size
-
-    @property
-    def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
-        d = super().template_data
-        d["size"] = self.size
-        return d
-
-    def set_data(self, d):
-        """:meta private: (documented at :class:`.InputElement`)"""
-        name_map = {str(choice.value): choice.name for choice in self.choices}
-        val = d.get(self.name, None)
-        val_name = name_map[val]
-
-        for choice in self.choices:
-            if choice.name == val_name:
-                self.input[choice.name] = True
-            else:
-                self.input[choice.name] = False
-
-
 class SelectPageList(SingleChoiceList):
     """
     A :class:`.SingleChoiceList`, automatically filled with page names.
@@ -3846,18 +4115,18 @@ class SelectPageList(SingleChoiceList):
             a section name, all pages in that section are listed.
         include_self: Whether to include the current page in the list,
             if it is in scope.
-        check_jumpto: If *True* (default), pages that cannot be jumped 
+        check_jumpto: If *True* (default), pages that cannot be jumped
             to will be marked as disabled options. The evaluation is
             based on the :attr:`.Section.allow_jumpto` attribute of
             each page's direct parent section (and only that section).
-        check_jumpfrom: If *True*, the element will check, if the 
+        check_jumpfrom: If *True*, the element will check, if the
             current page can be left via jump. If not, all pages in the
             list will be marked as disabled options.
-        show_all_in_scope: If *True* (default), all pages in the scope 
+        show_all_in_scope: If *True* (default), all pages in the scope
             will be shown, including those that cannot be jumped to.
         **kwargs, toplab: Keyword arguments are passend on to the parent
             class :class:`.SingleChoiceList`
-    
+
     Notes:
         This is mostly a utility element for the implementation of
         :class:`.JumpList`.
@@ -3881,7 +4150,6 @@ class SelectPageList(SingleChoiceList):
                 name = "demo2"
 
     """
-
 
     def __init__(
         self,
@@ -3926,7 +4194,7 @@ class SelectPageList(SingleChoiceList):
                     choice_labels.append(page.name)
         else:
             choice_labels = [page.name for page in scope]
-        
+
         if not self.include_self:
             try:
                 choice_labels.remove(self.name)
@@ -3959,13 +4227,13 @@ class SelectPageList(SingleChoiceList):
     def _jump_forbidden(self, page_name: str) -> bool:
         """
         Returns:
-            bool: True, if jumping to the target page or from the 
+            bool: True, if jumping to the target page or from the
             current page is forbidden. Also True, if the target page
             should not be shown.
         """
         target_page = self.experiment.root_section.all_pages[page_name]
 
-        conditions = [True] # list of conditions. True means that jumping is allowed
+        conditions = [True]  # list of conditions. True means that jumping is allowed
 
         # disable choice if the target page can't be jumped to
         if self.check_jumpto:
@@ -4000,13 +4268,13 @@ class SelectPageList(SingleChoiceList):
         For a given choice option, this method determines, whether it
         should be marked as checked by default.
 
-        If the experiment is started in debug mode, the current page is 
+        If the experiment is started in debug mode, the current page is
         marked as checked.
 
         Returns:
             bool: *True*, if the choice option with index *i* should be
             checked.
-    
+
         """
 
         # set default value
@@ -4039,7 +4307,7 @@ class SelectPageList(SingleChoiceList):
 
 class JumpList(Row):
     """
-    Allows participants to select a page from a dropdown menu and jump 
+    Allows participants to select a page from a dropdown menu and jump
     to it.
 
     Args:
@@ -4048,30 +4316,30 @@ class JumpList(Row):
             a section name, all pages in that section are listed.
         include_self: Whether to include the current page in the list,
             if it is in scope.
-        check_jumpto: If *True* (default), pages that cannot be jumped 
+        check_jumpto: If *True* (default), pages that cannot be jumped
             to will be marked as disabled options. The evaluation is
             based on the :attr:`.Section.allow_jumpto` attribute of
             each page's direct parent section (and only that section).
-        check_jumpfrom: If *True*, the element will check, if the 
+        check_jumpfrom: If *True*, the element will check, if the
             current page can be left via jump. If not, all pages in the
             list will be marked as disabled options.
-        show_all_in_scope: If *True* (default), all pages in the scope 
+        show_all_in_scope: If *True* (default), all pages in the scope
             will be shown, including those that cannot be jumped to.
         label: Label to display on the jump button.
-        button_style: Style of the jump button. See 
-            :class:`.SingleChoiceButtons` for more details on this 
+        button_style: Style of the jump button. See
+            :class:`.SingleChoiceButtons` for more details on this
             argument.
-        button_round_corners: Boolean, determining whether the button 
+        button_round_corners: Boolean, determining whether the button
             should have rounded corners.
-        debugmode: Boolean switch, telling the JumpList whether it 
+        debugmode: Boolean switch, telling the JumpList whether it
             should operate in debug mode.
         **kwargs, toplab: Keyword arguments are passend on to the parent
             class :class:`.SingleChoiceList`
-    
+
     Notes:
         Different from other input-type elements, the JumpList does not
         have to be named.
-    
+
     Examples:
         Minimal example::
 
@@ -4134,266 +4402,3 @@ class JumpList(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
-
-
-class Image(Element):
-    """
-    Displays an image.
-
-    Args:
-        path: Path to the image. Can be relative to the experiment 
-            directory, or absolute.
-        url: URL to the image.
-        **kwargs: Further keyword arguments are passed on to the parent 
-            class :class:`.Element`.
-    
-    Notes:
-        You can specify *either* a path, or a url, but not both.
-    
-    Examples:
-        Minimal example::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo1"
-
-                def on_exp_access(self):
-                    pylogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Python_logo_and_wordmark.svg/1920px-Python_logo_and_wordmark.svg.png"
-                    
-                    self += al.Image(url=pylogo)
-    
-    """
-
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("ImageElement.html.j2")
-
-    def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
-        super().__init__(**kwargs)
-
-        self.path = path
-        if url is not None and not is_url(url):
-            raise ValueError("Supplied value is not a valid url.")
-        else:
-            self.url = url
-
-        if path and url:
-            raise ValueError("You can only specify one of 'path' and 'url'.")
-
-        self.src = None
-
-    def added_to_experiment(self, experiment):
-        """ 
-        The image is added to the dict of static files, if a path is
-        provided.
-
-        :meta private: (documented at :class:`.Element`)
-        """
-        super().added_to_experiment(experiment)
-        if self.path:
-            p = self.experiment.subpath(self.path)
-            url = self.experiment.ui.add_static_file(p)
-            self.src = url
-        else:
-            self.src = self.url
-
-    @property
-    def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
-        d = super().template_data
-        d["src"] = self.src
-        return d
-
-
-class Audio(Image):
-    """
-    Allows playing audio files.
-
-    Args:
-        path: Path to the audio file. Can be relative to the experiment 
-            directory, or absolute.
-        url: URL to the audio file.
-        controls: If *True*, alfred will display controls like a pause/
-            play button for participants to use (default: *True*).
-        autoplay: If *True*, the audio file will start to play 
-            automatically (default: *False*).
-        loop: If *True*, the audio file will start playing from the 
-            beginning again, once the end is reached (default: *False*).
-        **kwargs: Further keyword arguments are passed on to the parent 
-            class :class:`.Element`.
-    
-    Notes:
-        You can specify *either* a path, or a url, but not both.
-    
-    Examples:
-        Minimal example::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo1"
-
-                def on_exp_access(self):
-                    demo_audio = "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_1MG.mp3"
-                    
-                    self += al.Audio(url=demo_audio)
-    
-    """
-
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("AudioElement.html.j2")
-
-    def __init__(
-        self,
-        path: Union[str, Path] = None,
-        url: str = None,
-        controls: bool = True,
-        autoplay: bool = False,
-        loop: bool = False,
-        align: str = "center",
-        **kwargs,
-    ):
-        super().__init__(path=path, url=url, align=align, **kwargs)
-        self.controls = controls
-        self.autoplay = autoplay
-        self.loop = loop
-
-    @property
-    def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
-        d = super().template_data
-        d["controls"] = self.controls
-        d["autoplay"] = self.autoplay
-        d["loop"] = self.loop
-
-        return d
-
-
-class Video(Audio):
-    """
-    Displays a video on the page.
-
-    Args:
-        path: Path to the video (relative to the experiment)
-        url: Url to the video
-        allow_fullscreen: Boolean, indicating whether users can enable
-            fullscreen mode.
-        video_height: Video height in absolute pixels (without unit).
-            Defaults to "auto".
-        video_width: Video width in absolute pixels (without unit).
-            Defaults to "100%". It is recommended to use leave this
-            parameter at the default value and use the general element
-            parameter *width* for setting the width.
-        **kwargs: Further keyword arguments are passed on to the parent
-            class :class:`.Audio`.
-
-    Notes:
-        You can specify *either* a path, or a url, but not both.
-
-    Examples:
-        Minimal example::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo1"
-
-                def on_exp_access(self):
-                    demo_video = "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4"
-                    
-                    self += al.Video(url=demo_video)
-
-    """
-
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("VideoElement.html.j2")
-
-    def __init__(
-        self,
-        path: Union[str, Path] = None,
-        url: str = None,
-        allow_fullscreen: bool = True,
-        video_height: str = "auto",
-        video_width: str = "100%",
-        **kwargs,
-    ):
-        super().__init__(path=path, url=url, **kwargs)
-        self.video_height = video_height
-        self.video_width = video_width
-        self.allow_fullscreen = allow_fullscreen
-
-    @property
-    def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
-        d = super().template_data
-        d["video_height"] = self.video_height
-        d["video_width"] = self.video_width
-        d["allow_fullscreen"] = self.allow_fullscreen
-
-        return d
-
-
-class MatPlot(Element):
-    """
-    Displays a :class:`matplotlib.figure.Figure` object.
-
-    Args:
-        fig (matplotlib.figure.Figure): The figure to display.
-        align: Alignment of the figure ('left', 'right', or 'center').
-            Defaults to 'center'.
-    
-    Notes:
-        When plotting in alfred, you need to use the Object-oriented
-        matplotlib API
-        (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
-
-    Examples:
-        Minimal example::
-
-            from matplotlib.figure import Figure
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo1"
-
-                def on_exp_access(self):
-                    
-                    # build an example plot
-                    fig = Figure()
-                    ax = fig.add_subplot()
-                    ax.plot(range(10))
-
-                    # add plot to page
-                    self += al.MatPlot(fig=fig)
-    
-    """
-
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("ImageElement.html.j2")
-
-    def __init__(self, fig, align: str = "center", **kwargs):
-        super().__init__(align=align, **kwargs)
-        self.fig = fig
-        self.src = None
-
-    def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
-        out = io.BytesIO()
-        self.fig.savefig(out, format="svg")
-        out.seek(0)
-        self.src = self.exp.ui.add_dynamic_file(out, content_type="image/svg+xml")
-
-    @property
-    def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
-        d = super().template_data
-        d["src"] = self.src
-        return d
