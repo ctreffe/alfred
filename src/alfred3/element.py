@@ -4147,6 +4147,9 @@ class Image(Element):
         **kwargs: Further keyword arguments are passed on to the parent 
             class :class:`.Element`.
     
+    Notes:
+        You can specify *either* a path, or a url, but not both.
+    
     Examples:
         Minimal example::
 
@@ -4161,7 +4164,8 @@ class Image(Element):
                     pylogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Python_logo_and_wordmark.svg/1920px-Python_logo_and_wordmark.svg.png"
                     
                     self += al.Image(url=pylogo)
-    """    
+    
+    """
 
     # Documented at :class:`.Element`
     element_template = jinja_env.get_template("ImageElement.html.j2")
@@ -4204,6 +4208,43 @@ class Image(Element):
 
 
 class Audio(Image):
+    """
+    Allows playing audio files.
+
+    Args:
+        path: Path to the audio file. Can be relative to the experiment 
+            directory, or absolute.
+        url: URL to the audio file.
+        controls: If *True*, alfred will display controls like a pause/
+            play button for participants to use (default: *True*).
+        autoplay: If *True*, the audio file will start to play 
+            automatically (default: *False*).
+        loop: If *True*, the audio file will start playing from the 
+            beginning again, once the end is reached (default: *False*).
+        **kwargs: Further keyword arguments are passed on to the parent 
+            class :class:`.Element`.
+    
+    Notes:
+        You can specify *either* a path, or a url, but not both.
+    
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    demo_audio = "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_1MG.mp3"
+                    
+                    self += al.Audio(url=demo_audio)
+    
+    """
+
+    # Documented at :class:`.Element`
     element_template = jinja_env.get_template("AudioElement.html.j2")
 
     def __init__(
@@ -4223,6 +4264,7 @@ class Audio(Image):
 
     @property
     def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["controls"] = self.controls
         d["autoplay"] = self.autoplay
@@ -4235,11 +4277,6 @@ class Video(Audio):
     """
     Displays a video on the page.
 
-    .. note::
-
-        You can specify a filepath or a url as the source, but not both
-        at the same time.
-
     Args:
         path: Path to the video (relative to the experiment)
         url: Url to the video
@@ -4251,16 +4288,30 @@ class Video(Audio):
             Defaults to "100%". It is recommended to use leave this
             parameter at the default value and use the general element
             parameter *width* for setting the width.
+        **kwargs: Further keyword arguments are passed on to the parent
+            class :class:`.Audio`.
 
-        **kwargs: The following keyword arguments are inherited from
-            :class:`.Audio`:
+    Notes:
+        You can specify *either* a path, or a url, but not both.
 
-            * controls
-            * autoplay
-            * loop
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    demo_video = "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4"
+                    
+                    self += al.Video(url=demo_video)
 
     """
 
+    # Documented at :class:`.Element`
     element_template = jinja_env.get_template("VideoElement.html.j2")
 
     def __init__(
@@ -4279,6 +4330,7 @@ class Video(Audio):
 
     @property
     def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["video_height"] = self.video_height
         d["video_width"] = self.video_width
@@ -4301,8 +4353,30 @@ class MatPlot(Element):
         matplotlib API
         (https://matplotlib.org/3.3.3/api/index.html#the-object-oriented-api).
 
+    Examples:
+        Minimal example::
+
+            from matplotlib.figure import Figure
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo1"
+
+                def on_exp_access(self):
+                    
+                    # build an example plot
+                    fig = Figure()
+                    ax = fig.add_subplot()
+                    ax.plot(range(10))
+
+                    # add plot to page
+                    self += al.MatPlot(fig=fig)
+    
     """
 
+    # Documented at :class:`.Element`
     element_template = jinja_env.get_template("ImageElement.html.j2")
 
     def __init__(self, fig, align: str = "center", **kwargs):
@@ -4311,6 +4385,7 @@ class MatPlot(Element):
         self.src = None
 
     def prepare_web_widget(self):
+        """:meta private: (documented at :class:`.Element`)"""
         out = io.BytesIO()
         self.fig.savefig(out, format="svg")
         out.seek(0)
@@ -4318,6 +4393,7 @@ class MatPlot(Element):
 
     @property
     def template_data(self):
+        """:meta private: (documented at :class:`.Element`)"""
         d = super().template_data
         d["src"] = self.src
         return d
