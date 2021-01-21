@@ -275,6 +275,19 @@ def extract_arguments(obj) -> dict:
 
     return {arg: clean(desc) for arg, desc in args.items()}
 
+def extract_arguments_from_tree(obj) -> dict:
+    args = {}
+    
+    mro = list(inspect.getmro(obj))
+    mro.reverse()
+    
+    for parent in mro:
+        parent_args = extract_arguments(parent)
+        parent_args.pop("**kwargs", None)
+        args.update(parent_args)
+    
+    return args
+
 def inherit_kwargs(
     _klass=None, *,
     from_: list = None,
