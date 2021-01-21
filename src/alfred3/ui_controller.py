@@ -103,7 +103,7 @@ class Move:
 
 
 class MovementManager:
-    instance_level_logging = False
+    instance_log = False
 
     def __init__(self, experiment):
         self.exp = experiment
@@ -360,7 +360,7 @@ class MovementManager:
 
 
 class UserInterface:
-    instance_level_logging = False
+    instance_log = False
 
     _css_files = [
         "bootstrap-4.5.3.min.css",

@@ -118,7 +118,7 @@ class SavingAgent(ABC):
         use: Set to false, if this saving agent should not be used.
     """
 
-    instance_level_logging = False
+    instance_log = False
 
     def __init__(
         self, activation_level: int = 10, experiment=None, name: str = None, encrypt: bool = False
@@ -732,7 +732,7 @@ class SavingAgentController:
         experiment: An alfred experiment.
     """
 
-    instance_level_logging = False
+    instance_log = False
 
     def __init__(self, experiment):
         """Constructor method."""

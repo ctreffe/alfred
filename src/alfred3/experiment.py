@@ -754,16 +754,20 @@ class ExperimentSession:
 
     @property
     def content(self):
+        """
+        Section: The experiment's main content section, which holds all
+        sections and pages added to the experiment.
+        """
         return self.root_section.content
     
     @property
     def root_section(self):
+        """
+        RootSection: The experiment's root section, organizing all other
+        sections, including :attr:`.content`.
+        """
         return self._root_section
     
-    @property
-    def page_controller(self):
-        return self._root_section
-
     @property
     def all_members(self) -> dict:
         """

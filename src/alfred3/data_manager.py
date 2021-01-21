@@ -37,7 +37,7 @@ class DataManager(object):
     CODEBOOK_DATA = "codebook"
     HISTORY = "move_history"
 
-    instance_level_logging = False
+    instance_log = False
     log = QueuedLoggingInterface(base_logger=__name__)
 
     def __init__(self, experiment):

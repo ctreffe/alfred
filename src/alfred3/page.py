@@ -331,9 +331,6 @@ class PageCore(ExpMember):
     def allow_closing(self):
         return True
 
-    def can_display_corrective_hints_in_line(self):
-        return False
-
     def corrective_hints(self):
         """
         returns a list of corrective hints

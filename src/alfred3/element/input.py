@@ -16,22 +16,22 @@ from emoji import emojize
 import cmarkgfm
 
 from ..exceptions import AlfredError
+from .._helper import inherit_kwargs
 
 from .core import jinja_env
 from .core import Element
 from .core import InputElement
-from .core import Choice
+from .core import _Choice
 from .core import ChoiceElement
 
-
+@inherit_kwargs
 class TextEntry(InputElement):
     """
     Provides a text entry field.
 
     Args:
         placeholder: Placeholder text, displayed inside the input field.
-        **kwargs: Further keyword arguments that are passed on to the
-            parent class :class:`.InputElement`.
+        {kwargs}
 
     Examples:
         ::
@@ -57,7 +57,7 @@ class TextEntry(InputElement):
         **kwargs,
     ):
         """Constructor method."""
-        super().__init__(toplab=toplab, **kwargs)
+        super().__init__(**kwargs)
 
         self._placeholder = placeholder if placeholder is not None else ""
 
@@ -68,27 +68,26 @@ class TextEntry(InputElement):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["placeholder"] = self.placeholder
         return d
 
     @property
     def codebook_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         data = super().codebook_data
         data["placeholder"] = self.placeholder
         return data
 
-
+@inherit_kwargs
 class TextArea(TextEntry):
     """
     A text area for long text input.
 
     Args:
         nrows: Initial height of the text area in number of rows.
-        **kwargs, toplab: Further keyword arguments that are passed on to the
-            parent class :class:`.TextEntry`.
+        {kwargs}
 
     Examples:
         ::
@@ -107,18 +106,18 @@ class TextArea(TextEntry):
 
     element_template = jinja_env.get_template("TextAreaElement.html.j2")
 
-    def __init__(self, toplab: str = None, nrows: int = 5, **kwargs):
-        super().__init__(toplab=toplab, **kwargs)
+    def __init__(self, nrows: int = 5, **kwargs):
+        super().__init__(**kwargs)
         self.area_nrows = nrows
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["area_nrows"] = self.area_nrows
         return d
 
-
+@inherit_kwargs
 class RegEntry(TextEntry):
     """
     Displays an input field, which only accepts inputs, matching a
@@ -132,8 +131,7 @@ class RegEntry(TextEntry):
             easier to read and write.
         match_hint: Hint to be displayed if the user input doesn't
             match with the regular expression.
-        **kwargs, toplab: Keyword arguments that are passed on to the
-            parent class :class:`.TextEntry`.
+        {kwargs}
 
     Examples:
 
@@ -146,8 +144,8 @@ class RegEntry(TextEntry):
 
     """
 
-    def __init__(self, toplab: str = None, pattern: str = r".*", match_hint: str = None, **kwargs):
-        super().__init__(toplab=toplab, **kwargs)
+    def __init__(self, pattern: str = r".*", match_hint: str = None, **kwargs):
+        super().__init__(**kwargs)
 
         #: Compiled regular expression pattern to be matched on
         #: participant input to this element
@@ -155,7 +153,7 @@ class RegEntry(TextEntry):
         self._match_hint = match_hint  # documented in getter property
 
     def validate_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         if not self.should_be_shown:
             return True
 
@@ -191,12 +189,12 @@ class RegEntry(TextEntry):
 
     @property
     def codebook_data(self) -> dict:
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         d = super().codebook_data
         d["regex_pattern"] = self.pattern.pattern
         return d
 
-
+@inherit_kwargs
 class NumberEntry(TextEntry):
     """
     Displays an input field which only accepts numerical input.
@@ -209,12 +207,11 @@ class NumberEntry(TextEntry):
             ``(",", ".")``, i.e. by default, both a comma and a dot are
             interpreted as decimal signs.
         match_hint: Specialized match hint for this element. You can
-            use the placeholders ``${min}``, ``${max}``, ``${ndecimals}``,
-            and ``${decimal_signs}``. To customize the match hint for
+            use the placeholders ``${{min}}``, ``${{max}}``, ``${{ndecimals}}``,
+            and ``${{decimal_signs}}``. To customize the match hint for
             all NumberEntry elements, change the respective setting
             in the config.conf.
-        **kwargs, toplab: Further keyword arguments that are passed on
-            to the parent class :class:`TextEntry`.
+        {kwargs}
 
     Examples:
 
@@ -235,7 +232,7 @@ class NumberEntry(TextEntry):
         match_hint: str = None,
         **kwargs,
     ):
-        super().__init__(toplab=toplab, **kwargs)
+        super().__init__(**kwargs)
 
         self.ndecimals: int = ndecimals  # documented in getter property
         self.decimal_signs: Tuple[str] = decimal_signs  # documented in getter property
@@ -350,7 +347,7 @@ class NumberEntry(TextEntry):
 
     @property
     def input(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         return self._input
 
     @input.setter
@@ -361,7 +358,7 @@ class NumberEntry(TextEntry):
         self._input = value
 
     def validate_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         if not self.should_be_shown:
             return True
 
@@ -395,7 +392,7 @@ class NumberEntry(TextEntry):
 
     @property
     def codebook_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         data = super().codebook_data
 
         data["ndecimals"] = self.ndecimals
@@ -405,7 +402,7 @@ class NumberEntry(TextEntry):
 
         return data
 
-
+@inherit_kwargs
 class SingleChoice(ChoiceElement):
     """
     Radio buttons for choosing a single option.
@@ -413,11 +410,10 @@ class SingleChoice(ChoiceElement):
     Args:
         *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        **kwargs: Refer to the parent class :class:`.ChoiceElement` for
-            a documentation of other possible initialization arguments.
         default: The *default* argument of single choice elements is an
             integer, indicating which choice should be selected by
             default. Counting of choices starts at 1.
+        {kwargs}
 
     Examples:
         A simple SingleChoice element::
@@ -437,11 +433,11 @@ class SingleChoice(ChoiceElement):
     # Documented at :class:`.ChoiceElement`
     type: str = "radio"
 
-    def define_choices(self) -> List[Choice]:
-        """:meta private: (documented at :class:`.ChoiceElement`)"""
+    def define_choices(self) -> List[_Choice]:
+        
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
-            choice = Choice()
+            choice = _Choice()
 
             if isinstance(label, Element):
                 choice.label = label.web_widget
@@ -468,7 +464,7 @@ class SingleChoice(ChoiceElement):
 
     @property
     def codebook_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         d = super().codebook_data
 
         for i, lab in enumerate(self.choice_labels, start=1):
@@ -479,7 +475,7 @@ class SingleChoice(ChoiceElement):
 
         return d
 
-
+@inherit_kwargs
 class MultipleChoice(ChoiceElement):
     """
     Checkboxes for choosing multiple options.
@@ -497,8 +493,7 @@ class MultipleChoice(ChoiceElement):
         default: Can be a single integer, or a list of integers which
             indicate the choices that should be selected by default.
             Counting starts at 1.
-        **kwargs: Further keyword arguments are passed on to the parent
-            class :class:`.ChoiceElement`.
+        {kwargs}
 
     Examples:
         A multiple choice element with three options::
@@ -575,7 +570,7 @@ class MultipleChoice(ChoiceElement):
             return hint.substitute(min=self.min, max=self.max)
 
     def validate_data(self) -> bool:
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         if self.force_input and len(self.input):
             self.hint_manager.post_message(self.no_input_hint)
             return False
@@ -601,7 +596,7 @@ class MultipleChoice(ChoiceElement):
         return {self.name: data}
 
     def set_data(self, d):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         for choice in self.choices:
             value = d.get(choice.name, None)
             if value:
@@ -610,10 +605,10 @@ class MultipleChoice(ChoiceElement):
                 self._input[choice.name] = False
 
     def define_choices(self):
-        """:meta private: (documented at :class:`.ChoiceElement`)"""
+        
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
-            choice = Choice()
+            choice = _Choice()
 
             if isinstance(label, Element):
                 choice.label = label.web_widget
@@ -638,12 +633,13 @@ class MultipleChoice(ChoiceElement):
             choices.append(choice)
         return choices
 
-
+@inherit_kwargs
 class SingleChoiceList(SingleChoice):
     """
     A dropdown list, allowing selection of one option.
 
-    The same documentation applies, as for :class:`.SingleChoice`.
+    Args:
+        {kwargs}
 
     Notes:
         The SingleChoiceList's default value defaults to "1" due to its
@@ -675,9 +671,9 @@ class SingleChoiceList(SingleChoice):
     type = "select_one"
 
     def __init__(self, *choice_labels, toplab: str = "", default: int = 1, **kwargs):
-        super().__init__(*choice_labels, toplab=toplab, default=default, **kwargs)
+        super().__init__(*choice_labels, default=default, **kwargs)
 
-
+@inherit_kwargs
 class MultipleChoiceList(MultipleChoice):
     """
     A :class:`.MultipleChoice` element, displayed as list.
@@ -688,8 +684,7 @@ class MultipleChoiceList(MultipleChoice):
         size: The vertical height of the list. The unit is the number
             of choices to be displayed without scrolling. Note that some
             browsers do not adhere to this unit exactly.
-        **kwargs: Further keyword arguments are passed on to
-            the parent class :`.MultipleChoice`.
+        {kwargs}
 
     Examples:
         Minimal example::
@@ -718,13 +713,13 @@ class MultipleChoiceList(MultipleChoice):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["size"] = self.size
         return d
 
     def set_data(self, d):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         name_map = {str(choice.value): choice.name for choice in self.choices}
         val = d.get(self.name, None)
         val_name = name_map[val]
@@ -735,7 +730,7 @@ class MultipleChoiceList(MultipleChoice):
             else:
                 self.input[choice.name] = False
 
-
+@inherit_kwargs
 class SingleChoiceButtons(SingleChoice):
     """
     A prettier :class:`.SingleChoice` element with buttons instead of
@@ -766,11 +761,9 @@ class SingleChoiceButtons(SingleChoice):
             supply their own CSS classes for button-styling.
 
         button_round_corners: A boolean switch to toggle whether buttons
-            should be displayed with  rounded corners (*True*). Defaults
-            to *True*.
+            should be displayed with  rounded corners (*True*). 
 
-        **kwargs: Further keyword arguments that are passed on to
-            the parent class :class:`.ChoiceElement`.
+        {kwargs}
 
     Notes:
 
@@ -844,7 +837,7 @@ class SingleChoiceButtons(SingleChoice):
 
     @property
     def template_data(self) -> dict:
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         d = super().template_data
         d["button_style"] = self.button_style
         d["button_group_class"] = self.button_group_class
@@ -935,7 +928,7 @@ class SingleChoiceButtons(SingleChoice):
             return None
 
     def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().prepare_web_widget()
 
         if self.button_toolbar:
@@ -947,11 +940,14 @@ class SingleChoiceButtons(SingleChoice):
         if not self.button_width == "auto":
             self._button_width()
 
-
+@inherit_kwargs
 class SingleChoiceBar(SingleChoiceButtons):
     """
     A variation of :class:`.SingleChoiceButtons`, which is displayed as
     a toolbar of connected buttons.
+
+    Args:
+        {kwargs}
 
     Examples:
         A single choice bar with three options::
@@ -974,6 +970,7 @@ class SingleChoiceBar(SingleChoiceButtons):
     button_toolbar = True
 
 
+@inherit_kwargs
 class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
     """
     A prettier :class:`.MultipleChoice` element with buttons instead of
@@ -995,9 +992,8 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
         default: Can be a single integer, or a list of integers which
             indicate the choices that should be selected by default.
             Counting starts at 1.
-        **kwargs: Further keyword arguments are passed on to
-            the parent classes :class:`.SingleChoiceButtons` (button
-            styling arguments) and :class:`.ChoiceElement`.
+        
+        {kwargs}
 
     Examples:
         Multiple choice buttons with three options::
@@ -1017,11 +1013,14 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
     def __init__(self, *choice_labels, button_round_corners: bool = False, **kwargs):
         super().__init__(*choice_labels, button_round_corners=button_round_corners, **kwargs)
 
-
+@inherit_kwargs
 class MultipleChoiceBar(MultipleChoiceButtons):
     """
     A variation of :class:`.MultipleChoiceButtons`, which is displayed as
     a toolbar of connected buttons.
+
+    Args:
+        {kwargs}
 
     Examples:
         A multiple choice bar with three options::
@@ -1047,7 +1046,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     # Documented at :class:`.SingleChoiceButtons
     button_round_corners: bool = False
 
-
+@inherit_kwargs
 class SelectPageList(SingleChoiceList):
     """
     A :class:`.SingleChoiceList`, automatically filled with page names.
@@ -1067,8 +1066,7 @@ class SelectPageList(SingleChoiceList):
             list will be marked as disabled options.
         show_all_in_scope: If *True* (default), all pages in the scope
             will be shown, including those that cannot be jumped to.
-        **kwargs, toplab: Keyword arguments are passend on to the parent
-            class :class:`.SingleChoiceList`
+        {kwargs}
 
     Notes:
         This is mostly a utility element for the implementation of
@@ -1104,7 +1102,7 @@ class SelectPageList(SingleChoiceList):
         show_all_in_scope: bool = True,
         **kwargs,
     ):
-        super().__init__(toplab=toplab, **kwargs)
+        super().__init__(**kwargs)
         self.scope = scope
         self.check_jumpto = check_jumpto
         self.check_jumpfrom = check_jumpfrom
@@ -1147,11 +1145,11 @@ class SelectPageList(SingleChoiceList):
 
         return choice_labels
 
-    def define_choices(self) -> List[Choice]:
-        """:meta private: (documented at :class:`.ChoiceElement`)"""
+    def define_choices(self) -> List[_Choice]:
+        
         choices = []
         for i, page_name in enumerate(self.choice_labels, start=1):
-            choice = Choice()
+            choice = _Choice()
 
             choice.label = self._choice_label(page_name)
             choice.type = "radio"
@@ -1237,12 +1235,12 @@ class SelectPageList(SingleChoiceList):
         return checked
 
     def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
 
     def set_data(self, d):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         value = d.get(self.name)
         if value:
             self._input = self.choice_labels.index(value) + 1

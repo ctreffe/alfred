@@ -9,9 +9,13 @@ _helper contains internal functions which are not to be called by framework user
 
 from urllib.parse import urlparse
 from cryptography.fernet import Fernet
+from dataclasses import dataclass
+from typing import Union
 import os
 import re
 import socket
+import functools
+import inspect
 
 def fontsize_converter(font_argument) -> int:
     '''
@@ -171,3 +175,172 @@ def socket_checker(port):
     except Exception:
         s.close()
         return False
+
+
+def sort_dict(d: dict) -> dict:
+    """Returns a dict, sorted alphabetically by its keys."""
+    return {key: d[key] for key in sorted(d)}
+
+
+def add_indent(inp: str, spaces: int = 8) -> str:
+        """
+        Adds indentation to all lines of a single or multiline string.
+
+        Args:
+            inp: Input string
+            spaces: Number of spaces to indent each line by
+        """
+        splitted = inp.split("\n")
+        indented = f"\n{' '*spaces}".join(splitted)
+        return " " * spaces + indented
+
+
+def build_table(docs: dict, caption: str = "", widths: str = "20, 80") -> str:
+        """
+        Transforms a documentation dictionary into a string, representing
+        the ReStructuredText csv-table directive.
+
+        Args:
+            docs: Documentation dictionary
+            caption: String to use as table caption
+            widths: String, indicating the relative widths of the table
+                columns in percent.
+        """
+        directive = f".. csv-table:: {caption}"
+        indent = " " * 3
+
+        rows = []
+        rows.append(f":widths: {widths}\n")
+
+        for arg, explanation in docs.items():
+            rows.append(f"\"{arg}\", \"{explanation}\"")
+
+        built_rows = f"\n{indent}".join(rows)
+        return directive + "\n" + indent + built_rows
+
+
+def build_kwargs(docs: dict, text: str = "Inherited keyword arguments\n", **kwargs) -> str:
+        """
+        Builds a full keyword-arguments string, ready for use in a class
+        docstring.
+
+        Args:
+            docs: Documentation dictionary
+            text: A short heading for the keyword arguments
+            **kwargs: Passed on to :meth:`.build_table`
+
+        """
+        heading = f"**kwargs: {text}\n"
+        body = build_table(docs=docs, **kwargs)
+        body = add_indent(body, spaces=12)
+        return heading + body
+
+def extract_arguments(obj) -> dict:
+    """
+    Extracts function arguments from google style docstrings of the
+    input object.
+
+    Returns:
+        dict: Dictionary of argument names and their descriptions.
+    """
+    args = {}
+    beginning_found = False
+    previous_arg = None
+    p = re.compile(r"    (?P<arg>[\w*]+[\w ,]*?) ?(\((?P<type>.+?)?\))?:(?P<description>.*)")
+
+    for line in inspect.getdoc(obj).split("\n"):
+        if line in ["Args:", "Arguments:"]:
+            beginning_found = True
+            continue
+
+        if beginning_found:
+            m = p.match(line)
+            if m is not None:
+                name = m["arg"] if m["type"] is None else f"{m['arg']} ({m['type']})"
+                args[name] = [m["description"]]
+                previous_arg = name
+            elif line.startswith(" "*8):
+                args[previous_arg].append(line)
+            
+            elif beginning_found and line.replace(" ", "") != "":
+                break
+    
+    def clean(lines: list) -> str:
+        joined = " ".join(lines)
+        stripped = joined.strip()
+        escaped1 = stripped.replace("'", "`")
+        escaped2 = escaped1.replace('"', '`')
+        return re.sub(r" +", " ", escaped2)
+
+
+    return {arg: clean(desc) for arg, desc in args.items()}
+
+def inherit_kwargs(
+    _klass=None, *,
+    from_: list = None,
+    not_from_: list = None,
+    include_kwargs: list = None,
+    exclude_kwargs: list = None,
+    sort_kwargs: bool = True,
+    build_function: callable = build_kwargs,
+    **kwargs,
+):
+    """
+    Decorator for easier docstring sharing.
+
+    Args:
+        from_: List of classes to inherit argument documentation from.
+        not_from_: List of classes *not* to inherit argument 
+            documentation from. Useful, if you want to include some
+            specific parent or grandparent.
+        include_kwargs: List of keyword argument names to include
+        exclude_kwargs: List of keyword argument names to exclude
+        sort_kwargs: If *True*, the keyword arguments will be arranged
+            in alphabetical order.
+        build_function: 
+    
+    Notes:
+        Replaces the placeholder``{kwargs}`` in the docstring of the 
+        decorated object with argument documentation extracted from
+        the parent classes.
+
+    See Also:
+        - :class:`.ShareDocumentation`: Base class for defining shared 
+          documentation.
+        - :func:`.shared_docs`: Another decorator, working in a similar 
+          way.
+    
+    """
+    def build_kwargs(klass):
+        @functools.wraps(klass)
+        def wrapper():
+            
+            # collect arguments from parent classes
+            inherited_docs = {}
+            parents = from_ if from_ is not None else klass.__bases__
+            for parent in parents:
+                if not_from_ is not None and parent not in not_from_:
+                    continue
+                inherited_docs.update(extract_arguments_from_tree(parent))
+
+            # remove arguments that are defined in klass directly
+            klass_args = extract_arguments(klass)
+            inherited_docs = {k: v for k, v in inherited_docs.items() if k not in klass_args}
+
+            if sort_kwargs:
+                inherited_docs = sort_dict(inherited_docs)
+            
+            doc_kwargs = build_function(docs=inherited_docs, **kwargs)
+            
+            # replace docstring
+            klass_doc = klass.__doc__.format(kwargs=doc_kwargs)
+            klass.__doc__ = klass_doc
+            
+            return klass
+
+        return wrapper()
+    
+    if _klass is None:
+        return build_kwargs
+    else:
+        return build_kwargs(_klass)

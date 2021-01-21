@@ -19,7 +19,7 @@ from .exceptions import AlfredError
 
 class ExpMember:
     name: str = None
-    instance_level_logging: bool = False
+    instance_log: bool = False
     showif: dict = {}
     
     #: Name of the parent section. Used when a member is appended to 

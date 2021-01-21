@@ -21,6 +21,8 @@ from ..messages import MessageManager
 from ..exceptions import AlfredError
 from .._helper import fontsize_converter
 from .._helper import check_name
+from .._helper import inherit_kwargs
+
 
 #: jinja Environment giving access to included jinja-templates.
 jinja_env = Environment(loader=PackageLoader(__name__, "templates"))
@@ -45,8 +47,9 @@ class Element:
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the
             page. Values can be 'left', 'center' (default), 'end',
-            or any valid value for the justify-content `flexbox
-            utility`_. Takes effect only, when the element is not
+            or any valid value for the justify-content 
+            `flexbox utility <https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content>`_. 
+            Takes effect only, when the element is not
             full-width.
         width: Defines the horizontal width of the element from
             small screens upwards. It's always full-width on extra
@@ -62,7 +65,7 @@ class Element:
             for the element to be shown. The conditions take the form of
             key-value pairs, where each key is an element name and the
             value is the required input. See :attr:`showif` for details.
-        instance_level_logging: If *True*, the element will use an
+        instance_log: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
 
@@ -71,11 +74,8 @@ class Element:
 
     Notes:
         The Element does not have its own display. It is used only
-        to inherit functionality.
+        to inherit functionality. 
 
-    .. _flexbox utility: https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content
-    .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
-    .. _logging facility: https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
     """
 
@@ -87,6 +87,8 @@ class Element:
     #: :meth:`.render_inner_html`
     element_template: Template = None
 
+    _inherited_kwargs = {}
+
     def __init__(
         self,
         name: str = None,
@@ -96,7 +98,7 @@ class Element:
         height: str = None,
         position: str = "center",
         showif: dict = None,
-        instance_level_logging: bool = False,
+        instance_log: bool = False,
     ):
 
         self.name: str = name  # documented in getter property
@@ -140,7 +142,7 @@ class Element:
         #: its own logger, or use the class-specific logger.
         #: Can be set to *True* to allow for very fine-grained logging.
         #: In most cases, it is fine to leave it at the default (*False*)
-        self.instance_level_logging: bool = instance_level_logging
+        self.instance_log: bool = instance_log
 
         #: A :class:`~.QueuedLoggingInterface`, offering logging
         #: through the methods *debug*, *info*, *warning*, *error*,
@@ -317,6 +319,8 @@ class Element:
 
             element = Element()
             element.element_width = [12, 12, 6]
+        
+        .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
 
         """
         if self.width is not None:
@@ -963,6 +967,7 @@ class _RowCol:
     id: str
 
 
+@inherit_kwargs
 class Row(Element):
     """
     Allows you to arrange up to 12 elements in a row.
@@ -988,7 +993,8 @@ class Row(Element):
             This switch exists, because some elements might default to
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
-        **kwargs: Passed on to the base class :class:`.Element`
+        
+        {kwargs}
 
     Notes:
 
@@ -1087,7 +1093,7 @@ class Row(Element):
         self.elements_full_width: bool = elements_full_width
 
     def added_to_page(self, page):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().added_to_page(page)
 
         for element in self.elements:
@@ -1100,7 +1106,7 @@ class Row(Element):
                 element.width = "full"
 
     def _prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         for element in self.elements:
             element.prepare_web_widget()
 
@@ -1120,13 +1126,13 @@ class Row(Element):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["columns"] = self._cols
         d["name"] = self.name
         return d
 
-
+@inherit_kwargs
 class Stack(Row):
     """
     Stacks multiple elements on top of each other.
@@ -1136,8 +1142,8 @@ class Stack(Row):
 
     Args:
         *elements: The elements to stack.
-        **kwargs: Keyword arguments that are passend on to the parent
-            class :class:`.Row`.
+        
+        {kwargs}
 
     Examples:
 
@@ -1173,7 +1179,7 @@ class Stack(Row):
         super().__init__(*elements, **kwargs)
         self.layout.width_xs = [12 for element in elements]
 
-
+@inherit_kwargs
 class LabelledElement(Element):
     """
     An intermediate Element class which provides support for labels.
@@ -1182,12 +1188,15 @@ class LabelledElement(Element):
     equipped with labels.
 
     Args:
-        toplab, leftlab, rightlab, bottomlab: String or instance of
-            :class:`.Label`, which will be used to label the element.
+        toplab, bottomlab leftlab, rightlab: Labels above, below, left 
+            and right of the element.
+
         layout: A list of integers, specifying the allocation of
             horizontal space between leftlab, main element widget and
             rightlab. Uses Bootstraps 12-column-grid, i.e. you can
             choose integers between 1 and 12.
+        
+        {kwargs}
 
     Notes:
         The labelled element is not supposed to be included on a page on
@@ -1238,7 +1247,7 @@ class LabelledElement(Element):
         self.bottomlab = bottomlab
 
     def added_to_page(self, page):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().added_to_page(page)
 
         for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
@@ -1246,7 +1255,7 @@ class LabelledElement(Element):
                 getattr(self, lab).name = f"{self.name}_{lab}"
 
     def added_to_experiment(self, experiment):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().added_to_experiment(experiment)
         self._layout.responsive = self.experiment.config.getboolean("layout", "responsive")
 
@@ -1353,7 +1362,7 @@ class LabelledElement(Element):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["toplab"] = self.toplab
         d["leftlab"] = self.leftlab
@@ -1363,17 +1372,13 @@ class LabelledElement(Element):
         d["input_valign"] = self._layout.valign_cols[self._input_col]
         return d
 
-
+@inherit_kwargs
 class InputElement(LabelledElement):
     """
     Base class for elements that allow data input.
 
     Args:
-        toplab: String or instance of :class:`.Label`, which will be
-            used to label the element. The other labels (leftlab,
-            rightlab, bottomlab) are supported aswell. Specify them
-            as keyword arguments, not positional arguments.
-        force_input: If `True`, users can only progress to the next page
+        force_input: If `True`, users can  only progress to the next page
             if they enter data into this field. Note that a
             :class:`.NoValidationSection` or similar sections might
             overrule this setting.
@@ -1381,7 +1386,10 @@ class InputElement(LabelledElement):
             A general, experiment-wide setting for force_input can be
             placed in the config.conf (section "general"). That setting
             is used by default and can be overruled here for individual
-            elements.
+            elements. Defaults to False. 
+            
+            The experiment-wide default can be changed in config.conf.
+
         default: Default value. Type depends on the element type.
         prefix: Prefix for the input field.
         suffix: Suffix for the input field.
@@ -1389,23 +1397,18 @@ class InputElement(LabelledElement):
             show up in the alfred-generated codebook. It has
             no effect on the display of the experiment, as it only
             serves as a descriptor for humans.
-        no_input_corrective_hint: Hint to be displayed if force_input
-            set to True and no user input registered. Defaults to the
-            experiment-wide value specified in config.conf.
-        **kwargs: Further keyword arguments are passed on to the
-            parent classes :class:`.LabelledElement` and :class:`Element`.
+        no_input_hint: Hint to be displayed if 
+            *force_input* set to True and no user input registered. 
+            Defaults to the experiment-wide default value 
+            specified in config.conf.
+        
+        {kwargs}
 
     Notes:
         The InputElement does not have its own display. It is used only
         to inherit functionality.
 
     """
-
-    #: Boolean flag, indicating whether the element's html template
-    #: has a dedicated container for corrective hints. If *False*,
-    #: corrective hints regarding this element will be placed in the
-    #: general page-wide conainer for such hints.
-    can_display_corrective_hints_in_line: bool = True
 
     def __init__(
         self,
@@ -1416,7 +1419,7 @@ class InputElement(LabelledElement):
         suffix: Union[str, Element] = None,
         description: str = None,
         disabled: bool = False,
-        no_input_corrective_hint: str = None,
+        no_input_hint: str = None,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
@@ -1427,14 +1430,14 @@ class InputElement(LabelledElement):
 
         self._input = ""
         self._force_input = force_input  # documented in getter property
-        self._no_input_corrective_hint = no_input_corrective_hint
+        self._no_input_hint = no_input_hint
         self._default = default  # documented in getter property
         self._prefix = prefix  # documented in getter property
         self._suffix = suffix  # documented in getter property
 
         #: Flag, indicating whether corrective hints regarding
         #: this element should be shown.
-        self.show_corrective_hints: bool = False
+        self.show_hints: bool = True
 
         #: A :class:`.MessageManager`, handling the corrective hints
         #: for this element.
@@ -1452,7 +1455,7 @@ class InputElement(LabelledElement):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
 
     def _prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super()._prepare_web_widget()
 
         try:
@@ -1543,14 +1546,15 @@ class InputElement(LabelledElement):
 
     @property
     def template_data(self) -> dict:
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["default"] = self.default
         d["prefix"] = self.prefix
         d["suffix"] = self.suffix
         d["input"] = self.input
         d["disabled"] = self.disabled
-        d["corrective_hints"] = list(self.corrective_hints)
+        if self.show_hints:
+            d["corrective_hints"] = list(self.corrective_hints)
         return d
 
     def validate_data(self) -> bool:
@@ -1573,8 +1577,8 @@ class InputElement(LabelledElement):
         """
         str: Hint for subjects, if they left a *force_input* field empty.
         """
-        if self._no_input_corrective_hint:
-            return self._no_input_corrective_hint
+        if self._no_input_hint:
+            return self._no_input_hint
         return self.default_no_input_hint
 
     @property
@@ -1696,7 +1700,7 @@ class InputElement(LabelledElement):
         return data
 
     def added_to_page(self, page):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         from .. import page as pg
 
         if not isinstance(page, pg.PageCore):
@@ -1719,7 +1723,7 @@ class InputElement(LabelledElement):
 
 
 @dataclass
-class Choice:
+class _Choice:
     """Dataclass for managing choices."""
 
     label: str = None
@@ -1733,7 +1737,7 @@ class Choice:
     disabled: bool = False
 
 
-
+@inherit_kwargs(from_=[InputElement])
 class ChoiceElement(InputElement, ABC):
     """
     Baseclass for derivation of choice elements.
@@ -1749,13 +1753,7 @@ class ChoiceElement(InputElement, ABC):
             be listed vertically. Defaults to *False*, i.e. horizontal
             display.
         
-        **kwargs: Inherited Keyword Arguments
-
-            .. csv-table::
-               :widths: 20, 80
-
-               "test", "test2"
-               "test", "test"
+        {kwargs}
         
     """
 
@@ -1783,7 +1781,7 @@ class ChoiceElement(InputElement, ABC):
         self.vertical = vertical
 
         #: List of choices that belong to this element.
-        self.choices: List[Choice] = None
+        self.choices: List[_Choice] = None
 
     def added_to_page(self, page):
         """
@@ -1801,12 +1799,12 @@ class ChoiceElement(InputElement, ABC):
                 label.width = "full"  # in case of TextElement, b/c its default is a special width
 
     def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         self.choices = self.define_choices()
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         d = super().template_data
         d["choices"] = self.choices
         d["vertical"] = self.vertical
@@ -1814,7 +1812,7 @@ class ChoiceElement(InputElement, ABC):
         return d
 
     @abstractmethod
-    def define_choices(self) -> List[Choice]:
+    def define_choices(self) -> List[_Choice]:
         """
         Abstract method for the definition of the individual choices
         belonging to this element.

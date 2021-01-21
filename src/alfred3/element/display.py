@@ -14,6 +14,7 @@ from emoji import emojize
 import cmarkgfm
 
 from .._helper import is_url
+from .._helper import inherit_kwargs
 
 from .core import jinja_env
 from .core import Element
@@ -56,11 +57,11 @@ class VerticalSpace(Element):
 
     @property
     def web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         # documented at baseclass
         return f"<div class='vertical-space-element' style='margin-bottom: {self.space};'></div>"
 
-
+@inherit_kwargs
 class Html(Element):
     """
     Displays html code on a page.
@@ -69,8 +70,8 @@ class Html(Element):
         html: Html to be displayed.
         path: Filepath to a file with html code (relative to the
             experiment directory).
-        **kwargs: Keyword arguments passed to the parent class
-            :class:`Element`.
+        
+        {kwargs}
 
     Notes:
         This works very similar to :class:`.Text`. The most notable
@@ -128,13 +129,13 @@ class Html(Element):
 
     @property
     def template_data(self) -> dict:
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["text"] = self.html_code
 
         return d
 
-
+@inherit_kwargs
 class Text(Element):
     """
     Displays text.
@@ -153,8 +154,7 @@ class Text(Element):
             most cases on different screen sizes.
         emojize: If True (default), emoji shortcodes in the text will
             be converted to unicode (i.e. emojis will be displayed).
-        **kwargs: Keyword arguments passed to the parent class
-            :class:`Element`.
+        {kwargs}
 
     Examples:
         A simple text element, including a 😊 (``:blush:``) emoji added
@@ -229,7 +229,7 @@ class Text(Element):
 
     @property
     def element_width(self) -> str:
-        """:meta private: (documented at :class:`.Element`)"""
+        
         if self.width is not None:
             return " ".join(self.converted_width)
 
@@ -244,13 +244,13 @@ class Text(Element):
 
     @property
     def template_data(self) -> dict:
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["text"] = self.render_text()
 
         return d
 
-
+@inherit_kwargs
 class Image(Element):
     """
     Displays an image.
@@ -259,8 +259,7 @@ class Image(Element):
         path: Path to the image. Can be relative to the experiment
             directory, or absolute.
         url: URL to the image.
-        **kwargs: Further keyword arguments are passed on to the parent
-            class :class:`.Element`.
+        {kwargs}
 
     Notes:
         You can specify *either* a path, or a url, but not both.
@@ -316,12 +315,12 @@ class Image(Element):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["src"] = self.src
         return d
 
-
+@inherit_kwargs
 class Audio(Image):
     """
     Allows playing audio files.
@@ -336,8 +335,7 @@ class Audio(Image):
             automatically (default: *False*).
         loop: If *True*, the audio file will start playing from the
             beginning again, once the end is reached (default: *False*).
-        **kwargs: Further keyword arguments are passed on to the parent
-            class :class:`.Element`.
+        {kwargs}
 
     Notes:
         You can specify *either* a path, or a url, but not both.
@@ -379,7 +377,7 @@ class Audio(Image):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["controls"] = self.controls
         d["autoplay"] = self.autoplay
@@ -387,7 +385,7 @@ class Audio(Image):
 
         return d
 
-
+@inherit_kwargs
 class Video(Audio):
     """
     Displays a video on the page.
@@ -403,8 +401,7 @@ class Video(Audio):
             Defaults to "100%". It is recommended to use leave this
             parameter at the default value and use the general element
             parameter *width* for setting the width.
-        **kwargs: Further keyword arguments are passed on to the parent
-            class :class:`.Audio`.
+        {kwargs}
 
     Notes:
         You can specify *either* a path, or a url, but not both.
@@ -445,7 +442,7 @@ class Video(Audio):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["video_height"] = self.video_height
         d["video_width"] = self.video_width
@@ -453,15 +450,14 @@ class Video(Audio):
 
         return d
 
-
+@inherit_kwargs
 class MatPlot(Element):
     """
     Displays a :class:`matplotlib.figure.Figure` object.
 
     Args:
         fig (matplotlib.figure.Figure): The figure to display.
-        **kwargs: Further keyword arguments are passed on to the parent
-            class :class:`.Element`.
+        {kwargs}
 
     Notes:
         When plotting in alfred, you need to use the Object-oriented
@@ -500,7 +496,7 @@ class MatPlot(Element):
         self.src = None
 
     def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         out = io.BytesIO()
         self.fig.savefig(out, format="svg")
         out.seek(0)
@@ -508,7 +504,7 @@ class MatPlot(Element):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["src"] = self.src
         return d
@@ -547,7 +543,7 @@ class Hline(Element):
         """
         return "<hr>"
 
-
+@inherit_kwargs
 class CodeBlock(Text):
     """
     A convenience element for displaying highlighted code.
@@ -561,8 +557,7 @@ class CodeBlock(Text):
             See https://prismjs.com/index.html#supported-languages
             for an overview of possible language codes. Note that
             we may currently not support all possible languages.
-        **kwargs: Keyword arguments are passed on to the parent elements
-            :class:`.Text` and :class:`.Element`
+        {kwargs}
 
     Examples:
         ::
@@ -594,7 +589,7 @@ class CodeBlock(Text):
 
     @property
     def text(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         if self.path:
             text = self.experiment.subpath(self.path).read_text()
 
@@ -604,9 +599,17 @@ class CodeBlock(Text):
             code = f"```{self.lang}\n{self._text}\n```"
             return code
 
-
+@inherit_kwargs
 class Label(Text):
-    """A utility class, serving as label for other elements."""
+    """
+    A utility class, serving as label for other elements.
+    
+    Args:
+        text: Text to be displayed.
+        width: Usage as in :class:`.Element`, with the same default ('full').
+        {kwargs}
+
+    """
 
     def __init__(self, text, width="full", **kwargs):
         super().__init__(text=text, width=width, **kwargs)
@@ -629,7 +632,7 @@ class Label(Text):
         """The label's vertical alignment"""
         return self.layout.valign_cols[self.layout_col]
 
-
+@inherit_kwargs
 class ProgressBar(LabelledElement):
     """
     Displays a progress bar.
@@ -651,6 +654,7 @@ class ProgressBar(LabelledElement):
             equipped with an animation.
         round: Determines, whether the corners of the progress bar
             should be round.
+        {kwargs}
 
     See Also:
         See :attr:`.ExperimentSession.progress_bar` for more information
@@ -698,7 +702,7 @@ class ProgressBar(LabelledElement):
             @exp.setup
             def setup(exp):
                 exp.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
-                exp.progress_bar.add_css("#progress_bar_ {font-size: 12pt;}")
+                exp.progress_bar.add_css("#progress_bar_ {{font-size: 12pt;}}")
 
             exp += al.Page(name="example_page")
 
@@ -732,7 +736,7 @@ class ProgressBar(LabelledElement):
         self._round_corners: bool = "border-radius: 0;" if round_corners == False else ""
 
     def added_to_experiment(self, exp):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().added_to_experiment(exp)
 
         css = f".progress#{self.name}  {{height: {self._bar_height}; {self._round_corners}}}"
@@ -782,7 +786,7 @@ class ProgressBar(LabelledElement):
 
     @property
     def template_data(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         d = super().template_data
         d["progress"] = self._progress
         d["show_text"] = self._show_text
@@ -808,7 +812,7 @@ class Alert(Text):
         **element_args: Keyword arguments passed to the parent class
             :class:`TextElement`. Accepted keyword arguments are: name,
             font_size, align, width, position, showif,
-            instance_level_logging.
+            instance_log.
 
     Examples:
 
@@ -845,8 +849,7 @@ class ButtonLabels(SingleChoiceButtons):
     Args:
         *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        **kwargs: Further keyword arguments are passed on to
-            the parent class :class:`.SingleChoiceButtons`.
+        {kwargs}ons`.
 
     Examples:
         Using button labels to label single choice buttons::
@@ -871,10 +874,10 @@ class ButtonLabels(SingleChoiceButtons):
 
     @property
     def data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         return {}
 
-
+@inherit_kwargs
 class BarLabels(ButtonLabels):
     """
     Disabled button bar to use for labelling.
@@ -882,8 +885,7 @@ class BarLabels(ButtonLabels):
     Args:
         *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        **kwargs: Further keyword arguments are passed on to
-            the parent class :class:`.ButtonLabels`.
+        {kwargs}
 
     Examples:
         Using button labels to label single choice buttons::

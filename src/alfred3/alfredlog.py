@@ -213,7 +213,7 @@ class QueuedLoggingInterface:
             exp.exp_id.module_name.class_name.object_identifier
         
         The identifier is only added if the object has an attribute
-        *instance_level_logging* that is set to *True*. If the object
+        *instance_log* that is set to *True*. If the object
         has a *name* attribute, that is used as the identifier. Else,
         the object's *uid* is used.
         
@@ -231,7 +231,7 @@ class QueuedLoggingInterface:
         name.append(type(obj).__name__)
 
         try:
-            if obj.instance_level_logging:
+            if obj.instance_log:
                 try:
                     name.append(obj.name)
                 except AttributeError:

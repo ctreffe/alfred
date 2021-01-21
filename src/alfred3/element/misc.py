@@ -12,7 +12,6 @@ from .core import Element
 from .core import InputElement
 from .core import jinja_env
 
-
 class Style(Element):
     """
     Adds CSS code to a page.
@@ -96,7 +95,7 @@ class Style(Element):
 
     @property
     def css_code(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         if self.path:
             p = self.experiment.subpath(self.path)
 
@@ -107,7 +106,7 @@ class Style(Element):
 
     @property
     def css_urls(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         if self.url:
             return [(self.priority, self.url)]
         else:
@@ -223,7 +222,7 @@ class JavaScript(Element):
 
     @property
     def js_code(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         if self.path:
             p = self.experiment.subpath(self.path)
 
@@ -234,7 +233,7 @@ class JavaScript(Element):
 
     @property
     def js_urls(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         if self.url:
             return [(self.priority, self.url)]
         else:

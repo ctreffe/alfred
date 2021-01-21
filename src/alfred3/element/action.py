@@ -9,23 +9,24 @@ from typing import List
 from uuid import uuid4
 
 from ..exceptions import AlfredError
+from .._helper import inherit_kwargs
 
 from .core import jinja_env
-from .core import Choice
+from .core import _Choice
 from .core import Row
 from .misc import JavaScript
 from .input import SingleChoiceButtons
 from .input import SingleChoiceList
 from .input import SelectPageList
 
-
+@inherit_kwargs
 class SubmittingButtons(SingleChoiceButtons):
     """
     SingleChoiceButtons that trigger submission of the current page
     on click.
 
-    The arguments are the same as for the parent class
-    :class:`.SingleChoiceButtons`.
+    Args:
+        {kwargs}
 
     Examples:
         Using submitting buttons together with the
@@ -49,7 +50,7 @@ class SubmittingButtons(SingleChoiceButtons):
         super().__init__(*choice_labels, button_style=button_style, **kwargs)
 
     def added_to_page(self, page):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().added_to_page(page)
 
         t = jinja_env.get_template("submittingbuttons.js.j2")
@@ -57,7 +58,7 @@ class SubmittingButtons(SingleChoiceButtons):
 
         page += JavaScript(code=js)
 
-
+@inherit_kwargs
 class JumpButtons(SingleChoiceButtons):
     """
     SingleChoiceButtons that trigger jumps to specific pages on click.
@@ -70,8 +71,7 @@ class JumpButtons(SingleChoiceButtons):
             "target_name" is the name of the page that the experiment
             will jump to on click of the button.
 
-        **kwargs: Keyword arguments are passed on to the parent class
-            :class:`.SingleChoiceButtons`.
+        {kwargs}
 
     Attributes:
         targets (str): List of target page names.
@@ -136,7 +136,7 @@ class JumpButtons(SingleChoiceButtons):
         self.choice_labels, self.targets = map(list, zip(*choice_labels))
 
     def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().prepare_web_widget()
 
         self._js_code = []
@@ -146,11 +146,11 @@ class JumpButtons(SingleChoiceButtons):
             self.add_js(js)
 
     def validate_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         cond1 = bool(self.input) if self.force_input else True
         return cond1
 
-
+@inherit_kwargs
 class DynamicJumpButtons(JumpButtons):
     """
     JumpButtons, where the target pages depend on the input to
@@ -163,8 +163,7 @@ class DynamicJumpButtons(JumpButtons):
             whose input value will be inserted as the name of the target
             page.
 
-        **kwargs: Keyword arguments are passed on to the parent class
-            :class:`.JumpButtons`.
+        {kwargs}
 
     Attributes:
         targets (str): List of target page names.
@@ -197,7 +196,7 @@ class DynamicJumpButtons(JumpButtons):
     js_template = jinja_env.get_template("dynamic_jumpbuttons.js.j2")
 
     def validate_data(self):
-        """:meta private: (documented at :class:`.InputElement`)"""
+        
         return True
         # cond1 = bool(self.data) if self.force_input else True
 
@@ -211,7 +210,7 @@ class DynamicJumpButtons(JumpButtons):
         # cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
         # return cond1 and cond2
 
-
+@inherit_kwargs
 class JumpList(Row):
     """
     Allows participants to select a page from a dropdown menu and jump
@@ -240,8 +239,8 @@ class JumpList(Row):
             should have rounded corners.
         debugmode: Boolean switch, telling the JumpList whether it
             should operate in debug mode.
-        **kwargs, toplab: Keyword arguments are passend on to the parent
-            class :class:`.SingleChoiceList`
+        
+        {kwargs}
 
     Notes:
         Different from other input-type elements, the JumpList does not
@@ -304,7 +303,7 @@ class JumpList(Row):
         self.debugmode = debugmode
 
     def prepare_web_widget(self):
-        """:meta private: (documented at :class:`.Element`)"""
+        
         super().prepare_web_widget()
         if self.debugmode:
             for el in self.elements:
