@@ -292,8 +292,8 @@ def inherit_kwargs(
     _klass=None, *,
     from_: list = None,
     not_from_: list = None,
-    include_kwargs: list = None,
-    exclude_kwargs: list = None,
+    include: list = None,
+    exclude: list = None,
     sort_kwargs: bool = True,
     build_function: callable = build_kwargs,
     **kwargs,
@@ -306,8 +306,8 @@ def inherit_kwargs(
         not_from_: List of classes *not* to inherit argument 
             documentation from. Useful, if you want to include some
             specific parent or grandparent.
-        include_kwargs: List of keyword argument names to include
-        exclude_kwargs: List of keyword argument names to exclude
+        include: List of keyword argument names to include
+        exclude: List of keyword argument names to exclude
         sort_kwargs: If *True*, the keyword arguments will be arranged
             in alphabetical order.
         build_function: 
@@ -324,9 +324,11 @@ def inherit_kwargs(
           way.
     
     """
+    exclude = exclude if exclude is not None else []
     def build_kwargs(klass):
         @functools.wraps(klass)
         def wrapper():
+
             
             # collect arguments from parent classes
             inherited_docs = {}
@@ -339,6 +341,11 @@ def inherit_kwargs(
             # remove arguments that are defined in klass directly
             klass_args = extract_arguments(klass)
             inherited_docs = {k: v for k, v in inherited_docs.items() if k not in klass_args}
+
+            # apply inclusion and exclusion
+            for arg in list(inherited_docs.keys()):
+                if arg in exclude: del inherited_docs[arg]
+                elif include is not None and arg not in include: del inherited_docs[arg]
 
             if sort_kwargs:
                 inherited_docs = sort_dict(inherited_docs)
