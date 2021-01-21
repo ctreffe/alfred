@@ -17,9 +17,9 @@ from typing import Union
 from typing import Iterator
 from .page import Page
 from .section import Section
-from .element import Element
-from .element import InputElement
-from .element import Label
+from .element.core import Element
+from .element.core import InputElement
+from .element.display import Label
 
 def icon(name: str, ml: int = 0, mr: int = 0) -> str:
     """Returns HTML code for displaying font-awesome icons.

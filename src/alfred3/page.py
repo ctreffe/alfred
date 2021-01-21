@@ -41,6 +41,7 @@ from future.utils import with_metaclass
 
 from . import alfredlog
 from . import element as elm
+from .element.misc import Style
 from . import saving_agent
 from ._core import ExpMember
 from ._helper import _DictObj
@@ -148,7 +149,7 @@ class PageCore(ExpMember):
             
             if self.exp.config.getboolean("general", "debug") and self is not self.exp.final_page:
                 name = self.name + "__debug_jumplist__"
-                jumplist = elm.JumpList(
+                jumplist = elm.action.JumpList(
                     scope="exp", 
                     check_jumpto=False, 
                     check_jumpfrom=False, 
@@ -475,7 +476,7 @@ class CoreCompositePage(PageCore):
 
         input_elements = {}
         for name, el in self.elements.items():
-            if isinstance(el, (elm.InputElement)):
+            if isinstance(el, (elm.core.InputElement)):
                 input_elements[name] = el
         return input_elements
     
@@ -521,7 +522,7 @@ class CoreCompositePage(PageCore):
 
     def append(self, *elements):
         for elmnt in elements:
-            if not isinstance(elmnt, (elm.Element)):
+            if not isinstance(elmnt, (elm.core.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
 
             elmnt.added_to_page(self)
@@ -582,7 +583,7 @@ class CoreCompositePage(PageCore):
         super(CoreCompositePage, self).close_page()
 
         for elmnt in self.elements.values():
-            if isinstance(elmnt, elm.InputElement):
+            if isinstance(elmnt, elm.core.InputElement):
                 elmnt.disabled = True
 
         debug_jumplist = self.elements.get(self.name + "__debug_jumplist__")
@@ -771,36 +772,36 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
 
             if self.responsive_width:
                 w = self._parse_responsive_width(self.responsive_width)
-                self += elm.Style(code=self._responsive_media_query(w))
+                self += Style(code=self._responsive_media_query(w))
 
             elif self.experiment.config.get("layout", "responsive_width"):
                 config_width = self.experiment.config.get("layout", "responsive_width")
                 w = self._parse_responsive_width(config_width)
-                self += elm.Style(code=self._responsive_media_query(w))
+                self += Style(code=self._responsive_media_query(w))
 
         elif not self.fixed_width:
             w = self.experiment.config.get("layout", "fixed_width")
-            self += elm.Style(code=f".fixed-width {{ width: {w}; }}")
-            self += elm.Style(code=f".min-width {{ min-width: {w}; }}")
+            self += Style(code=f".fixed-width {{ width: {w}; }}")
+            self += Style(code=f".min-width {{ min-width: {w}; }}")
 
         else:
-            self += elm.Style(code=f".fixed-width {{ width: {self.fixed_width}; }}")
-            self += elm.Style(code=f".min-width {{ min-width: {self.fixed_width}; }}")
+            self += Style(code=f".fixed-width {{ width: {self.fixed_width}; }}")
+            self += Style(code=f".min-width {{ min-width: {self.fixed_width}; }}")
 
     def _set_color(self):
         if self.header_color:
-            self += elm.Style(code=f".logo-bg {{background-color: {self.header_color};}}")
+            self += Style(code=f".logo-bg {{background-color: {self.header_color};}}")
 
         elif self.experiment.config.get("layout", "header_color", fallback=False):
             c = self.experiment.config.get("layout", "header_color", fallback=False)
-            self += elm.Style(code=f".logo-bg {{background-color: {c};}}")
+            self += Style(code=f".logo-bg {{background-color: {c};}}")
 
         if self.background_color:
-            self += elm.Style(code=f"body {{background-color: {self.background_color};}}")
+            self += Style(code=f"body {{background-color: {self.background_color};}}")
 
         elif self.experiment.config.get("layout", "background_color", fallback=False):
             c = self.experiment.config.get("layout", "background_color", fallback=False)
-            self += elm.Style(code=f"body {{background-color: {c};}}")
+            self += Style(code=f"body {{background-color: {c};}}")
 
     @property
     def web_thumbnail(self):
@@ -905,7 +906,7 @@ class NoNavigationPage(Page):
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
-        self += elm.Style("#page-navigation {display: none;}")
+        self += Style("#page-navigation {display: none;}")
 
 
 ####################
@@ -1251,5 +1252,5 @@ class DefaultFinalPage(Page):
 
     def on_exp_access(self):
         txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
-        self += elm.Text(text=txt, align="center")
-        self += elm.WebExitEnabler()
+        self += elm.display.Text(text=txt, align="center")
+        self += elm.misc.WebExitEnabler()

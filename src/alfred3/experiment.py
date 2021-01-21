@@ -66,7 +66,7 @@ from . import element as elm
 
 class Experiment:
     """ 
-    Holds pages and section and creates experiment sessions.
+    Holds pages and sections, filled in script.py.
 
     Experiment members can be added with the augmented assigment 
     operator ``+=`` (see exampples). They can be accessed with the
@@ -78,12 +78,18 @@ class Experiment:
 
     Examples:
 
-        Create an experiment and add simple page in linear style
+        Create an experiment and add simple page in object oriented 
+        style::
 
-        >>> exp = al.Experiment()
-        >>> exp += al.Page(name="page1")
-        >>> exp.members
-        {"page1": Page(class="Page", name="page1")}
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class HelloWorld(al.Page):
+                name = "hello_world"
+
+                def on_exp_access(self):
+                    self += al.TextEntry(toplab="Enter something", name="text1")
 
         Access a page with square bracket syntax.
         
@@ -132,22 +138,21 @@ class Experiment:
 
             In this example, we use the the ``@exp.setup`` decorator to
             add a plugin to the experiment session's plugin dictionary and
-            access that same plugin later in a page hook.
+            access that same plugin later in a page hook::
 
-            >>> import alfred3 as al
-            >>> exp = al.Experiment()
-            ...
-            >>> @exp.setup
-            >>> def setup(exp):  # the decorated function can have any name 
-            ...     exp.plugins["a"] = "mock plugin"
-            ...
-            >>> @exp.member
-            >>> class HelloWorld(al.Page):
-            ...     name = "hello_world"
-            ...
-            ...     def on_exp_access(self):
-            ...         print(self.exp.plugins["a"])
-            mock plugin
+                import alfred3 as al
+                exp = al.Experiment()
+                
+                @exp.setup
+                def setup(exp):
+                    exp.plugins["a"] = "mock plugin"
+                
+                @exp.member
+                class HelloWorld(al.Page):
+                    name = "hello_world"
+                
+                    def on_exp_access(self):
+                        print(self.exp.plugins["a"])
             
         """
 
@@ -183,16 +188,18 @@ class Experiment:
             changing the final page::
 
                 import alfred3 as al
-                
                 exp = al.Experiment()
 
-                exp += al.Page(name="page1")
-                exp.page1 += al.TextEntry("Enter text", name="text1")
+                @exp.member
+                class Demo(al.Page):
+                    name = "demo1"
 
                 @exp.finish
                 def set_final_page(exp):  # the decorated function can have any name 
+                    
                     if exp.values["text1"] == "value":
                        exp.final_page = al.Page("Option A", name="final_page_a")
+                   
                    else:
                        exp.final_page = al.Page("Option B", name="final_page_b")
             
@@ -217,35 +224,32 @@ class Experiment:
 
         Examples:
 
-            Adding a page directly to the main content section:
+            Adding a page directly to the main content section::
 
-            >>> exp = al.Experiment()
-            ... 
-            >>> @exp.member
-            >>> class HelloWorld(al.Page):
-            ...     name = "hello_world"
-            ...     
-            ...     def on_exp_access(self):
-            ...         self += al.Text("This is a 'hello, world!' Page.")
-            ...
-            >>> exp.members
-            {"hello_world": Page(class="HelloWorld", name="hello_world")}
+                import alfred3 as al
+                exp = al.Experiment()
+                
+                @exp.member
+                class HelloWorld(al.Page):
+                    name = "hello_world"
+                    
+                    def on_exp_access(self):
+                        self += al.Text("This is a 'hello, world!' Page.")
 
-            Adding a page to a specific section:
+            Adding a page to a specific section::
 
-            >>> exp = al.Experiment()
-            ... 
-            >>> exp += al.Section(name="main")
-            >>> @exp.member(of_section="main")
-            >>> class HelloWorld(al.Page):
-            ...     name = "hello_world"
-            ...     title = "Hello, World!"
-            ...     def on_exp_access(self):
-            ...         self += al.Text("This is a 'hello, world!' Page.")
-            ...
-            >>> exp["hello_world"]
-            Page(class="HelloWorld", name="hello_world")
+                import alfred3 as al
+                exp = al.Experiment()
+                
+                exp += al.Section(name="main")
 
+                @exp.member(of_section="main")
+                class HelloWorld(al.Page):
+                    name = "hello_world"
+                    title = "Hello, World!"
+                    def on_exp_access(self):
+                        self += al.Text("This is a 'hello, world!' Page.")
+        
         """
 
         def add_member(member):
@@ -314,21 +318,20 @@ class Experiment:
         Use this decorator, if you want to define a new final page with
         full access to all experiment hooks.
         
-        Examples:
-
-            >>> exp = al.Experiment()
-            ...
-            >>> @exp.as_final_page
-            >>> class Final(al.Page):
-            ...     name = "final_page"
-            ...     def on_exp_access(self):
-            ...         self += al.Text("This is the final page.")
-            ...
-            >>> exp.final_page.name
-            final_page
-        
         See Also:
             :attr:`.final_page`: The final page as a property.
+        
+        Examples:
+            ::
+            
+                exp = al.Experiment()
+
+                @exp.as_final_page
+                class Final(al.Page):
+                    name = "final_page"
+
+                    def on_exp_access(self):
+                        self += al.Text("This is the final page.")
 
         """
 
@@ -586,7 +589,7 @@ class ExperimentSession:
         self.user_interface_controller = UserInterface(self)
         self.ui = self.user_interface_controller
         
-        self.progress_bar = elm.ProgressBar() # documented in getter method
+        self.progress_bar = elm.display.ProgressBar() # documented in getter method
 
         # init logging message
         self.log.info(
@@ -599,7 +602,7 @@ class ExperimentSession:
         )
     
     @property
-    def progress_bar(self) -> elm.ProgressBar:
+    def progress_bar(self) -> elm.display.ProgressBar:
         """
         The experiment's progress bar.
 
@@ -646,7 +649,7 @@ class ExperimentSession:
         return self._progress_bar
     
     @progress_bar.setter
-    def progress_bar(self, bar: elm.ProgressBar):
+    def progress_bar(self, bar: elm.display.ProgressBar):
         if bar.name is not None:
             raise AlfredError("If you redefine the progress bar, you can't set a custom name. It's fixed to 'progress_bar_'.")
         bar.name = "progress_bar_"
