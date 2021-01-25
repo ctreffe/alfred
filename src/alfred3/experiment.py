@@ -110,6 +110,10 @@ class Experiment:
         #: A dictionary of all pages and sections added to the experiment.
         self.members: dict = {}
 
+        #: A dictionary of all pages and sections that are direct children
+        #: of the main _content section
+        self._root_members: dict = {}
+
         #: A list of function that will be called upon creation of an 
         #: experiment session. They are added with the :meth:`.setup`
         #: decorator
@@ -256,6 +260,10 @@ class Experiment:
         def add_member(member):
             @functools.wraps(member)
             def wrapper():
+                if isclass(member) and not member.name:
+                    if Page in member.__bases__ or Section in member.__bases__:
+                        member.name = type(member).__name__
+
                 self.append(member, to_section=of_section)
                 return member
 
@@ -343,33 +351,6 @@ class Experiment:
 
         return wrapper()
 
-    def init_members(self) -> dict:
-        """
-        Initializes all pages and sections in the members dictionary.
-
-        Also appends all members to their respective parents. If a 
-        member is already instantiated, the instance is copied to ensure
-        uniqueness of instances across experiments.
-
-        Returns:
-            dict: Dictionary of initialized sections and pages.
-
-        """
-
-        members = {}
-
-        for member_name, member in self.members.items():
-            member_inst = member() if isclass(member) else member
-            
-            members[member_name] = member_inst
-
-        for member_inst in members.values():
-            if member_inst.parent_name == "_content":
-                continue
-            parent = members[member_inst.parent_name]
-            parent += member_inst
-
-        return members
 
     def create_session(
         self, session_id: str, config: ExperimentConfig, secrets: ExperimentSecrets, **urlargs
@@ -396,9 +377,8 @@ class Experiment:
 
         exp_session._allow_append = True
 
-        for member in self.init_members().values():
-            if member.parent_name == "_content":
-                exp_session += member
+        for member in self._root_members.values():
+            exp_session += member
 
         if self.final_page is not None:
             if isclass(self.final_page):
@@ -448,9 +428,17 @@ class Experiment:
                 raise ValueError(f"A section or page of name '{name}' already exists.")
 
             member.parent_name = to_section
+            member_inst = member() if isclass(member) else member
 
-            self.members[member.name] = member
-    
+            self.members[member.name] = member_inst
+
+            if member_inst.parent_name == "_content":
+                self._root_members[member_inst.name] = member_inst
+            else:
+                parent = self.members[member_inst.parent_name]
+                parent += member_inst
+
+        
     def __iadd__(self, other: Union[Section, Page]):
         self.append(other, to_section="_content")
         return self
