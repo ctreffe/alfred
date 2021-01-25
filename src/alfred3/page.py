@@ -159,56 +159,36 @@ class PageCore(ExpMember):
                 jumplist.should_be_shown = False
                 self += jumplist
             
-        self.on_showing_widget()
-        self.on_showing()
         self.on_each_show()
 
         self._has_been_shown = True
 
-    def on_showing_widget(self):
-        """**DEPRECATED**: Hook for code that is meant to be executed 
-        *every time* the page is shown.
-        
-        .. note::
-            **Note**: on_showing_widget is deprecated and will be 
-            removed in future releases. Please use one of the 
-            replacements:
-
-            - on_first_show
-            - on_each_show
-        """
-        pass
-
-    def on_showing(self):
-        """**DEPRECATED**: Hook for code that is meant to be executed 
-        *every time* the page is shown.
-
-        .. note::
-            **Note**: on_showing is deprecated and will be removed in
-            future releases. Please use one of the replacements:
-
-            - on_first_show
-            - on_each_show
-        """
-        pass
 
     def on_first_show(self):
-        """Hook for code that is meant to be executed when a page is
-        shown for the first time.
-
+        """
+        Executed *once*, when the page is shown for the first time, 
+        *before* executing :meth:`.on_each_show`.
+        
         This is your go-to-hook, if you want to have access to data 
         from other pages within the experiment, and your code is meant
         to be executed only once (i.e. the first time a page is shown).
 
-        *New in v1.4.*
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
+
         """
         pass
 
     def on_each_show(self):
-        """Hook for code that is meant to be executed *every time* the 
-        page is shown.
+        """
+        Executed *every time* the page is shown, *after* executing 
+        :meth:`.on_first_show`.
+        
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
 
-        *New in v1.4.*
         """
         pass
 
@@ -227,67 +207,51 @@ class PageCore(ExpMember):
         if not self._has_been_hidden:
             self.on_first_hide()
 
-        self.on_hiding_widget()
-        self.on_hiding()
         self.on_each_hide()
 
         self._has_been_hidden = True
 
         self.save_data()
 
-    def on_hiding_widget(self):
-        """**DEPRECATED**: Hook for code that is meant to be executed 
-        *every time* the page is hidden.
-
-        .. note::
-            **Note**: on_hiding_widget is deprecated and will be removed
-            in future releases. Please use one of the replacements:
-
-            - on_first_hide
-            - on_each_hide
-            - on_close
-        """
-        pass
-
-    def on_hiding(self):
-        """**DEPRECATED**: Hook for code that is meant to be executed 
-        *every time* the page is hidden.
-
-        .. note::
-            **Note**: on_hiding is deprecated and will be removed in
-            future releases. Please use one of the replacements:
-
-            - on_first_hide
-            - on_each_hide
-            - on_close
-        """
-        pass
 
     def on_first_hide(self):
-        """Hook for code that is meant to be executed only once, when
+        """
+        Executed *once*, when the page is hidden for the first time, 
+        *before* executing :meth:`.on_each_hide`.
+        
+        Hook for code that is meant to be executed only once, when
         the page is hidden for the first time, **before** saving the
         page's data.
 
-        .. note: **Important**: Note the difference to :meth:`on_close`, which is
-        executed upon final submission of the page's data. When using
-        :meth:`on_first_hide`, subject input can change (e.g., when a
-        subject revists a page and changes his/her input).
+        Notes:
+            Note the difference to :meth:`on_close`, which is
+            executed upon final submission of the page's data. When using
+            :meth:`on_first_hide`, subject input can change (e.g., when a
+            subject revists a page and changes his/her input).
+        
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
 
-        *New in v1.4.*
         """
         pass
 
     def on_each_hide(self):
-        """Hook for code that is meant to be executed *every time* 
-        the page is hidden, **before** saving the page's data.
+        """
+        Executed *every time* the page is hidden, *before* closing it 
+        and *before* saving data, but *after* executing 
+        :meth:`.on_first_hide`.
+        
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
 
-        *New in v1.4*
         """
         pass
 
     def on_close(self):
-        """Hook for code that is meant to be executed when a page is 
-        closed, **before** saving the page's data.
+        """
+        Executed *once*, when the page is closed, *before* data saving.
 
         This is your go-to-hook, if you want to have the page execute 
         this code only once, when submitting the data from a page. After
@@ -295,28 +259,25 @@ class PageCore(ExpMember):
         This is the most important difference of :meth:`on_close` from
         :meth:`on_first_hide` and :meth`on_each_hide`.
 
-        *New in v1.4*
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
+
         """
         pass
 
     def on_exp_access(self):
-        """Hook for code that is meant to be executed as soon as a page 
-        is added to an experiment.
+        """
+        Executed *once*, when the :class:`.ExperimentSession` becomes 
+        available to the page.
         
         This is your go-to-hook, if you want to have access to the 
         experiment, but don't need access to data from other pages.
-
-        .. note::
-            Compared to :meth:`on_first_show`, this method gets executed
-            earlier, i.e. during experiment generation, while 
-            :meth:`on_first_show` is executed on runtime.
         
-        .. note::
-            Internally, the hook is executed at the end of the 
-            :class:`CoreCompositePage`'s added_to_experiment method,
-            not the :class:`PageCore`'s.
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
 
-        *New in v1.4*
         """
         pass
 
@@ -608,50 +569,65 @@ class CoreCompositePage(PageCore):
 
     def custom_move(self):
         """
-        Hook for defining a page's own movement behavior. 
+        Hook for defining a page's own movement behavior, executed 
+        *every time* a movement *from* the page takes place,
+        *before* :meth:`.on_first_hide` and :meth:`.on_each_hide`. 
+
+        User input to the elements on the current page is available in
+        this method through the page's :attr:`.Page.data` attribute.
         
-        Use the :class:`.MovementManager`s movement methods to define
+        Use the :class:`.ExperimentSession` s movement methods to define
         your own behavior. The available methods are
 
-        - forward
-        - backward
-        - jump_by_name
-        - jump_by_index
+        .. autosummary::
+           :nosignatures:
+           
+           ~alfred3.experiment.ExperimentSession.forward
+           ~alfred3.experiment.ExperimentSession.backward
+           ~alfred3.experiment.ExperimentSession.jump
+        
+        Notes:
+            You can fall back to alfred3's movement system by returning 
+            *True* from your custom move function.
 
-        Example::
-
-            exp = al.Experiment()
-
-            @exp.member
-            class CustomMove(al.Page):
-                name = "custom_move"
-                
-                def custom_move(self):
-                    self.exp.jump(to="third")
-
-            exp += al.Page(name="second")
-            exp += al.Page(name="third")
-
-
-        You can work with different conditions and fall back to 
-        alfred3's movement system by returning *True*::
+        Examples:
             
-            exp = al.Experiment()
+            Create a page that always jumps to a specific page upon
+            submission::
 
-            @exp.member
-            class CustomMove(al.Page):
+                exp = al.Experiment()
 
-                def on_exp_access(self):
-                    self += elm.TextEntry(name="text")
-                
-                def custom_move(self):
-                    if self.data.get("text) == "yes":
+                @exp.member
+                class CustomMove(al.Page):
+                    name = "custom_move"
+                    
+                    def custom_move(self):
                         self.exp.jump(to="third")
-                    else:
-                        return True
 
-            exp += al.Page(name="second")
-            exp += al.Page(name="third")
+                exp += al.Page(name="second")
+                exp += al.Page(name="third")
+
+
+            Create a page that jumps to a specific page, if it received
+            a user input of 'yes', and use alfred3's usual movement
+            system otherwise::
+            
+                exp = al.Experiment()
+
+                @exp.member
+                class CustomMove(al.Page):
+
+                    def on_exp_access(self):
+                        self += elm.TextEntry(name="text")
+                    
+                    def custom_move(self):
+                        if self.data.get("text) == "yes":
+                            self.exp.jump(to="third")
+                        else:
+                            return True
+
+                exp += al.Page(name="second")
+                exp += al.Page(name="third")
         
         """
         return True
