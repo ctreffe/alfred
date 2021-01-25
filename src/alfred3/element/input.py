@@ -586,8 +586,6 @@ class MultipleChoice(ChoiceElement):
 
         Input is turned into a single value which fits the structure of
         other input element data dictionaries.
-
-        :meta private: (documented at :class:`.InputElement`)
         """
         data = {}
         vals = [str(i) for i, (name, checked) in enumerate(self.input.items()) if checked]
