@@ -357,12 +357,14 @@ class Section(ExpMember):
         self.active = True
         
         self.log.debug(f"Entering {self}.")
+        self.on_enter()
         self.update_members()
 
         if self.shuffle:
             self.shuffle_members()
 
         if isinstance(self.first_member, Section) and not self.first_member.active:
+            self.hand_over()
             self.first_member.enter()
         
     def leave(self):
