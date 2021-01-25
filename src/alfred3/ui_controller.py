@@ -369,7 +369,7 @@ class MovementManager:
     def start(self):
 
         if not self.current_page.should_be_shown:
-            raise AlfredError("Your must page must not be hidden.")
+            raise AlfredError("The first page must not be hidden.")
         
         self.exp.root_section.enter()
         self.current_page._on_showing_widget(show_time=time.time())
