@@ -305,6 +305,11 @@ class JumpList(Row):
     def prepare_web_widget(self):
         
         super().prepare_web_widget()
+
+        if not self.page.section.allow_jumpfrom:
+            # disable button (disabling the list is controlled via init arguments of the list)
+            self.elements[1].disabled = True
+
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
