@@ -1157,7 +1157,7 @@ class SelectPageList(SingleChoiceList):
             choice.id = f"choice{i}-{self.name}"
             choice.label_id = f"{choice.id}-lab"
             choice.disabled = True if self.disabled else self._jump_forbidden(page_name)
-            choice.checked = self._determine_check(i)
+            choice.checked = self._determine_check(i) if not choice.disabled else False
             choice.css_class = f"choice-button choice-button-{self.name}"
 
             choices.append(choice)
