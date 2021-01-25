@@ -296,70 +296,68 @@ class Section(ExpMember):
 
 
     def on_exp_access(self):
-        """Hook for code that is meant to be executed as soon as a 
-        section is added to an experiment.
+        """
+        Executed *once*, when the :class:`.ExperimentSession` becomes 
+        available to the section.
 
-        Example::
-            class MainSection(SegmentedSection):
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
 
-                def on_exp_access(self):
-                    self += Page(title='Example Page')
-        
-        *New in v1.4.*
         """
         pass
 
     def on_enter(self):
-        """Hook for code that is meant to be executed upon entering
-        a section in an ongoing experiment.
+        """
+        Executed *every time* this section is entered.
 
-        Example::
-            class MainSection(SegmentedSection):
-
-                def on_enter(self):
-                    print("Code executed upon entering section.")
-
-        *New in v1.4.*
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
         """
         pass
 
     def on_leave(self):
-        """Hook for code that is meant to be executed upon leaving a 
-        section in an ongoing experiment.
+        """
+        Executed *every time* this section is left.
 
-        This code will be executed *after* closing the section's last
-        page.
-
-        Example::
-            class MainSection(SegmentedSection):
-
-                def on_leave(self):
-                    print("Code executed upon leaving section.")
-        
-        *New in v1.4.*
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
         """
         pass
 
-    def on_move(self):
-        pass
-    
-    def on_forward(self):
+    def on_resume(self):
+        """ 
+        Executed *every time* the experiment resumes from a child section to this section.
+
+        Resuming takes place, when a child section is left and the
+        next page is a direct child of the parent section. Then this 
+        the parent section becomes the primary current section again: it
+        resumes its status.
+
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
+        """
         pass
 
-    def on_backward(self):
-        pass
+    def on_hand_over(self):
+        """
+        Executed *every time* a subsection of this section is entered.
 
-    def on_jumpfrom(self):
-        pass
-
-    def on_jumpto(self):
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
+        
+        """
         pass
 
     def enter(self):
         self.active = True
         
         self.log.debug(f"Entering {self}.")
-        self.on_enter()
+        self.update_members()
 
         if self.shuffle:
             self.shuffle_members()
@@ -385,47 +383,28 @@ class Section(ExpMember):
         self.log.debug(f"{self} handing over to child section.")
         self.on_hand_over()
     
-    def on_resume(self):
-        """ 
-        Hook for code to be executed on resuming this section.
-
-        Resuming takes place, when a child section is left and the
-        next page is a direct child of this section (self). Then this 
-        section (self) becomes the primary current section again, it
-        resumes its status.
-        """
-        pass
-
-    def on_hand_over(self):
-        """
-        Hook for code to be executed when this section hands over.
-
-        Handover takes place, when a subsection of this section 
-        is entered.
-        """
-        pass
-
     def forward(self):
-        self.on_forward()
+        pass
     
     def backward(self):
-        self.on_backward()
+        pass
     
     def jumpfrom(self):
-        self.on_jumpfrom()
+        pass
     
     def jumpto(self):
-        self.on_jumpto()
-    
-    def move(self, direction: str):
-        self.on_move()
-        self.update_members()
+        pass
 
+    def move(self, direction):
         if direction == "forward":
             self.forward()
         elif direction == "backward":
             self.backward()
-
+        elif direction == "jumpfrom":
+            self.jumpfrom()
+        elif direction == "jumpto":
+            self.jumpto()
+    
     @staticmethod
     def validate(page):
         return page.validate()
@@ -537,7 +516,7 @@ class RootSection(Section):
 
     @final_page.setter
     def final_page(self, page):
-        page += elm.HideNavigation()
+        page += elm.misc.HideNavigation()
         self.finished_section.members = {}
         self.finished_section._final_page = page
     

@@ -207,7 +207,12 @@ class MovementManager:
         elif not getattr(self.current_page.section, "allow_" + direction):
             self.log.debug(f"Section of page {self.current_page} does not allow movement in direction '{direction}'")
             return self._abort_move()
-
+        
+        # check section permission for target section
+        elif direction == "backward" and not to_page.section.allow_backward:
+            self.log.debug(f"Section of page {to_page} does not allow movement in direction '{direction}'")
+            return self._abort_move()
+        
         # validate page data        
         elif not self.current_page.section.validate(self.current_page):
             self.log.debug(f"Validation of {self.current_page} failed. Aborting move.")
@@ -220,30 +225,41 @@ class MovementManager:
 
         # management of section entering and leaving behavior
         # and recording the move
+        page_status_before = current_page.is_closed
+        
         if current_page.section is not to_page.section:
+            if direction == "jump":
+                current_page.section.move("jumpfrom")
+            else:
+                current_page.section.move(direction)
+
             if to_page.section.name in current_page.section.all_members:
                 current_page.section.hand_over()
             else:
                 current_page.section.leave()
-                
+            
+
             if self.exp.config.getboolean("general", "record_move_history"):
                 self.record_move(page_status_before, direction=direction, to_page=to_page)
+            
+            if direction == "jump":
+                to_page.section.move("jumpto")
 
-            if current_page.section.name not in to_page.section.all_members:
-                to_page.section.enter()
-            else:
+            if current_page.section.name in to_page.section.all_members:
                 to_page.section.resume()
+            else:
+                to_page.section.enter()
+        
         else:
             if self.exp.config.getboolean("general", "record_move_history"):
                 self.record_move(page_status_before, direction=direction, to_page=to_page)
 
-        if direction == "jump":
-            current_page.section.jumpfrom()
-            to_page.section.jumpto()
+            if direction == "jump":
+                current_page.section.move("jumpfrom")
+                current_page.section.move("jumpto")
+            else:
+                current_page.section.move(direction)
 
-        else:
-            current_page.section.move(direction=direction)
-        
         to_page._on_showing_widget(show_time=now)
         
         if not to_page.should_be_shown:
