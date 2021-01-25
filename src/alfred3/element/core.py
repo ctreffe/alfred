@@ -52,11 +52,11 @@ class Element:
             Takes effect only, when the element is not
             full-width.
         width: Defines the horizontal width of the element from
-            small screens upwards. It's always full-width on extra
+            small screens upwards. It is always full-width on extra
             small screens. Possible values are 'narrow', 'medium',
             'wide', and 'full'. For more detailed control, you can
             define the :attr:`.element_width` attribute.
-        height: Vertical height of the element's display area. Supply a
+        height: Vertical height of the elements display area. Supply a
             string with a unit, e.g. "80px". Usually, the default is
             fine. For adding vertical space to a page, you should prefer
             the :class:`.VerticalSpace` element, as it is sematically
@@ -80,7 +80,7 @@ class Element:
     """
 
     #: Base template for the element, which will be used to hold the
-    #: rendered element template. Gets rendered by :attr:`.web_widget`
+    #: rendered element template. Gets rendered by :attr:`.Element.web_widget`
     base_template: Template = jinja_env.get_template("Element.html.j2")
 
     #: The element's specific, inner template. Gets rendered by
@@ -784,6 +784,10 @@ class RowLayout:
         responsive: Boolean, indicating whether breakpoints should
             be responsive, or not.
 
+    Attributes:
+        width_xs: List of column widths on screens of size 'xs' or bigger
+            (<576px). Content must be integers between 1 and 12.
+
     Examples:
 
         ::
@@ -803,9 +807,10 @@ class RowLayout:
         #: Indicates whether breakpoints should be responsive, or not.
         self.responsive: bool = responsive
 
-        #: List of column widths on screens of size 'xs' or bigger
-        #: (<576px). Content must be integers between 1 and 12.
         self.width_xs: List[int] = None
+        """List of column widths on screens of size 'xs' or bigger
+        (<576px). Content must be integers between 1 and 12.
+        """
 
         #: List of column widths on screens of size 's' or bigger
         #: (>=576px). Content must be integers between 1 and 12.
@@ -1188,7 +1193,7 @@ class LabelledElement(Element):
     equipped with labels.
 
     Args:
-        toplab, bottomlab leftlab, rightlab: Labels above, below, left 
+        toplab, bottomlab, leftlab, rightlab: Labels above, below, left 
             and right of the element.
 
         layout: A list of integers, specifying the allocation of

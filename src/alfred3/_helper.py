@@ -310,12 +310,30 @@ def inherit_kwargs(
         exclude: List of keyword argument names to exclude
         sort_kwargs: If *True*, the keyword arguments will be arranged
             in alphabetical order.
-        build_function: 
+        build_function: A function that minimally takes in an argument
+            of *docs*, which is the dictionary of arguments and their
+            documentation. It must return a string. Its output is 
+            inserted in the decorated class' docstring.
     
     Notes:
         Replaces the placeholder``{kwargs}`` in the docstring of the 
         decorated object with argument documentation extracted from
         the parent classes.
+
+        Further notes:
+        
+        1. The decorator can deal with classes that inherit from more 
+           than one class.
+        
+        2. It is possible to use a different formatting by supplying
+           a different build function.
+        
+        3. Arguments that are already part of the decorated class' 
+           docstring will be filtered out.
+        
+        4. By using the *from_* argument, you can inherit from a 
+           completely different class that is not part of the decorated
+           class' hierarchy.
 
     See Also:
         - :class:`.ShareDocumentation`: Base class for defining shared 
@@ -329,7 +347,6 @@ def inherit_kwargs(
         @functools.wraps(klass)
         def wrapper():
 
-            
             # collect arguments from parent classes
             inherited_docs = {}
             parents = from_ if from_ is not None else klass.__bases__
