@@ -404,6 +404,8 @@ class Section(ExpMember):
         Raises:
             ValidationError: If validation of the current page fails.
         """
+        self.validate_current_page()
+        
         if direction == "forward":
             self.forward()
         elif direction == "backward":
@@ -413,7 +415,6 @@ class Section(ExpMember):
         elif direction == "jumpto":
             self.jumpto()
         
-        self.validate_current_page()
 
     def validate_pages(self):
         """
