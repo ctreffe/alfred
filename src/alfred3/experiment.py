@@ -123,7 +123,8 @@ class Experiment:
 
     def setup(self, func):
         """
-        Decorator for functions that work on the experiment session.
+        Decorator for functions that work on the experiment session
+        directly after intialization.
         
         The decorated function can have an arbitrary name. It *must*
         take an :class:`.ExperimentSession` object as its only argument
@@ -365,7 +366,7 @@ class Experiment:
         for member_inst in members.values():
             if member_inst.parent_name == "_content":
                 continue
-            parent = members[member.parent_name]
+            parent = members[member_inst.parent_name]
             parent += member_inst
 
         return members
