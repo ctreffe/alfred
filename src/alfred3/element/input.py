@@ -52,7 +52,6 @@ class TextEntry(InputElement):
 
     def __init__(
         self,
-        toplab: str = None,
         placeholder: str = None,
         **kwargs,
     ):
@@ -224,7 +223,6 @@ class NumberEntry(TextEntry):
 
     def __init__(
         self,
-        toplab: str = None,
         ndecimals: int = 0,
         min: Union[int, float] = None,
         max: Union[int, float] = None,
@@ -670,7 +668,7 @@ class SingleChoiceList(SingleChoice):
     # Documented at :class:`.SingleChoice`
     type = "select_one"
 
-    def __init__(self, *choice_labels, toplab: str = "", default: int = 1, **kwargs):
+    def __init__(self, *choice_labels, default: int = 1, **kwargs):
         super().__init__(*choice_labels, default=default, **kwargs)
 
 @inherit_kwargs
@@ -1094,7 +1092,6 @@ class SelectPageList(SingleChoiceList):
 
     def __init__(
         self,
-        toplab: str = None,
         scope: str = "exp",
         include_self: bool = False,
         check_jumpto: bool = True,
