@@ -10,6 +10,9 @@ class AlfredError(Exception):
     """
     pass
 
+class ValidationError(AlfredError): pass
+
+class AbortMove(AlfredError): pass
 
 class MoveError(AlfredError):
     pass

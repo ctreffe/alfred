@@ -45,12 +45,12 @@ from .element.misc import Style
 from . import saving_agent
 from ._core import ExpMember
 from ._helper import _DictObj
-from .exceptions import AlfredError
+from .exceptions import AlfredError, ValidationError
 
 
 class PageCore(ExpMember):
     def __init__(
-        self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = {}, **kwargs,
+        self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = None, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         self._minimum_display_time_msg = minimum_display_time_msg
@@ -63,9 +63,13 @@ class PageCore(ExpMember):
 
         super(PageCore, self).__init__(**kwargs)
 
-        if not isinstance(values, dict):
-            raise TypeError("The parameter 'values' requires a dictionary as input.")
-        self.values = _DictObj(values)
+        
+        if values is not None:
+            if not isinstance(values, dict):
+                raise TypeError("The parameter 'values' requires a dictionary as input.")
+            self.values = _DictObj(values)
+        else:
+            self.values = _DictObj()
 
     def added_to_experiment(self, experiment):
 
@@ -128,6 +132,34 @@ class PageCore(ExpMember):
     @should_be_shown.setter
     def should_be_shown(self, value: bool):
         self._should_be_shown = bool(value)
+    
+    @property
+    def must_be_shown(self) -> bool:
+        """
+        bool: False, if the experiment tolerates skipping this
+        page entirely. Defaults to False.
+
+        Notes:
+            If there are input elements with *force_input=True* on a 
+            skippable page, particpants will be notified and validation 
+            will fail, even if the *must_be_shown* attribute of the page 
+            itself is set to False.
+
+            If a page that must be shown has not been shown, the 
+            experiment will display the hint *page_must_be_shown* as defined
+            in config.conf, section "hints".
+
+            Such a message might still be quite confusing for 
+            participants, and 
+            
+            ..warning::
+                It is easy to end up in a situation where
+                a mandatory page has not been shown, but the participant has
+                no way of moving back to it. So, please be careful when
+                using this option.
+
+        """
+        return False
 
     @property
     def has_been_shown(self) -> bool:
@@ -282,15 +314,9 @@ class PageCore(ExpMember):
         pass
 
     def close_page(self):
-        if not self.allow_closing:
-            raise AlfredError()
-
         self.on_close()
         self._is_closed = True
 
-    @property
-    def allow_closing(self):
-        return True
 
     def corrective_hints(self):
         """
@@ -300,26 +326,12 @@ class PageCore(ExpMember):
         """
         return []
 
-    def validate(self):
-        """Alias for 'allow_leaving'. Better description of what this
-        method does.
-        """
-
-        return self.allow_leaving()
-
-    def allow_leaving(self):
-        if not self.allow_closing:
-            self.show_corrective_hints = True
-            return False
-
-        # check minimum display time
-        mintime = self._minimum_display_time
-        if time.time() - self.show_times[0] < mintime:
-            msg = self.minimum_display_time_msg.replace("${mdt}", str(mintime))
-            self.exp.message_manager.post_message(msg)
-            return False
-
+    def validate_page(self):
         return True
+    
+    def validate_elements(self):
+        return True
+
 
     def save_data(self, level: int = 1, sync: bool = False):
         """Saves current experiment data.
@@ -530,10 +542,6 @@ class CoreCompositePage(PageCore):
                 if not element.exp:
                     element.added_to_experiment(self.experiment)
 
-    @property
-    def allow_closing(self):
-        return all([el.validate_data() for el in self.input_elements.values()])
-
     def close(self):
         self.close_page()
 
@@ -658,6 +666,27 @@ class CoreCompositePage(PageCore):
         first_duration, *_ = self.durations()
         return first_duration
 
+    def validate_page(self):
+
+        if not self.has_been_shown:
+            if self.must_be_shown:
+                msg = self.exp.config.get("hints", "page_must_be_shown")
+                self.exp.post_message(msg, level="danger")
+                return False
+            else:
+                return True
+
+        # check minimum display time
+        mintime = self._minimum_display_time
+        if time.time() - self.show_times[0] < mintime:
+            msg = self.minimum_display_time_msg.format(mdt=str(mintime))
+            self.exp.message_manager.post_message(msg)
+            return False
+
+        return True
+    
+    def validate_elements(self):
+        return all([el.validate_data() for el in self.input_elements.values()])
 
 class WebCompositePage(CoreCompositePage, WebPageInterface):
     def __init__(self, title: str = None, name: str = None, *args, **kwargs):

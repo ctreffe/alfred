@@ -206,8 +206,8 @@ class NumberEntry(TextEntry):
             ``(",", ".")``, i.e. by default, both a comma and a dot are
             interpreted as decimal signs.
         match_hint: Specialized match hint for this element. You can
-            use the placeholders ``${{min}}``, ``${{max}}``, ``${{ndecimals}}``,
-            and ``${{decimal_signs}}``. To customize the match hint for
+            use the placeholders ``{{min}}``, ``{{max}}``, ``{{ndecimals}}``,
+            and ``{{decimal_signs}}``. To customize the match hint for
             all NumberEntry elements, change the respective setting
             in the config.conf.
         {kwargs}
@@ -309,10 +309,12 @@ class NumberEntry(TextEntry):
 
         signs = " ".join([f"<code>{sign}</code>" for sign in self.decimal_signs])
 
-        hint = hint.replace("${min}", str(self.min))
-        hint = hint.replace("${max}", str(self.max))
-        hint = hint.replace("${decimal_signs}", signs)
-        hint = hint.replace("${ndecimals}", str(self.ndecimals))
+        hint = hint.format(
+            min=str(self.min), 
+            max=str(self.max), 
+            decimal_signs=signs, 
+            ndecimals=str(self.ndecimals)
+            )
 
         return hint
 
@@ -564,8 +566,8 @@ class MultipleChoice(ChoiceElement):
         if self._select_hint:
             return self._select_hint
         else:
-            hint = string.Template(self.experiment.config.get("hints", "select_MultipleChoice"))
-            return hint.substitute(min=self.min, max=self.max)
+            msg = self.experiment.config.get("hints", "select_MultipleChoice")
+            return msg.format(min=self.min, max=self.max)
 
     def validate_data(self) -> bool:
         

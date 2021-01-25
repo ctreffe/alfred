@@ -7,7 +7,7 @@
 from . import element as elm
 from ._core import ExpMember
 from .page import PageCore, UnlinkedDataPage, DefaultFinalPage
-from .exceptions import MoveError, AlfredError
+from .exceptions import MoveError, AlfredError, ValidationError
 from . import alfredlog
 from random import shuffle
 
@@ -371,7 +371,8 @@ class Section(ExpMember):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
 
-        for page in self.all_pages.values():
+        self.validate_pages()
+        for page in self.pages.values():
             page.close()
         
         if self is self.parent.last_member:
@@ -398,6 +399,11 @@ class Section(ExpMember):
         pass
 
     def move(self, direction):
+        """
+
+        Raises:
+            ValidationError: If validation of the current page fails.
+        """
         if direction == "forward":
             self.forward()
         elif direction == "backward":
@@ -406,30 +412,59 @@ class Section(ExpMember):
             self.jumpfrom()
         elif direction == "jumpto":
             self.jumpto()
-    
-    @staticmethod
-    def validate(page):
-        return page.validate()
+        
+        self.validate_current_page()
 
+    def validate_pages(self):
+        """
+        Validates pages and their input elements within the section.
 
-class NoValidationSection(Section):
-    """Section without movement restrictions.
-    
-    You can jump to and from this section, and inputs are not
-    validated.
+        Can be overloaded to change the validating behavior of a derived
+        section.
 
-    """
-    allow_forward: bool = True
-    allow_backward: bool = True
-    allow_jumpfrom: bool = True
-    allow_jumpto: bool = True
+        Notes:
+            Validation is conducted only for pages that are direct 
+            children of this section. Pages in subsections are not 
+            validated.
 
-    @staticmethod
-    def validate(page):
-        return True
+        Raises:
+            ValidationError: If validation fails.
+        """
+        for page in self.pages.values():
+            
+            if not page.validate_page():
+                raise ValidationError()
 
+            if not page.validate_elements():
+                msg = self.exp.config.get("hints", "no_input_section_validation")
+                msg = msg.format(n=len(self.pages))
+                self.exp.post_message(msg, level="danger")
+                raise ValidationError()
+
+    def validate_current_page(self):
+        """
+        Validations the current page and its elements.
+
+        Can be overloaded to change the validating behavior of a derived
+        section.
+
+        Raises:
+            ValidationError: If validation fails.
+        """
+        current_page = self.exp.movement_manager.current_page
+        
+        if not current_page.validate_page():
+            raise ValidationError()
+        
+        if not current_page.validate_elements():
+            raise ValidationError()
+        
 
 class RevisitSection(Section):
+    """
+    Closes pages that are direct children upon moving forward and 
+    jumping from within this section.
+    """
     allow_forward: bool = True
     allow_backward: bool = True
     allow_jumpfrom: bool = True
@@ -445,6 +480,9 @@ class RevisitSection(Section):
 
 
 class OnlyForwardSection(RevisitSection):
+    """
+    Allows only single steps forward.
+    """
     allow_forward: bool = True
     allow_backward: bool = False
     allow_jumpfrom: bool = False

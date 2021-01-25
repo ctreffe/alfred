@@ -279,6 +279,3 @@ class ExpMember:
     def short_tree(self) -> str:
         return self.tree.replace("_root._content.", "")
 
-    def allow_leaving(self, direction):
-        return True
-
