@@ -50,7 +50,7 @@ from .exceptions import AlfredError, ValidationError
 
 class PageCore(ExpMember):
     def __init__(
-        self, minimum_display_time=0, minimum_display_time_msg=None, values: dict = None, **kwargs,
+        self, minimum_display_time=0, minimum_display_time_msg=None, **kwargs,
     ):
         self._minimum_display_time = minimum_display_time
         self._minimum_display_time_msg = minimum_display_time_msg
@@ -64,13 +64,6 @@ class PageCore(ExpMember):
         super(PageCore, self).__init__(**kwargs)
 
         
-        if values is not None:
-            if not isinstance(values, dict):
-                raise TypeError("The parameter 'values' requires a dictionary as input.")
-            self.values = _DictObj(values)
-        else:
-            self.values = _DictObj()
-
     def added_to_experiment(self, experiment):
 
         if not isinstance(self, WebPageInterface):
