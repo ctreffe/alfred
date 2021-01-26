@@ -1826,3 +1826,16 @@ class ChoiceElement(InputElement, ABC):
         of :class:`.Choice` instances.
         """
         pass
+
+    @property
+    def codebook_data(self):
+        
+        d = super().codebook_data
+
+        for i, lab in enumerate(self.choice_labels, start=1):
+            try:
+                d.update({f"choice{i}": lab.text})  # if there is a text attribute, we use it.
+            except AttributeError:
+                d.update({f"choice{i}": str(lab)})  # otherwise __str__
+
+        return d

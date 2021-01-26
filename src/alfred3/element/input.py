@@ -462,18 +462,6 @@ class SingleChoice(ChoiceElement):
             choices.append(choice)
         return choices
 
-    @property
-    def codebook_data(self):
-        
-        d = super().codebook_data
-
-        for i, lab in enumerate(self.choice_labels, start=1):
-            try:
-                d.update({f"choice{i}": lab.text})  # if there is a text attribute, we use it.
-            except AttributeError:
-                d.update({f"choice{i}": str(lab)})  # otherwise __str__
-
-        return d
 
 @inherit_kwargs
 class MultipleChoice(ChoiceElement):
@@ -579,23 +567,15 @@ class MultipleChoice(ChoiceElement):
         else:
             return True
 
-    @property
-    def data(self) -> dict:
-        """
-        Data dictionary with transformed participant input.
-
-        Input is turned into a single value which fits the structure of
-        other input element data dictionaries.
-        """
-        data = {}
-        vals = [str(i) for i, (name, checked) in enumerate(self.input.items()) if checked]
-        data["value"] = ",".join(vals)
-        data.update(self.codebook_data)
-        return {self.name: data}
-
     def set_data(self, d):
         
+        # Important: We need to have a check that ensures that the
+        # generated name for the value of each choice is not used by
+        # any other name in the experiment.
+        # For this element, we implement it in the *define_choices* 
+        # method.
         for choice in self.choices:
+
             value = d.get(choice.name, None)
             if value:
                 self._input[choice.name] = True
@@ -617,6 +597,15 @@ class MultipleChoice(ChoiceElement):
             choice.type = "checkbox"
             choice.value = i
             choice.id = f"{self.name}_choice{i}"
+
+            if choice.id in self.exp.root_section.all_elements:
+                msg = (
+                    f"You have a MultipleChoice-type element of name {self.name}, which means "
+                    f"that the name '{choice.id}' must be reserved. Please check if you are using "
+                    "it for any other element."
+                )
+                raise AlfredError(msg)
+
             choice.name = choice.id
             choice.label_id = f"{choice.id}-lab"
             choice.css_class = f"choice-button choice-button-{self.name}"

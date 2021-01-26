@@ -192,8 +192,8 @@ class DataManager(object):
         
         return list(fieldnames)
     
-    @staticmethod
-    def extract_ordered_fieldnames(data: Iterator) -> list:
+    @classmethod
+    def extract_ordered_fieldnames(cls, data: Iterator) -> list:
         """ 
         Finds correct (and correctly ordered) fieldnames for exporting 
         multiple experiment datasets to a single csv file.
@@ -219,13 +219,9 @@ class DataManager(object):
         elements = {}
 
         for dataset in data:
-            d = copy.copy(dataset)
-            els = d.pop("exp_data", {})
-            elements.update(els)
-            d.pop("exp_move_history", None)
+            d = cls.flatten(copy.copy(dataset))
+            elements.update(d)
 
-            d.pop("_id", None) # remove mongoDB doc ID, if there is one
-            
             for entry in list(d.keys()):
                 if entry.startswith("client_"):
                     d.pop(entry)
@@ -294,7 +290,15 @@ class DataManager(object):
         eldata = data.pop("exp_data")
         data.pop("exp_move_history", None)
         data.pop("_id", None)
-        values = {name: elmnt["value"] for name, elmnt in eldata.items()}
+
+        values = {}
+        for name, elmnt in eldata.items():
+            try:
+                # if the value is a dictionary, like in multiple choice elements
+                for subname, val in elmnt["value"].items():
+                    values[subname] = val
+            except AttributeError:
+                values[name] = elmnt["value"]
         
         additional_data = data.pop("additional_data", {})
 
