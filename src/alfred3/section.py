@@ -371,7 +371,7 @@ class Section(ExpMember):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
 
-        self.validate_pages()
+        self.validate_on_leave()
         for page in self.pages.values():
             page.close()
         
@@ -404,7 +404,7 @@ class Section(ExpMember):
         Raises:
             ValidationError: If validation of the current page fails.
         """
-        self.validate_current_page()
+        self.validate_on_move()
         
         if direction == "forward":
             self.forward()
@@ -416,7 +416,7 @@ class Section(ExpMember):
             self.jumpto()
         
 
-    def validate_pages(self):
+    def validate_on_leave(self):
         """
         Validates pages and their input elements within the section.
 
@@ -442,9 +442,9 @@ class Section(ExpMember):
                 self.exp.post_message(msg, level="danger")
                 raise ValidationError()
 
-    def validate_current_page(self):
+    def validate_on_move(self):
         """
-        Validations the current page and its elements.
+        Validates the current page and its elements.
 
         Can be overloaded to change the validating behavior of a derived
         section.
