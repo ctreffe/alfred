@@ -33,13 +33,22 @@ _logger = logging.getLogger(__name__)
 
 
 def _save_worker():
-    """Takes a data dictionary and saving_agent_controller from the 
+    """Takes a data dictionary and saving_agent_controller from the
     global saving queue and calls the saving method of the controller.
     """
     try:
         while True:
             try:
-                (_, t, lvl, _, event, data, sa_controller, agent_name,) = _queue.get_nowait()
+                (
+                    _,
+                    t,
+                    lvl,
+                    _,
+                    event,
+                    data,
+                    sa_controller,
+                    agent_name,
+                ) = _queue.get_nowait()
             except queue.Empty:
                 break
             sa_controller._do_saving(data=data, agent_name=agent_name, level=lvl, data_time=t)
@@ -92,12 +101,12 @@ _logger.info("Global alfred3 saving thread started.")
 
 
 class SavingAgent(ABC):
-    """Base class for all saving agents. All saving agents must 
-    inherit from :class:`SavingAgent` and define the method 
+    """Base class for all saving agents. All saving agents must
+    inherit from :class:`SavingAgent` and define the method
     :meth:`_save`.
 
     If you do not pass a value to the argument *name*, a name will be
-    generated automatically, and a warning will be logged. The 
+    generated automatically, and a warning will be logged. The
     generated name has the form::
 
         classname_time_uid
@@ -107,13 +116,13 @@ class SavingAgent(ABC):
         LocalSavingAgent_2020-08-05_t125518_6c8cda18e924486a9ab31a3072592d14
 
     Args:
-        activation_level: The activation level is used by 
-            :meth:`save_data` to determine whether data should be saved. 
-            Generally, the lower the level, the more important is a 
-            saving agent. You can think of the level as some kind of 
+        activation_level: The activation level is used by
+            :meth:`save_data` to determine whether data should be saved.
+            Generally, the lower the level, the more important is a
+            saving agent. You can think of the level as some kind of
             hurdle to pass. (Defaults to 10)
         experiment: The experiment to which the saving agent belongs.
-        name: The name of the saving agent. Will be used as a unique 
+        name: The name of the saving agent. Will be used as a unique
             identifier by saving agent controllers.
         use: Set to false, if this saving agent should not be used.
     """
@@ -164,8 +173,7 @@ class SavingAgent(ABC):
         return self._experiment
 
     def append_fallback(self, *args):
-        """Appends saving agents to the list of fallback saving agents. 
-        """
+        """Appends saving agents to the list of fallback saving agents."""
 
         for saving_agent in args:
             if not isinstance(saving_agent, SavingAgent):
@@ -178,14 +186,14 @@ class SavingAgent(ABC):
         """Acquires a lock, performs some checks and calls :meth:`_save`.
 
         Will only save data, if:
-        
+
         - *data_time* is newer than the latest previously saved data.
         - *level* is smaller than the agent's activation level.
 
-        In case saving fails and the agent has fallbacks, more attempts 
-        will be made with the fallback agents until one successful 
-        saving proccess was performed or all fallback agents saved. If 
-        the first fallback agent succeeds, the remaining fallback agents 
+        In case saving fails and the agent has fallbacks, more attempts
+        will be made with the fallback agents until one successful
+        saving proccess was performed or all fallback agents saved. If
+        the first fallback agent succeeds, the remaining fallback agents
         will not be used.
 
         Args:
@@ -193,21 +201,21 @@ class SavingAgent(ABC):
             level: Incoming task level. If this is bigger than the
                 agent's own activation level, the data will not be saved.
             data_time: Time of data snapshot in seconds since epoch. If
-                no value is provided, the current time will be 
+                no value is provided, the current time will be
                 inserted and a debug message will be logged.
-        
+
         Returns:
-            A tuple with two elements. The first value is a boolean, 
-                which indicates whether or not data was saved. The 
+            A tuple with two elements. The first value is a boolean,
+                which indicates whether or not data was saved. The
                 second value is a status string which gives more detail:
-                
+
                 * A value of "time" indicates that a newer data snapshot
-                    was already present. 
-                * A value of "error" indicates that an exception occured 
-                    during saving. 
+                    was already present.
+                * A value of "error" indicates that an exception occured
+                    during saving.
                 * A value of "level" indicates that the task's level was
-                    below the SavingAgent's activation level. 
-                * A value of "success" indicates that data was saved 
+                    below the SavingAgent's activation level.
+                * A value of "success" indicates that data was saved
                     successfully.
                 * A value of "fallback" indicates that saving failed
                     initially, but succeed with at least one fallback
@@ -215,7 +223,9 @@ class SavingAgent(ABC):
         """
         if self._experiment.config.getboolean("general", "debug"):
             if self._experiment.config.getboolean("debug", "disable_saving"):
-                self.log.debug(f"Saving disabled. 'save_data' was called on {self}, but not executed.")
+                self.log.debug(
+                    f"Saving disabled. 'save_data' was called on {self}, but not executed."
+                )
                 return (True, "success")
 
         self._lock.acquire()
@@ -278,12 +288,13 @@ class SavingAgent(ABC):
         """
         pass
 
+
 class LocalSavingAgent(SavingAgent):
     """A SavingAgent that writes data to a .json file on the disk.
 
-    The most common use case is to append a SavingAgent to a 
-    :class:`SavingAgentController`. You can also use a SavingAgent 
-    individually by calling the :meth:`~LocalSavingAgent.save_data` 
+    The most common use case is to append a SavingAgent to a
+    :class:`SavingAgentController`. You can also use a SavingAgent
+    individually by calling the :meth:`~LocalSavingAgent.save_data`
     method.
 
     Args:
@@ -294,25 +305,25 @@ class LocalSavingAgent(SavingAgent):
             to the instance attribute. A '.json' suffix will be added
             automatically.
         filepath: Path to the directory in which to save the data.
-        activation_level: The activation level is used by 
-            :meth:`save_data` to determine whether data should be saved. 
-            Generally, the lower the level, the more important is a 
-            saving agent. You can think of the level as some kind of 
+        activation_level: The activation level is used by
+            :meth:`save_data` to determine whether data should be saved.
+            Generally, the lower the level, the more important is a
+            saving agent. You can think of the level as some kind of
             hurdle to pass. (Defaults to 1)
         experiment: The experiment to which the saving agent belongs.
         name: Name of the saving agent instance.
         encrypt: Should data be encrypted before saving? (Currently
             only available for unlinked data)
-    
+
     Attributes:
         filename: Full name of the .json file in which data is saved.
         save_directory: Directory containing the saved data files. If
             you set this directory with a path that is not absolute,
-            it will be treated as a subdirectory of the experiment 
+            it will be treated as a subdirectory of the experiment
             directory.
         name: The name of the saving agent.
         activation_level: The saving agent's activation level.
-        log: An instance of 
+        log: An instance of
             :class:`alfred3.alfredlog.QueuedLoggingInterface` for logging.
     """
 
@@ -405,13 +416,13 @@ class AutoLocalSavingAgent(LocalSavingAgent):
 class MongoSavingAgent(SavingAgent):
     """A SavingAgent that writes data to a MongoDB collection.
 
-    The most common use case is to append a SavingAgent to a 
-    :class:`SavingAgentController`. You can also use a SavingAgent 
-    individually by calling the :meth:`~MongoSavingAgent.save_data` 
+    The most common use case is to append a SavingAgent to a
+    :class:`SavingAgentController`. You can also use a SavingAgent
+    individually by calling the :meth:`~MongoSavingAgent.save_data`
     method.
 
     If you do not pass a value to the argument *name*, a name will be
-    generated automatically, and a warning will be logged. The 
+    generated automatically, and a warning will be logged. The
     generated name has the form::
 
         classname_time_uid
@@ -421,7 +432,7 @@ class MongoSavingAgent(SavingAgent):
         MongoSavingAgent_2020-08-05_t125518_6c8cda18e924486a9ab31a3072592d14
 
     By defining a custom identifier, you can change the SavingAgent's
-    behavior, e.g. from saving a new document for every experiment 
+    behavior, e.g. from saving a new document for every experiment
     session to saving only one document for the experiment::
 
         agent = MongoSavingAgent(...)
@@ -431,10 +442,10 @@ class MongoSavingAgent(SavingAgent):
         client: An active MongoClient.
         db: Name of the database to use.
         collection: Name of the database collection to use.
-        activation_level: The activation level is used by 
-            :meth:`save_data` to determine whether data should be saved. 
-            Generally, the lower the level, the more important is a 
-            saving agent. You can think of the level as some kind of 
+        activation_level: The activation level is used by
+            :meth:`save_data` to determine whether data should be saved.
+            Generally, the lower the level, the more important is a
+            saving agent. You can think of the level as some kind of
             hurdle to pass. (Defaults to 1)
         experiment: The experiment to which the saving agent belongs.
         name: Name of the saving agent instance.
@@ -444,7 +455,7 @@ class MongoSavingAgent(SavingAgent):
     Attributes:
         name: The name of the saving agent.
         activation_level: The saving agent's activation level.
-        log: An instance of 
+        log: An instance of
             :class:`alfred3.alfredlog.QueuedLoggingInterface` for logging.
         identifier: A filter dictionary that allows for
             fine-grained control of the SavingAgent's saving behavior.
@@ -569,7 +580,7 @@ class MongoSavingAgent(SavingAgent):
 class AutoMongoSavingAgent(MongoSavingAgent):
     """Initializes a :class:`MongoSavingAgent` with auto configuration.
 
-    The agent extracts configuration automatically from a 
+    The agent extracts configuration automatically from a
     :class:`configparser.SectionProxy`. If the agent receives no client,
     it initializes its own client.
 
@@ -593,10 +604,13 @@ class AutoMongoSavingAgent(MongoSavingAgent):
             that the client's connection has read and write privileges
             for the specified collection.
         experiment: An alfred experiment.
-     """
+    """
 
     def __init__(
-        self, config: SectionProxy, client: pymongo.MongoClient = None, experiment=None,
+        self,
+        config: SectionProxy,
+        client: pymongo.MongoClient = None,
+        experiment=None,
     ):
 
         if not client:
@@ -655,16 +669,16 @@ class MongoManager:
         * Configuration from *section* will be completed with config
             from *fill_section*, such that you only need to specify
             changing information in your configuration file.
-        
+
         * If appropriate, an existing MongoClient will be used for the
             new agent in order to save resources.
-        
+
         Args:
             agent_class: The class that will be used to instantiate
                 a saving agent.
             section: Name of section with configuration information.
             fill_section: Name of section with configuration for
-                filling in information that is missing in *section*. 
+                filling in information that is missing in *section*.
                 Defaults to None.
             fallbacks: List of section names (str) for configuration
                 of fallback agents. These must be fully specified.
@@ -696,8 +710,8 @@ class MongoManager:
         return agent
 
     def _available_client(self, config: SectionProxy):
-        """Returns a fitting MongoClient. 
-        
+        """Returns a fitting MongoClient.
+
         If a fitting client is already present in the MongoManager's
         client list, that client will be returned.
 
@@ -722,9 +736,9 @@ class SavingAgentController:
     Initiate the SavingAgentController with an alfred experiment and
     append saving agents using :meth:`~SavingAgentController.append`.
 
-    To prevent data loss when saving errors occur, append at least one 
-    failure saving agent using 
-    :meth:`~SavingAgentController.append_failure_agent`. The failure 
+    To prevent data loss when saving errors occur, append at least one
+    failure saving agent using
+    :meth:`~SavingAgentController.append_failure_agent`. The failure
     agents will be employed only when all fallback agents of a particular
     saving agents fail.
 
@@ -742,7 +756,7 @@ class SavingAgentController:
         self._experiment = experiment
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
         self.log.add_queue_logger(self, __name__)
-    
+
     @property
     def experiment(self):
         return self._experiment
@@ -768,9 +782,9 @@ class SavingAgentController:
 
     def append_failure_agent(self, saving_agent: SavingAgent):
         """Appends a SavingAgent to the list of failure agents.
-        
-        Failure SavingAgents are the last resort in order to avoid 
-        data loss. The failure SavingAgents get called when a 
+
+        Failure SavingAgents are the last resort in order to avoid
+        data loss. The failure SavingAgents get called when a
         SavingAgent and all its fallback agents fail.
 
         Args:
@@ -793,29 +807,36 @@ class SavingAgentController:
         """
         self.agents.pop(name)
 
-    def save_with_all_agents(self, data: dict, level: int, sync: bool = False):
-        """Puts saving tasks into the app-wide saving queue for all 
-        agents attached to the controller. 
-        
+    def save_with_all_agents(
+        self, data: dict, level: int, sync: bool = False, data_time: float = None
+    ):
+        """Puts saving tasks into the app-wide saving queue for all
+        agents attached to the controller.
+
         Args:
             data: Data to be saved.
-            level: Level of saving task. If the task level is 
+            level: Level of saving task. If the task level is
                 below a saving agent's activation level, it will not
                 be saved.
             sync: Whether to synchronise the task. If
                 True, the experiment will continue only after the task
                 was completed. Defaults to False.
+            data_time: Time of saving
         """
         for agent in self.agents.values():
-            self._queue_task(data=data, level=level, agent_name=agent.name, sync=sync)
+            self._queue_task(
+                data=data, level=level, agent_name=agent.name, sync=sync, data_time=data_time
+            )
 
-    def save_with_agent(self, data: dict, name: str, level: int, sync: bool = False):
+    def save_with_agent(
+        self, data: dict, name: str, level: int, sync: bool = False, data_time: float = None
+    ):
         """Puts a saving task in to the app-wide saving queue for the
         agent *name*.
 
         Args:
             data: Data to be saved.
-            level: Level of saving task. If the task level is 
+            level: Level of saving task. If the task level is
                 below a saving agent's activation level, it will not
                 be saved.
             name: Name of the saving agent.
@@ -823,14 +844,16 @@ class SavingAgentController:
                 True, the experiment will continue only after the task
                 was completed. Defaults to False.
         """
-        self._queue_task(data=data, level=level, agent_name=name, sync=sync)
+        self._queue_task(data=data, level=level, agent_name=name, sync=sync, data_time=data_time)
 
-    def _queue_task(self, data: dict, level: int, agent_name: str, sync: bool = False):
+    def _queue_task(
+        self, data: dict, level: int, agent_name: str, sync: bool = False, data_time: float = None
+    ):
         """Puts a saving task into the app-wide saving queue.
-        
+
         Args:
             data: Data to be saved.
-            level: Level of saving task. If the task level is 
+            level: Level of saving task. If the task level is
                 below a saving agent's activation level, it will not
                 be saved.
             agent_name: Name of the SavingAgent to be used for this task.
@@ -839,7 +862,7 @@ class SavingAgentController:
                 was completed. Defaults to False.
         """
 
-        save_time = time.time()
+        save_time = time.time() if data_time is None else data_time
         task_id = uuid4()
 
         priority = 1 if sync else 5
@@ -847,20 +870,21 @@ class SavingAgentController:
 
         task = (priority, save_time, level, task_id, e, data, self, agent_name)
         _queue.put(task)
+        
         if sync:
             e.wait()
 
     def _do_saving(self, data: dict, agent_name: str, level: int, data_time: float):
-        """Starts the execution of a task with the given saving agent. 
-        
-        If the agent and its fallbacks fail, the SavingAgentController 
+        """Starts the execution of a task with the given saving agent.
+
+        If the agent and its fallbacks fail, the SavingAgentController
         will save the data using ALL available failure saving agents.
         """
 
         agent = self.agents[agent_name]
-        saved, _ = agent.save_data(data=data, level=level, data_time=data_time)
+        saved, reason = agent.save_data(data=data, level=level, data_time=data_time)
 
-        if not saved:
+        if not saved and not reason == "time":
             self.log.warning(
                 f"Saving with {agent} failed. Attempting to save with failure saving agent now."
             )
@@ -885,12 +909,12 @@ class SavingAgentController:
         time in seconds since epoch as 'save_time' and saves data.
 
         Provided under this name mainly for backwards compatibility.
-        
-        The methods :meth:`save_with_all_agents` and 
-        :meth:`save_with_agent` are the recommended replacements. 
+
+        The methods :meth:`save_with_all_agents` and
+        :meth:`save_with_agent` are the recommended replacements.
 
         Args:
-            level (int): Level of saving task. If the task level is 
+            level (int): Level of saving task. If the task level is
                 below a saving agent's activation level, it will not
                 be saved.
             sync (bool, optional): Whether to synchronise the task. If
@@ -905,8 +929,7 @@ class SavingAgentController:
 
 
 class DataSaver:
-    """Manages an experiment's standard saving agent controllers.
-    """
+    """Manages an experiment's standard saving agent controllers."""
 
     _LSA = "local_saving_agent"
     _LSA_FB = ["fallback_local_saving_agent", "level2_fallback_local_saving_agent"]
@@ -921,42 +944,42 @@ class DataSaver:
     def __init__(self, experiment):
         # Allows for session-specific saving of unlinked data.
         self._unlinked_random_name_part = uuid4().hex
-        
+
         self.experiment = experiment
         self.exp = experiment
         self.mongo_manager = MongoManager(self.experiment)
         self.main = self._init_main_controller()
         self.unlinked = self._init_unlinked_controller()
-    
+
     def _init_main_controller(self):
         exp = self.experiment
         from alfred3.data_manager import DataManager
 
         sac_main = SavingAgentController(exp)
         init_time = time.strftime("%Y-%m-%d_%H:%M:%S")
-        
+
         # local saving agent
         if exp.config.getboolean(self._LSA, "use"):
             # init agent
             agent_local = AutoLocalSavingAgent(config=exp.config[self._LSA], experiment=exp)
             agent_local.filename = f"{init_time}_{agent_local.name}_{exp.session_id}.json"
-            
+
             # append fallbacks to saving agent
             for fb in self._LSA_FB:
                 if exp.config.getboolean(fb, "use"):
                     fb_agent = AutoLocalSavingAgent(config=exp.config[fb], experiment=exp)
                     fb_agent.filename = f"{init_time}_{fb_agent.name}_{exp.session_id}.json"
                     agent_local.append_fallback(fb_agent)
-            
-            sac_main.append(agent_local) 
+
+            sac_main.append(agent_local)
 
         # failure local saving agent
         if exp.config.getboolean(self._F_LSA, "use"):
             agent_fail = AutoLocalSavingAgent(config=exp.config[self._F_LSA], experiment=exp)
             agent_fail.filename = f"{init_time}_{agent_fail.name}_{exp.session_id}.json"
-            
+
             sac_main.append_failure_agent(agent_fail)
-        
+
         # filter dict for mongodb queries
         mongodb_filter = {}
         mongodb_filter["exp_id"] = exp.exp_id
@@ -967,11 +990,11 @@ class DataSaver:
         if exp.secrets.getboolean(self._MSA, "use"):
             agent_mongo = self.mongo_manager.init_agent(section=self._MSA, fallbacks=self._MSA_FB)
             agent_mongo.identifier = mongodb_filter
-            
+
             # append fallback mongo agent
             for fb_agent in agent_mongo.fallback_agents:
                 fb_agent.identifier = mongodb_filter
-            
+
             sac_main.append(agent_mongo)
 
         # BW compatibility: mongo saving agent from config.conf
@@ -995,9 +1018,9 @@ class DataSaver:
 
         return sac_main
 
-
     def _init_unlinked_controller(self):
         from alfred3.data_manager import DataManager
+
         exp = self.experiment
         sac_unlinked = SavingAgentController(exp)
 
@@ -1019,10 +1042,11 @@ class DataSaver:
 
         return sac_unlinked
 
+
 class AutoMongoClient(pymongo.MongoClient):
     """Constructs a :class:`pymongo.MongoClient` directly from an alfred
     configuration section.
-    
+
     """
 
     def __init__(self, config: SectionProxy, **kwargs):
