@@ -225,10 +225,10 @@ class SavingAgent(ABC):
             msg = f"No data_time provided in save_data call to {self}. Inserting current time."
             self.log.debug(msg)
 
-        time_check = self._latest_save_time is None or self._latest_save_time < data_time
-        if not time_check:
+        data_is_newer_than_previous = self._latest_save_time is None or self._latest_save_time < data_time
+        if not data_is_newer_than_previous:
             msg = f"Data snapshot from {data_time} was not saved, because there was a newer one."
-            self.log.info(msg)
+            self.log.debug(msg)
             self._lock.release()
             return (False, "time")
 
