@@ -173,6 +173,10 @@ class MovementManager:
     def first_page(self):
         return self.exp.root_section.all_pages_list[0]
     
+    @property
+    def last_page(self):
+        return self.exp.root_section.all_pages_list[-2]
+    
     def _abort_move(self):
         return self.current_index, self.current_index
     
