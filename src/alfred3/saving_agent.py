@@ -237,8 +237,9 @@ class SavingAgent(ABC):
 
         data_is_newer_than_previous = self._latest_save_time is None or self._latest_save_time < data_time
         if not data_is_newer_than_previous:
-            msg = f"Data snapshot from {data_time} was not saved, because there was a newer one."
-            self.log.debug(msg)
+            if self.exp.movement_manager.current_page is not self.exp.movement_manager.last_page:
+                msg = f"Data snapshot from {data_time} was not saved, because there was a newer one."
+                self.log.info(msg)
             self._lock.release()
             return (False, "time")
 
