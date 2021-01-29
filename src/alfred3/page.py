@@ -370,10 +370,6 @@ class WebPageInterface(with_metaclass(ABCMeta, object)):
         pass
 
     @property
-    def web_thumbnail(self):
-        return None
-
-    @property
     def css_code(self):
         return []
 
@@ -797,25 +793,6 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         elif self.experiment.config.get("layout", "background_color", fallback=False):
             c = self.experiment.config.get("layout", "background_color", fallback=False)
             self += Style(code=f"body {{background-color: {c};}}")
-
-    @property
-    def web_thumbnail(self):
-        """
-        gibt das thumbnail von self._thumbnail_element oder falls self._thumbnail_element nicht gesetzt, das erste thumbnail eines elements aus self._element_list zurueck.
-
-        .. todo:: was ist im fall, wenn thumbnail element nicht gestzt ist? anders verhalten als jetzt???
-
-        """
-        if not self.show_thumbnail:
-            return None
-
-        if self._thumbnail_element:
-            return self._thumbnail_element.web_thumbnail
-        else:
-            for elmnt in self._element_list:
-                if elmnt.web_thumbnail and elmnt.should_be_shown:
-                    return elmnt.web_thumbnail
-            return None
 
     @property
     def css_code(self):
