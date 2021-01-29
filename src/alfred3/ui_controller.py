@@ -607,8 +607,6 @@ class UserInterface:
         d["title"] = page.title
         d["subtitle"] = page.subtitle
         
-        if page.statustext:
-            d["statustext"] = page.statustext
         
         if page.section.allow_backward and not page is self.exp.movement_manager.first_page:
             d["backward_text"] = self.experiment.config.get("navigation", "backward")

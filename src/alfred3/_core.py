@@ -18,6 +18,17 @@ from .exceptions import AlfredError
 
 
 class ExpMember:
+    """
+    Baseclass for sections and pages.
+
+    Args:
+        name (str): Name of the member. Must be unique throughout the
+            experiment.
+        title (str): Title of the member.
+        subtitle (str): Subtitle of the member.
+    """
+
+
     name: str = None
     instance_log: bool = False
     showif: dict = {}
@@ -29,10 +40,9 @@ class ExpMember:
 
     def __init__(
         self,
-        title: str = None,
         name: str = None,
-        subtitle=None,
-        statustext=None,
+        title: str = None,
+        subtitle: str = None,
         showif: dict = None
     ):
 
@@ -48,7 +58,6 @@ class ExpMember:
         
         self._title = None
         self._subtitle = None
-        self._statustext = None
         self._has_been_shown = False
         self._has_been_hidden = False
 
@@ -64,9 +73,6 @@ class ExpMember:
         if subtitle is not None:
             self.subtitle = subtitle
 
-        if statustext is not None:
-            self.statustext = statustext
-        
         self._name_set_via = {}
 
         if self.name is not None:
@@ -205,14 +211,6 @@ class ExpMember:
     @subtitle.setter
     def subtitle(self, subtitle):
         self._subtitle = subtitle
-
-    @property
-    def statustext(self):
-        return self._statustext
-
-    @statustext.setter
-    def statustext(self, title):
-        self._statustext = title
 
     def added_to_experiment(self, exp):
         if not self.name:
