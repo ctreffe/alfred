@@ -261,8 +261,7 @@ class Experiment:
             @functools.wraps(member)
             def wrapper():
                 if isclass(member) and not member.name:
-                    if Page in member.__bases__ or Section in member.__bases__:
-                        member.name = member.__name__
+                    member.name = member.__name__
 
                 self.append(member, to_section=of_section)
                 return member
