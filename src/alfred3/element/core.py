@@ -102,16 +102,9 @@ class Element:
     ):
 
         self.name: str = name  # documented in getter property
-
-        #: The element's parent :class:`~.page.Page` (i.e. the page on which
-        #: it is displayed).
-        self.page = None
-
-        #: The :class:`.Experiment` to which this element belongs
-        self.exp = None
-
-        #: Alias for :attr:`.exp`
-        self.experiment = None
+        self.page = None # documented in getter 
+        self.exp = None # documented in getter 
+        self.experiment = None # documented in getter 
 
         #: Alignment of inner element (does not apply to labels)
         self.align = align
@@ -148,6 +141,40 @@ class Element:
         #: through the methods *debug*, *info*, *warning*, *error*,
         #: *exception*, and *log*.
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
+
+    @property
+    def page(self):
+        """
+        alfred3.Page: The page to which this element belongs.
+        """
+        return self._page
+    
+    @page.setter
+    def page(self, page):
+        self._page = page
+
+    @property
+    def exp(self):
+        """
+        alfred3.ExperimentSession: The experiment session to which this
+        element belongs.
+        """
+        return self._exp
+    
+    @exp.setter
+    def exp(self, exp):
+        self._exp = exp
+    
+    @property
+    def experiment(self):
+        """
+        Alias for :attr:`.exp`
+        """
+        return self._exp
+    
+    @experiment.setter
+    def experiment(self, exp):
+        self.exp = exp
 
     @property
     def showif(self) -> dict:
@@ -193,7 +220,6 @@ class Element:
 
                 @exp.member
                 class MyPage(al.Page):
-                    name = "my_page"
 
                     def on_exp_access(self):
                         self += al.Text("This is text", showif={"exp_condition": "one"})
@@ -204,11 +230,10 @@ class Element:
 
                 import alfred3 as al
                 exp = al.Experiment()
-                exp += al.Page(name="page1")
+                exp += al.Page(name="FirstPage")
 
                 @exp.member
                 class SecondPage(al.Page):
-                    name = "page2"
 
                     def on_first_show(self):
                         if sum(self.exp.page1.durations) > 20:
@@ -784,10 +809,6 @@ class RowLayout:
         responsive: Boolean, indicating whether breakpoints should
             be responsive, or not.
 
-    Attributes:
-        width_xs: List of column widths on screens of size 'xs' or bigger
-            (<576px). Content must be integers between 1 and 12.
-
     Examples:
 
         ::
@@ -799,34 +820,123 @@ class RowLayout:
 
     def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
         """Constructor method."""
-        #: Number of columns
         self.ncols: int = ncols
-
         self._valign_cols = valign_cols if valign_cols is not None else []
+        self.responsive: bool = responsive # documented in getter
 
-        #: Indicates whether breakpoints should be responsive, or not.
-        self.responsive: bool = responsive
+        self._width_xs: List[int] = None # documented in getter
+        self._width_sm: List[int] = None # documented in getter
+        self._width_md: List[int] = None # documented in getter
+        self._width_lg: List[int] = None # documented in getter
+        self._width_xl: List[int] = None # documented in getter
+    
+    @property
+    def ncols(self):
+        """
+        int: Number of columns
+        """
+        return self._ncols
+    
+    @ncols.setter
+    def ncols(self, value):
+        self._ncols = value
 
-        self.width_xs: List[int] = None
-        """List of column widths on screens of size 'xs' or bigger
+    @property
+    def responsive(self):
+        """
+        bool: Indicates whether breakpoints should be responsive, or not.
+        """
+        return self._responsive
+    
+    @responsive.setter
+    def responsive(self, value):
+        self._responsive = value
+
+    @property
+    def width_xs(self):
+        """
+        List[int]: List of column widths on screens of size 'xs' or bigger
         (<576px). Content must be integers between 1 and 12.
         """
+        return self._width_xs
+    
+    @width_xs.setter
+    def width_xs(self, value):
+        try:
+            assert isinstance(value[0], int)
+        except (AssertionError, TypeError):
+            raise ValueError("width must be a list of integers")
+        
+        self._width_xs = value
+    
+    @property
+    def width_sm(self):
+        """
+        List[int]: List of column widths on screens of size 'sm' or bigger
+        (>=576px). Content must be integers between 1 and 12.
+        """
+        return self._width_sm
+    
+    @width_sm.setter
+    def width_sm(self, value):
+        try:
+            assert isinstance(value[0], int)
+        except AssertionError:
+            raise ValueError("width must be a list of integers")
+        
+        self._width_sm = value
+    
+    @property
+    def width_md(self):
+        """
+        List[int]: List of column widths on screens of size 'md' or bigger
+        (>=768px). Content must be integers between 1 and 12.
+        """
+        return self._width_md
+    
+    @width_md.setter
+    def width_md(self, value):
+        try:
+            assert isinstance(value[0], int)
+        except AssertionError:
+            raise ValueError("width must be a list of integers")
+        
+        self._width_md = value
+    
+    @property
+    def width_lg(self):
+        """
+        List[int]: List of column widths on screens of size 'lg' or bigger
+        (>=992px). Content must be integers between 1 and 12.
+        """
+        return self._width_lg
+    
+    @width_lg.setter
+    def width_lg(self, value):
+        try:
+            assert isinstance(value[0], int)
+        except AssertionError:
+            raise ValueError("width must be a list of integers")
+        
+        self._width_lg = value
+    
+    @property
+    def width_xl(self):
+        """
+        List[int]: List of column widths on screens of size 'xl' or bigger
+        (>=1200px). Content must be integers between 1 and 12.
+        """
+        return self._width_xl
+    
+    @width_xl.setter
+    def width_xl(self, value):
+        try:
+            assert isinstance(value[0], int)
+        except AssertionError:
+            raise ValueError("width must be a list of integers")
+        
+        self._width_xl = value
 
-        #: List of column widths on screens of size 's' or bigger
-        #: (>=576px). Content must be integers between 1 and 12.
-        self.width_sm: List[int] = None
-
-        #: List of column widths on screens of size 'md' or bigger
-        #: (>=768px). Content must be integers between 1 and 12.
-        self.width_md: List[int] = None
-
-        #: List of column widths on screens of size 'lg' or bigger
-        #: (>=992px). Content must be integers between 1 and 12.
-        self.width_lg: List[int] = None
-
-        #: List of column widths on screens of size 'xl' or bigger
-        #: (>=1200px). Content must be integers between 1 and 12.
-        self.width_xl: List[int] = None
 
     def col_breaks(self, col: int) -> str:
         """
@@ -1082,20 +1192,49 @@ class Row(Element):
         """Constructor method."""
         super().__init__(name=name, showif=showif, height=height, **kwargs)
 
-        #: List of the elements in this row
-        self.elements: list = elements
+        self.elements: list = elements # documented in getter
+        self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols) # documented in getter
+        self.elements_full_width: bool = elements_full_width # documented in getter
 
-        #: An instance of :class:`.RowLayout`,
-        #: used for layouting. You can use this attribute to finetune
-        #: column widths via the width attributes
-        #: (e.g. :attr:`.RowLayout.width_xs`)
-        self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols)
+    @property
+    def elements(self):
+        """
+        List[Element]: List of the elements in this row.
+        """
+        return self._elements
+    
+    @elements.setter
+    def elements(self, value):
+        self._elements = value
+    
+    @property
+    def layout(self):
+        """
+        RowLayout: The layout of this row, can be used to finetune 
+        column widths via its attributes. See :class:`.RowLayout` for
+        the available width attributes.
+        """
+        return self._layout
+    
+    @layout.setter
+    def layout(self, value):
+        self._layout = value
+    
+    @property
+    def elements_full_width(self):
+        """
+        bool: If *True*, all elements will take up the full horizontal
+        space of their column, regardless of the element's
+        :attr:`.Element.element_width` and :attr:`.Element.width`
+        attributes.
 
-        #: If *True*, all elements will take up the full horizontal
-        #: space of their column, regardless of the element's
-        #: :attr:`.Element.element_width` and :attr:`.Element.width`
-        #: attributes.
-        self.elements_full_width: bool = elements_full_width
+        This is done by default for better default layouting.
+        """
+        return self._elements_full_width
+    
+    @elements_full_width.setter
+    def elements_full_width(self, value):
+        self._elements_full_width = value
 
     def added_to_page(self, page):
         
@@ -1429,35 +1568,67 @@ class InputElement(LabelledElement):
     ):
         super().__init__(toplab=toplab, **kwargs)
 
-        #: Detailed description of this element to be added to the
-        #: automatically generated codebook
-        self.description = description
-
-        self._input = ""
+        self.description = description # documented in getter
+        self.input = "" # documented in getter
         self._force_input = force_input  # documented in getter property
         self._no_input_hint = no_input_hint
         self._default = default  # documented in getter property
         self._prefix = prefix  # documented in getter property
         self._suffix = suffix  # documented in getter property
-
-        #: Flag, indicating whether corrective hints regarding
-        #: this element should be shown.
         self.show_hints: bool = True
-
-        #: A :class:`.MessageManager`, handling the corrective hints
-        #: for this element.
-        self.hint_manager = MessageManager(default_level="danger")
-
-        #: A boolean flag, indicating whether the element is disabled
-        #: A disabled input element is shown and displays its input
-        #: value, but subjects cannot enter any data.
-        self.disabled: bool = disabled
+        self._hint_manager = MessageManager(default_level="danger") # documented in getter
+        self.disabled: bool = disabled # documented in getter
 
         if default is not None:
-            self._input = default
+            self.input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+    
+    @property
+    def show_hints(self):
+        """
+        bool: Flag, indicating whether corrective hints regarding
+        this element should be shown.
+        """
+        return self._show_hints
+    
+    @show_hints.setter
+    def show_hints(self, value):
+        self._show_hints = value
+    
+    @property
+    def description(self):
+        """
+        str: Detailed description of this element to be added to the
+        automatically generated codebook
+        """
+        return self._description
+    
+    @description.setter
+    def description(self, value):
+        self._description = value
+    
+    @property
+    def disabled(self):
+        """
+        bool: A boolean flag, indicating whether the element is disabled
+        A disabled input element is shown and displays its input
+        value, but subjects cannot enter any data.
+        """
+        return self._disabled
+    
+    @disabled.setter
+    def disabled(self, value):
+        self._disabled = value
+    
+    @property
+    def hint_manager(self):
+        """
+        MessageManager: A :class:`.MessageManager`, handling the corrective hints
+        for this element.
+        """
+        return self._hint_manager
 
     def _prepare_web_widget(self):
         
@@ -1782,11 +1953,33 @@ class ChoiceElement(InputElement, ABC):
     ):
         super().__init__(align=align, **kwargs)
 
-        self.choice_labels = choice_labels
-        self.vertical = vertical
+        self.choice_labels = choice_labels # documented in getter
+        self.vertical = vertical # documented in getter
 
         #: List of choices that belong to this element.
         self.choices: List[_Choice] = None
+    
+    @property
+    def vertical(self):
+        """
+        bool: Attribute defining, whether the element is displayed vertically.
+        """
+        return self._vertical
+    
+    @vertical.setter
+    def vertical(self, value):
+        self._vertical = value
+    
+    @property
+    def choice_labels(self):
+        """
+        list: Stored list of choice labels.
+        """
+        return self._choice_labels
+    
+    @choice_labels.setter
+    def choice_labels(self, value: list):
+        self._choice_labels = value
 
     def added_to_page(self, page):
         """
