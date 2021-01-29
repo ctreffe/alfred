@@ -198,7 +198,7 @@ def add_indent(inp: str, spaces: int = 8) -> str:
 def build_table(docs: dict, caption: str = "", widths: str = "20, 80") -> str:
         """
         Transforms a documentation dictionary into a string, representing
-        the ReStructuredText csv-table directive.
+        the docutils csv-table directive.
 
         Args:
             docs: Documentation dictionary
@@ -266,6 +266,12 @@ def extract_arguments(obj) -> dict:
                 break
     
     def clean(lines: list) -> str:
+        """
+        Notes:
+            All occurances of single quotes are replaced by single 
+            backticks, because otherwise they would mess up the csv table.
+            
+        """
         joined = " ".join(lines)
         stripped = joined.strip()
         escaped1 = stripped.replace("'", "`")
