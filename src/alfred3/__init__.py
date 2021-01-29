@@ -11,6 +11,8 @@ from .page import Page
 from .page import WidePage
 from .page import UnlinkedDataPage
 from .page import CustomSavingPage
+from .page import AutoForwardPage
+from .page import AutoClosePage
 
 from .element.core import Row
 from .element.core import Stack

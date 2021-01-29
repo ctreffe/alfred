@@ -827,39 +827,36 @@ class NoNavigationPage(Page):
         self += Style("#page-navigation {display: none;}")
 
 
-####################
-# Page Mixins
-####################
+class TimeoutPage(Page):
+    timeout = None
 
-
-class WebTimeoutMixin(object):
-    def __init__(self, timeout, **kwargs):
-        super(WebTimeoutMixin, self).__init__(**kwargs)
+    def __init__(self, timeout: str = None, **kwargs):
+        super().__init__(**kwargs)
 
         self._end_link = "unset"
         self._run_timeout = True
-        self._timeout = timeout
-
+        if timeout is not None:
+            self.timeout = timeout
+        
+        if self.timeout is None:
+            raise AlfredError("A TimeoutPage must have a 'timeout' attribute.")
+        
+        unit = self.timeout[-1]
+        if unit == "s":
+            self.timeout = float(self.timeout[:-1])
+        elif unit == "m":
+            self.timeout = float(self.timeout[:-1]) * 60
+        else:
+            raise ValueError("You must specify the unit of your timeout ('s' - seconds, or 'm' - minutes)")
+    
     def added_to_experiment(self, experiment):
-        super(WebTimeoutMixin, self).added_to_experiment(experiment)
+        super().added_to_experiment(experiment)
         self._end_link = self._experiment.user_interface_controller.add_callable(self.callback)
 
         if self._experiment.config.getboolean("general", "debug"):
             if self._experiment.config.getboolean("debug", "reduce_countdown"):
-                self._timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
-
-    def callback(self, *args, **kwargs):
-        self._run_timeout = False
-        self._experiment.user_interface_controller.update_with_user_input(kwargs)
-        return self.on_timeout(*args, **kwargs)
-
-    def on_hiding_widget(self):
-        self._run_timeout = False
-        super(WebTimeoutMixin, self).on_hiding_widget()
-
-    def on_timeout(self, *args, **kwargs):
-        pass
-
+                self.timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
+    
     @property
     def js_code(self):
         code = (
@@ -890,59 +887,32 @@ class WebTimeoutMixin(object):
                 setTimeout(timeout_function, timeout*1000);
             });
         """
-            % (self._timeout, self._end_link),
+            % (self.timeout, self._end_link),
         )
-        js_code = super(WebTimeoutMixin, self).js_code
+        js_code = super().js_code
         if self._run_timeout:
             js_code.append(code)
         else:
             js_code.append((5, """$(document).ready(function(){$(".timeout-label").html(0);});"""))
         return js_code
+    
+    def callback(self, *args, **kwargs):
+        self._run_timeout = False
+        self._experiment.movement_manager.current_page.set_data(kwargs)
+        return self.on_timeout(*args, **kwargs)
+    
+    def on_timeout(self, *args, **kwargs):
+        pass
 
 
-class WebTimeoutForwardMixin(WebTimeoutMixin):
+class AutoForwardPage(TimeoutPage):
     def on_timeout(self, *args, **kwargs):
         self.experiment.movement_manager.forward()
 
-
-class WebTimeoutCloseMixin(WebTimeoutMixin):
+class AutoClosePage(TimeoutPage):
     def on_timeout(self, *args, **kwargs):
         self.close_page()
 
-
-class HideButtonsMixin(object):
-    def _on_showing_widget(self):
-        self._experiment.user_interface_controller.layout.forward_enabled = False
-        self._experiment.user_interface_controller.layout.backward_enabled = False
-        self._experiment.user_interface_controller.layout.jump_list_enabled = False
-        self._experiment.user_interface_controller.layout.finish_disabled = True
-
-        super(HideButtonsMixin, self)._on_showing_widget()
-
-    def _on_hiding_widget(self):
-        self._experiment.user_interface_controller.layout.forward_enabled = True
-        self._experiment.user_interface_controller.layout.backward_enabled = True
-        self._experiment.user_interface_controller.layout.jump_list_enabled = True
-        self._experiment.user_interface_controller.layout.finish_disabled = False
-
-        super(HideButtonsMixin, self)._on_hiding_widget()
-
-
-####################
-# Pages with Mixins
-####################
-
-
-class WebTimeoutForwardPage(WebTimeoutForwardMixin, WebCompositePage):
-    pass
-
-
-class WebTimeoutClosePage(WebTimeoutCloseMixin, WebCompositePage):
-    pass
-
-class TimeoutForwardPage(WebTimeoutForwardPage): pass
-
-class TimeoutClosePage(WebTimeoutClosePage): pass
 
 class NoDataPage(Page):
     """This Page does not save any data except its tag and uid."""
