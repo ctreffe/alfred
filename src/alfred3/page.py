@@ -1137,38 +1137,8 @@ class UnlinkedDataPage(NoDataPage):
 
 
 class CustomSavingPage(Page, ABC):
-    """Allows you to add custom SavingAgents directly to the page.
-
-    Since this is an abstract class, it can not be instantiated directly.
-    You have to derive a child class and define the property
-    :meth:`custom_save_data`, which must return a dictionary. Through
-    this property, you control exactly which data will be saved by this
-    page.
-
-    Example 1: Saving ordinary page data (like other pages)::
-
-        class MyPage(CustomSavingPage):
-
-            @property
-            def custom_save_data(self):
-                return self.data
-
-
-    Example 2: Saving a static dictionary
-
-        class MyPage(CustomSavingPage):
-
-            @property
-            def custom_save_data(self):
-                return {"key": "value"}
-
-    .. warning::
-        Each SavingAgent maintains one file or one document. 
-        On saving, the document will be fully replaced with the current
-        data. That means, you should not let two CustomSavingPages
-        share a SavingAgent, as they will override each other's data.
-        That is, unless that is your intended behavior, e.g. when the
-        pages share data.
+    """
+    Allows you to add custom SavingAgents directly to the page.
 
     Args:
         experiment: Alfred experiment. This page must be initialized
@@ -1176,6 +1146,39 @@ class CustomSavingPage(Page, ABC):
         save_to_main: If True, data will be *also* saved using the
             experiment's main SavingAgentController and all of its
             SavingAgents. Defaults to False.
+    
+    Notes:
+        Since this is an abstract class, it can not be instantiated directly.
+        You have to derive a child class and define the property
+        :meth:`custom_save_data`, which must return a dictionary. Through
+        this property, you control exactly which data will be saved by this
+        page.
+
+        .. warning::
+            Each SavingAgent maintains one file or one document. 
+            On saving, the document will be fully replaced with the current
+            data. That means, you should not let two CustomSavingPages
+            share a SavingAgent, as they will override each other's data.
+            That is, unless that is your intended behavior, e.g. when the
+            pages share data.
+    
+    Examples:
+        Example 1: Saving ordinary page data (like other pages)::
+
+            class MyPage(CustomSavingPage):
+
+                @property
+                def custom_save_data(self):
+                    return self.data
+
+
+        Example 2: Saving a static dictionary
+
+            class MyPage(CustomSavingPage):
+
+                @property
+                def custom_save_data(self):
+                    return {"key": "value"}
     """
 
     def __init__(self, experiment, save_to_main: bool = False, **kwargs):
