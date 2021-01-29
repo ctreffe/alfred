@@ -1216,7 +1216,8 @@ class CustomSavingPage(Page, ABC):
                 raise ValueError("A SavingAgent added to a CustomSavingPage must be unique")
 
     def append_saving_agents(self, *args):
-        """Appends saving agents to this page.
+        """
+        Appends saving agents to this page.
         
         These saving agents will be used to save the page's data.
         """
@@ -1246,6 +1247,10 @@ class CustomSavingPage(Page, ABC):
 
 
 class DefaultFinalPage(Page):
+    """
+    The default final page.
+    """
+
     title = "Experiment beendet"
 
     def on_exp_access(self):
