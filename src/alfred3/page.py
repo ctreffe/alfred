@@ -811,66 +811,12 @@ class WebCompositePage(CoreCompositePage, WebPageInterface):
         return reduce(lambda l, element: l + element.js_urls, self.elements.values(), [])
 
 
-class CompositePage(WebCompositePage):
-    pass
-
-
 class Page(WebCompositePage):
     pass
 
 
 class WidePage(Page):
     responsive_width = "85, 75, 75, 70"
-
-
-class PagePlaceholder(PageCore, WebPageInterface):
-    def __init__(self, ext_data={}, **kwargs):
-        super(PagePlaceholder, self).__init__(**kwargs)
-
-        self._ext_data = ext_data
-
-    @property
-    def web_widget(self):
-        return ""
-
-    @property
-    def data(self):
-        data = {}
-        data.update(self._ext_data)
-        return data
-
-    @property
-    def should_be_shown(self):
-        return False
-
-    @should_be_shown.setter
-    def should_be_shown(self, b):
-        pass
-
-    @property
-    def is_jumpable(self):
-        return False
-
-    @is_jumpable.setter
-    def is_jumpable(self, is_jumpable):
-        pass
-
-
-class AutoHidePage(CompositePage):
-    def __init__(self, on_hiding=False, on_closing=True, **kwargs):
-        super(AutoHidePage, self).__init__(**kwargs)
-
-        self._on_closing = on_closing
-        self._on_hiding = on_hiding
-
-    def on_hiding_widget(self):
-        if self._on_hiding:
-            self.should_be_shown = False
-
-    def close_page(self):
-        super(AutoHidePage, self).close_page()
-        if self._on_closing:
-            self.should_be_shown = False
 
 
 class NoNavigationPage(Page):
