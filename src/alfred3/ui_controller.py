@@ -481,36 +481,42 @@ class UserInterface:
         if style == "base":
             with importlib.resources.path(css, "base.css") as f:
                 url = self.add_static_file(f, content_type="text/css")
-                self.css_urls.append((10, url))
+                self.css_urls.append((5, url))
 
         elif style == "goe":
 
             with importlib.resources.path(css, "goe.css") as f:
                 url = self.add_static_file(f, content_type="text/css")
-                self.css_urls.append((10, url))
+                self.css_urls.append((5, url))
 
             with importlib.resources.path(img, "uni_goe_logo_white.png") as p:
                 url = self.add_static_file(p, content_type="image/png")
                 self.config["logo_url"] = url
-
-        elif style.endswith(".css"):
-            path = self.experiment.subpath(style)
-            url = self.add_static_file(path, content_type="text/css")
-            self.css_urls.append((10, url))
-
-            logo = self.experiment.config.get("layout", "logo")
-            logo_path = self.experiment.subpath(logo)
-            if logo_path.suffix == ".png":
-                content_type = "image/png"
-            elif logo_path.suffix in [".jpg", ".jpeg"]:
-                content_type = "image/jpeg"
-            logo_url = self.add_static_file(logo_path, content_type=content_type)
-            self.config["logo_url"] = logo_url
-
         else:
-            raise ValueError(
-                "Config option 'style' in section 'layout' must be 'base', 'goe', or a valid path to a .css file."
-            )
+            raise ValueError(f"Invalid value for option 'style' in config section 'layout': {style}")
+        
+        # read CSS files from static folder
+        static_folder = self.exp.config.get("layout", "static_folder")
+        static_folder = self.exp.subpath(static_folder)
+        try:
+            for filename in static_folder.iterdir():
+                if filename.is_file() and filename.suffix == ".css":
+                    path = filename.resolve()
+                    url = self.add_static_file(path, content_type="text/css")
+                    self.css_urls.append((7, url))
+        except FileNotFoundError:
+            self.log.debug(f"Did not find static folder {static_folder}. Passing silently.")
+
+        # read custom logo
+        logo = self.experiment.config.get("layout", "logo")
+        logo = self.experiment.subpath(logo)
+        if logo.is_file():
+            if logo.suffix == ".png":
+                content_type = "image/png"
+            elif logo.suffix in [".jpg", ".jpeg"]:
+                content_type = "image/jpeg"
+            logo_url = self.add_static_file(logo, content_type=content_type)
+            self.config["logo_url"] = logo_url
 
     def _add_resource_links(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
