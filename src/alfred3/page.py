@@ -896,21 +896,69 @@ class TimeoutPage(Page):
             js_code.append((5, """$(document).ready(function(){$(".timeout-label").html(0);});"""))
         return js_code
     
-    def callback(self, *args, **kwargs):
+    def callback(self, **kwargs):
         self._run_timeout = False
         self._experiment.movement_manager.current_page.set_data(kwargs)
         self.on_timeout()
     
-    def on_timeout(self, ):
+    def on_timeout(self):
+        """
+        Executed *once*, after the timeout of the page runs out.
+
+        See Also:
+            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            of available hooks.
+
+            This hook is defined by :class:`.AutoForwardPage` and 
+            :class:`.AutoClosePage`.
+        """
         pass
 
 
 class AutoForwardPage(TimeoutPage):
-    def on_timeout(self, ):
-        self.experiment.movement_manager.forward()
+    """
+    A page that automatically moves forward after the timeout expires.
+
+    Notes:
+        This page will work with customly defined :meth:`.custom_move`
+        methods.
+    
+    Examples:
+
+        ::
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class DemoPage(al.AutoForwardPage):
+                timeout = "5s"
+
+                def on_exp_access(self):
+                    self += al.Text("This page will move after 5 seconds.")
+
+    """
+    def on_timeout(self):
+        self.experiment.movement_manager.move(direction="forward")
 
 class AutoClosePage(TimeoutPage):
-    def on_timeout(self, ):
+    """
+    A page that automatically closes itself after the timeout expires.
+
+    Examples:
+
+        ::
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class DemoPage(al.AutoClosePage):
+                timeout = "5s"
+
+                def on_exp_access(self):
+                    self += al.Text("This page will close after 5 seconds.")
+
+    """
+    def on_timeout(self):
         self.close_page()
 
 
