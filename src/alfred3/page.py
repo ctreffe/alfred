@@ -390,7 +390,7 @@ class WebPageInterface(with_metaclass(ABCMeta, object)):
 
 
 class CoreCompositePage(PageCore):
-    def __init__(self, elements=None, **kwargs):
+    def __init__(self, **kwargs):
         super(CoreCompositePage, self).__init__(**kwargs)
 
         self.elements = {}
@@ -400,11 +400,6 @@ class CoreCompositePage(PageCore):
         self._element_name_counter = 1
         self._thumbnail_element = None
         
-        if elements is not None:
-            if not isinstance(elements, list):
-                raise TypeError
-            self.append(*elements)
-    
     def __contains__(self, element): 
         try:
             return element.name in self.elements
