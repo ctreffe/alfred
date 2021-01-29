@@ -899,18 +899,18 @@ class TimeoutPage(Page):
     def callback(self, *args, **kwargs):
         self._run_timeout = False
         self._experiment.movement_manager.current_page.set_data(kwargs)
-        return self.on_timeout(*args, **kwargs)
+        self.on_timeout()
     
-    def on_timeout(self, *args, **kwargs):
+    def on_timeout(self, ):
         pass
 
 
 class AutoForwardPage(TimeoutPage):
-    def on_timeout(self, *args, **kwargs):
+    def on_timeout(self, ):
         self.experiment.movement_manager.forward()
 
 class AutoClosePage(TimeoutPage):
-    def on_timeout(self, *args, **kwargs):
+    def on_timeout(self, ):
         self.close_page()
 
 
