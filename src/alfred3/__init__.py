@@ -10,7 +10,6 @@ from .section import OnlyForwardSection
 from .page import Page
 from .page import WidePage
 from .page import UnlinkedDataPage
-from .page import CustomSavingPage
 from .page import AutoForwardPage
 from .page import AutoClosePage
 
