@@ -274,8 +274,8 @@ def extract_arguments(obj) -> dict:
         """
         joined = " ".join(lines)
         stripped = joined.strip()
-        escaped1 = stripped.replace("'", "`")
-        escaped2 = escaped1.replace('"', '`')
+        escaped1 = stripped.replace("'", "")
+        escaped2 = escaped1.replace('"', '')
         return re.sub(r" +", " ", escaped2)
 
 
