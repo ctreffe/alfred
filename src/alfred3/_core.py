@@ -23,9 +23,21 @@ class ExpMember:
 
     Args:
         name (str): Name of the member. Must be unique throughout the
-            experiment.
-        title (str): Title of the member.
-        subtitle (str): Subtitle of the member.
+            experiment. Can be defined as a class attribute. When you
+            write a page or section in *class style*, the name can be
+            inferred from the class name and does not need to be
+            defined explicitly again. If a name is defined explicitly
+            as a class attribute, that name is used.
+        title (str): Title of the member. Can be defined as a class 
+            attribute.
+        subtitle (str): Subtitle of the member. Can be defined as a 
+            class attribute.
+        showif (dict): A dictionary, which can be used to define a 
+            simple set of conditions under which the member will be
+            shown. The conditions take the form of
+            key-value pairs, where each key is the name of an input 
+            element in the experiment and the value is the required 
+            input. Can be defined as a class attribute.
     """
 
 
