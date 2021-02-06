@@ -1,4 +1,5 @@
-"""Provides configuration handling for alfred3 experiments.
+"""
+Provides configuration handling for alfred3 experiments.
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
@@ -14,10 +15,11 @@ from pathlib import Path
 from typing import Union
 
 from . import files
-
+from ._helper import inherit_kwargs
 
 class ExperimentConfig(ConfigParser):
-    """Provides basic functionality for alfred3 configuration.
+    """
+    Provides basic functionality for alfred3 configuration.
 
     Configuration files are parsed in the following order (later files
     override settings from earlier ones):
@@ -44,29 +46,25 @@ class ExperimentConfig(ConfigParser):
         expdir: Path to the experiment directory.
         config_objects: A list of dictionaries and/or strings with alfred
             configuration in ini format. Defaults to `None`.
-        *args: Variable length argument list, will be passed on to the
-            parent class.
-        **kwargs: Arbitrary keyword arguments, will be passed on to the
-            parent class.
-    
-    Attributes:
-        env_location: Environment variable key that corresponds to a 
-            full filepath (including filename) to an alfred configuration
-            file.
-        global_config_name: Name of the general library-wide 
-            configuration files.
-        exp_config_name: Name of the experiment-specific configuration 
-            file.
+        **kwargs, inline_comment_prefixes: Keyword arguments that are passed on to 
+            :class:`configparser.ConfigParser`
     
     .. _documentation: https://docs.python.org/3/library/configparser.html#configparser.ConfigParser
     """
 
+    #: Environment variable key that corresponds to a 
+    #: full filepath (including filename) to an alfred configuration
+    #: file.
     env_location = "ALFRED_CONFIG_FILE"
+
+    #: Name of the general library-wide configuration files.
     global_config_name = "alfred.conf"
+
+    #: Name of the experiment-specific configuration file.
     exp_config_name = "config.conf"
 
-    def __init__(self, expdir: str = None, config_objects: list = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, expdir: str = None, config_objects: list = None, inline_comment_prefixes: str = ("#"), **kwargs):
+        super().__init__(inline_comment_prefixes=inline_comment_prefixes, **kwargs)
 
         self._config_objects = config_objects if config_objects is not None else []
 
@@ -75,7 +73,8 @@ class ExperimentConfig(ConfigParser):
         self._parse_alfred_config()
 
     def _collect_config_files(self):
-        """Collect user-defined config files from config locations.
+        """
+        Collect user-defined config files from config locations.
         """
 
         files = []
@@ -92,7 +91,8 @@ class ExperimentConfig(ConfigParser):
         self._config_files = [str(p) for p in files if p is not None]
 
     def _parse_alfred_config(self):
-        """Parse all config files from different locations.
+        """
+        Parse all config files from different locations.
         """
 
         with importlib.resources.path(files, self.global_config_name) as f:
@@ -111,7 +111,8 @@ class ExperimentConfig(ConfigParser):
                 self.read_string(obj)
 
     def as_dict(self) -> dict:
-        """Converts the ConfigParser structure into a nested dict.
+        """
+        Converts the ConfigParser structure into a nested dict.
 
         Each section name is a first level key in the the dict, and the 
         key values of the section becomes the dict in the second level::
@@ -130,7 +131,8 @@ class ExperimentConfig(ConfigParser):
         return {section_name: dict(self[section_name]) for section_name in self.sections()}
 
     def get_section(self, name: str) -> SectionProxy:
-        """Returns a section of the parser, if it exists.
+        """
+        Returns a section of the parser, if it exists.
 
         Args:
             name: Name of the section you wish to retrieve.
@@ -148,7 +150,8 @@ class ExperimentConfig(ConfigParser):
             return None
 
     def combine_sections(self, *args):
-        """Parses the given sections on top of each other and returns
+        """
+        Parses the given sections on top of each other and returns
         the resulting section.
 
         Example with section in dict notation for simplicity::
@@ -170,29 +173,19 @@ class ExperimentConfig(ConfigParser):
 
         return parser["section"]
 
-
 class ExperimentSecrets(ExperimentConfig):
-    """Provides functionality for parsing secret config, e.g. DB credentials.
+    """
+    Provides functionality for parsing secret config, e.g. DB credentials.
 
     This class is used only to set the attributes :attr:`env_location`,
     :attr:`global_config_name`, and :attr:`exp_config_name`. Otherwise
     it behaves exactly like :class:`ExperimentConfig`.
+
+    Args:
+
     """
 
     env_location = "ALFRED_SECRETS_FILE"
     global_config_name = "secrets.conf"
     exp_config_name = "secrets.conf"
 
-
-def init_configuration(expdir: str) -> dict:
-    """Returns a dictionary with experiment config and secrets.
-
-    Args:
-        expdir: Experiment directory. Handed over to 
-            :class:`ExperimentConfig` and :class:`ExperimentSecrets`
-    """
-
-    exp_config = ExperimentConfig(expdir=expdir)
-    exp_secrets = ExperimentSecrets(expdir=expdir)
-    config = {"exp_config": exp_config, "exp_secrets": exp_secrets}
-    return config

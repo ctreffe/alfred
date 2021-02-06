@@ -201,8 +201,7 @@ class MovementManager:
         elif direction == "jump":
             self.log.debug(f"{to_page} should not be shown. Aborting move.")
             if self.exp.config.getboolean("general", "debug"):
-                if self.exp.config.getboolean("debug", "verbose"):
-                    self.exp.message_manager.post_message(f"{to_page} should not be shown. Jump was aborted.", level="info")
+                self.exp.message_manager.post_message(f"{to_page} should not be shown. Jump was aborted.", level="debug")
             raise AbortMove()
     
     def _check_permissions(self, to_page, direction: str):
@@ -235,7 +234,7 @@ class MovementManager:
         else:
             from_page.section.leave()
 
-        if self.exp.config.getboolean("general", "record_move_history"):
+        if self.exp.config.getboolean("data", "record_move_history"):
             self.record_move(page_status_before, direction=direction, to_page=to_page)
         
         if direction == "jump":
@@ -283,7 +282,7 @@ class MovementManager:
             except ValidationError:
                 raise AbortMove()
             
-            if self.exp.config.getboolean("general", "record_move_history"):
+            if self.exp.config.getboolean("data", "record_move_history"):
                 self.record_move(page_status_before, direction=direction, to_page=to_page)
 
         to_page._on_showing_widget(show_time=now)
@@ -315,8 +314,7 @@ class MovementManager:
     def _check_jump_permission(self, next_page):
         if self.experiment.config.getboolean("general", "debug"):
             self.log.debug("Debug mode enabled. Jump permission not checked.")
-            if self.experiment.config.getboolean("debug", "verbose"):
-                self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="info")
+            self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="debug")
             return True
 
         elif not self.current_page.section.allow_jumpfrom:
@@ -577,7 +575,7 @@ class UserInterface:
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution
         first_page = self.exp.movement_manager.first_page
-        if page is first_page and self.experiment.config.getboolean("general", "save_client_info"):
+        if page is first_page and self.experiment.config.getboolean("data", "save_client_info"):
             code["js_code"] += [(7, importlib.resources.read_text(js, "clientinfo.js"))]
         
         try:
@@ -606,7 +604,6 @@ class UserInterface:
 
         d["title"] = page.title
         d["subtitle"] = page.subtitle
-        
         
         if page.section.allow_backward and not page is self.exp.movement_manager.first_page:
             d["backward_text"] = self.experiment.config.get("navigation", "backward")

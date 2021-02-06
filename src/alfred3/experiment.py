@@ -45,7 +45,7 @@ import pymongo
 from cryptography.fernet import Fernet
 
 from . import alfredlog
-from .section import Section, RootSection
+from .section import Section, _RootSection
 from .page import Page
 from . import messages, page, section
 from . import saving_agent
@@ -382,7 +382,7 @@ class Experiment:
         if self.final_page is not None:
             if isclass(self.final_page):
                 exp_session.final_page = self.final_page
-            elif isinstance(self.final_page, page.PageCore):
+            elif isinstance(self.final_page, page._PageCore):
                 exp_session.final_page = self.final_page
         
 
@@ -436,6 +436,48 @@ class Experiment:
             else:
                 parent = self.members[member_inst.parent_name]
                 parent += member_inst
+    
+    def run(self, path: Union[str, Path] = None, **kwargs):
+        """
+        Runs the experiment.
+
+        Args:
+            path: Path to the experiment directory, containing script.py.
+                If None, alfred looks for a script.py in the directory
+                from which this method is executed.
+            **kwargs: Keyword arguments passed on to :class:`alfred3.run.ExperimentRunner.auto_run`
+        
+        Notes:
+            .. warning::
+                If you execute this method in your script.py, make sure to
+                use an ``if __name__ == "__main__"``protector (see example)!
+        
+        See Also:
+            There are two other useful ways of running your alfred 
+            experiment:
+
+            1. Define a run.py in your Experiment directory
+            2. Use the command line interface
+
+            Both of these are documented at :module:`alfred3.run`
+        
+        Examples:
+
+            A convenient way of running short alfred experiments is to
+            call this method at the end of your script.py::
+
+                import alfred3 as al
+                exp = al.Experiment()
+                exp += al.Page(name="demo")
+
+                if __name__ == "__main__":
+                    exp.run()
+
+        
+        """
+        from alfred3.run import ExperimentRunner
+        runner = ExperimentRunner(path=path)
+        runner.auto_run(**kwargs)
 
         
     def __iadd__(self, other: Union[Section, Page]):
@@ -475,7 +517,7 @@ class ExperimentSession:
 
     .. note::
         Because the experiment session is newly created for every new
-        subject, you can only access it in the *object-oriented* style
+        subject, you can only access it in the *class* style
         of writing an alfred experiment by deriving new :class:`.Page`
         and/or :class:`.Section` classes and using their hooks to add
         elements.
@@ -569,7 +611,7 @@ class ExperimentSession:
         self.data_saver = DataSaver(self)
         self.message_manager = messages.MessageManager()
         
-        self._root_section = RootSection(self)
+        self._root_section = _RootSection(self)
         self.root_section.append_root_sections()
         self.root_section.update_members_recursively()
         self.root_section.generate_unset_tags_in_subtree()
@@ -700,16 +742,19 @@ class ExperimentSession:
 
         self.save_data(sync=True)
 
-        if self.config.getboolean("general", "transform_data_to_csv"):
-            exporter = Exporter(self)
-            if self.config.getboolean("local_saving_agent", "use"):
-                exporter.export(DataManager.EXP_DATA)
-            if self.root_section.unlinked_data:
-                exporter.export(DataManager.UNLINKED_DATA)
-            if self.config.getboolean("general", "export_codebook"):
-                exporter.export(DataManager.CODEBOOK_DATA)
-            if self.config.getboolean("general", "record_move_history"):
-                exporter.export(DataManager.HISTORY)
+        if not self.config.getboolean("local_saving_agent", "use"):
+            return
+
+        cfg = self.config["data"]
+        exporter = Exporter(self)
+        if cfg.getboolean("export_exp_data") and self.config.getboolean("local_saving_agent", "use"):
+            exporter.export(DataManager.EXP_DATA)
+        if cfg.getboolean("export_unlinked_data") and self.root_section.unlinked_data:
+            exporter.export(DataManager.UNLINKED_DATA)
+        if cfg.getboolean("export_codebook"):
+            exporter.export(DataManager.CODEBOOK_DATA)
+        if cfg.getboolean("export_move_history") and cfg.getboolean("record_move_histors"):
+            exporter.export(DataManager.HISTORY)
 
     def save_data(self, sync: bool = False):
         """
@@ -751,7 +796,7 @@ class ExperimentSession:
     @property
     def root_section(self):
         """
-        RootSection: The experiment's root section, organizing all other
+        _RootSection: The experiment's root section, organizing all other
         sections, including :attr:`.content`.
         """
         return self._root_section
@@ -810,7 +855,7 @@ class ExperimentSession:
 
     @final_page.setter
     def final_page(self, value: Page):
-        if not isinstance(value, page.PageCore):
+        if not isinstance(value, page._PageCore):
             raise ValueError("Not a valid page.")
 
         self.root_section.final_page = value
@@ -980,7 +1025,7 @@ class ExperimentSession:
     def type(self) -> str:
         """str: Type of the experiment"""
 
-        return self.config.get("experiment", "type")
+        return self.config.get("experiment", "type", fallback="web")
 
     @property
     def version(self) -> str:
@@ -1125,49 +1170,36 @@ class ExperimentSession:
             raise AttributeError(f"The experiment session has no attribute '{name}'.")
 
     def _set_encryptor(self):
-        """Sets the experiments encryptor.
+        """
+        Sets the experiments encryptor.
 
-        Four possible outcomes:
-
-        1. Encryptor with key from default secrets.conf
-            If neither environment variable nor non-public custom key 
-            in the experiments' *secrets.conf* is defined.
-        2. Encryptor with key from environment variable
+        1. Encryptor with key from environment variable
             If 'ALFRED_ENCRYPTION_KEY' is defined in the environment
             and no non-public custom key is defined in the experiments'
             *secrets.conf*.
-        3. Encryptor with key from experiment secrets.conf
+        2. Encryptor with key from experiment secrets.conf
             If 'public_key = false' and a key is defined in the 
             experiments' *secrets.conf*.
-        4. No encryptor
+        3. No encryptor
             If 'public_key = false' and no key is defined in the 
             experiments' *secrets.conf*.
 
         """
 
         key = os.environ.get("ALFRED_ENCRYPTION_KEY", None)
-
-        if not key or not self.secrets.getboolean("encryption", "public_key"):
+        if self.secrets.get("encryption", "key", fallback=None):
             key = self.secrets.get("encryption", "key")
 
         if key:
             return Fernet(key=key.encode())
         else:
-            self.log.warning(
-                "No encryption key found. Thus, no encryptor was set, and the methods 'encrypt' and 'decrypt' will not work."
-            )
+            self.log.debug("No encryption key found. Encryptor was not set.")
+            return None
+
 
     def encrypt(self, data: Union[str, int, float]) -> str:
         """
         Encrypts the input and returns the encrypted string.
-
-        In web experiments deployed via mortimer, a safe, user-specific 
-        secret key will be used for encryption. 
-        
-        .. warning:: 
-            The method will also work in offline experiments, but does 
-            NOT provide safe encryption in this case, as a PUBLIC key 
-            is used for encryption. This is only ok for testing purposes.
 
         Args:
             data: Input object that you want to encrypt. If the input is
@@ -1175,7 +1207,45 @@ class ExperimentSession:
             
         Returns:
             str: Encrypted data
+        
+        Raises:
+            AlfredError: If no encryptor is available, which usually
+            means that no encryption key was provided.
+        
+        Notes:
+            In web experiments deployed via mortimer, a safe, user-specific 
+            secret key will be used for encryption. 
+
+            For encryption in local experiments, you must provide an
+            encryption key yourself. You have two options:
+
+            1. Save the key to the environment variable "ALFRED_ENCRYPTION_KEY".
+               Alfred will look for this variable and use the key 
+               provided here.
+            
+            2. Create a secrets.conf file in your experiment directory
+               and define the option "key" in section "encryption".
+               If you define this option, this key will be preferred
+               over the key from the environment variable.
+            
+            The key must be a string containing a valid fernet key, 
+            generated by :meth:`cryptography.fernert.Fernet.generate_key`.
+
+            A string key can be generated with a few lines of python code:
+
+            >>> from cryptography.fernert import Fernet
+            >>> key = Fernet.generate_key()
+            >>> print(key.decode())
+            biNJTMLgFYc5fKAd-DNi1ioh44BTnfAQGbozpDcXZ-M=
+
+            You can copy-paste a key that you generated this way into
+            your environment variable or secrets.conf (*but obviously 
+            DON'T copy the key from this public example!*).
+        
         """
+        if not self._encryptor:
+            raise AlfredError("For encryption to work, you must set an encryption key in secrets.conf.")
+
         if data is None:
             return None
 
@@ -1184,11 +1254,6 @@ class ExperimentSession:
 
         d_str = str(data)
         d_bytes = d_str.encode()
-
-        if self.secrets.getboolean("encryption", "public_key"):
-            self.log.warning(
-                "USING STANDARD PUBLIC ENCRYPTION KEY. YOUR DATA IS NOT SAFE! USE ONLY FOR TESTING"
-            )
 
         encrypted = self._encryptor.encrypt(d_bytes)
         return encrypted.decode()
@@ -1215,6 +1280,13 @@ class ExperimentSession:
 
         d = self._encryptor.decrypt(d_bytes)
         return d.decode()
+    
+    @property
+    def current_page(self):
+        """
+        alfred3.page.Page: The currently active page of the experiment.
+        """
+        return self.movement_manager.current_page
 
     def forward(self):
         """

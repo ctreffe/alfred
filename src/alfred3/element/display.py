@@ -664,7 +664,7 @@ class ProgressBar(LabelledElement):
         If the argument *show_text* is *True*, the text's appearance
         can be altered via CSS. It receives a class of
         ":attr:`.css_class_element`-text" and an id of
-        ":attr:`.name`-text". You can use the method :meth:`.add_css`
+        ":attr:`.Element.name`-text". You can use the method :meth:`.add_css`
         to append fitting CSS to the bar (see examples).
 
     Examples:

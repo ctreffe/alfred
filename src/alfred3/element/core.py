@@ -583,7 +583,7 @@ class Element:
         """
         from .. import page as pg
 
-        if not isinstance(page, pg.PageCore):
+        if not isinstance(page, pg._PageCore):
             raise TypeError()
 
         self.page = page
@@ -1879,7 +1879,7 @@ class InputElement(LabelledElement):
         
         from .. import page as pg
 
-        if not isinstance(page, pg.PageCore):
+        if not isinstance(page, pg._PageCore):
             raise TypeError()
 
         self.page = page

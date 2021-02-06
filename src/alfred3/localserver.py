@@ -25,43 +25,15 @@ from . import alfredlog
 
 
 class Script:
-
     exp = None
-    generate_experiment = None
     exp_session = None
     expdir = None
     config = None
-
-    def set_generator(self, generator):
-        """
-        DEPRECATED
-        Included for backwards compatibility from v1.2.0 onwards.
-        
-        """
-        # if the script.py contains generate_experiment directly, not as a class method
-        if builtins_callable(generator):
-            self.generate_experiment = generator.__get__(self, Script)
-        # if the script.py contains Script.generate_experiment()
-        elif builtins_callable(generator.generate_experiment):
-            self.generate_experiment = generator.generate_experiment(self, Script)
-
-
-class Generator(Script):
-    """Included for backwards compatibility from v1.2.0 onwards.
-
-    TODO: Remove in v2.0.0
-    """
-
-    pass
+    secrets = None
 
 
 app = Flask(__name__)
 script = Script()
-
-# Included for backwards compatibility with trad. run.py from v1.2.0 onwards
-# TODO: Remove in v2.0.0
-app.secret_key = "1327157a-0c8a-4e6d-becf-717a2a21cdba"
-
 
 @app.route("/start", methods=["GET", "POST"])
 def start():
@@ -72,25 +44,15 @@ def start():
     # Try-except block for compatibility with alfred3 previous to v1.2.0
     # TODO: Remove try-except block in v2.0.0 (keep "try" part)
     # pylint: disable=unsubscriptable-object
-    exp_id = script.config["exp_config"].get("metadata", "exp_id")
-    session_id = script.config["exp_config"].get("metadata", "session_id")
+    exp_id = script.config.get("metadata", "exp_id")
+    session_id = script.config.get("metadata", "session_id")
     # session_id = uuid4().hex
     log = alfredlog.QueuedLoggingInterface("alfred3", f"exp.{exp_id}")
     log.session_id = session_id
     script.log = log
 
-    # generate experiment
     try:
-        script.exp = script.generate_experiment()
-    except TypeError:
-        pass
-        # script.log.debug("Error passed: " + traceback.format_exc())
-    
-    config = script.config["exp_config"]
-    secrets = script.config["exp_secrets"]
-
-    try:
-        script.exp_session = script.exp.create_session(session_id=session_id, config=config, secrets=secrets, **request.args)
+        script.exp_session = script.exp.create_session(session_id=session_id, config=script.config, secrets=script.secrets, **request.args)
     except Exception:
         script.log.exception("Expection during experiment generation.")
         abort(500)
@@ -106,7 +68,11 @@ def start():
 
     session["page_tokens"] = []
 
-    return redirect(url_for("experiment"))
+    try:
+        return redirect(url_for("experiment"))
+    except Exception:
+        log.exception("Exception during experiment startup.")
+        abort(500)
 
 
 @app.route("/experiment", methods=["GET", "POST"])

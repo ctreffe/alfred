@@ -1,26 +1,79 @@
 # -*- coding:utf-8 -*-
-
 """
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
+Sections organize movement between pages in an experiment.
+
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
 
 from . import element as elm
 from ._core import ExpMember
-from .page import PageCore, UnlinkedDataPage, DefaultFinalPage
+from ._helper import inherit_kwargs
+from .page import _PageCore, UnlinkedDataPage, _DefaultFinalPage
 from .exceptions import MoveError, AlfredError, ValidationError
 from . import alfredlog
 from random import shuffle
 
+@inherit_kwargs
 class Section(ExpMember):
+    """
+    The basic section, allows forward and backward movements.
 
+    Args:
+        shuffle (bool): If True, the order of all members in this 
+            section will be randomized every time the section is entered.
+            Shuffling is not recursive, it only affects direct members
+            of a section. That means, if there are subsections, 
+            their position in the parent section will be randomized, 
+            but the members within the subsection will not be affected. 
+            Defaults to False. Can be defined as a class attribute.
+        {kwargs}
+    
+    Examples:
+        Using a basic section and filling it with a page in instance 
+        style::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            exp += al.Section(name="main")
+            
+            exp.main += al.Page(title="Demo", name="DemoPage")
+        
+        Using a basic section and filling it with a page in class style::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Main(al.Section): pass
+
+            @exp.member(of_section="Main")
+            class DemoPage(al.Page):
+                title = "Demo"
+
+    """
+
+    #: Controls, whether participants can move forward from pages in 
+    #: this section.
     allow_forward: bool = True
+
+    #: Controls, whether participants can move backward from pages in 
+    #: this section.
     allow_backward: bool = True
+    
+    #: Controls, whether participants can jump *from* pages in this 
+    #: section
     allow_jumpfrom: bool = True
+    
+    #: Controls, whether participants can jump *to* pages in this 
+    #: section.
     allow_jumpto: bool = True
 
+    #: If True, the members of this section will be randomized every
+    #: time the section is entered.
     shuffle: bool = False
 
-    def __init__(self, title: str = None, name: str = None, **kwargs):
+    def __init__(self, title: str = None, name: str = None, shuffle: bool = None, **kwargs):
         super().__init__(title=title, name=name, **kwargs)
 
         self.members = {}
@@ -30,8 +83,8 @@ class Section(ExpMember):
         #: is currently operating within this section
         self.active: bool = False
 
-        if kwargs.get("shuffle", None):
-            self.shuffle = kwargs.get("shuffle", False)
+        if shuffle is not None:
+            self.shuffle = shuffle
     
     def __contains__(self, member):
         try:
@@ -73,7 +126,7 @@ class Section(ExpMember):
     def all_updated_pages(self) -> dict:
         pages = {}
         for name, member in self.all_updated_members.items():
-            if isinstance(member, PageCore):
+            if isinstance(member, _PageCore):
                 pages[name] = member
         
         return pages
@@ -87,7 +140,8 @@ class Section(ExpMember):
 
     @property
     def all_members(self) -> dict:
-        """Returns a flat dict of all members in this section and its subsections.
+        """
+        Returns a flat dict of all members in this section and its subsections.
 
         The order is preserved, i.e. members are listed in this dict in 
         the same order in which they appear in the experiment.
@@ -111,7 +165,8 @@ class Section(ExpMember):
 
     @property
     def all_subsections(self) -> dict:
-        """Returns a flat dict of all sections in this section and its subsections.
+        """
+        Returns a flat dict of all sections in this section and its subsections.
 
         The order is preserved, i.e. sections are listed in this dict in 
         the same order in which they appear in the experiment.
@@ -127,7 +182,8 @@ class Section(ExpMember):
 
     @property
     def subsections(self) -> dict:
-        """Returns a flat dict of all subsections in this section.
+        """
+        Returns a flat dict of all subsections in this section.
 
         Subsections in subsections are not included. Use 
         :attr:`.all_subsections` for that purpose.
@@ -136,7 +192,8 @@ class Section(ExpMember):
 
     @property
     def all_pages(self) -> dict:
-        """Returns a flat dict of all pages in this section and its subsections.
+        """
+        Returns a flat dict of all pages in this section and its subsections.
 
         The order is preserved, i.e. pages are listed in this dict in 
         the same order in which they appear in the experiment.
@@ -144,7 +201,7 @@ class Section(ExpMember):
 
         pages = {}
         for name, member in self.members.items():
-            if isinstance(member, PageCore):
+            if isinstance(member, _PageCore):
                 pages[name] = member
             elif isinstance(member, Section):
                 pages.update(member.all_pages)
@@ -161,16 +218,18 @@ class Section(ExpMember):
     
     @property
     def pages(self) -> dict:
-        """Returns a flat dict of all pages in this section.
+        """
+        Returns a flat dict of all pages in this section.
 
         Pages in subsections are not included. Use :attr:`.all_pages`
         for that purpose.
         """
-        return {name: page for name, page in self.members.items() if isinstance(page, PageCore)}
+        return {name: page for name, page in self.members.items() if isinstance(page, _PageCore)}
     
     @property
     def all_elements(self) -> dict:
-        """Returns a flat dict of all elements in this section.
+        """
+        Returns a flat dict of all elements in this section.
         
         Recursive: Includes elements from pages in this section and all 
         its subsections.
@@ -183,7 +242,8 @@ class Section(ExpMember):
     
     @property
     def all_input_elements(self) -> dict:
-        """Returns a flat dict of all input elements in this section.
+        """
+        Returns a flat dict of all input elements in this section.
         
         Recursive: Includes elements from pages in this section and all 
         its subsections.
@@ -196,7 +256,8 @@ class Section(ExpMember):
     
     @property
     def all_shown_input_elements(self) -> dict:
-        """Returns a flat dict of all shown input elements in this section.
+        """
+        Returns a flat dict of all shown input elements in this section.
         
         Recursive: Includes elements from pages in this section and all 
         its subsections.
@@ -329,7 +390,7 @@ class Section(ExpMember):
 
     def on_resume(self):
         """ 
-        Executed *every time* the experiment resumes from a child section to this section.
+        Executed *every time* the experiment resumes from a direct subsection to this section.
 
         Resuming takes place, when a child section is left and the
         next page is a direct child of the parent section. Then this 
@@ -344,7 +405,7 @@ class Section(ExpMember):
 
     def on_hand_over(self):
         """
-        Executed *every time* a subsection of this section is entered.
+        Executed *every time* a direct subsection of this section is entered.
 
         See Also:
             See :ref:`hooks-how-to` for a how to on using hooks and an overview
@@ -400,6 +461,7 @@ class Section(ExpMember):
 
     def move(self, direction):
         """
+        Conducts a section's part of moving in an alfred experiment.
 
         Raises:
             ValidationError: If validation of the current page fails.
@@ -452,19 +514,46 @@ class Section(ExpMember):
         Raises:
             ValidationError: If validation fails.
         """
-        current_page = self.exp.movement_manager.current_page
         
-        if not current_page.validate_page():
+        if not self.exp.current_page.validate_page():
             raise ValidationError()
         
-        if not current_page.validate_elements():
+        if not self.exp.current_page.validate_elements():
             raise ValidationError()
         
 
+@inherit_kwargs
 class RevisitSection(Section):
     """
-    Closes pages that are direct children upon moving forward and 
-    jumping from within this section.
+    A section that disables all input elements upon moving forward (and
+    jumping) form it, but still allows participants to revisit previous
+    pages.
+
+    Args:
+        {kwargs}
+
+    Examples:
+        Using a RevisitSection and filling it with a page in instance 
+        style::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            exp += al.RevisitSection(name="main")
+            
+            exp.main += al.Page(title="Demo", name="DemoPage")
+        
+        Using a basic section and filling it with a page in class style::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Main(al.RevisitSection): pass
+
+            @exp.member(of_section="Main")
+            class DemoPage(al.Page):
+                title = "Demo"
     """
     allow_forward: bool = True
     allow_backward: bool = True
@@ -479,10 +568,37 @@ class RevisitSection(Section):
         super().jumpfrom()
         self.exp.movement_manager.current_page.close()
 
-
+@inherit_kwargs
 class OnlyForwardSection(RevisitSection):
     """
-    Allows only single steps forward.
+    A section that allows only a single step forward; no jumping and no
+    backwards steps.
+
+    Args:
+        {kwargs}
+    
+    Examples:
+        Using an OnlyForwardSection and filling it with a page in instance 
+        style::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            exp += al.OnlyForwardSection(name="main")
+            
+            exp.main += al.Page(title="Demo", name="DemoPage")
+        
+        Using a basic section and filling it with a page in class style::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Main(al.OnlyForwardSection): pass
+
+            @exp.member(of_section="Main")
+            class DemoPage(al.Page):
+                title = "Demo"
     """
     allow_forward: bool = True
     allow_backward: bool = False
@@ -490,13 +606,14 @@ class OnlyForwardSection(RevisitSection):
     allow_jumpto: bool = False
 
 
-class HeadOpenSection(RevisitSection): pass
-
-
-class SegmentedSection(OnlyForwardSection): pass
-
-
-class FinishedSection(Section):
+@inherit_kwargs
+class _FinishedSection(Section):
+    """
+    A section that finishes the experiment on entering it.
+    
+    Args:
+        {kwargs}
+    """
 
     allow_forward: bool = False
     allow_backward: bool = False
@@ -507,8 +624,18 @@ class FinishedSection(Section):
         super().enter()
         self.experiment.finish()
 
+@inherit_kwargs
+class _RootSection(Section):
+    """
+    A section that serves as parent for all other sections in the 
+    experiment. 
 
-class RootSection(Section):
+    Args:
+        {kwargs}
+    
+    Defines the '_content' section and the '__finished_section' as its 
+    only direct children.
+    """
 
     name = "_root"
 
@@ -517,8 +644,8 @@ class RootSection(Section):
         self._experiment = experiment
         self.log.add_queue_logger(self, __name__)
         self.content = Section(name="_content")
-        self.finished_section = FinishedSection(name="__finished_section")
-        self.finished_section += DefaultFinalPage(name="_final_page")
+        self.finished_section = _FinishedSection(name="__finished_section")
+        self.finished_section += _DefaultFinalPage(name="_final_page")
 
         self._all_pages_list = None
         self._all_page_names = None

@@ -164,6 +164,7 @@ class SavingAgent(ABC):
         self.encrypt = encrypt
 
         if self.encrypt and not self._experiment.secrets.get("encryption", "key"):
+            
             raise ValueError(
                 f"Encryption was turned on for {self}, but the experiment does not have an encryption key. Turn encryption off in the saving agent configuration, or provide an encryption key in secrets.conf."
             )
@@ -183,7 +184,8 @@ class SavingAgent(ABC):
             self.log.info(f"Fallback saving agent {saving_agent} added to {self}.")
 
     def save_data(self, data: dict, level: int, data_time: float = None) -> tuple:
-        """Acquires a lock, performs some checks and calls :meth:`_save`.
+        """
+        Acquires a lock, performs some checks and calls :meth:`_save`.
 
         Will only save data, if:
 
@@ -256,7 +258,7 @@ class SavingAgent(ABC):
             self._save(data)
         except Exception:
             self._lock.release()
-            self.log.exception(f"Running SavingAgent {self} failed. Using fallback agents.")
+            self.log.exception(f"Running {self} failed. Using fallback agents.")
 
             saved = False
             for agent in self._fallback_agents:
@@ -269,7 +271,7 @@ class SavingAgent(ABC):
             else:
                 return (False, "error")
 
-        self.log.info(f"Running SavingAgent {self} succeeded.")
+        self.log.info(f"Running {self} succeeded.")
         self._latest_save_time = data_time
         self._lock.release()
         return (True, "success")
@@ -288,6 +290,9 @@ class SavingAgent(ABC):
         by all children of :class:`SavingAgent`.
         """
         pass
+    
+    def __str__(self):
+        return f"{type(self).__name__}(name='{self.name}', level={self.activation_level})"
 
 
 class LocalSavingAgent(SavingAgent):
@@ -386,12 +391,9 @@ class LocalSavingAgent(SavingAgent):
     @property
     def file(self):
         return self.directory / self.filename
-
+    
     def __str__(self):
-        return (
-            f"<LocalSavingAgent [name: '{self.name}', path: '{str(self.file)}', "
-            f"activation_level: '{str(self.activation_level)}']>"
-        )
+        return f"{type(self).__name__}(name='{self.name}', level={self.activation_level}, path='{self.directory.parent.name}/{self.directory.name}')"
 
 
 class AutoLocalSavingAgent(LocalSavingAgent):
@@ -570,12 +572,7 @@ class MongoSavingAgent(SavingAgent):
             raise ValueError("Both port and host are needed for comparison.")
 
     def __str__(self):
-        msg = (
-            f"<MongoSavingAgent [name: '{self.name}', host: {self._mc.host}, database: "
-            f"{self._db.name}.{self._col.name}, activation level: '{self.activation_level}']>"
-        )
-
-        return msg
+        return f"{type(self).__name__}(name='{self.name}', level='{self.activation_level}', collection='{self._col.name}')"
 
 
 class AutoMongoSavingAgent(MongoSavingAgent):

@@ -48,18 +48,19 @@ from pathlib import Path
 from uuid import uuid4
 
 import click
-from flask import Flask
 from thesmuggler import smuggle
 
 from alfred3._helper import socket_checker
 from alfred3 import localserver
 from alfred3 import alfredlog
-from alfred3.config import init_configuration
+from alfred3.config import ExperimentConfig
+from alfred3.config import ExperimentSecrets
 
 class ExperimentRunner:
     def __init__(self, path: str = None):
         self.expdir = self.find_path(path)
-        self.config = init_configuration(self.expdir)
+        self.config = ExperimentConfig(self.expdir)
+        self.secrets = ExperimentSecrets(self.expdir)
         self.app = None
         self.expurl = None
 
@@ -87,7 +88,7 @@ class ExperimentRunner:
 
     def generate_session_id(self):
         session_id = uuid4().hex
-        self.config["exp_config"].read_dict({"metadata": {"session_id": session_id}})
+        self.config.read_dict({"metadata": {"session_id": session_id}})
 
     def configure_logging(self):
         """Sets some sensible logging configuration for local 
@@ -99,7 +100,7 @@ class ExperimentRunner:
         
         * Queue logger gets configured using settings from config.conf
         """
-        config = self.config["exp_config"]
+        config = self.config
 
         exp_id = config.get("metadata", "exp_id")
         loggername = f"exp.{exp_id}"
@@ -136,16 +137,18 @@ class ExperimentRunner:
 
     def create_experiment_app(self):
         script = smuggle(str(self.expdir / "script.py"))
-        # set generate_experiment function
+        
         localserver.Script.expdir = self.expdir
         localserver.Script.config = self.config
-
-        try:
-            localserver.Script.exp = script.exp
-        except AttributeError:
-            localserver.Script.generate_experiment = script.generate_experiment
+        localserver.Script.secrets = self.secrets
+        localserver.Script.exp = script.exp
+        
         self.app = localserver.app
-        self.app.secret_key = self.config["exp_secrets"].get("flask", "secret_key")
+        secret_key = self.secrets.get("flask", "secret_key", fallback=None)
+        if not secret_key:
+            import secrets
+            secret_key = secrets.token_urlsafe(16)
+        self.app.secret_key = secret_key
 
         return self.app
 
@@ -166,7 +169,7 @@ class ExperimentRunner:
         # generate url
         expurl = "http://127.0.0.1:{port}/start".format(port=self.port)
 
-        if self.config["exp_config"].getboolean("experiment", "fullscreen"):
+        if self.config.getboolean("general", "fullscreen"):
             ChromeKiosk.open(url=expurl)
         else:
             webbrowser.open(url=expurl)

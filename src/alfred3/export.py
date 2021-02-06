@@ -52,8 +52,8 @@ class Exporter:
     def __init__(self, experiment):
         self.experiment = experiment
         self.exp = experiment
-        self.csv_dir = self.exp.subpath(self.exp.config.get("general", "csv_directory"))
-        self.delimiter = self.exp.config.get("general", "csv_delimiter")
+        self.csv_dir = self.exp.subpath(self.exp.config.get("data", "csv_directory"))
+        self.delimiter = self.exp.config.get("data", "csv_delimiter")
         self.save_dir = self.exp.subpath(self.exp.config.get("local_saving_agent", "path"))
 
     def export(self, data_type):
@@ -155,8 +155,9 @@ class Exporter:
             data = ul_data
         
         if self.exp.config.getboolean("local_saving_agent_unlinked", "decrypt_csv_export"):
-            key = self.exp.secrets.get("encryption", "key").encode()
-            data = decrypt_recursively(data, key=key)
+            if self.exp.secrets.get("encryption", "key"):
+                key = self.exp.secrets.get("encryption", "key").encode()
+                data = decrypt_recursively(data, key=key)
 
         self._write(data, fieldnames, path)
 
@@ -210,7 +211,7 @@ def find_data_directory(expdir, saving_agent):
 
 def find_csv_dir(expdir):
     config = ExperimentConfig(expdir=expdir)
-    path = Path(config.get("general", "csv_directory")).resolve()
+    path = Path(config.get("data", "csv_directory")).resolve()
     if not path.is_absolute():
         path = expdir.resolve() / path
     return path

@@ -462,6 +462,11 @@ class SingleChoice(ChoiceElement):
             choices.append(choice)
         return choices
 
+    @property
+    def default_no_input_hint(self) -> str:
+        # docstring inherited
+        return self.experiment.config.get("hints", "no_inputSingleChoice")
+
 
 @inherit_kwargs
 class MultipleChoice(ChoiceElement):
@@ -619,6 +624,12 @@ class MultipleChoice(ChoiceElement):
 
             choices.append(choice)
         return choices
+
+    @property
+    def default_no_input_hint(self) -> str:
+        # docstring inherited
+        return self.experiment.config.get("hints", "no_inputMultipleChoice")
+
 
 @inherit_kwargs
 class SingleChoiceList(SingleChoice):
