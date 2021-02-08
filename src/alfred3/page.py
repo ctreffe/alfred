@@ -40,11 +40,12 @@ class _PageCore(ExpMember):
             Defaults to None. Can be defined as a class attribute.
         minimum_display_time (str): The minimal amount of time that the page
             must be displayed, before participants can move to the next
-            page. Defaults to None.
+            page. Defaults to None. Can be defined as a class attribute.
         minimum_display_time_msg (str): A page-specific message to be displayed,
             if participants try to move forward before the minimum
             display time has expired. Defaults to None, which means that
             the default message defined in config.conf will be used.
+            Can be defined as a class attribute.
         {kwargs}
     """
 
@@ -52,17 +53,20 @@ class _PageCore(ExpMember):
 
     def __init__(
         self,
+        prefix_element_names: bool = None,
         minimum_display_time: str = None,
         minimum_display_time_msg: str = None,
         **kwargs,
     ):
-        self._minimum_display_time = 0
+        self._minimum_display_time = "0s"
         
         if minimum_display_time is not None:
             self.minimum_display_time = minimum_display_time
 
         if minimum_display_time_msg:
             self._minimum_display_time_msg = minimum_display_time_msg
+        else:
+            self._minimum_display_time_msg = None
         
         if prefix_element_names is not None:
             self.prefix_element_names = prefix_element_names
@@ -84,25 +88,30 @@ class _PageCore(ExpMember):
     @property
     def minimum_display_time(self):
         """
-        float: Minimal amount of time that a page must be displayed
+        str: Minimal amount of time that a page must be displayed
         before participants can move forward.
 
         Must be specified as a string with a unit of 's' (for seconds),
         or 'm' (for minutes).
         """
         return self._minimum_display_time
-
-    @minimum_display_time.setter
-    def minimum_display_time(self, value: str):
-        unit = value[-1]
+    
+    @property
+    def _mdt(self) -> float:
+        mdt = self.minimum_display_time
+        unit = mdt[-1]
         if unit == "s":
-            self._minimum_display_time = float(value[:-1])
+            return float(mdt[:-1])
         elif unit == "m":
-            self._minimum_display_time = float(value[:-1]) * 60
+            return float(mdt[:-1]) * 60
         else:
             raise ValueError(
                 "Please specify minimum display time with a unit ('s' - seconds, 'm' - minutes)."
             )
+
+    @minimum_display_time.setter
+    def minimum_display_time(self, value: str):
+        self._minimum_display_time = value
 
     def added_to_experiment(self, experiment):
 
@@ -110,10 +119,10 @@ class _PageCore(ExpMember):
         self.log.add_queue_logger(self, __name__)
 
         debug = self.experiment.config.getboolean("general", "debug")
-        if debug and not self._minimum_display_time == 0:
+        if debug and not self._mdt == 0:
             if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
                 self.log.debug("Minimum display time disabled (debug mode).")
-                self._minimum_display_time = 0
+                self.minimum_display_time = "0s"
 
     @property
     def minimum_display_time_msg(self):
@@ -693,7 +702,7 @@ class _CoreCompositePage(_PageCore):
                 return True
 
         # check minimum display time
-        mintime = self.minimum_display_time
+        mintime = self._mdt
         if time.time() - self.show_times[0] < mintime:
             msg = self.minimum_display_time_msg.format(mdt=str(mintime))
             self.exp.message_manager.post_message(msg)
