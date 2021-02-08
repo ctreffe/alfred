@@ -753,7 +753,7 @@ class ExperimentSession:
             exporter.export(DataManager.UNLINKED_DATA)
         if cfg.getboolean("export_codebook"):
             exporter.export(DataManager.CODEBOOK_DATA)
-        if cfg.getboolean("export_move_history") and cfg.getboolean("record_move_histors"):
+        if cfg.getboolean("export_move_history") and cfg.getboolean("record_move_history"):
             exporter.export(DataManager.HISTORY)
 
     def save_data(self, sync: bool = False):
