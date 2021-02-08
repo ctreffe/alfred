@@ -434,11 +434,10 @@ class Element:
         """
         str: String, giving the exact position in the experiment.
 
-        This version of the tree omits the ``_root._content`` part that
-        is the same for all elements.
+        This version of the tree omits the ``_root`` part.
         """
 
-        return self.tree.replace("_root._content.", "")
+        return self.tree.replace("_root.", "")
 
     @property
     def css_code(self) -> List[Tuple[int, str]]:
@@ -616,7 +615,7 @@ class Element:
     # Magic methods start here -----------------------------------------
 
     def __str__(self):
-        return f"{type(self).__name__}(name: '{self.name}')"
+        return f"{type(self).__name__}(name='{self.name}')"
 
     def __repr__(self):
         return self.__str__()
@@ -1900,7 +1899,8 @@ class InputElement(LabelledElement):
             try:
                 fix.should_be_shown = False
                 self.page += fix
-            except AttributeError:
+            except AttributeError as e:
+                self.log.debug(f"Exception passed silently: {e}")
                 pass
 
 
