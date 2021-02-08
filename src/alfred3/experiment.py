@@ -459,7 +459,7 @@ class Experiment:
             1. Define a run.py in your Experiment directory
             2. Use the command line interface
 
-            Both of these are documented at :module:`alfred3.run`
+            Both of these are documented at :mod:`alfred3.run`
         
         Examples:
 
