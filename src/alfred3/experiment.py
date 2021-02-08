@@ -450,7 +450,7 @@ class Experiment:
         Notes:
             .. warning::
                 If you execute this method in your script.py, make sure to
-                use an ``if __name__ == "__main__"``protector (see example)!
+                use an ``if __name__ == "__main__"`` protector (see example)!
         
         See Also:
             There are two other useful ways of running your alfred 
