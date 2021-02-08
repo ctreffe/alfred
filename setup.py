@@ -37,7 +37,6 @@ setuptools.setup(
         "jinja2>=2.11",
         "Flask>=1.1",
         "thesmuggler==1.0.1",
-        "dload==0.6",
         "Click>=7.0",
         "emoji>=0.6",
         "cmarkgfm>=0.4.2"
