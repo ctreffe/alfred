@@ -21,33 +21,22 @@ class ExperimentConfig(ConfigParser):
     """
     Provides basic functionality for alfred3 configuration.
 
-    Configuration files are parsed in the following order (later files
-    override settings from earlier ones):
-
-        1. Default configuration
-        2. :attr:`global_config_name` in "/etc/alfred/" (for unix operating 
-            systems)
-        3. :attr:`global_config_name` in the user's home directory
-        4. :attr:`env_location`
-        5. :attr:`exp_config_name` in the experiment directory (usual place 
-            for user's experiment-specific config)
-        6. Objects given in the argument `config_objects`.
-
-    This is a child class of :py:class:`configparser.ConfigParser`, 
-    which parses alfred configuration files and objects on intialization
-    and behaves just like a usual `ConfigParser` afterwards, most
-    importantly providing the methods ``get(section, option)``,
-    ``getint(section, option)``, ``getfloat(section, option)``,
-    and ``getboolean(section, option)`` for retrieving values from the
-    parser instance. There are many more methods available, which are
-    documented in the official ConfigParser `documentation`_.
-
     Args:
         expdir: Path to the experiment directory.
         config_objects: A list of dictionaries and/or strings with alfred
             configuration in ini format. Defaults to `None`.
         **kwargs, inline_comment_prefixes: Keyword arguments that are passed on to 
             :class:`configparser.ConfigParser`
+    
+    Notes:
+        This is a child class of :class:`configparser.ConfigParser`, 
+        which parses alfred configuration files and objects on intialization
+        and behaves just like a usual `ConfigParser` afterwards, most
+        importantly providing the methods ``get(section, option)``,
+        ``getint(section, option)``, ``getfloat(section, option)``,
+        and ``getboolean(section, option)`` for retrieving values from the
+        parser instance. There are many more methods available, which are
+        documented in the official ConfigParser `documentation`_.
     
     .. _documentation: https://docs.python.org/3/library/configparser.html#configparser.ConfigParser
     """
