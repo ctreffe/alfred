@@ -35,6 +35,9 @@ class _PageCore(ExpMember):
     Provides core functionality for pages.
 
     Args:
+        prefix_element_names (bool): If True, the names of all input 
+            elements on this page will be prefixed with the page name.
+            Defaults to None. Can be defined as a class attribute.
         minimum_display_time (str): The minimal amount of time that the page
             must be displayed, before participants can move to the next
             page. Defaults to None.
@@ -44,6 +47,8 @@ class _PageCore(ExpMember):
             the default message defined in config.conf will be used.
         {kwargs}
     """
+
+    prefix_element_names: bool = False
 
     def __init__(
         self,
@@ -58,6 +63,9 @@ class _PageCore(ExpMember):
 
         if minimum_display_time_msg:
             self._minimum_display_time_msg = minimum_display_time_msg
+        
+        if prefix_element_names is not None:
+            self.prefix_element_names = prefix_element_names
 
         self._data = {}
         self._is_closed = False

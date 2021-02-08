@@ -1886,8 +1886,15 @@ class InputElement(LabelledElement):
         if self.name is None:
             raise ValueError(f"{self} is not named. Input elements must be named")
 
+        if page.prefix_element_names:
+            self.name = f"{self.page.name}_{self.name}"
+
         if self.page.experiment and not self.experiment:
             self.added_to_experiment(self.page.experiment)
+        elif self.experiment:
+            if self.name in self.experiment.root_section.all_updated_elements:
+                raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
+
 
         for fix in (self._prefix, self._suffix):
             try:
