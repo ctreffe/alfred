@@ -38,6 +38,7 @@ import random
 from typing import Union
 from typing import List, Iterator
 from pathlib import Path
+from itertools import chain
 
 import click
 
@@ -48,6 +49,17 @@ from .config import ExperimentConfig, ExperimentSecrets
 
 
 class Exporter:
+    """
+    Handles data export from json to csv.
+
+    The exporter obeys the follwoing rules for all export functions:
+
+    1. Check if a file of the designated name exists in the designated
+       directory.
+    2. If yes, append the data from the current session to this file.
+    3. If not, scan all available .json files and produce a new, 
+       complete csv file.
+    """
 
     def __init__(self, experiment):
         self.experiment = experiment
@@ -56,7 +68,16 @@ class Exporter:
         self.delimiter = self.exp.config.get("data", "csv_delimiter")
         self.save_dir = self.exp.subpath(self.exp.config.get("local_saving_agent", "path"))
 
-    def export(self, data_type):
+    def export(self, data_type: str):
+        """
+        Calls the appropriate specialized export function, depending
+        on data type.
+
+        Args:
+            data_type (str): One of 'exp_data', 'unlinked', 'codebook',
+                'move_history'.
+
+        """
         self.csv_dir.mkdir(parents=True, exist_ok=True)
         if data_type == DataManager.CODEBOOK_DATA:
             self.export_codebook()
@@ -64,26 +85,48 @@ class Exporter:
             self.export_move_history()
         elif data_type == DataManager.UNLINKED_DATA:
             self.export_unlinked()
-        else:
+        elif data_type == DataManager.EXP_DATA:
             self.export_exp_data()
     
     def _load(self, path: Union[str, Path]) -> list:
+        """
+        Returns a list of dictonaries with session data, read from an
+        existing csv file.
+
+        This version of 'load' uses the experiment-specific delimiter
+        defined in config.conf.
+        """
         return self.load(path, self.delimiter)
 
     @staticmethod
     def load(path: Union[str, Path], delimiter: str) -> list:
+        """
+        Returns a list of dictonaries with session data, read from an
+        existing csv file.
+
+        This version of 'load' is available as a public static method.
+        """
         with open(path, "r", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile, delimiter=delimiter)
-            existing_data = []
-            for row in reader:
-                existing_data.append(dict(row))
+            existing_data = [dict(row) for row in reader]
         return existing_data
     
     def _write(self, data: Iterator[dict], fieldnames: List[str], path: Path):
+        """
+        Writes a list of session data dictionaries to a csv file.
+
+        This version of 'write' uses the experiment-specific delimiter
+        defined in config.conf.
+        """
         self.write(data, fieldnames, path, self.delimiter)
 
     @staticmethod
     def write(data: Iterator[dict], fieldnames: List[str], path: Path, delimiter: str):
+        """
+        Writes a list of session data dictionaries to a csv file.
+
+        This version of 'write' is available as a public static method.
+        """
         with open(path, "w", encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=delimiter)
             writer.writeheader()
@@ -109,12 +152,11 @@ class Exporter:
                             element_names.append(colname)
             fieldnames = metadata + client_info + sorted(element_names) + ["additional_data"]
         else:
-            existing_data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
-            sessiondata = self.exp.data_manager.session_data
-            alldata = existing_data + [sessiondata]
-            fieldnames = DataManager.extract_ordered_fieldnames(alldata)
-            alldata = [DataManager.flatten(d) for d in alldata]
+            data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
+            fieldnames = DataManager.extract_ordered_fieldnames(data)
+            alldata = [DataManager.flatten(d) for d in data]
         self._write(alldata, fieldnames, path)
+        self.exp.log.info(f"Exported main experiment data to {path.parent.name}/{path.name}.")
 
     def export_move_history(self):
         csv_name = "move_history.csv"
@@ -128,14 +170,12 @@ class Exporter:
             fieldnames = DataManager.extract_fieldnames(history)
         else:
             existing_data = DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir)
-            history = []
-            for sessiondata in existing_data:
-                session_history = sessiondata.pop("exp_move_history", [])
-                history += session_history
-            history += data
-            fieldnames = DataManager.extract_fieldnames(history)
+            history = [d["exp_move_history"] for d in existing_data]
+            fieldnames = DataManager.extract_fieldnames(chain(*history))
+            history = chain(*history)
         
         self._write(history, fieldnames, path)
+        self.exp.log.info(f"Exported movement history to {path.parent.name}/{path.name}.")
 
     def export_unlinked(self):
         csv_name = "unlinked.csv"
@@ -153,6 +193,11 @@ class Exporter:
             random.shuffle(ul_data)
             fieldnames = DataManager.extract_fieldnames(ul_data)
             data = ul_data
+        else:
+            unlinked_dir = self.exp.config.get("local_saving_agent_unlinked", "path")
+            existing_data = list(DataManager.iterate_local_data(data_type=DataManager.UNLINKED_DATA, directory=unlinked_dir))
+            data = [DataManager.flatten(d) for d in existing_data]
+            fieldnames = DataManager.extract_fieldnames(data)
         
         if self.exp.config.getboolean("local_saving_agent_unlinked", "decrypt_csv_export"):
             if self.exp.secrets.get("encryption", "key"):
@@ -160,6 +205,7 @@ class Exporter:
                 data = decrypt_recursively(data, key=key)
 
         self._write(data, fieldnames, path)
+        self.exp.log.info(f"Exported unlinked data to {path.parent.name}/{path.name}.")
 
     def export_codebook(self):
         data = self.exp.data_manager.codebook_data
@@ -172,11 +218,7 @@ class Exporter:
         if path.exists() and path.read_text():
             with open(path, "r", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=self.delimiter)
-                
-                existing_codebook = {}
-                for row in reader:
-                    r = dict(row)
-                    existing_codebook[r["name"]] = r
+                existing_codebook = {dict(row)["name"]: dict(row) for row in reader}
             
             existing_codebook.update(data)
             data = existing_codebook
@@ -184,6 +226,7 @@ class Exporter:
         fieldnames = DataManager.extract_fieldnames(data.values())
         fieldnames = DataManager.sort_codebook_fieldnames(fieldnames)
         self._write(data.values(), fieldnames, path)
+        self.exp.log.info(f"Exported codebook to {path.parent.name}/{path.name}.")
 
 def find_unique_name(directory, filename, exp_version=None, index: int = 1):
     filename = Path(filename)

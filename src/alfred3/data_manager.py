@@ -40,27 +40,46 @@ class DataManager(object):
     instance_log = False
     log = QueuedLoggingInterface(base_logger=__name__)
 
+    # the empty fields are initialized here below to enable name-
+    # checking for all experiment members on these names and ordering
+    # of fieldnames for csv export independent of an ExperimentSession
+    # instance
+    client_data = {}
+    client_data["client_resolution_screen"] = None
+    client_data["client_resolution_inner"] = None
+    client_data["client_referrer"] = None
+    client_data["client_javascript_active"] = None
+    client_data["client_device_type"] = None
+    client_data["client_device_manufacturer"] = None
+    client_data["client_device_family"] = None
+    client_data["client_browser"] = None
+    client_data["client_os_family"] = None
+    client_data["client_os_name"] = None
+    client_data["client_os_version"] = None
+
+    _metadata = {}
+    _metadata["exp_author"] = None
+    _metadata["exp_title"] = None
+    _metadata["exp_version"] = None
+    _metadata["exp_start_time"] = None
+    _metadata["exp_start_timestamp"] = None
+    _metadata["exp_save_time"] = None
+    _metadata["exp_finished"] = None
+    _metadata["exp_session"] = None
+    _metadata["exp_condition"] = None
+    _metadata["exp_id"] = None
+    _metadata["exp_session_id"] = None
+    _metadata["session_status"] = None
+    _metadata["alfred_version"] = None
+    _metadata["type"] = None
+
     def __init__(self, experiment):
         self._experiment = experiment
         self.exp = experiment
         self.additional_data = {}
         self.log.add_queue_logger(self, __name__)
         
-        self.client_data = {}
-
-        # the empty fields are initialized here below to enable name-
-        # checking for all experiment members on these names
-        self.client_data["client_resolution_screen"] = None
-        self.client_data["client_resolution_inner"] = None
-        self.client_data["client_referrer"] = None
-        self.client_data["client_javascript_active"] = None
-        self.client_data["client_device_type"] = None
-        self.client_data["client_device_manufacturer"] = None
-        self.client_data["client_device_family"] = None
-        self.client_data["client_browser"] = None
-        self.client_data["client_os_family"] = None
-        self.client_data["client_os_name"] = None
-        self.client_data["client_os_version"] = None
+        
 
     @property
     def experiment(self):
@@ -91,7 +110,7 @@ class DataManager(object):
 
     @property
     def metadata(self):
-        data = {}
+        data = self._metadata
         
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
@@ -220,14 +239,15 @@ class DataManager(object):
 
         for dataset in data:
             d = cls.flatten(copy.copy(dataset))
-            elements.update(d)
 
             for entry in list(d.keys()):
-                if entry.startswith("client_"):
+                if entry in cls.client_data:
                     d.pop(entry)
                     client_info.append(entry)
-                else:
+                elif entry in cls._metadata:
+                    d.pop(entry)
                     metadata.append(entry)
+            elements.update(d)
         
         metadata = [name for name in metadata if name != "additional_data"]
         
@@ -261,10 +281,10 @@ class DataManager(object):
                 duplicate values.
         """
         if len(set(fieldnames)) != len(fieldnames):
-            raise ValueError("Input list must contain only unique elements")
+            raise ValueError("Input list must contain only unique elements.")
         
         if len(set(template)) != len(template):
-            raise ValueError("Template list must contain only unique elements")
+            raise ValueError("Template list must contain only unique elements.")
 
         def find_position(name):
             try:
@@ -296,7 +316,7 @@ class DataManager(object):
             try:
                 # if the value is a dictionary, like in multiple choice elements
                 for subname, val in elmnt["value"].items():
-                    values[subname] = val
+                    values[f"{name}_{subname}"] = val
             except AttributeError:
                 values[name] = elmnt["value"]
         
