@@ -1953,6 +1953,8 @@ class ChoiceElement(InputElement, ABC):
     ):
         super().__init__(align=align, **kwargs)
 
+        self._input = {}
+
         self.choice_labels = choice_labels # documented in getter
         self.vertical = vertical # documented in getter
 
@@ -2032,3 +2034,17 @@ class ChoiceElement(InputElement, ABC):
                 d.update({f"choice{i}": str(lab)})  # otherwise __str__
 
         return d
+
+    @property
+    def input(self) -> dict:
+        """
+        Dict[str, bool]: Dictionary of subject inputs.
+
+        Contains the choice labels as keys and their selection status
+        (*True* for selected choices, *False* otherwise) as values.
+        """
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        self._input = value

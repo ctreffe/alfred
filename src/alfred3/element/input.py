@@ -415,6 +415,16 @@ class SingleChoice(ChoiceElement):
             default. Counting of choices starts at 1.
         {kwargs}
 
+    Notes:
+        This element saves and returns not a single value, but a 
+        dictionary of values. Each choice is represented by a key, and
+        the corresponding value is *True*, if the choice was selected and
+        *False* otherwise.
+
+        The keys are of the form "choice{{i}}", where {{i}} is a placeholer
+        for the number of the choice.
+        
+
     Examples:
         A simple SingleChoice element::
 
@@ -427,6 +437,7 @@ class SingleChoice(ChoiceElement):
 
                 def on_exp_access(self):
                     self += al.SingleChoice("Yes", "No", name="c1")
+        
 
     """
 
@@ -448,12 +459,20 @@ class SingleChoice(ChoiceElement):
             choice.type = "radio"
             choice.value = i
             choice.name = self.name
-            choice.id = f"choice{i}-{self.name}"
+            choice.id = f"{self.name}_choice{i}"
+            if choice.id in self.exp.root_section.all_elements:
+                msg = (
+                    f"You have a SingleChoice-type element of name {self.name}, which means "
+                    f"that the name '{choice.id}' must be reserved. Please check if you are using "
+                    "it for any other element."
+                )
+                raise AlfredError(msg)
+
             choice.label_id = f"{choice.id}-lab"
             choice.disabled = True if self.disabled else False
 
             if self.input:
-                choice.checked = True if int(self.input) == i else False
+                choice.checked = True if int(self.input[f"choice{choice.value}"]) == i else False
             elif self.default is not None:
                 choice.checked = True if self.default == i else False
 
@@ -466,6 +485,20 @@ class SingleChoice(ChoiceElement):
     def default_no_input_hint(self) -> str:
         # docstring inherited
         return self.experiment.config.get("hints", "no_inputSingleChoice")
+    
+    def set_data(self, d):
+        
+        # Important: We need to have a check that ensures that the
+        # generated name for the value of each choice is not used by
+        # any other name in the experiment.
+        # For this element, we implement it in the *define_choices* 
+        # method.
+        if not self.name in d:
+            return
+
+        chosen_option = d.get(self.name)
+        for choice in self.choices:
+            self._input[f"choice{choice.value}"] = str(choice.value) == chosen_option
 
 
 @inherit_kwargs
@@ -488,6 +521,15 @@ class MultipleChoice(ChoiceElement):
             Counting starts at 1.
         {kwargs}
 
+    Notes:
+        This element saves and returns not a single value, but a 
+        dictionary of values. Each choice is represented by a key, and
+        the corresponding value is *True*, if the choice was selected and
+        *False* otherwise.
+
+        The keys are of the form "choice{{i}}", where {{i}} is a placeholer
+        for the number of the choice.
+    
     Examples:
         A multiple choice element with three options::
 
@@ -536,20 +578,6 @@ class MultipleChoice(ChoiceElement):
             self.default = default
 
     @property
-    def input(self) -> dict:
-        """
-        Dict[str, bool]: Dictionary of subject inputs.
-
-        Contains the choice labels as keys and their selection status
-        (*True* for selected choices, *False* otherwise) as values.
-        """
-        return self._input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
     def select_hint(self) -> str:
         """
         str: Hint for participants. Displayed, if the number of selected
@@ -582,10 +610,7 @@ class MultipleChoice(ChoiceElement):
         for choice in self.choices:
 
             value = d.get(choice.name, None)
-            if value:
-                self._input[choice.name] = True
-            else:
-                self._input[choice.name] = False
+            self._input[f"choice{choice.value}"] = str(choice.value) == value
 
     def define_choices(self):
         
@@ -618,7 +643,7 @@ class MultipleChoice(ChoiceElement):
             if self.debug_enabled:
                 choice.checked = True if i <= self.max else False
             elif self.input:
-                choice.checked = True if self.input[choice.name] is True else False
+                choice.checked = True if self.input[f"choice{choice.value}"] is True else False
             elif self.default:
                 choice.checked = True if i in self.default else False
 
