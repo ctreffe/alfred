@@ -475,7 +475,7 @@ class DataManager(object):
 
         Args:
             data_type: The type of data to be collected. Can be 
-                'exp_data', 'codebook', or 'unlinked'.
+                'exp_data' or 'unlinked'.
             exp_version: If specified, data will only be queried for
                 this specific version.
             directory: The directory in which to look for data.

@@ -157,7 +157,7 @@ class Exporter:
             alldata = [DataManager.flatten(d) for d in data]
         self._write(alldata, fieldnames, path)
         self.exp.log.info(f"Exported main experiment data to {path.parent.name}/{path.name}.")
-
+    
     def export_move_history(self):
         csv_name = "move_history.csv"
         data = self.exp.data_manager.move_history
@@ -264,124 +264,140 @@ def find_csv_name(expdir, data_type):
     filename = data_type + ".csv"
     return find_unique_name(directory, filename)
 
-@click.command()
-@click.option(
-    "--src",
-    default="local_saving_agent",
-    help="The name of the configuration section in 'config.conf' or 'secrets.conf' that defines the SavingAgent whose data you want to export.",
-    show_default=True,
-)
-@click.option(
-    "--directory",
-    default=Path.cwd(),
-    help="The path to the experiment whose data you want to export. [default: Current working directory]",
-)
-@click.option(
-    "-h",
-    "--here",
-    default=False,
-    is_flag=True,
-    help="With this flag, you can indicate that you want to export .json files located in the current working directory.",
-    show_default=True,
-)
-@click.option(
-    "--data_type",
-    default=None,
-    help="The type of data that you want to export. Accepted values are 'exp_data', 'unlinked', and 'codebook'. If you specify a 'src', the function tries to infer the data type from the 'src's suffix. (Example: 'mongo_saving_agent_codebook' would lead to 'data_type' = 'codebook'. If you give a value for 'data_type', that always takes precedence. If no data_type is provide and no data_type can be inferred, 'exp_data' is used.",
-    show_default=True,
-)
-@click.option(
-    "--missings",
-    default=None,
-    help="Here, you can manually specify a value that you want to insert for missing values",
-    show_default=True,
-)
-# @click.option(
-#     "--remove_linebreaks",
-#     default=False,
-#     is_flag=True,
-#     help="Indicates, whether linebreak characters should be deleted from the file. If you don't use this flag (the default), linebreaks will be replaced with spaces.",
-#     show_default=True,
-# )
-@click.option(
-    "--delimiter",
-    default=",",
-    help="Here, you can manually specify a delimiter for your .csv file. You need to put the delimiter inside quotation marks, e.g. like this: --delimiter=';'.",
-    show_default=True,
-)
-def export_cli(data_type, src, directory, here, missings, remove_linebreaks, delimiter):
 
-    # try to guess data_type from suffix of src
-    if not data_type and src is not None and src.endswith(DataManager.CODEBOOK_DATA):
-        data_type = DataManager.CODEBOOK_DATA
-    elif not data_type and src is not None and src.endswith(DataManager.UNLINKED_DATA):
-        data_type = DataManager.UNLINKED_DATA
-    elif not data_type and src is not None and src.endswith(DataManager.EXP_DATA):
-        data_type = DataManager.EXP_DATA
-    data_type = DataManager.EXP_DATA if data_type is None else data_type
+class Extractor:
+    """
+    Turns uncurated alfred data from json format into csv format.
 
+    Args:
+        in_path (str): Path to directory containing json files. If None
+            (default), the current working directory will be used.
+        out_path (str): Path to directory in which the output csv file
+            will be place. If None (default), the current working 
+            directory will be used.
+        delimiter (str): Delimiter to use in the resulting csv file. 
+            Defaults to ";"
     
-    if src.startswith("local"):
-        if here:
-            datadir = Path.cwd()
-        elif directory:
-            datadir = find_data_directory(expdir=directory, saving_agent=src)
+    Examples:
+        The extractor is used by calling one of its four methods. The
+        following python code can be used to turn all alfred json 
+        datasets in the current working directory into a nice csv file.
+
+        >>> from alfred3.export import Extractor
+        >>> ex = Extractor()
+        >>> ex.extract_exp_data()
         
-        data = DataManager.iterate_local_data(data_type=data_type, directory=datadir)
-    
-    elif src.startswith("mongo"):
-        exp_id = ExperimentConfig(expdir=directory).get("general", "exp_id")
-        secrets = ExperimentSecrets(expdir=directory)
+    """
 
-        data = DataManager.iterate_mongo_data(exp_id=exp_id, data_type=data_type, secrets=secrets)
+    def __init__(self, in_path: str = None, out_path: str = None, delimiter: str = ";"):
+        self.in_path = Path(in_path) if in_path is not None else Path.cwd()
+        self.out_path = Path(out_path) if out_path is not None else Path.cwd()
+        self.delimiter = delimiter
 
-    data_list = [DataManager.flatten(dataset) for dataset in data]
-    fieldnames = list(data_list.keys())
+    def extract_exp_data(self):
+        """
+        Extracts the main experiment data from json files in the 
+        Extractors *in_path*.
 
-    csv_name = find_csv_name(expdir=directory, data_type=data_type)
+        Examples:
+            Turn all alfred json datasets in the current working 
+            directory into a nice csv file.
 
-    writer = csv.DictWriter(csv_name, fieldnames=fieldnames, delimiter=delimiter)
-    writer.writeheader()
-    writer.writerows(data_list)
+            >>> from alfred3.export import Extractor
+            >>> ex = Extractor()
+            >>> ex.extract_exp_data()
+        """
+        data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.in_path))
+        fieldnames = DataManager.extract_ordered_fieldnames(data)
+        alldata = [DataManager.flatten(d) for d in data]
+        csvname = find_unique_name(directory=self.out_path, filename="exp_data.csv")
+        Exporter.write(data=alldata, fieldnames=fieldnames, path=csvname, delimiter=self.delimiter)
+
+    def extract_unlinked_data(self):
+        """
+        Extracts unlinked data from json files in the Extractors 
+        *in_path*.
+
+        Examples:
+            Turn all alfred json datasets in the current working 
+            directory into a nice csv file.
+
+            >>> from alfred3.export import Extractor
+            >>> ex = Extractor()
+            >>> ex.extract_unlinked_data()
+        """
+        existing_data = list(DataManager.iterate_local_data(data_type=DataManager.UNLINKED_DATA, directory=self.in_path))
+        data = [DataManager.flatten(d) for d in existing_data]
+        fieldnames = DataManager.extract_fieldnames(data)
+        csvname = find_unique_name(directory=self.out_path, filename="unlinked.csv")
+        Exporter.write(data=data, fieldnames=fieldnames, path=csvname, delimiter=self.delimiter)
+
+    def extract_codebook(self, exp_version: str):
+        """
+        Extracts codebook data from json files in the Extractors 
+        *in_path*.
+
+        Args:
+            exp_version (str): Experiment version. Codebook data must
+                be exported for specific experiment versions.
+
+        Examples:
+            Get a nice csv codebook for the json data in the current
+            working directory.
+
+            >>> from alfred3.export import Extractor
+            >>> ex = Extractor()
+            >>> ex.extract_codebook("1.0")
+        """
+        cursor = DataManager.iterate_local_data(
+            data_type=DataManager.EXP_DATA, 
+            directory=self.in_path, 
+            exp_version=exp_version
+            )
         
+        cursor_unlinked = DataManager.iterate_local_data(
+            data_type=DataManager.UNLINKED_DATA,
+            directory=self.in_path, 
+            exp_version=exp_version
+        )
+        
+        # extract individual codebooks for each experimen session
+        cbdata_collection = []
+        for entry in cursor:
+            cb = DataManager.extract_codebook_data(entry)
+            cbdata_collection.append(cb)
+        for entry in cursor_unlinked:
+            cb = DataManager.extract_codebook_data(entry)
+            cbdata_collection.append(cb)
+        
+        # combine them to a single dictionary, overwriting old values 
+        # with newer ones
+        data = {}
+        for entry in cbdata_collection:
+            data.update(entry)
 
-    # if here and data_type == DataManager.CODEBOOK_DATA:
-    #     wd = Path.cwd()
-    #     exporter = CodeBookExporter()
-    #     for filename in os.listdir(wd):
-    #         fp = wd / filename
-    #         exporter.write_local_data_to_file(
-    #             in_file=fp, out_dir=wd, delimiter=delimiter,
-    #         )
-    #         exporter.reset()
-    #     print(f"Export completed. Files are located in '{wd}'.")
-
-    # elif here and data_type in [DataManager.EXP_DATA, DataManager.UNLINKED_DATA]:
-    #     wd = Path.cwd()
-    #     exporter = ExpDataExporter()
-
-    #     exporter.write_local_data_to_file(
-    #         in_dir=wd,
-    #         out_dir=wd,
-    #         data_type=data_type,
-    #         missings=missings,
-    #         remove_linebreaks=remove_linebreaks,
-    #         delimiter=delimiter,
-    #     )
-    #     print(f"Export completed. Files are located in '{wd}'.")
-    # else:
-
-    #     if "mongo" in src:
-    #         exporter = MongoToCSV(secrets_section=src, data_type=data_type, expdir=directory)
-    #     elif "local" in src:
-    #         exporter = LocalToCSV(config_section=src, data_type=data_type, expdir=directory)
-
-    #     exporter.activate()
-    #     exporter.export(
-    #         missings=missings, remove_linebreaks=remove_linebreaks, delimiter=delimiter
-    #     )
-    #     print(f"Export completed. Files are located in '{str(exporter.out_dir)}'.")
+        fieldnames = DataManager.extract_fieldnames(data.values())
+        fieldnames = DataManager.sort_codebook_fieldnames(fieldnames)
+        csvname = find_unique_name(directory=self.out_path, filename=f"codebook_{exp_version}.csv")
+        Exporter.write(data=data.values(), fieldnames=fieldnames, path=csvname, delimiter=self.delimiter)
 
 
-if __name__ == "__main__":
-    export_cli()  # pylint: disable=no-value-for-parameter
+    def extract_move_history(self):
+        """
+        Extracts movement data from json files in the Extractors 
+        *in_path*.
+
+        Examples:
+            Get a nice csv of movement data for json data in the 
+            current working directory.
+
+            >>> from alfred3.export import Extractor
+            >>> ex = Extractor()
+            >>> ex.extract_move_history()
+        """
+        existing_data = DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.in_path)
+        history = [d["exp_move_history"] for d in existing_data]
+        fieldnames = DataManager.extract_fieldnames(chain(*history))
+        history = chain(*history)
+        csvname = find_unique_name(directory=self.out_path, filename="move_history.csv")
+        Exporter.write(data=history, fieldnames=fieldnames, path=csvname, delimiter=self.delimiter)
