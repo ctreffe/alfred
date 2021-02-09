@@ -849,7 +849,7 @@ class ButtonLabels(SingleChoiceButtons):
     Args:
         *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
-        {kwargs}ons`.
+        {kwargs}
 
     Examples:
         Using button labels to label single choice buttons::
