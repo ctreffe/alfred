@@ -27,6 +27,7 @@ setuptools.setup(
             "static/js/*",
             "templates/*",
             "templates/elements/*",
+            "element/templates/*"
         ]
     },
     package_dir={"": "src"},
@@ -41,6 +42,10 @@ setuptools.setup(
         "emoji>=0.6",
         "cmarkgfm>=0.4.2"
     ],
+    entry_points="""
+    [console_scripts]
+    alfred3=alfred3.cli:cli
+    """,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

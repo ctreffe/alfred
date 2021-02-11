@@ -258,26 +258,3 @@ class ChromeKiosk:
 
         subprocess.run(["open", "-a", "Google Chrome", url, "--args", "--kiosk"])
 
-
-
-@click.command()
-@click.option(
-    "-a/-m",
-    "--auto-open/--manual-open",
-    default=True,
-    help="If this flag is set to '-a', the experiment will open a browser window automatically. [default: '-a']",
-)
-@click.option("--path", default=Path.cwd())
-@click.option(
-    "-debug/-production",
-    "--debug/--production",
-    default=False,
-    help="If this flag is set to to '-debug', the alfred experiment will start in flask's debug mode. [default: '-production']",
-)
-def run_cli(path, auto_open, debug):
-    runner = ExperimentRunner(path)
-    runner.auto_run(open_browser=auto_open, debug=debug)
-
-
-if __name__ == "__main__":
-    run_cli()  # pylint: disable=no-value-for-parameter
