@@ -995,25 +995,6 @@ class DataSaver:
 
             sac_main.append(agent_mongo)
 
-        # BW compatibility: mongo saving agent from config.conf
-        try:
-            if exp.config.getboolean(self._MSA, "use"):
-                agent_mongo_bw = self.mongo_manager.init_agent(
-                    section=self._MSA, fallbacks=self._MSA_FB, config_name="config"
-                )
-                agent_mongo_bw.identifier = mongodb_filter
-                for fb_agent in agent_mongo_bw.fallback_agents:
-                    fb_agent.identifier = mongodb_filter
-                msg = (
-                    "Initialized a MongoSavingAgent that was configured in config.conf. "
-                    "This is deprecated. Please configure your MongoSavingAgents in secrets.conf."
-                )
-                DeprecationWarning(msg)
-                exp.log.warning(msg)
-                sac_main.append(agent_mongo_bw)
-        except NoSectionError:
-            pass
-
         return sac_main
 
     def _init_unlinked_controller(self):

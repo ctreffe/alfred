@@ -85,29 +85,6 @@ class DataManager(object):
     def experiment(self):
         return self._experiment
 
-    def add_additional_data(self, key, value):
-        """Method for adding data to the additional data dictionary.
-
-        .. deprecated:: 1.5
-           Use the property
-           :attr:`~alfred3.data_manager.DataManager.additional_data`
-           directly instead.
-
-        """
-
-        self.additional_data[key] = value
-
-    def get_additional_data_by_key(self, key):
-        """Method for retrieving data from the additional data dictionary.
-
-        .. deprecated:: 1.5
-           Use the property
-           :attr:`~alfred3.data_manager.DataManager.additional_data`
-           directly instead.
-
-        """
-        return self.additional_data[key]
-
     @property
     def metadata(self):
         data = self._metadata

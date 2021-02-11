@@ -322,19 +322,6 @@ class Section(ExpMember):
             if isinstance(member, Section):
                 member.generate_unset_tags_in_subtree()
 
-    def append_item(self, item):
-
-        self.log.warning("Section.append_item() is deprecated. Use Section.append() instead.")
-
-        self.append(item)
-
-    def append_items(self, *items):
-
-        self.log.warning("Section.append_items() is deprecated. Use Section.append() instead.")
-
-        for item in items:
-            self.append(item)
-
     def append(self, *items):
         for item in items:
 

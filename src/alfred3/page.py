@@ -504,18 +504,6 @@ class _CoreCompositePage(_PageCore):
     def element_dict(self):
         return self._element_dict
 
-    def add_element(self, element):
-
-        self.log.warning("page.add_element() is deprecated. Use page.append() instead.")
-
-        self.append(element)
-
-    def add_elements(self, *elements):
-        self.log.warning("page.add_elements() is deprecated. Use page.append() instead.")
-
-        for elmnt in elements:
-            self.append(elmnt)
-
     def append(self, *elements):
         for elmnt in elements:
             if not isinstance(elmnt, (elm.core.Element)):
