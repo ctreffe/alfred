@@ -305,24 +305,28 @@ def inherit_kwargs(
     **kwargs,
 ):
     """
-    Decorator for easier docstring sharing.
+    Decorator for easier docstring sharing, used for displaying
+    documentation of inherited keyword arguments.
 
     Args:
-        from_: List of classes to inherit argument documentation from.
-        not_from_: List of classes *not* to inherit argument 
+        ``from_`` : List of classes to inherit argument documentation from.
+        ``not_from_`` : List of classes *not* to inherit argument 
             documentation from. Useful, if you want to include some
             specific parent or grandparent.
         include: List of keyword argument names to include
         exclude: List of keyword argument names to exclude
         sort_kwargs: If *True*, the keyword arguments will be arranged
-            in alphabetical order.
-        build_function: A function that minimally takes in an argument
+            in alphabetical order. Defaults to True.
+        build_function: A function that, as a minimmum, takes an argument
             of *docs*, which is the dictionary of arguments and their
             documentation. It must return a string. Its output is 
-            inserted in the decorated class' docstring.
+            inserted in the decorated class' docstring. The **kwargs 
+            will be passed on to the build_function.
+        **kwargs: Further keyword arguments. These will be passed on to
+            the *build_function*.
     
     Notes:
-        Replaces the placeholder``{kwargs}`` in the docstring of the 
+        Replaces the placeholder ``{kwargs}`` in the docstring of the 
         decorated object with argument documentation extracted from
         the parent classes.
 
@@ -340,13 +344,40 @@ def inherit_kwargs(
         4. By using the *from_* argument, you can inherit from a 
            completely different class that is not part of the decorated
            class' hierarchy.
-
-    See Also:
-        - :class:`.ShareDocumentation`: Base class for defining shared 
-          documentation.
-        - :func:`.shared_docs`: Another decorator, working in a similar 
-          way.
     
+    Examples:
+
+        A simple example::
+            
+            from alfred3._helper import inherit_kwargs
+
+            class Parent:
+                '''
+                Parent docstring.
+
+                Args:
+                    arg1: Description
+                    arg2: Description
+                '''
+
+                def __init__(self, arg1, arg2):
+                    pass
+            
+            
+            @inherit_kwargs
+            class Child(Parent):
+                '''
+                Child docstring.
+                
+                Args:
+                    arg3: Description
+                    {kwargs}
+                '''
+                
+                def __init__(self, arg3, **kwargs):
+                    super().__init__(**kwargs)
+
+
     """
     exclude = exclude if exclude is not None else []
     def build_kwargs(klass):
