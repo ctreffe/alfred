@@ -5,8 +5,7 @@ alfred3 - a library for rapid experiment development
 
 Alfred3 is a package for Python 3 offering experimenters in the social 
 sciences a fast and easy way to create truly dynamic computer experiments 
-for a wide range of applications. See 
-http://www.the-experimenter.com/framework for more information.
+for a wide range of applications.
 
 Installation
 ------------
@@ -24,7 +23,6 @@ Creating a hello-world experiment is as easy as writing this *script.py*
 file. You can even do it in a simple text editor. Note that the file
 must be named ``script.py``::
 
-    # script.py
     import alfred3 as al
     exp = al.Experiment()
     exp += al.Page("Hello, world!", name="hello_world") 
@@ -34,9 +32,9 @@ your experiment directory::
 
     $ cd path/to/experiment
 
-Next, simply execute the folling command in the terminal::
+Next, simply execute the following command in the terminal::
 
-    $ python3 -m alfred3.run
+    $ alfred3 run
 
 If you have *Google Chrome* installed on your machine, a browser window 
 with the experiment opens automatically. Otherwise, open any webbrowser 
@@ -54,20 +52,9 @@ Citation
     **If you are publishing research conducted using alfred3, the 
     following citation is required:**
 
-    Treffenstaedt, C., Wiemann, P. & Brachem, J. (2020). Alfred3 - A 
-    library for rapid experiment development (Version 1.x.x). Göttingen, 
+    Treffenstaedt, C., Wiemann, P. & Brachem, J. (2021). Alfred3 - A 
+    library for rapid experiment development (Version x.x.x). Göttingen, 
     Germany: https://doi.org/10.5281/zenodo.1437219
-
-
-A note on the version number
-----------------------------
-
-Alfred3 is currently at version 1.x.x, because it is already in use for 
-research. However, it does currently lack comprehensive documentation 
-and automatic unit testing. Also, some of its most powerful extensions 
-are not currently publicly available. Currently, we lack the resources 
-to upgrade our documentation and testing capacities, focusing mainly on 
-maintaining the current state of the library.
 
 If you want to use alfred3, please contact us via alfred@psych.uni-goettingen.de.
 
