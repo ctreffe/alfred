@@ -456,11 +456,11 @@ class Experiment:
             There are two other useful ways of running your alfred 
             experiment:
 
-            1. Define a run.py in your Experiment directory
-            2. Use the command line interface
+            1. Define a run.py in your Experiment directory (see :mod:`alfred3.run`)
+            2. Use the command line interface (see :mod:`.cli`) ::
 
-            Both of these are documented at :mod:`alfred3.run`
-        
+                alfred3 run
+
         Examples:
 
             A convenient way of running short alfred experiments is to
