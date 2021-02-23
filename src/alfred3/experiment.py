@@ -45,7 +45,7 @@ import pymongo
 from cryptography.fernet import Fernet
 
 from . import alfredlog
-from .section import Section, _RootSection
+from .section import Section, _RootSection, _AbortSection
 from .page import Page
 from . import messages, page, section
 from . import saving_agent
@@ -559,6 +559,12 @@ class ExperimentSession:
         #: Indicates whether the experiment session is finished
         self.finished: bool = False
 
+        #: Indicates whether the experiment session was aborted
+        self.aborted: bool = False
+
+        #: If the experiment session was aborted, this variable indicates the reason.
+        self.aborted_because: str = None
+
         #: Timestamp saved upon experiment start
         self.start_timestamp: str = None
         
@@ -695,6 +701,9 @@ class ExperimentSession:
         url route is called.
 
         """
+        if self.aborted:
+            return 
+
         if not self.all_members:
             raise AlfredError("There are no pages in your experiment.")
 
@@ -709,9 +718,47 @@ class ExperimentSession:
         self.user_interface_controller.start()
 
         jumpto = self.urlargs.get("jumpto")
-        if jumpto:
+        if jumpto and not self.aborted:
             self.log.info(f"Experiment session started with a jump. Jumping to Page '{jumpto}'.")
             self.movement_manager.move("jump", to=jumpto)
+
+    def abort(self, reason: str, title: str = "", msg: str = "The experiment run was aborted.", elements: list = None):
+        """
+        Aborts the experiment session.
+
+        When a session is aborted, the experiment will jump to the 
+        "Abort Page", informing the participant about the event.
+
+        In an aborted experiment, the movement system is shut down.
+
+        Args:
+            reason (str): The reason for which the session was aborted.
+            title (str): Title of the abort page.
+            msg (str): Message displayed on the abort page.
+            elements (list): A list of further elements to be included
+                on the abort page. You can use this to display images
+                or whatever you want.
+        """
+        pg_name = "_abort_" + uuid4().hex
+        abort_page = Page(title=title, name=pg_name)
+        abort_page += elm.display.Text(text=msg)
+        abort_page += elm.misc.HideNavigation()
+        abort_page += elm.misc.WebExitEnabler()
+        
+        if elements is not None:
+            for el in elements:
+                abort_page += el
+        
+        abort_section = _AbortSection(name="_abort_section")
+        abort_section += abort_page
+
+        self += abort_section
+        abort_page._on_showing_widget()
+        self.jump(to=pg_name)
+        
+        self.log.info(f"ExperimentSession.abort() called. Aborting session. Reason: {reason}")
+        self.aborted = True
+        self.aborted_because = reason
 
     def finish(self):
         """
@@ -741,6 +788,9 @@ class ExperimentSession:
                 return
 
         self.save_data(sync=True)
+        self._export_data()
+    
+    def _export_data(self):
 
         if not self.config.getboolean("local_saving_agent", "use"):
             return
@@ -943,7 +993,7 @@ class ExperimentSession:
 
         """
         p = self.subpath(path)
-        for row in util.read_csv_todict(p, encoding=encoding, **kwargs):
+        for row in util._read_csv_todict(p, encoding=encoding, **kwargs):
             yield row
     
     def read_csv_tolist(self, path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[list]:
@@ -1013,7 +1063,7 @@ class ExperimentSession:
 
         """
         p = self.subpath(path)
-        for row in util.read_csv_tolist(p, encoding=encoding, **kwargs):
+        for row in util._read_csv_tolist(p, encoding=encoding, **kwargs):
             yield row
 
     @property
@@ -1144,6 +1194,9 @@ class ExperimentSession:
             {"page1": Page(class="Page", name="page1")}
 
         """
+        if self.aborted:
+            return 
+
         if not self._allow_append:
             raise AlfredError("You cannot append members during setup.")
 

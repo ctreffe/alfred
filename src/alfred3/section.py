@@ -611,6 +611,13 @@ class _FinishedSection(Section):
         super().enter()
         self.experiment.finish()
 
+class _AbortSection(Section):
+    allow_forward: bool = False
+    allow_backward: bool = False
+    allow_jumpfrom: bool = False
+    allow_jumpto: bool = True
+
+
 @inherit_kwargs
 class _RootSection(Section):
     """

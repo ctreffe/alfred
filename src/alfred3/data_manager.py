@@ -65,6 +65,8 @@ class DataManager(object):
     _metadata["exp_start_timestamp"] = None
     _metadata["exp_save_time"] = None
     _metadata["exp_finished"] = None
+    _metadata["exp_aborted"] = None
+    _metadata["exp_aborted_because"] = None
     _metadata["exp_session"] = None
     _metadata["exp_condition"] = None
     _metadata["exp_id"] = None
@@ -97,6 +99,8 @@ class DataManager(object):
         data["exp_start_timestamp"] = self._experiment.start_timestamp
         data["exp_save_time"] = time.time()
         data["exp_finished"] = self._experiment.finished
+        data["exp_aborted"] = self._experiment.aborted
+        data["exp_aborted_because"] = self._experiment.aborted_because
         data["exp_session"] = self._experiment.session
         data["exp_condition"] = self._experiment.condition
         data["exp_id"] = self._experiment.exp_id

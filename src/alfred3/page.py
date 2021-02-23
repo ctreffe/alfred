@@ -398,11 +398,6 @@ class _PageCore(ExpMember):
     def __repr__(self):
         return f"Page(class='{type(self).__name__}', name='{self.name}')"
 
-    def __str__(self):
-        title = self.title if self.title is not None else "<None>"
-        tag = self.tag if self.tag is not None else "<None>"
-        return f"<Page of class '{type(self).__name__}', title: '{title}', tag: '{tag}', uid: '{self.uid}'>"
-
     def prepare_web_widget(self):
         """
         Hook for computations for preparing a page for display.
