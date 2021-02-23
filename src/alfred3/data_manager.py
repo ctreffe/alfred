@@ -463,7 +463,6 @@ class DataManager(object):
             raise ValueError("directory must be absolute")
 
         if not path.exists():
-            cls.log.warning(f"{path} is not a directory.")
             return
 
         for fp in path.iterdir():
@@ -474,10 +473,8 @@ class DataManager(object):
                 with open(fp, "r", encoding="utf-8") as f:
                     doc = json.load(f)
             except json.decoder.JSONDecodeError:
-                cls.log.warning(f"Skipped file '{fp}' (not valid .json).")
                 continue
             except IsADirectoryError:
-                cls.log.debug(f"Skipped '{fp}' (not a directory).")
                 continue
 
             doctype = doc.get("type")
