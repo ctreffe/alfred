@@ -3,6 +3,9 @@ from ._version import __version__
 
 from .experiment import Experiment
 
+from .condition import ListRandomizer
+from .condition import AllConditionsFull
+
 from .section import Section
 from .section import RevisitSection
 from .section import OnlyForwardSection
