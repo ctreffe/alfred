@@ -38,7 +38,7 @@ class DataManager(object):
     HISTORY = "move_history"
 
     instance_log = False
-    log = QueuedLoggingInterface(base_logger=__name__)
+    
 
     # the empty fields are initialized here below to enable name-
     # checking for all experiment members on these names and ordering
@@ -77,6 +77,7 @@ class DataManager(object):
         self._experiment = experiment
         self.exp = experiment
         self.additional_data = {}
+        self.log = QueuedLoggingInterface(base_logger=__name__)
         self.log.add_queue_logger(self, __name__)
         
         
