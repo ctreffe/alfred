@@ -480,6 +480,7 @@ class MongoSavingAgent(SavingAgent):
         experiment=None,
         name: str = None,
         encrypt: bool = False,
+        misc_collection: str = None,
     ):
         """Constructor method."""
         super().__init__(
@@ -488,6 +489,7 @@ class MongoSavingAgent(SavingAgent):
         self._mc = client
         self._db = self._mc[database]
         self._col = self._db[collection]
+        self._misc_col = misc_collection
         self.doc_id = uuid4().hex
 
         self._identifier = {"_id": self.doc_id}
@@ -540,6 +542,19 @@ class MongoSavingAgent(SavingAgent):
     def col(self):
         """The agent's :class:`pymongo.collection.Collection`."""
         return self._col
+    
+    @property
+    def misc_col(self):
+        """
+        The miscellaneous collection associated with this saving agent.
+        
+        If no miscellaneous collection was specified, the main collection
+        will be returned.
+        """
+        if self._misc_col is not None:
+            return self.db[self._misc_col]
+        else:
+            return self.col
 
     def check_equality(self, agent) -> bool:
         a1 = (self.client_info(self.client), self.db.name, self.col.name)
@@ -625,6 +640,7 @@ class AutoMongoSavingAgent(MongoSavingAgent):
             experiment=experiment,
             name=config.get("name"),
             encrypt=config.getboolean("encrypt", fallback=False),
+            misc_collection=config.get("misc_collection")
         )
 
 

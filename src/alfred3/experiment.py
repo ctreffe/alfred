@@ -549,7 +549,7 @@ class ExperimentSession:
         self.plugins: dict = {}
 
         #: A list of functions that will be called upon finishing an 
-        #: experiment session. They are added with the :meth:`.finish`
+        #: experiment session. They are added with the :meth:`.Experiment.finish`
         #: decorator
         self.finish_functions: List[callable] = []
 
@@ -1628,15 +1628,12 @@ class ExperimentSession:
         """
         Document collection for miscellaneous data.
 
+        If the option 'misc_collection' was defined for the main 
+        mongo saving agent, that collection will be returned. Otherwise,
+        the main collection of the main mongo saving agent will be returned.
+
         You can use this property to interact with the collection 
         through the pymongo api: https://pymongo.readthedocs.io/en/stable/
-
-        .. note::
-            This property assumes that the database credentials used by 
-            the main mongo saving agent are valid for a collection with
-            the name *misc* in the same database aswell. If that is not 
-            the case, you will receive authentication errors when 
-            interacting with this property.
 
         Returns:
             pymongo.collections.Collection: A collection object. If no
@@ -1647,5 +1644,5 @@ class ExperimentSession:
         """
         for agent in self.data_saver.main.agents.values():
             if isinstance(agent, MongoSavingAgent):
-                return agent.db["misc"]
+                return agent.misc_col
         return None
