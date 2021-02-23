@@ -97,7 +97,7 @@ class _ConditionIO:
         
         elif self.exp.config.get("local_saving_agent", "use"):
             self.method = "local"
-            self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path"))
+            self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path")) / f"randomization{self.version}.json"
     
     def load(self) -> dict:
         if self.method == "mongo":
@@ -314,12 +314,20 @@ class ListRandomizer:
         random.shuffle(slots)
         return _SlotList(*slots)
 
-    def get_condition(self, customize_full_behavior: bool = False) -> str:
+    def get_condition(self, 
+        full_page_title: str = "Experiment closed",
+        full_page_text: str = "Sorry, the experiment currently does not accept any further participants.",
+        customize_full_behavior: bool = False
+    ) -> str:
         """
         Returns a condition.
 
-
         Args:
+            full_page_title (str): Displayed title of the 'experiment full' 
+                page, shown to new participants if all conditions are 
+                full.
+            full_page_text (str): Displayed text on the 'experiment full'
+                page.
             customize_full_behavior (bool): If True, the function raises
                 the :class:`.AllConditionsFull` exception instead of 
                 automatically aborting the experiment if all conditions 
@@ -328,9 +336,8 @@ class ListRandomizer:
         
         If all conditions are full, the experiment will be aborted. New
         participants will be redirected to an abort page. The text
-        displayed on this page can be customized with the options
-        'full_page_title' and 'full_page_text' in the section 'exp_condition'
-        of config.conf.
+        displayed on this page can be customized with the arguments
+        'full_page_title' and 'full_page_text'.
 
         Returns:
             str: A condition name, taken from the randomized conditions
@@ -388,9 +395,7 @@ class ListRandomizer:
             if customize_full_behavior:
                 raise AllConditionsFull
             else:
-                title = self.exp.config.get("exp_condition", "full_page_title")
-                text = self.exp.config.get("exp_condition", "full_page_text")
-                self.exp.abort(reason="full", title=title, msg=text)
+                self.exp.abort(reason="full", title=full_page_title, msg=full_page_text)
                 return "__aborted__"
             
         slot.sessions.append(_Session(self.id))
