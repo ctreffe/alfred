@@ -779,7 +779,7 @@ class ProgressBar(LabelledElement):
         shown_pg = len(self.experiment.root_section.all_shown_pages)
         exact_progress = ((shown_el + shown_pg) / (n_el + n_pg)) * 100
 
-        if not self.experiment.finished:
+        if not self.experiment.finished and not self.experiment.aborted:
             return min(round(exact_progress, 1), 95)
         else:
             return 100

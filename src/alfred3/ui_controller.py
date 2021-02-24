@@ -281,7 +281,7 @@ class MovementManager:
                     current_page.section.move(direction)
             except ValidationError:
                 raise AbortMove()
-            
+
             if self.exp.config.getboolean("data", "record_move_history"):
                 self.record_move(page_status_before, direction=direction, to_page=to_page)
 
@@ -296,6 +296,18 @@ class MovementManager:
         
         return self.current_index, self.index_of(to_page)
 
+    def _direct_jump(self, to):
+        """
+        Bypasses the normal movement system and permissions for a
+        direct jump to the given page. Used, e.g. when an experiment is
+        aborted.
+        """
+        to_page = self.find_page(query=to)
+        self.log.debug(f"Direct jump to {to_page}. Skipping all normal move function.")
+        if self.exp.config.getboolean("data", "record_move_history"):
+                self.record_move(self.current_page.is_closed, direction="jump", to_page=to_page)
+         
+        self.current_index = self.index_of(to_page)
 
     def _move(self, to_page, direction: str) -> Tuple[int, int]:
         try:
@@ -357,8 +369,15 @@ class MovementManager:
         move.page_status_before_visit = "closed" if page_was_closed else "open"
         move.page_status_after_visit = "closed" if current_page.is_closed else "open"
         move.show_time = current_page.show_times[-1]
-        move.hide_time = current_page.hide_times[-1]
-        move.duration = move.hide_time - move.show_time
+        
+        try:
+            move.hide_time = current_page.hide_times[-1]
+            move.duration = move.hide_time - move.show_time
+        except IndexError:
+            self.log.debug(f"Hide time for {current_page} not available. Moving on.")
+            move.hide_time = None
+            move.duration = None
+        
         move.previous_page = self.previous_page.name if self.previous_page else None
         move.section_allows_forward = current_page.section.allow_forward
         move.section_allows_backward = current_page.section.allow_backward

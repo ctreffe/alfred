@@ -9,7 +9,7 @@ from . import element as elm
 from ._core import ExpMember
 from ._helper import inherit_kwargs
 from .page import _PageCore, UnlinkedDataPage, _DefaultFinalPage
-from .exceptions import MoveError, AlfredError, ValidationError
+from .exceptions import AlfredError, ValidationError, AbortMove
 from . import alfredlog
 from random import shuffle
 
@@ -463,6 +463,9 @@ class Section(ExpMember):
             self.jumpfrom()
         elif direction == "jumpto":
             self.jumpto()
+        
+        if self.exp.aborted:
+            raise AbortMove
         
 
     def validate_on_leave(self):

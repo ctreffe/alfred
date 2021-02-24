@@ -58,6 +58,7 @@ from .ui_controller import UserInterface
 from .ui_controller import MovementManager
 from .exceptions import SavingAgentException
 from .exceptions import AlfredError
+from .exceptions import AbortMove
 from .config import ExperimentConfig
 from .config import ExperimentSecrets
 from . import util
@@ -722,14 +723,9 @@ class ExperimentSession:
             self.log.info(f"Experiment session started with a jump. Jumping to Page '{jumpto}'.")
             self.movement_manager.move("jump", to=jumpto)
 
-    def abort(self, reason: str, title: str = "", msg: str = "The experiment run was aborted.", elements: list = None):
+    def abort(self, reason: str, title: str = "Experiment aborted", msg: str = "Sorry! The experiment was aborted.", elements: list = None):
         """
         Aborts the experiment session.
-
-        When a session is aborted, the experiment will jump to the 
-        "Abort Page", informing the participant about the event.
-
-        In an aborted experiment, the movement system is shut down.
 
         Args:
             reason (str): The reason for which the session was aborted.
@@ -738,10 +734,39 @@ class ExperimentSession:
             elements (list): A list of further elements to be included
                 on the abort page. You can use this to display images
                 or whatever you want.
+
+        When a session is aborted, the experiment will jump to the 
+        "Abort Page", informing the participant about the event.
+
+        In an aborted experiment, the movement system is shut down. The
+        corresponding dataset will contain the info that the session was
+        aborted, as well as the reason.
+
+        Examples:
+            This is a minimal example of a participant screening. In this
+            case, the experiment will abort::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class Screening(al.Page):
+                    title = "Participant Screening"
+
+                    def on_exp_access(self):
+                        self += al.NumberEntry(leftlab="Please enter your age", name="age", force_input=True)
+                    
+                    def on_first_hide(self):
+                        if int(self.exp.values.get("age")) < 25:
+                            self.exp.abort(
+                                reason="screening",
+                                title="Experiment aborted", 
+                                msg="Sorry, you do not fulfill the criteria for participation."
+                                )
         """
         pg_name = "_abort_" + uuid4().hex
         abort_page = Page(title=title, name=pg_name)
-        abort_page += elm.display.Text(text=msg)
+        abort_page += elm.display.Text(text=msg, align="center")
         abort_page += elm.misc.HideNavigation()
         abort_page += elm.misc.WebExitEnabler()
         
@@ -754,7 +779,7 @@ class ExperimentSession:
 
         self += abort_section
         abort_page._on_showing_widget()
-        self.jump(to=pg_name)
+        self.movement_manager._direct_jump(to=pg_name)
         
         self.log.info(f"ExperimentSession.abort() called. Aborting session. Reason: {reason}")
         self.aborted = True

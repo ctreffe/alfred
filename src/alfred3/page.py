@@ -26,7 +26,7 @@ from . import saving_agent
 from ._core import ExpMember
 from ._helper import _DictObj
 from ._helper import inherit_kwargs
-from .exceptions import AlfredError, ValidationError
+from .exceptions import AlfredError, ValidationError, AbortMove
 
 
 @inherit_kwargs
@@ -237,6 +237,8 @@ class _PageCore(ExpMember):
         self.on_each_show()
 
         self._has_been_shown = True
+        if self.exp.aborted:
+            raise AbortMove
 
     def on_first_show(self):
         """
@@ -286,6 +288,9 @@ class _PageCore(ExpMember):
         self._has_been_hidden = True
 
         self.save_data()
+
+        if self.exp.aborted:
+            raise AbortMove
 
     def on_first_hide(self):
         """
