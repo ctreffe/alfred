@@ -1,3 +1,7 @@
+"""
+Provides functionality for assigning participants to experiment conditions.
+"""
+
 from dataclasses import dataclass, asdict
 from typing import Tuple, List, Iterator
 from pathlib import Path
@@ -154,7 +158,7 @@ class ListRandomizer:
             Setting *respect_version* to True can fix such issues. 
             Defaults to False.
         
-        mode (str): Can be one of 'strict', or 'inclusive'. 
+        mode (str): Can be one of 'strict' or 'inclusive'. 
         
             If 'strict', the randomizer will only assign a condition 
             slot, if there are no active sessions for that slot. It will
@@ -182,10 +186,17 @@ class ListRandomizer:
         random_seed: The random seed used for reproducible pseudo-random
             behavior. This seed will be used for shuffling the condition
             list. Defaults to the current system time.
+
+    The ListRandomizer is used by initializing it (either directly
+    or via the convenience method :meth:`.balanced`) and using the
+    method :meth:`.get_condition` to receive a condition. By default,
+    the ListRandomizer will automatically abort new sessions and display
+    an information page for participants, if the experiment is full. This
+    behavior can be customized (see :meth:`.get_condition`).
     
     Notes: 
 
-        .. rubric:: List Randomization
+        **List Randomization**
 
         In naive randomization, you might end up with a very unbalanced
         design. For example, if you recruit 300 participants and randomize
@@ -212,7 +223,7 @@ class ListRandomizer:
         Then, the conditions are assigned to participants based on the
         shuffled list in the order that they start the experiment.
 
-        .. rubric:: Using the ListRandomizer offline
+        **Using the ListRandomizer offline**
 
         You can use the ListRandomizer offline, i.e. without using a
         mongoDB for data saving. In this case, you must keep in mind,
@@ -237,7 +248,7 @@ class ListRandomizer:
             @exp.member
             class DemoPage(al.Page):
 
-                def on_exp_acces(self):
+                def on_exp_access(self):
 
                     if self.exp.condition == "cond1":
                         lab = "label in condition 1"
@@ -348,6 +359,30 @@ class ListRandomizer:
             all conditions are full.
         
         Examples:
+
+            An example using the default behavior::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
+                    exp.condition = randomizer.get_condition()
+                
+                @exp.member
+                class DemoPage(al.Page):
+
+                    def on_exp_access(self):
+
+                        if self.exp.condition == "cond1":
+                            lab = "label in condition 1"
+                        
+                        elif self.exp.condition == "cond2":
+                            lab = "label in condition 2"
+                
+                        self += al.TextEntry(leftlab=lab, name="t1")
+
             This is an example of customizing the 'full' behavior. 
             It re-implements the default behavior, but showcases how
             you can customize behavior::
@@ -371,7 +406,7 @@ class ListRandomizer:
                 @exp.member
                 class DemoPage(al.Page):
 
-                    def on_exp_acces(self):
+                    def on_exp_access(self):
 
                         if self.exp.condition == "cond1":
                             lab = "label in condition 1"
@@ -440,21 +475,12 @@ class ListRandomizer:
                 @exp.setup
                 def setup(exp):
                     randomizer = al.ListRandomizer.balanced("cond1", "cond2", n_per_condition=10, exp=exp)
-                    
-                    try:
-                        exp.condition = randomizer.get_condition()
-                    except al.AllConditionsFull:
-                        exp.abort(
-                            reason="full",
-                            title="Experiment closed.",
-                            msg="Sorry, the experiment currently does not accept any further participants."
-                            )
-                
+                    exp.condition = randomizer.get_condition()
                 
                 @exp.member
                 class DemoPage(al.Page):
 
-                    def on_exp_acces(self):
+                    def on_exp_access(self):
 
                         if self.exp.condition == "cond1":
                             lab = "label in condition 1"
