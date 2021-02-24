@@ -230,13 +230,13 @@ class NumberEntry(TextEntry):
         match_hint: str = None,
         **kwargs,
     ):
-        super().__init__(**kwargs)
 
         self.ndecimals: int = ndecimals  # documented in getter property
         self.decimal_signs: Tuple[str] = decimal_signs  # documented in getter property
         self.min = min  # documented in getter property
         self.max = max  # documented in getter property
         self._match_hint = match_hint  # documented in getter property
+        super().__init__(**kwargs)
 
     @property
     def ndecimals(self) -> int:
