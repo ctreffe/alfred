@@ -38,7 +38,7 @@ Next, simply execute the following command in the terminal::
 
 If you have *Google Chrome* installed on your machine, a browser window 
 with the experiment opens automatically. Otherwise, open any webbrowser 
-and visit ``http://127.0.0.1:5000/start`` to start the experiment.
+and visit http://127.0.0.1:5000/start to start the experiment.
 
 Of course, this "Hello, world" experiment does not contain much content:
 Only a single page with a heading. To learn how to add content to an 
