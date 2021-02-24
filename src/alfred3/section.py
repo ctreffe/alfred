@@ -329,7 +329,7 @@ class Section(ExpMember):
                 raise ValueError(f"Name of {item} is also an attribute of {self}.")
             
             if item.name in self.members:
-                raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
+                raise AlfredError(f"Name '{item.name}' is already present in the experiment.")
 
             item.added_to_section(self)
 
