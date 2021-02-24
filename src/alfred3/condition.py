@@ -97,36 +97,58 @@ class _ConditionIO:
 
         if self.exp.secrets.getboolean("mongo_saving_agent", "use"):
             self.method = "mongo"
-            self.query = {"exp_id": self.exp.exp_id, "exp_version": self.version}
+            self.query = {"exp_id": self.exp.exp_id, "exp_version": self.version, "type": "condition_data"}
         
         elif self.exp.config.get("local_saving_agent", "use"):
             self.method = "local"
             self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path")) / f"randomization{self.version}.json"
     
-    def load(self) -> dict:
+    def load(self, atomic: bool = True) -> dict:
         if self.method == "mongo":
-            return self.exp.db_misc.find_one(self.query)
+            if atomic:
+                # this will try a couple of times until if receives a version of the data that
+                # can be safely worked on (with no other assignment ongoing)
+                data = None
+                i = 0
+                while not data:
+                    query = {**self.query, **{"assignment_ongoing": False}}
+                    data = self.exp.db_misc.find_one_and_update(query, {"$set": {"assignment_ongoing": True}})
+                    time.sleep(1)
+                    i += 1
+                    if i > 10:
+                        self.exp.log.error("Could not find a free condition dataset in 10 trys.")
+                        break
+                return data
+            else:
+                
+                # if there is no data, this returns None and places an assignment_ongoing note in the DB
+                # if there is data, this returns the data and places an assignment_ongoing note in the DB
+                data = self.exp.db_misc.find_one_and_update(
+                    self.query, 
+                    {"$set": {"assignment_ongoing": True}}, 
+                    upsert=True
+                    )
+                return data
+        
         elif self.method == "local":
-            with open(self.path, "r") as f:
-                return json.load(f)
+            try:
+                with open(self.path, "r") as f:
+                    return json.load(f)
+            except FileNotFoundError:
+                return None
     
-    def write(self, data: dict):
+    def write(self, data: dict, update: bool = False):
         if self.method == "mongo":
-            self.exp.log.warning( "write called with: " + str(data))
-
-            from pprint import pprint
-            pprint(self.query)
-            pprint(data)
-            
-            d = self.exp.db_misc.find_one()
-            pprint(d)
-
-            self.exp.db_misc.find_one_and_replace(self.query, data, upsert=True)
-
-            d = self.exp.db_misc.find_one(self.query)
-            if not d:
-                self.exp.log.error("no data saved.")
-
+            if update:
+                # this will update the slots, without touching the assignment status
+                query = self.query
+                data = {"slots": data["slots"]}
+                self.exp.db_misc.find_one_and_update(query, {"$set": data})
+            else:
+                # this will replace the document, usually leading to releasing the assignment status
+                query = {**self.query, **{"assignment_ongoing": True}}
+                self.exp.db_misc.find_one_and_replace(query, data, upsert=True)
+        
         elif self.method == "local":
             with open(self.path, "w") as f:
                 json.dump(data, f, indent=4, sort_keys=True)
@@ -282,13 +304,19 @@ class ListRandomizer:
         
         self.io = _ConditionIO(self.exp, respect_version)
 
-        try:
-            data = self.io.load()
-            self._check_consistency(data)
-            self.slotlist = _SlotList(*data["slots"])
-        except (FileNotFoundError, TypeError):
-            self.exp.log.exception("error")
+        # check if there is any data at all, independent of assignment_ongoing status
+        data = self.io.load(atomic=False) 
+        
+        if not data: # if not, create a dataset and mark it as assignment_ongoing
             self.slotlist = self._randomize()
+            data = self._data
+            data["assignment_ongoing"] = True
+            self.io.write(data)
+        elif data and data["assignment_ongoing"]:
+            data = self.io.load() # load data again, this time respecting assignment_ongoing
+        
+        self._check_consistency(data)
+        self.slotlist = _SlotList(*data["slots"])
 
 
     def _check_consistency(self, data):
@@ -434,7 +462,7 @@ class ListRandomizer:
                 return "__aborted__"
             
         slot.sessions.append(_Session(self.id))
-        self.io.write(self._data)
+        self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
         return slot.condition
 
     @property
@@ -446,6 +474,7 @@ class ListRandomizer:
         d["mode"] = self.mode
         d["slots"] = asdict(self.slotlist)["slots"]
         d["random_seed"] = self.random_seed
+        d["assignment_ongoing"] = False
         return d
 
     @classmethod
@@ -497,4 +526,6 @@ class ListRandomizer:
     def _mark_slot_finished(self, exp):
         slot = self.slotlist.id_assigned_to(self.id)
         slot.finished = True
-        self.io.write(self._data)
+        self.io.write(self._data, update=True)
+    
+
