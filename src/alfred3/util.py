@@ -50,23 +50,48 @@ def emoji(text: str) -> str:
     """
     return emojize(text, use_aliases=True)
 
-def is_section(obj: Any) -> bool: return isinstance(obj, Section)
+def is_section(obj: Any) -> bool: 
+    """
+    Returns True, if the given object is a :class:`.Section`, or a
+    subclass of Section.
+    """
+    return isinstance(obj, Section)
 
-def is_page(obj: Any) -> bool: return isinstance(obj, Page)
+def is_page(obj: Any) -> bool: 
+    """
+    Returns True, if the given object is a :class:`.Page`, or a
+    subclass of Page.
+    """
+    return isinstance(obj, Page)
 
-def is_element(obj: Any) -> bool: return isinstance(obj, Element)
+def is_element(obj: Any) -> bool: 
+    """
+    Returns True, if the given object is an :class:`.Element`, or a
+    subclass of Element.
+    """
+    return isinstance(obj, Element)
 
-def is_input_element(obj: Any) -> bool: return isinstance(obj, InputElement)
+def is_input_element(obj: Any) -> bool:
+    """
+    Returns True, if the given object is an :class:`.InputElement`, or a
+    subclass of InputElement.
+    """
+    return isinstance(obj, InputElement)
 
-def is_label(obj: Any) -> bool: return isinstance(obj, Label)
+def is_label(obj: Any) -> bool: 
+    """
+    Returns True, if the given object is an :class:`.Label`, or a
+    subclass of Label.
+    """
+    return isinstance(obj, Label)
 
-def read_csv_todict(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[dict]:
+def _read_csv_todict(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[dict]:
     with open(path, "r", encoding=encoding) as csvfile:
         reader = csv.DictReader(csvfile, **kwargs)
         for row in reader:
             yield row
 
-def read_csv_tolist(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[list]:
+def _read_csv_tolist(path: Union[str, Path], encoding: str = "utf-8", **kwargs) -> Iterator[list]:
     with open(path, "r", encoding=encoding) as csvfile:
         reader = csv.reader(csvfile, **kwargs)
         for row in reader:
@@ -83,10 +108,16 @@ def random_condition(*conditions) -> str:
     Returns:
         str: One of the input arguments, chosen at random.
     
+    See Also:
+        This is a naive way of randomizing, suitable mostly for
+        quick prototypes with equal probability of all conditions. 
+        A more powerful approach is offered by :class:`.ListRandomizer`.
+    
     Examples:
         
             >>> import alfred3 as al
             >>> al.random_condition("A", "B")
+            A
 
         The example returns either "A" or "B".
     """

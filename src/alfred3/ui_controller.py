@@ -317,7 +317,7 @@ class MovementManager:
             self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="debug")
             return True
 
-        elif not self.current_page.section.allow_jumpfrom:
+        elif not self.current_page is next_page and not self.current_page.section.allow_jumpfrom:
             self.log.debug(f"The section of page {self.current_page} cannot be jumped from. Aborting move.")
             msg = self.experiment.config.get("hints", "jumpfrom_forbidden")
             self.experiment.message_manager.post_message(msg, level="warning")
@@ -374,7 +374,11 @@ class MovementManager:
         if not proceed:
             self.log.debug(f"Page defined its own move method. Alfred's move system stands by.")
             return
-
+        
+        if self.exp.aborted:
+            self.log.debug(f"A move was called, but the experiment is aborted. No move is being conducted.")
+            return
+        
         if direction == "forward":
             self.forward()
         elif direction == "backward":
