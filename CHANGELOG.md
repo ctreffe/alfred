@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## [Unreleased]
 
+### Added
+
+- The new `alfred3.ListRandomizer` class offers list randomization
+- The new `alfred3.ExperimentSession.abort` method allows experimenters
+  to abort an experiment in a controlled fashion.
+
 ### Removed
 
 - `layout.py`
