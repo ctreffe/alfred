@@ -21,7 +21,7 @@ from .element.core import Element
 from .element.core import InputElement
 from .element.display import Label
 
-def icon(name: str, ml: int = 0, mr: int = 0) -> str:
+def icon(name: str, ml: int = 0, mr: int = 0, size: str = "1rem") -> str:
     """Returns HTML code for displaying font-awesome icons.
     
     These icons can be used in all places where HTML code is rendered,
@@ -33,7 +33,7 @@ def icon(name: str, ml: int = 0, mr: int = 0) -> str:
         mr: Margin to the right, can be an integer from 0 to 5.
 
     """
-    return f"<i class='fas fa-{name} ml-{ml} mr-{mr}'></i>"
+    return f"<i class='fas fa-{name} ml-{ml} mr-{mr}' style='font-size: {size};'></i>"
 
 
 def emoji(text: str) -> str:
