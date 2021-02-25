@@ -100,7 +100,7 @@ class DataManager(object):
         data["exp_save_time"] = time.time()
         data["exp_finished"] = self._experiment.finished
         data["exp_aborted"] = self._experiment.aborted
-        data["exp_aborted_because"] = self._experiment.aborted_because
+        data["exp_aborted_because"] = self._experiment._aborted_because
         data["exp_session"] = self._experiment.session
         data["exp_condition"] = self._experiment.condition
         data["exp_id"] = self._experiment.exp_id

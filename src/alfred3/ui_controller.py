@@ -27,6 +27,7 @@ from .static import css
 from .static import img
 from . import element as elm
 from .exceptions import AlfredError, ValidationError, AbortMove
+from .util import icon
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
 
@@ -388,6 +389,15 @@ class MovementManager:
         self.history.append(move)
 
     def move(self, direction, to: Union[str, int] = None):
+
+        if self.exp.session_expired:
+            return self.exp.abort(
+                reason="session timed out", 
+                title="Session expired",
+                icon="hourglass-end",
+                msg= "Sorry! The experiment session timed out."
+                )
+        
         proceed = self.current_page.custom_move()
         
         if not proceed:
