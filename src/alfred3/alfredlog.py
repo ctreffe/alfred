@@ -132,7 +132,10 @@ class QueuedLoggingInterface:
     def add_queue_logger(self, obj, module: str):
         name = self.loggername(obj, module)
         self.queue_logger = logging.getLogger(name)
-        self.session_id = obj.experiment.config.get("metadata", "session_id")
+        try:
+            self.session_id = obj.experiment.config.get("metadata", "session_id")
+        except AttributeError:
+            self.session_id = obj.exp.config.get("metadata", "session_id")
         self.log_queued_messages()
 
     def loggername(self, obj, module: str) -> str:
