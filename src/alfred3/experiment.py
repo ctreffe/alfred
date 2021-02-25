@@ -723,7 +723,14 @@ class ExperimentSession:
             self.log.info(f"Experiment session started with a jump. Jumping to Page '{jumpto}'.")
             self.movement_manager.move("jump", to=jumpto)
 
-    def abort(self, reason: str, title: str = "Experiment aborted", msg: str = "Sorry! The experiment was aborted.", elements: list = None):
+    def abort(
+        self,
+        reason: str,
+        title: str = "Experiment aborted",
+        msg: str = "Sorry! The experiment was aborted.",
+        icon: str = "mug-hot",
+        page: Page = None,
+    ):
         """
         Aborts the experiment session.
 
@@ -731,11 +738,14 @@ class ExperimentSession:
             reason (str): The reason for which the session was aborted.
             title (str): Title of the abort page.
             msg (str): Message displayed on the abort page.
-            elements (list): A list of further elements to be included
-                on the abort page. You can use this to display images
-                or whatever you want.
+            icon (str): Name of the icon that you wish to show on the
+                page. All free icons from Font Awesome 5 can be used:
+                https://fontawesome.com/icons?d=gallery&p=2
+            page (alfred3.page.Page): A custom page that you want to
+                display upon experiment abortion. If you use this argument,
+                the arguments *title* and *msg* will be ignored.
 
-        When a session is aborted, the experiment will jump to the 
+        When a session is aborted, the experiment will jump to the
         "Abort Page", informing the participant about the event.
 
         In an aborted experiment, the movement system is shut down. The
@@ -755,35 +765,42 @@ class ExperimentSession:
 
                     def on_exp_access(self):
                         self += al.NumberEntry(leftlab="Please enter your age", name="age", force_input=True)
-                    
+
                     def on_first_hide(self):
                         if int(self.exp.values.get("age")) < 25:
                             self.exp.abort(
                                 reason="screening",
-                                title="Experiment aborted", 
+                                title="Experiment aborted",
                                 msg="Sorry, you do not fulfill the criteria for participation."
                                 )
         """
         pg_name = "_abort_" + uuid4().hex
-        abort_page = Page(title=title, name=pg_name)
-        abort_page += elm.display.Text(text=msg, align="center")
-        abort_page += elm.misc.HideNavigation()
-        abort_page += elm.misc.WebExitEnabler()
-        
-        if elements is not None:
-            for el in elements:
-                abort_page += el
-        
+
+        if page is not None:
+            if not isinstance(page, Page):
+                raise TypeError("Abort page must be a page.")
+            abort_page = page
+        else:
+            abort_page = Page(title=title, name=pg_name)
+            if msg:
+                ic = util.icon(icon, size="80pt")
+                abort_page += elm.display.VerticalSpace("50px")
+                abort_page += elm.display.Html(ic, align="center")
+                abort_page += elm.display.VerticalSpace("100px")
+                abort_page += elm.display.Text(msg, align="center")
+            abort_page += elm.misc.HideNavigation()
+            abort_page += elm.misc.WebExitEnabler()
+
         abort_section = _AbortSection(name="_abort_section")
         abort_section += abort_page
 
         self += abort_section
         abort_page._on_showing_widget()
         self.movement_manager._direct_jump(to=pg_name)
-        
+
         self.log.info(f"ExperimentSession.abort() called. Aborting session. Reason: {reason}")
         self.aborted = True
-        self.aborted_because = reason
+        self._aborted_because = reason
 
     def finish(self):
         """
