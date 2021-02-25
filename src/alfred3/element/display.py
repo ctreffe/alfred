@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from emoji import emojize
 import cmarkgfm
+from cmarkgfm.cmark import Options as cmarkgfmOptions
 
 from .._helper import is_url
 from .._helper import inherit_kwargs
@@ -221,7 +222,7 @@ class Text(Element):
             text = emojize(self.text, use_aliases=True)
         else:
             text = self.text
-        return cmarkgfm.github_flavored_markdown_to_html(text)
+        return cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
 
     @text.setter
     def text(self, text):
