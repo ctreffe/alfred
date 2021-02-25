@@ -53,8 +53,11 @@ class _Slot:
 
     @property
     def active_sessions(self):
-        now = time.time()
-        return [s for s in self.sessions if (now - s.timestamp) < self.timeout]
+        if self.timeout:
+            now = time.time()
+            return [s for s in self.sessions if (now - s.timestamp) < self.timeout]
+        else:
+            return self.sessions
 
     @property
     def ids(self):
@@ -152,6 +155,12 @@ class _ConditionIO:
         elif self.method == "local":
             with open(self.path, "w") as f:
                 json.dump(data, f, indent=4, sort_keys=True)
+    
+    def abort(self):
+        if self.method == "mongo":
+            query = {**self.query, **{"assignment_ongoing": True}}
+            self.exp.db_misc.find_one_and_update(query, {"$set": {"assignment_ongoing": False}})
+        
 
 class ListRandomizer:
     """
@@ -175,10 +184,10 @@ class ListRandomizer:
         respect_version (bool): If True, randomization will start anew
             for each experiment version. This is especially important,
             if you make changes to the condition setup of an ongoing
-            experiment, which might cause the randomizer to fail, causing
+            experiment. This which might cause the randomizer to fail, causing
             :class:`.ConditionInconsistency` errors.
             Setting *respect_version* to True can fix such issues. 
-            Defaults to False.
+            Defaults to True.
         
         mode (str): Can be one of 'strict' or 'inclusive'. 
         
@@ -203,7 +212,12 @@ class ListRandomizer:
         
         timeout (int): Timeout in seconds. After timeout expiration,
             sessions are regarded as expired. Their condition slots will
-            be marked as open again. Defaults to 12 hours.
+            be marked as open again. If None (default), the Randomizer 
+            will use the :attr:`.ExperimentSession.session_timeout`, which
+            is highly recommended. Using a shorter timeout than the 
+            session timeout might result in a situation where a session
+            that the Randomizer regarded as expired ends up still finishing
+            the experiment.
         
         random_seed: The random seed used for reproducible pseudo-random
             behavior. This seed will be used for shuffling the condition
@@ -215,6 +229,8 @@ class ListRandomizer:
     the ListRandomizer will automatically abort new sessions and display
     an information page for participants, if the experiment is full. This
     behavior can be customized (see :meth:`.get_condition`).
+
+    .. warning:: Be mindful of the argument *respect_version*!
     
     Notes: 
 
@@ -288,9 +304,9 @@ class ListRandomizer:
         *conditions: Tuple[str, int],
         exp,
         id: str = None,
-        respect_version: bool = False,
+        respect_version: bool = True,
         mode: str = "strict",
-        timeout: int = 60 * 60 * 12,
+        timeout: int = None,
         random_seed=time.time(),
     ):
         self.exp = exp
@@ -298,7 +314,7 @@ class ListRandomizer:
         self.exp.finish_functions.append(self._mark_slot_finished)
         self.respect_version = respect_version
         self.mode = mode
-        self.timeout = timeout
+        self.timeout = timeout if timeout is not None else self.exp.session_timeout
         self.random_seed = random_seed
         self.conditions = conditions
         
@@ -354,20 +370,17 @@ class ListRandomizer:
         return _SlotList(*slots)
 
     def get_condition(self, 
-        full_page_title: str = "Experiment closed",
-        full_page_text: str = "Sorry, the experiment currently does not accept any further participants.",
-        customize_full_behavior: bool = False
+        abort_page = None,
+        raise_exception: bool = False
     ) -> str:
         """
         Returns a condition.
 
         Args:
-            full_page_title (str): Displayed title of the 'experiment full' 
-                page, shown to new participants if all conditions are 
-                full.
-            full_page_text (str): Displayed text on the 'experiment full'
-                page.
-            customize_full_behavior (bool): If True, the function raises
+            abort_page (alfred3.page.Page): You can reference a custom
+                page to be displayed to new participants, if the 
+                experiment is full.
+            raise_exception (bool): If True, the function raises
                 the :class:`.AllConditionsFull` exception instead of 
                 automatically aborting the experiment if all conditions 
                 are full. This allows you to catch the exception and 
@@ -383,7 +396,7 @@ class ListRandomizer:
             list.
         
         Raises:
-            AllConditionsFull: If customize_full_behavior is True and
+            AllConditionsFull: If raise_exception is True and
             all conditions are full.
         
         Examples:
@@ -412,8 +425,9 @@ class ListRandomizer:
                         self += al.TextEntry(leftlab=lab, name="t1")
 
             This is an example of customizing the 'full' behavior. 
-            It re-implements the default behavior, but showcases how
-            you can customize behavior::
+            It basically re-implements the default behavior, but showcases how
+            you can customize behavior by catching the "AllConditionsFull"
+            exception::
 
                 import alfred3 as al
                 exp = al.Experiment()
@@ -422,13 +436,41 @@ class ListRandomizer:
                 def setup(exp):
                     randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
                     try:
-                        exp.condition = randomizer.get_condition()
+                        exp.condition = randomizer.get_condition(raise_exception=True)
                     except al.AllConditionsFull:
-                        exp.abort(
-                            reason="full",
-                            title="Experiment closed.",
-                            msg="Sorry, the experiment currently does not accept any further participants."
-                            )
+                        full_page = al.Page(title="Experiment closed.", name="fullpage")
+                        full_page += al.Text("Sorry, the experiment currently does not accept any further participants")
+                        exp.abort(reason="full", page=full_page)
+                
+                
+                @exp.member
+                class DemoPage(al.Page):
+
+                    def on_exp_access(self):
+
+                        if self.exp.condition == "cond1":
+                            lab = "label in condition 1"
+                        
+                        elif self.exp.condition == "cond2":
+                            lab = "label in condition 2"
+                
+                        self += al.TextEntry(leftlab=lab, name="t1")
+            
+            The following is an example of a custom page displayed when
+            the experiment is full. Note that it, basically implements
+            the same behavior as the previous example, it is just a little
+            more convenient::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
+                
+                    full_page = al.Page(title="Experiment closed.", name="fullpage")
+                    full_page += al.Text("Sorry, the experiment currently does not accept any further participants.")
+                    exp.condition = randomizer.get_condition(abort_page=full_page)
                 
                 
                 @exp.member
@@ -444,6 +486,7 @@ class ListRandomizer:
                 
                         self += al.TextEntry(leftlab=lab, name="t1")
 
+
         """
         assigned_slot = self.slotlist.id_assigned_to(self.id)
         if assigned_slot is not None:
@@ -455,10 +498,13 @@ class ListRandomizer:
             slot = next(self.slotlist.pending_slots(), None)
 
         if slot is None:
-            if customize_full_behavior:
+            if raise_exception:
                 raise AllConditionsFull
             else:
-                self.exp.abort(reason="full", title=full_page_title, msg=full_page_text)
+                self.io.abort()
+                full_page_title = "Experiment closed"
+                full_page_text = "Sorry, the experiment currently does not accept any further participants."
+                self.exp.abort(reason="full", title=full_page_title, msg=full_page_text, icon="user-check", page=abort_page)
                 return "__aborted__"
             
         slot.sessions.append(_Session(self.id))
