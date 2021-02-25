@@ -221,7 +221,8 @@ class ListRandomizer:
         
         random_seed: The random seed used for reproducible pseudo-random
             behavior. This seed will be used for shuffling the condition
-            list. Defaults to the current system time.
+            list. Defaults to the current system time. Valid seeds are
+            all values that are accepted by :func:`random.seed`
 
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
@@ -230,7 +231,10 @@ class ListRandomizer:
     an information page for participants, if the experiment is full. This
     behavior can be customized (see :meth:`.get_condition`).
 
-    .. warning:: Be mindful of the argument *respect_version*!
+    .. warning:: Be mindful of the argument *respect_version*! With the
+        default setting (True), randomization starts from scratch for
+        every experiment version. If you set it to False, you will
+        run into an error, if you change anything about the conditions.
     
     Notes: 
 
@@ -307,7 +311,7 @@ class ListRandomizer:
         respect_version: bool = True,
         mode: str = "strict",
         timeout: int = None,
-        random_seed=time.time(),
+        random_seed=None,
     ):
         self.exp = exp
         self.id = id if id is not None else exp.session_id
@@ -315,7 +319,7 @@ class ListRandomizer:
         self.respect_version = respect_version
         self.mode = mode
         self.timeout = timeout if timeout is not None else self.exp.session_timeout
-        self.random_seed = random_seed
+        self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         
         self.io = _ConditionIO(self.exp, respect_version)
