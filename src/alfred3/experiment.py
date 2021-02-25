@@ -747,7 +747,7 @@ class ExperimentSession:
             msg (str): Message displayed on the abort page.
             icon (str): Name of the icon that you wish to show on the
                 page. All free icons from Font Awesome 5 can be used:
-                https://fontawesome.com/icons?d=gallery&p=2
+                https://fontawesome.com/icons?d=gallery&p=1&m=free
             page (alfred3.page.Page): A custom page that you want to
                 display upon experiment abortion. If you use this argument,
                 the arguments *title* and *msg* will be ignored.
@@ -778,6 +778,7 @@ class ExperimentSession:
                             self.exp.abort(
                                 reason="screening",
                                 title="Experiment aborted",
+                                icon="users",
                                 msg="Sorry, you do not fulfill the criteria for participation."
                                 )
         """
