@@ -72,7 +72,13 @@ def start():
         return redirect(url_for("experiment"))
     except Exception:
         log.exception("Exception during experiment startup.")
-        abort(500)
+        script.exp_session.abort(
+            reason="error",
+            title="Oops - Something went wrong",
+            icon="mug-hot",
+            msg="Sorry, there was an error on our side."
+        )
+        return redirect(url_for("experiment"))
 
 
 @app.route("/experiment", methods=["GET", "POST"])
@@ -131,7 +137,17 @@ def experiment():
             return resp
     except Exception:
         script.log.exception("Exception during experiment execution.")
-        abort(500)
+        script.exp_session.abort(
+            reason="error",
+            title="Oops - Something went wrong",
+            icon="mug-hot",
+            msg="Sorry, there was an error on our side (500)."
+        )
+        html = script.exp_session.user_interface_controller.render_html(page_token)
+        resp = make_response(html)
+        resp.cache_control.no_cache = True
+        return resp
+
 
 
 @app.route("/staticfile/<identifier>")
