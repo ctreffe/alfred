@@ -1781,7 +1781,9 @@ class ExperimentSession:
     @property
     def session_timeout(self):
         """
-        int: After expiration of the timeout, the session will abort on
+        int: The session's timeout (in seconds).
+        
+        After expiration of the timeout, the session will abort on
         the next move.
 
         The default timeout is 24 hours. You can set the timeout in
