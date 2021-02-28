@@ -132,10 +132,12 @@ class QueuedLoggingInterface:
     def add_queue_logger(self, obj, module: str):
         name = self.loggername(obj, module)
         self.queue_logger = logging.getLogger(name)
-        try:
+        if "experiment" in obj.__dict__:
             self.session_id = obj.experiment.config.get("metadata", "session_id")
-        except AttributeError:
+        elif "exp" in obj.__dict__:
             self.session_id = obj.exp.config.get("metadata", "session_id")
+        else:
+            self.session_id = obj.experiment.config.get("metadata", "session_id")
         self.log_queued_messages()
 
     def loggername(self, obj, module: str) -> str:
@@ -159,19 +161,28 @@ class QueuedLoggingInterface:
 
         name = []
         name.append("exp")
-        name.append(obj.experiment.exp_id)
+        if "experiment" in obj.__dict__:
+            name.append(obj.experiment.exp_id)
+        elif "exp" in obj.__dict__:
+            name.append(obj.exp.exp_id)
+        else:
+            name.append(obj.experiment.exp_id)
+
+        
         name.append(".".join(module_name))
         name.append(type(obj).__name__)
 
-        try:
-            if obj.instance_log:
-                try:
-                    name.append(obj.name)
-                except AttributeError:
-                    name.append(obj.uid)
+        if "instance_log" in obj.__dict__:
 
-        except AttributeError as e:
-            self.debug(f"Suppressed exception: {e}")
+            try:
+                if obj.instance_log:
+                    try:
+                        name.append(obj.name)
+                    except AttributeError:
+                        name.append(obj.uid)
+
+            except AttributeError as e:
+                self.debug(f"Suppressed exception: {e}")
 
         return ".".join(name)
 
