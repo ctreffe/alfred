@@ -514,11 +514,10 @@ class UserInterface:
                 url = self.add_static_file(f, content_type="text/css")
                 self.css_urls.append((5, url))
             
-            with importlib.resources.path(img, "alfred_logo_color.png") as p:
-                url = self.add_static_file(p, content_type="image/png")
-                self.config["logo_url"] = url
-
             self.config["logo_text"] = self.experiment.config.get("layout_base", "logo_text")
+            logo = self.exp.subpath(self.exp.config.get("layout_goe", "logo"))
+            if logo.is_file():
+                self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
 
         elif style == "goe":
 
@@ -531,6 +530,10 @@ class UserInterface:
                 self.config["logo_url"] = url
             
             self.config["logo_text"] = self.experiment.config.get("layout_goe", "logo_text")
+
+            logo = self.exp.subpath(self.exp.config.get("layout_goe", "logo"))
+            if logo.is_file():
+                self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
         else:
             raise ValueError(f"Invalid value for option 'style' in config section 'layout': {style}")
         
