@@ -973,11 +973,11 @@ class ExperimentSession:
             pathlib.Path: Absolute path
 
         """
-        p = Path(path).resolve()
+        p = Path(path)
         if p.is_absolute():
             return p
         else:
-            return self.path / p
+            return self.path / path
 
     def read_csv_todict(
         self, path: Union[str, Path], encoding: str = "utf-8", **kwargs
