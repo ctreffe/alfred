@@ -46,8 +46,8 @@ class SubmittingButtons(SingleChoiceButtons):
 
     """
 
-    def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-info", **kwargs):
-        super().__init__(*choice_labels, button_style=button_style, **kwargs)
+    def __init__(self, *choice_labels, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
 
     def added_to_page(self, page):
         
