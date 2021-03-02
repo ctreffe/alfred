@@ -37,7 +37,7 @@ def icon(name: str, ml: int = 0, mr: int = 0, size: str = "1rem", spin: bool = F
     return f"<i class='fas fa-{name} {spin} ml-{ml} mr-{mr}' style='font-size: {size};'></i>"
 
 
-def emoji(text: str) -> str:
+def emoji(text: str, size: str = "1rem") -> str:
     """Returns a new string in which emoji shortcodes in the input 
     string are replaced with their unicode representation.
     
@@ -49,7 +49,7 @@ def emoji(text: str) -> str:
         text: Text, containing emoji shortcodes.
     
     """
-    return emojize(text, use_aliases=True)
+    return f"<span style='font-size: {size};'>{emojize(text, use_aliases=True)}</span>"
 
 def is_section(obj: Any) -> bool: 
     """
