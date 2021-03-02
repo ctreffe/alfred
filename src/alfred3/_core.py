@@ -89,8 +89,9 @@ class ExpMember:
 
         if self.name is not None:
             self.set_name(self.name, via="class")
-
-        if name is not None:
+        elif name is None:
+            self.set_name(type(self).__name__, via="class-auto")
+        else:
             self.set_name(name, via="argument")
         
         
@@ -107,6 +108,7 @@ class ExpMember:
         can override it.
 
         """
+
         check_name(name)
         self._uid = name
         self._tag = name
@@ -253,6 +255,14 @@ class ExpMember:
     @property
     def exp(self):
         return self._experiment
+    
+    @exp.setter
+    def exp(self, value):
+        self._experiment = value
+    
+    @experiment.setter
+    def experiment(self, value):
+        self._experiment = value
 
     def added_to_section(self, section):
         self._parent_section = section
