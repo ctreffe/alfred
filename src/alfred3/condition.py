@@ -494,6 +494,7 @@ class ListRandomizer:
         """
         assigned_slot = self.slotlist.id_assigned_to(self.id)
         if assigned_slot is not None:
+            self.io.write(self._data)
             return assigned_slot.condition
 
         slot = next(self.slotlist.open_slots(), None)
