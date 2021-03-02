@@ -1422,5 +1422,7 @@ class _DefaultFinalPage(Page):
 
     def on_exp_access(self):
         txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
+        self += elm.display.Text(":mortar_board:", font_size=70, align="center")
+        self += elm.display.VerticalSpace("20px")
         self += elm.display.Text(text=txt, align="center")
         self += elm.misc.WebExitEnabler()
