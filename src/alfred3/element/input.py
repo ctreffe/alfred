@@ -14,6 +14,7 @@ from pathlib import Path
 
 from emoji import emojize
 import cmarkgfm
+from cmarkgfm.cmark import Options as cmarkgfmOptions
 
 from ..exceptions import AlfredError
 from .._helper import inherit_kwargs
@@ -455,7 +456,7 @@ class SingleChoice(ChoiceElement):
             else:
                 if self.emojize:
                     label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
             choice.type = "radio"
             choice.value = i
             choice.name = self.name
@@ -623,7 +624,7 @@ class MultipleChoice(ChoiceElement):
             else:
                 if self.emojize:
                     label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label))
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
             choice.type = "checkbox"
             choice.value = i
             choice.id = f"{self.name}_choice{i}"
