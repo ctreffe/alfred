@@ -260,8 +260,6 @@ class MovementManager:
         # check section permissions for jumps
         self._check_permissions(to_page=to_page, direction=direction)
 
-        now = time.time()
-        current_page._on_hiding_widget(hide_time=now)
         self.log.debug(f"Moving from {self.current_page} to {to_page}, direction: '{direction}'.")
 
         # management of section entering and leaving behavior
@@ -286,6 +284,7 @@ class MovementManager:
             if self.exp.config.getboolean("data", "record_move_history"):
                 self.record_move(page_status_before, direction=direction, to_page=to_page)
 
+        now = time.time()
         to_page._on_showing_widget(show_time=now)
 
         if not to_page.should_be_shown:
@@ -399,6 +398,11 @@ class MovementManager:
                 )
         
         proceed = self.current_page.custom_move()
+        now = time.time()
+        try:
+            self.current_page._on_hiding_widget(hide_time=now)
+        except AbortMove:
+            return
         
         if not proceed:
             self.log.debug(f"Page defined its own move method. Alfred's move system stands by.")
@@ -649,8 +653,10 @@ class UserInterface:
         d["title"] = page.title
         d["subtitle"] = page.subtitle
         
-        if page.section.allow_backward and not page is self.exp.movement_manager.first_page:
-            d["backward_text"] = self.experiment.config.get("navigation", "backward")
+        if not page is self.exp.movement_manager.first_page:
+            previous_section = self.exp.movement_manager.page_before(page).section
+            if previous_section.allow_backward and page.section.allow_backward:
+                d["backward_text"] = self.experiment.config.get("navigation", "backward")
         
         if page.section.allow_forward:
             if self.exp.movement_manager.next_page is self.exp.root_section.final_page:
