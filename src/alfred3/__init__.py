@@ -35,6 +35,7 @@ from .element.display import ProgressBar
 from .element.display import Alert
 from .element.display import ButtonLabels
 from .element.display import BarLabels
+from .element.display import Counter
 
 from .element.input import TextEntry
 from .element.input import TextArea

@@ -911,3 +911,21 @@ class BarLabels(ButtonLabels):
     # Documented at :class:`.SingleChoiceButtons`
     button_toolbar = True
 
+
+class Counter(Element):
+
+    counter_js = jinja_env.get_template("counter.js.j2")
+    element_template = jinja_env.get_template("TextElement.html.j2")
+
+    def __init__(self, end_after: int = -1, end_msg: str = "expired", **kwargs):
+        super().__init__(**kwargs)
+
+        self.end_after = end_after
+        self.end_msg = end_msg
+        
+    
+    def prepare_web_widget(self):
+        self._js_code = []
+        js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg)
+        self.add_js(js)
+
