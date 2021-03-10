@@ -17,6 +17,7 @@ from .page import AutoForwardPage
 from .page import AutoClosePage
 from .page import NoNavigationPage
 from .page import NoDataPage
+from .page import NoSavingPage
 
 from .element.core import Row
 from .element.core import Stack

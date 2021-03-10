@@ -1176,12 +1176,97 @@ class AutoClosePage(TimeoutPage):
 class NoDataPage(Page):
     """
     A page that does not save any data.
-    
+
     Args:
         {kwargs}
+    
+    Notes:
+        This page *will* still trigger a saving event upon moving,
+        so that, for example, updates to the :attr:`.ExperimentSession.adata` 
+        dictionary will be saved. It just does not save any data itself,
+        i.e. input elements on this page will not appear in the data.
+    
+    See Also:
+        See :class:`.NoSavingPage` for a page that does not trigger a
+        saving event.
     """
 
     data = {}
+
+@inherit_kwargs
+class NoSavingPage(Page):
+    """
+    A page that does not trigger a saving event on moving.
+
+    Args:
+        {kwargs}
+    
+    Notes:
+        This page will not trigger any saving action on its own. But if
+        experiment data is saved at another point of the experiment, data
+        collected on a NoSavingPage *will* be saved. You can switch off 
+        this behavior by overriding the *data* attribute, effectively
+        creating a NoDataNoSavingPage (see Example 2).
+
+        Note also that upon finishing, the experiment will always trigger
+        a saving event, even if you only have NoSavingPages in your
+        experiment. To prevent this, you can switch the option 
+        'save_data' in section 'data' of config.conf to 'false'.
+
+    See Also:
+        See :class:`.NoDataPage` for a page that does not collect any
+        data.
+    
+    Examples:
+
+        Example 1, simple usage::
+
+            import alfred3 as al
+            exp = al.Experiment()
+            exp += al.NoSavingPage(name="demo")
+
+        Example 2, a NoSavingPage that also does not collect any data::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            class NoDataNoSavingPage(al.NoSavingPage):
+
+                data = {{}}
+            
+            exp += NoDataNoSavingPage(name="demo")
+        
+        Example 3, a more elaborate example. Here, we create an 
+        experiment with an "admin" mode, triggered by an url parameter,
+        in which no data will be saved.
+        Note that, if we use this method, we do not even need to use
+        a NoSavingPage::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.setup
+            def setup(exp):
+                admin = exp.urlargs.get("admin", False)
+                if admin == "true":
+                    exp.config.read_dict({{"data": {{"save_data": "false"}}}})
+                    exp.log.info("Admin mode triggered. No data will be saved")
+
+            exp += al.Page(name="demo")
+        
+        If this experiment is started with the suffix ``?admin=true`` to
+        the starting url, no data will be saved. In case of a locally 
+        running experiment, the url would be 
+        http://localhost:5000/start?admin=true
+
+        .. info:: Note that the experiment will most likely crash, if
+            the /start route gets called twice for any reason in a local
+            experiment.
+
+    """
+
+    def save_data(self, *args, **kwargs):
+        pass
 
 
 @inherit_kwargs
