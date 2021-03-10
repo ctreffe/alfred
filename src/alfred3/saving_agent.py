@@ -889,11 +889,18 @@ class SavingAgentController:
             e.wait()
 
     def _do_saving(self, data: dict, agent_name: str, level: int, data_time: float):
-        """Starts the execution of a task with the given saving agent.
+        """
+        Starts the execution of a task with the given saving agent.
 
         If the agent and its fallbacks fail, the SavingAgentController
         will save the data using ALL available failure saving agents.
+
+        If the option "save_data" in section "data" of config.conf is
+        set to "false", no data will be saved.
         """
+        if not self.experiment.config.getboolean("data", "save_data"):
+            self.log.debug("Option 'save_data' was 'false'. Not saving any data.")
+            return
 
         agent = self.agents[agent_name]
         saved, reason = agent.save_data(data=data, level=level, data_time=data_time)

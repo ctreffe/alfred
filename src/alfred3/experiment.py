@@ -825,6 +825,10 @@ class ExperimentSession:
                                 msg="Sorry, you do not fulfill the criteria for participation."
                                 )
         """
+        if self.aborted:
+            self.log.debug(f"ExperimentSession.abort() called, but it was already aborted. New Reason: {reason}, Old Reason: {self._aborted_because}")
+            return
+        
         for func in self.abort_functions:
             func(self)
 
@@ -892,6 +896,10 @@ class ExperimentSession:
             return
 
         cfg = self.config["data"]
+        if not cfg.getboolean("save_data"):
+            self.log.debug("Option 'save_data' was 'false'. Not exporting any data.")
+            return
+
         exporter = Exporter(self)
         if cfg.getboolean("export_exp_data") and self.config.getboolean(
             "local_saving_agent", "use"
