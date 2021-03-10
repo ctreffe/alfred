@@ -344,6 +344,13 @@ def inherit_kwargs(
         4. By using the *from_* argument, you can inherit from a 
            completely different class that is not part of the decorated
            class' hierarchy.
+        
+        5. If you are using curly braces (``{{}}``) anywhere in your 
+           docstrings, you have to escape them to let *inherit_kwargs* 
+           know that they are not a placeholder. Otherwise you will
+           receive a somewhat cryptic error message
+           ("IndexError: Replacement index 0 out of range for positional 
+           args tuple").
     
     Examples:
 
