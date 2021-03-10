@@ -559,7 +559,7 @@ class RevisitSection(Section):
         self.exp.movement_manager.current_page.close()
 
 @inherit_kwargs
-class OnlyForwardSection(RevisitSection):
+class ForwardOnlySection(RevisitSection):
     """
     A section that allows only a single step forward; no jumping and no
     backwards steps.
@@ -568,13 +568,13 @@ class OnlyForwardSection(RevisitSection):
         {kwargs}
     
     Examples:
-        Using an OnlyForwardSection and filling it with a page in instance 
+        Using an ForwardOnlySection and filling it with a page in instance 
         style::
 
             import alfred3 as al
             exp = al.Experiment()
 
-            exp += al.OnlyForwardSection(name="main")
+            exp += al.ForwardOnlySection(name="main")
             
             exp.main += al.Page(title="Demo", name="DemoPage")
         
@@ -584,7 +584,7 @@ class OnlyForwardSection(RevisitSection):
             exp = al.Experiment()
 
             @exp.member
-            class Main(al.OnlyForwardSection): pass
+            class Main(al.ForwardOnlySection): pass
 
             @exp.member(of_section="Main")
             class DemoPage(al.Page):

@@ -8,7 +8,7 @@ from .condition import AllConditionsFull
 
 from .section import Section
 from .section import RevisitSection
-from .section import OnlyForwardSection
+from .section import ForwardOnlySection
 
 from .page import Page
 from .page import WidePage
