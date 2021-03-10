@@ -133,11 +133,11 @@ class QueuedLoggingInterface:
         name = self.loggername(obj, module)
         self.queue_logger = logging.getLogger(name)
         if "experiment" in obj.__dict__:
-            self.session_id = obj.experiment.config.get("metadata", "session_id")
+            self.session_id = obj.experiment.session_id
         elif "exp" in obj.__dict__:
-            self.session_id = obj.exp.config.get("metadata", "session_id")
+            self.session_id = obj.exp.session_id
         else:
-            self.session_id = obj.experiment.config.get("metadata", "session_id")
+            self.session_id = obj.experiment.session_id
         self.log_queued_messages()
 
     def loggername(self, obj, module: str) -> str:
