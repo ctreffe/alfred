@@ -977,7 +977,7 @@ class DataSaver:
         from alfred3.data_manager import DataManager
 
         sac_main = SavingAgentController(exp)
-        init_time = time.strftime("%Y-%m-%d_%H:%M:%S")
+        init_time = time.strftime("%Y-%m-%d_%H.%M.%S")
 
         # local saving agent
         if exp.config.getboolean(self._LSA, "use"):
