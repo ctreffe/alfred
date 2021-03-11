@@ -14,6 +14,7 @@ from typing import List
 
 from . import alfredlog
 from ._helper import check_name
+from ._helper import _DictObj
 from .exceptions import AlfredError
 
 
@@ -38,12 +39,24 @@ class ExpMember:
             key-value pairs, where each key is the name of an input 
             element in the experiment and the value is the required 
             input. Can be defined as a class attribute.
+        vargs (dict): A dictionary that can be used to pass additional
+            arguments to the page. The arguments are then available as
+            an instance attribute. As a special feature, the instance
+            attribute allows you to access the values of the dictionary
+            not only via the usual square-bracket notation, but also
+            via dot-notation. 
+
+            This argument fulfills a similar function as **kwargs do
+            sometimes, but it makes sure that user-defined additional
+            arguments will not collide with inherited keywords arguments.
+            
+            Can be defined as a class attribute.
     """
 
 
     name: str = None
     instance_log: bool = False
-    showif: dict = {}
+    showif: dict = None
     
     #: Name of the parent section. Used when a member is appended to 
     #: the :class:`.Experiment`. If *None*, a member will be appended
@@ -55,7 +68,8 @@ class ExpMember:
         name: str = None,
         title: str = None,
         subtitle: str = None,
-        showif: dict = None
+        showif: dict = None,
+        vargs: dict = None,
     ):
 
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
@@ -78,6 +92,12 @@ class ExpMember:
         # init parameters
         if showif is not None:
             self.showif = showif
+        
+        self._vargs = None
+        if vargs is not None:
+            self._vargs = _DictObj(vargs)
+        elif self.vargs is not None:
+            self.vargs = _DictObj(self.vargs)
 
         if title is not None:
             self.title = title
@@ -93,6 +113,48 @@ class ExpMember:
             self.set_name(type(self).__name__, via="class-auto")
         else:
             self.set_name(name, via="argument")
+    
+    @property
+    def vargs(self):
+        """
+        A dictionary of additional arguments passed on the class upon
+        initialization. Can be defined as a class attribute.
+
+        As a special feature, you can use dot notation to access
+        (but not to set) values on this dictionary.
+
+        Examples:
+
+            Example of definig the *vargs* as a class attribute on a page::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class Demo(al.Page):
+                    vargs = {"variable_argument": "demo"}
+
+                    def on_exp_access(self):
+                        self += al.Text(self.vargs.variable_argument)
+            
+            Example of using the *vargs* in page instantiation::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                class TestPage(al.Page):
+                    def on_exp_access(self):
+                        self += al.Text(f"{self.vargs.test}")
+
+                @exp.member
+                class Test(al.Section):
+
+                    def on_exp_access(self):
+                        for i in range(3):
+                            self += TestPage(name=f"p{i}", vargs={"test": 123})
+
+        """
+        return self._vargs
         
         
     def set_name(self, name: str, via: str):
