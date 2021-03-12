@@ -11,7 +11,6 @@ function countup( elementName, maxSecs, msg)
     function updateTimer()
     {
         msCount = Date.now() - startTime;
-        console.log(msCount);
        
         if ( msCount < 1000 ) {
 
@@ -25,9 +24,7 @@ function countup( elementName, maxSecs, msg)
             time = new Date( msCount );
             hours = time.getUTCHours();
             mins = time.getUTCMinutes();
-            console.log(hours);
-            console.log(mins);
-            element.innerHTML = (hours ? hours + ':' + twoDigits( mins ) : twoDigits( mins ) ) + ':' + twoDigits( time.getUTCSeconds() );
+            element.innerHTML = (hours ? twoDigits(hours) + ':' + twoDigits( mins ) : twoDigits( mins ) ) + ':' + twoDigits( time.getUTCSeconds() );
             setTimeout( updateTimer, 500 );
         }
     }
@@ -35,6 +32,6 @@ function countup( elementName, maxSecs, msg)
     element = document.getElementById( elementName );
     updateTimer();
 }
-document.ready(
+$(document).ready(
     countup( '{{ name }}', {{ end_after }}, '{{ end_msg }}')
 )

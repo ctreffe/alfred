@@ -6,6 +6,7 @@ Provides elements that display content.
 
 import io
 
+from datetime import datetime
 from typing import Union
 from pathlib import Path
 from uuid import uuid4
@@ -911,10 +912,32 @@ class BarLabels(ButtonLabels):
     # Documented at :class:`.SingleChoiceButtons`
     button_toolbar = True
 
+@inherit_kwargs
+class CountUp(Element):
+    """
+    Displays a counter, counting up from 00:00:00 (hh:mm:ss).
 
-class Counter(Element):
+    Args:
+        end_after (int): Optional argument for specifying an end for 
+            the counter after a number of seconds. Defaults to *-1*, which
+            will let the counter run indefinitely.
+        end_msg (str): Text to be displayed in the counter's place upon
+            expiration.
+        {{kwargs}}
+    
+    Examples:
+        ::
+            import alfred3 as al
+            exp = al.Experiment()
+            
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.Counter(font_size="big", align="center")
 
-    counter_js = jinja_env.get_template("counter.js.j2")
+    """
+
+    counter_js = jinja_env.get_template("countup.js.j2")
     element_template = jinja_env.get_template("TextElement.html.j2")
 
     def __init__(self, end_after: int = -1, end_msg: str = "expired", **kwargs):
@@ -929,3 +952,126 @@ class Counter(Element):
         js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg)
         self.add_js(js)
 
+
+@inherit_kwargs
+class CountDown(CountUp):
+    """
+    Displays a countdown, counting down from now (time of page loading)
+    to a specified end.
+
+    Args:
+        end_after (int): The amount of seconds after which the countdown
+            ends. Alternatively, you can specifiy a specific time with
+            the alternative constructor :meth:`.tilldate`.
+        end_msg (str): Text to be displayed in the countdown's place upon
+            expiration.
+        {kwargs}
+    
+    Examples:
+        Countdown running 30 seconds::
+            
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.CounDown(end_after=30, font_size="big", align="center")
+        
+        Countdown running until a certain datetime is reached::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.CounDown.tilldate(
+                        year=2031, 
+                        month=1, 
+                        day=31, 
+                        hour=12, 
+                        minute=30, 
+                        second=12, 
+                        font_size="big", 
+                        align="center"
+                        )
+    """
+    counter_js = jinja_env.get_template("countdown.js.j2")
+    element_template = jinja_env.get_template("TextElement.html.j2")
+
+    def __init__(self, end_after: int, end_msg: str = "expired", **kwargs):
+        super().__init__(**kwargs)
+
+        self.end_after = end_after
+        self.end_msg = end_msg
+    
+
+    @classmethod
+    def tilldate(cls, year: int = None, month: int = None, day: int = None, hour: int = None, minute: int = None, second: int = None, **kwargs):
+        """
+        Alternative constructor for a countdown targeted at a specific date.
+
+        Args:
+            year, month, day, hour, minute, second: Time units, all 
+                integers. Cannot have leading zeroes. It is fine to 
+                specific only, for example, the year and the month. The
+                arguments will be passed on to :class:`datetime.datetime`
+                to construct a time object.
+            
+            **kwargs: Further keyword arguments are passed on to the
+                ordinary constructor, see :class:`.CountDown`.
+        
+        Examples:
+
+            Countdown running until a certain datetime is reached::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class Demo(al.Page):
+                    def on_exp_access(self):
+                        self += al.CounDown.tilldate(
+                            year=2031, 
+                            month=1, 
+                            day=31, 
+                            hour=12, 
+                            minute=30, 
+                            second=12, 
+                            font_size="big", 
+                            align="center"
+                            )
+        """
+        if "end_after" in kwargs:
+            raise TypeError("'end_after' is an invalid keyword argument for the 'fromdate' constructor.")
+        
+        dargs = {}
+        if year:
+            dargs["year"] = year
+        if month:
+            dargs["month"] = month
+        if day:
+            dargs["day"] = day
+        if hour:
+            dargs["hour"] = hour
+        if minute:
+            dargs["minute"] = minute
+        if second:
+            dargs["second"] = second
+        
+        date = datetime(**dargs)
+        now = datetime.now()
+        diff = date - now
+
+        return cls(end_after=diff.total_seconds(), **kwargs)
+
+
+
+
+# class CountDown(Element):
+
+#     countdown_js = jinja_env.get_template("countdown.js.j2")
+#     element_template = jinja_env.get_template("TextElement.html.j2")
+
+#     def __init__(self, start: float, end: float)
