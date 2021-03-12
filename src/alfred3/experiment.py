@@ -584,7 +584,7 @@ class ExperimentSession:
         **urlargs,
     ):
 
-        self._plugins: dict = {}  # docs in getter
+        self._plugins = _DictObj()  # docs in getter
         self._finish_functions: List[callable] = []  # docs in getter
         self._abort_functions: List[callable] = []  # docs in getter
 
