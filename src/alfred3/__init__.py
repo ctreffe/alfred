@@ -5,6 +5,7 @@ from .experiment import Experiment
 
 from .condition import ListRandomizer
 from .condition import AllConditionsFull
+from .condition import random_condition
 
 from .section import Section
 from .section import RevisitSection
@@ -72,5 +73,3 @@ from .util import is_input_element
 from .util import is_label
 from .util import is_page
 from .util import is_section
-
-from .util import random_condition
