@@ -105,6 +105,7 @@ class _ConditionIO:
         elif self.exp.config.get("local_saving_agent", "use"):
             self.method = "local"
             self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path")) / f"randomization{self.version}.json"
+            self.path.parent.mkdir(exist_ok=True, parents=True)
     
     def load(self, atomic: bool = True) -> dict:
         if self.method == "mongo":
@@ -184,7 +185,7 @@ class ListRandomizer:
         respect_version (bool): If True, randomization will start anew
             for each experiment version. This is especially important,
             if you make changes to the condition setup of an ongoing
-            experiment. This which might cause the randomizer to fail, causing
+            experiment. This might cause the randomizer to fail, causing
             :class:`.ConditionInconsistency` errors.
             Setting *respect_version* to True can fix such issues. 
             Defaults to True.
@@ -223,6 +224,10 @@ class ListRandomizer:
             behavior. This seed will be used for shuffling the condition
             list. Defaults to the current system time. Valid seeds are
             all values that are accepted by :func:`random.seed`
+        
+        abort_page (alfred3.page.Page): You can reference a custom
+                page to be displayed to new participants, if the 
+                experiment is full.
 
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
@@ -312,6 +317,7 @@ class ListRandomizer:
         mode: str = "strict",
         timeout: int = None,
         random_seed=None,
+        abort_page=None,
     ):
         self.exp = exp
         self.id = id if id is not None else exp.session_id
@@ -321,69 +327,85 @@ class ListRandomizer:
         self.timeout = timeout if timeout is not None else self.exp.session_timeout
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
+        self.abort_page = abort_page
         
         self.io = _ConditionIO(self.exp, respect_version)
+        self.slotlist = None
+    
+    @property
+    def full(self) -> bool:
+        """
+        bool: Boolean, indicating whether there are any open slots left.
+        """
+        slot = next(self.slotlist.open_slots(), None)
 
-        # check if there is any data at all, independent of assignment_ongoing status
-        data = self.io.load(atomic=False) 
+        if slot is None and self.mode == "inclusive":
+            slot = next(self.slotlist.pending_slots(), None)
         
-        if not data: # if not, create a dataset and mark it as assignment_ongoing
-            self.slotlist = self._randomize()
-            data = self._data
-            data["assignment_ongoing"] = True
-            self.io.write(data)
-        elif data and data["assignment_ongoing"]:
-            data = self.io.load() # load data again, this time respecting assignment_ongoing
+        if slot is not None:
+            return False
+        else:
+            return True
+
+    @classmethod
+    def balanced(cls, *conditions, n: int, **kwargs):
+        """
+        Alternative constructor for the ListRandomizer.
+
+        Args:
+            *conditions (str): A variable number of strings, giving the
+                condition names.
+            n (int): The number of participants **per condition**.
+            **kwargs: Keyword arguments, passed on the normal intialization
+                of :class:`.ListRandomizer`.
         
-        self._check_consistency(data)
-        self.slotlist = _SlotList(*data["slots"])
+        Notes:
+            This alternative constructor offers a more concise syntax
+            for simple balanced setups. All conditions receive the same
+            sample size.
+        
+        Examples:
+            ::
 
+                import alfred3 as al
+                exp = al.Experiment()
 
-    def _check_consistency(self, data):
-        if self.respect_version:
-            assert self.exp.version == data["exp_version"]
+                @exp.setup
+                def setup(exp):
+                    randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
+                    exp.condition = randomizer.get_condition()
+                
+                @exp.member
+                class DemoPage(al.Page):
 
-        data_conditions = [slot["condition"] for slot in data["slots"]]
-        self_conditions = [c for c, _ in self.conditions]
+                    def on_exp_access(self):
 
-        what_to_do = "You might try to set 'respect_version' to True and increase the experiment version."
-        msg = "Condition data is inconsistent with randomizer specification. " + what_to_do
+                        if self.exp.condition == "cond1":
+                            lab = "label in condition 1"
+                        
+                        elif self.exp.condition == "cond2":
+                            lab = "label in condition 2"
+                
+                        self += al.TextEntry(leftlab=lab, name="t1")
 
-        # all condition that appear in the data are represented in self
-        if not all([condition in self_conditions for condition in data_conditions]):
-            raise ConditionInconsistency(msg)
+        """
+        conditions = [(c, n) for c in conditions]
+        return cls(*conditions, **kwargs)
 
-        # all conditions in self are represented in the data
-        if not all([condition in data_conditions for condition in self_conditions]):
-            raise ConditionInconsistency(msg)
-
-        # number of slots is consistent
-        if not len(self._generate_slots()) == len(data["slots"]):
-            raise ConditionInconsistency(msg)
-
-    def _generate_slots(self) -> List[_Slot]:
-        slots = []
-        for c in self.conditions:
-            slots += [{"condition": c[0], "timeout": self.timeout}] * c[1]
-        return slots
-
-    def _randomize(self) -> _SlotList:
-        slots = self._generate_slots()
-        random.seed(self.random_seed)
-        random.shuffle(slots)
-        return _SlotList(*slots)
+    def abort(self):
+        self.io.abort()
+        full_page_title = "Experiment closed"
+        full_page_text = "Sorry, the experiment currently does not accept any further participants."
+        self.exp.abort(reason="full", title=full_page_title, msg=full_page_text, icon="user-check", page=self.abort_page)
+        return "__aborted__"
 
     def get_condition(self, 
-        abort_page = None,
         raise_exception: bool = False
     ) -> str:
         """
         Returns a condition.
 
         Args:
-            abort_page (alfred3.page.Page): You can reference a custom
-                page to be displayed to new participants, if the 
-                experiment is full.
             raise_exception (bool): If True, the function raises
                 the :class:`.AllConditionsFull` exception instead of 
                 automatically aborting the experiment if all conditions 
@@ -470,11 +492,12 @@ class ListRandomizer:
 
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
-                
                     full_page = al.Page(title="Experiment closed.", name="fullpage")
                     full_page += al.Text("Sorry, the experiment currently does not accept any further participants.")
-                    exp.condition = randomizer.get_condition(abort_page=full_page)
+                    
+                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp, abort_page=full_page)
+                
+                    exp.condition = randomizer.get_condition()
                 
                 
                 @exp.member
@@ -492,6 +515,9 @@ class ListRandomizer:
 
 
         """
+        self._load_or_insert_data()
+
+        # TODO atomisieren
         assigned_slot = self.slotlist.id_assigned_to(self.id)
         if assigned_slot is not None:
             self.io.write(self._data)
@@ -506,15 +532,64 @@ class ListRandomizer:
             if raise_exception:
                 raise AllConditionsFull
             else:
-                self.io.abort()
-                full_page_title = "Experiment closed"
-                full_page_text = "Sorry, the experiment currently does not accept any further participants."
-                self.exp.abort(reason="full", title=full_page_title, msg=full_page_text, icon="user-check", page=abort_page)
-                return "__aborted__"
+                return self.abort()
             
         slot.sessions.append(_Session(self.id))
         self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
         return slot.condition
+    
+    def _check_consistency(self, data):
+        if self.respect_version:
+            assert self.exp.version == data["exp_version"]
+
+        data_conditions = [slot["condition"] for slot in data["slots"]]
+        self_conditions = [c for c, _ in self.conditions]
+
+        what_to_do = "You might try to set 'respect_version' to True and increase the experiment version."
+        msg = "Condition data is inconsistent with randomizer specification. " + what_to_do
+
+        # all condition that appear in the data are represented in self
+        if not all([condition in self_conditions for condition in data_conditions]):
+            raise ConditionInconsistency(msg)
+
+        # all conditions in self are represented in the data
+        if not all([condition in data_conditions for condition in self_conditions]):
+            raise ConditionInconsistency(msg)
+
+        # number of slots is consistent
+        if not len(self._generate_slots()) == len(data["slots"]):
+            raise ConditionInconsistency(msg)
+
+    def _load_or_insert_data(self):
+
+        # check if there is any data at all, independent of assignment_ongoing status
+        data = self.io.load(atomic=False) 
+        
+        if not data: # if not, create a dataset and mark it as assignment_ongoing
+            self.slotlist = self._randomize()
+            data = self._data
+            data["assignment_ongoing"] = True
+            self.io.write(data)
+        elif data and data["assignment_ongoing"]:
+            data = self.io.load() # load data again, this time respecting assignment_ongoing
+        
+        self._check_consistency(data)
+        self.slotlist = _SlotList(*data["slots"])
+
+        if self.full:
+            self.abort()
+
+    def _generate_slots(self) -> List[_Slot]:
+        slots = []
+        for c in self.conditions:
+            slots += [{"condition": c[0], "timeout": self.timeout}] * c[1]
+        return slots
+
+    def _randomize(self) -> _SlotList:
+        slots = self._generate_slots()
+        random.seed(self.random_seed)
+        random.shuffle(slots)
+        return _SlotList(*slots)
 
     @property
     def _data(self):
@@ -528,55 +603,34 @@ class ListRandomizer:
         d["assignment_ongoing"] = False
         return d
 
-    @classmethod
-    def balanced(cls, *conditions, n_per_condition: int, **kwargs):
-        """
-        Alternative constructor for the ListRandomizer.
-
-        Args:
-            *conditions (str): A variable number of strings, giving the
-                condition names.
-            n_per_condition (int): The number of participants aimed at
-                per condition.
-            **kwargs: Keyword arguments, passed on the normal intialization
-                of :class:`.ListRandomizer`.
-        
-        Notes:
-            This alternative constructor offers a more concise syntax
-            for simple balanced setups. All conditions receive the same
-            sample size.
-        
-        Examples:
-            ::
-
-                import alfred3 as al
-                exp = al.Experiment()
-
-                @exp.setup
-                def setup(exp):
-                    randomizer = al.ListRandomizer.balanced("cond1", "cond2", n_per_condition=10, exp=exp)
-                    exp.condition = randomizer.get_condition()
-                
-                @exp.member
-                class DemoPage(al.Page):
-
-                    def on_exp_access(self):
-
-                        if self.exp.condition == "cond1":
-                            lab = "label in condition 1"
-                        
-                        elif self.exp.condition == "cond2":
-                            lab = "label in condition 2"
-                
-                        self += al.TextEntry(leftlab=lab, name="t1")
-
-        """
-        conditions = [(c, n_per_condition) for c in conditions]
-        return cls(*conditions, **kwargs)
-
     def _mark_slot_finished(self, exp):
         slot = self.slotlist.id_assigned_to(self.id)
         slot.finished = True
         self.io.write(self._data, update=True)
     
 
+def random_condition(*conditions) -> str:
+    """
+    Returns a random condition based on the supplied arguments with 
+    equal probability of all conditions.
+
+    Args:
+        *conditions: A variable number of condition identifiers
+    
+    Returns:
+        str: One of the input arguments, chosen at random.
+    
+    See Also:
+        This is a naive way of randomizing, suitable mostly for
+        quick prototypes with equal probability of all conditions. 
+        A more powerful approach is offered by :class:`.ListRandomizer`.
+    
+    Examples:
+        
+            >>> import alfred3 as al
+            >>> al.random_condition("A", "B")
+            A
+
+        The example returns either "A" or "B".
+    """
+    return str(random.choice(conditions))

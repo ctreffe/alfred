@@ -98,32 +98,6 @@ def _read_csv_tolist(path: Union[str, Path], encoding: str = "utf-8", **kwargs) 
         for row in reader:
             yield row    
 
-def random_condition(*conditions) -> str:
-    """
-    Returns a random condition based on the supplied arguments with 
-    equal probability of all conditions.
-
-    Args:
-        *conditions: A variable number of condition identifiers
-    
-    Returns:
-        str: One of the input arguments, chosen at random.
-    
-    See Also:
-        This is a naive way of randomizing, suitable mostly for
-        quick prototypes with equal probability of all conditions. 
-        A more powerful approach is offered by :class:`.ListRandomizer`.
-    
-    Examples:
-        
-            >>> import alfred3 as al
-            >>> al.random_condition("A", "B")
-            A
-
-        The example returns either "A" or "B".
-    """
-    return str(random.choice(conditions))
-
 
 def prefix_keys(d: dict, prefix: str, sep: str = "_") -> dict:
     """
