@@ -179,7 +179,7 @@ class ExperimentRunner:
         browser = threading.Thread(target=self._open_browser, name="browser")
         browser.start()
 
-    def auto_run(self, open_browser: bool = True, debug=False):
+    def auto_run(self, open_browser: bool = None, debug=False):
         """
         Automatically runs an alfred experiment.
 
@@ -187,7 +187,9 @@ class ExperimentRunner:
             open_browser: Indicates, whether alfred should try to open
                 a new browser window automatically.
             debug: Indicates, whether the underlying flask app should be
-                run in debug mode.
+                run in debug mode. Defaults to None, which leads to
+                taking the value from option 'open_browser' in section
+                'general' of config.conf.
 
         """
 
@@ -195,6 +197,8 @@ class ExperimentRunner:
         self.configure_logging()
         self.create_experiment_app()
         self.set_port()
+
+        open_browser = self.config.getboolean("general", "open_browser") if open_browser is None else open_browser
         if open_browser:
             self.start_browser_thread()
         self.print_startup_message()
