@@ -915,7 +915,7 @@ class BarLabels(ButtonLabels):
 @inherit_kwargs
 class CountUp(Element):
     """
-    Displays a counter, counting up from 00:00:00 (hh:mm:ss).
+    Displays a timer, counting up from 00:00:00 (hh:mm:ss).
 
     Args:
         end_after (int): Optional argument for specifying an end for 
@@ -923,17 +923,19 @@ class CountUp(Element):
             will let the counter run indefinitely.
         end_msg (str): Text to be displayed in the counter's place upon
             expiration.
-        {{kwargs}}
+        {kwargs}
     
     Examples:
+        
         ::
+
             import alfred3 as al
             exp = al.Experiment()
             
             @exp.member
             class Demo(al.Page):
                 def on_exp_access(self):
-                    self += al.Counter(font_size="big", align="center")
+                    self += al.CountUp(font_size="big", align="center")
 
     """
 
