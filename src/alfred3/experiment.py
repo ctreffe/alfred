@@ -1768,7 +1768,7 @@ class ExperimentSession:
         """
         for agent in self.data_saver.main.agents.values():
             if isinstance(agent, MongoSavingAgent):
-                return agent.db.col
+                return agent.col
         return None
 
     @property
@@ -1788,7 +1788,7 @@ class ExperimentSession:
         """
         for agent in self.data_saver.unlinked.agents.values():
             if isinstance(agent, MongoSavingAgent):
-                return agent.db.col
+                return agent.col
         return None
 
     @property
