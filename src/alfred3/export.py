@@ -147,10 +147,10 @@ class Exporter:
             element_names = []
             for row in alldata:
                 for colname in row:
-                    if not colname in metadata + client_info + ["additional_data"]:
+                    if not colname in metadata + client_info:
                         if not colname in element_names:
                             element_names.append(colname)
-            fieldnames = metadata + client_info + sorted(element_names) + ["additional_data"]
+            fieldnames = metadata + client_info + sorted(element_names)
         else:
             data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
             fieldnames = DataManager.extract_ordered_fieldnames(data)

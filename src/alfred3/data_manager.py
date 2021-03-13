@@ -29,6 +29,8 @@ from .exceptions import AlfredError
 from .config import ExperimentSecrets
 from .saving_agent import AutoMongoClient
 from .alfredlog import QueuedLoggingInterface
+from .util import flatten_dict
+from .util import prefix_keys_safely
 
 
 class DataManager(object):
@@ -217,6 +219,7 @@ class DataManager(object):
         """
         metadata = []
         client_info = []
+        adata = []
         elements = {}
 
         for dataset in data:
@@ -229,15 +232,19 @@ class DataManager(object):
                 elif entry in cls._metadata:
                     d.pop(entry)
                     metadata.append(entry)
+                elif entry.startswith("additional_data"):
+                    d.pop(entry)
+                    adata.append(entry)
             elements.update(d)
         
-        metadata = [name for name in metadata if name != "additional_data"]
+        metadata = [name for name in metadata if not name.startswith("additional_data")]
         
         element_names = sorted(list(elements))
         metadata = sorted(list(set(metadata)))
         client_info = sorted(list(set(client_info)))
+        adata = sorted(list(set(adata)))
 
-        fieldnames = metadata + client_info + element_names + ["additional_data"]
+        fieldnames = metadata + client_info + element_names + adata
         return fieldnames
     
     @staticmethod
@@ -302,9 +309,12 @@ class DataManager(object):
             except AttributeError:
                 values[name] = elmnt["value"]
         
-        additional_data = data.pop("additional_data", {})
-
-        return {**data, **values, **additional_data}
+        adata = data.pop("additional_data", {})
+        adata = flatten_dict(adata)
+        
+        maindata = {**data, **values}
+        adata = prefix_keys_safely(data=adata, base=maindata, prefix="additional_data")
+        return {**maindata, **adata}
     
     @staticmethod
     def regularize(data: dict) -> dict:
