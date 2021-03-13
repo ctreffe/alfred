@@ -383,9 +383,9 @@ class Button(Element):
             class Demo(al.Page):
 
                 def demo_function(self):
-                    print("\nThis is a demonstration")
+                    print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
-                    print("\n")
+                    print("\\n")
                 
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
@@ -400,9 +400,9 @@ class Button(Element):
             class Demo(al.Page):
 
                 def demo_function(self):
-                    print("\nThis is a demonstration")
+                    print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
-                    print("\n")
+                    print("\\n")
                 
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3", name="demo_button")
@@ -491,7 +491,4 @@ class Button(Element):
         elif self.experiment:
             if self.name in self.experiment.root_section.all_updated_elements:
                 raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
-    
-
-
     
