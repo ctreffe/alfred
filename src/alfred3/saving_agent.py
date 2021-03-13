@@ -510,15 +510,8 @@ class MongoSavingAgent(SavingAgent):
         data.update(f)
         data["_id"] = self.doc_id
 
-        if self._col.find_one(filter=f):
-            self._col.find_one_and_replace(filter=f, replacement=data)
-        else:
-            self._col.insert_one(document=data)
-
-        try:
-            data.pop("_id")
-        except KeyError:
-            pass
+        self._col.find_one_and_replace(filter=f, replacement=data, upsert=True)
+        data.pop("_id", None)
 
         check = self._col.find_one(filter=f)
         doc_id = check.pop("_id")
