@@ -781,7 +781,7 @@ class SingleChoiceButtons(SingleChoice):
             buttons in the element. If you supply a list, you can define
             individual styles for each button. If you supply a list that
             is shorter than the list of labels, the last style
-            will be repeated for remaining buttons. Advanced user can
+            will be repeated for remaining buttons. Advanced users can
             supply their own CSS classes for button-styling.
 
         button_round_corners: A boolean switch to toggle whether buttons
