@@ -1259,7 +1259,7 @@ class NoSavingPage(Page):
         running experiment, the url would be 
         http://localhost:5000/start?admin=true
 
-        .. info:: Note that the experiment will most likely crash, if
+        .. note:: Note that the experiment will most likely crash, if
             the /start route gets called twice for any reason in a local
             experiment.
 
