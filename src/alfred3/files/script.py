@@ -13,3 +13,7 @@ import alfred3 as al
 exp = al.Experiment()
 
 exp += al.Page(title="Hello, world!", name="hello_world")
+
+
+if __name__ == "__main__":
+    exp.run()
