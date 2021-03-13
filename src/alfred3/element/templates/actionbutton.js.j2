@@ -1,0 +1,17 @@
+$( "#{{ name }}" ).click(function() {
+    console.log("click registered");
+    $.get( "{{ url }}", function(data) {
+        console.log(data);
+        
+        if ("{{ followup }}" == "refresh") {
+            glob_unbind_leaving();
+            window.location.reload();
+        } else if ("{{ followup }}" == "custom") {
+            {{ custom_js }}
+        } else if ("{{ followup }}" != "none") {
+            $("#alt-submit").attr("name", "move");
+            $("#alt-submit").val("{{ followup }}");
+            $("#form").submit();
+        }
+    });
+})

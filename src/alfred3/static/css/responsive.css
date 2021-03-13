@@ -4,7 +4,7 @@
     height: 30px;
 }
 
-.corrective-hint>p:last-child, .Alert-element>p:last-child {
+.corrective-hint>p:last-child, .Alert-element>p:last-child, .Button-element>p:last-child {
     margin-bottom: 0;
 }
 

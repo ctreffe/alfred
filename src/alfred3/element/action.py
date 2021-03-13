@@ -8,12 +8,17 @@ from typing import Union
 from typing import List
 from uuid import uuid4
 
+import cmarkgfm
+from cmarkgfm.cmark import Options as cmarkgfmOptions
+from emoji import emojize
+
 from ..exceptions import AlfredError
 from .._helper import inherit_kwargs
 
 from .core import jinja_env
 from .core import _Choice
 from .core import Row
+from .core import Element
 from .misc import JavaScript
 from .input import SingleChoiceButtons
 from .input import SingleChoiceList
@@ -313,3 +318,180 @@ class JumpList(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
+
+
+@inherit_kwargs
+class Button(Element):
+    """
+    A button that triggers execution of a python function on click.
+    
+    Args:
+        text (str): Button text
+
+        func (callable): Python function to be called on button click.
+            The function must take zero arguments, but it can be a 
+            method of a class or instance.
+        
+        followup (str): What to do after the python function was called.
+            Can take the following values: 
+            
+            - 'refresh' simply reloads the current page (default),
+            - 'none' does nothing,
+            - 'forward' submits the current page and moves forward,
+            - 'backward' submits the current page and moves backward,
+            - 'jump>page_name' submits the current page and triggers
+              a jump to a page with the name 'page_name'
+            - 'custom' executes custom JavaScript. If you choose this 
+              option, you must supply your custom JavaScript through the
+              argument *custom_js*.
+        
+        button_style (str): Can be used for quick color-styling, using
+            Bootstraps default color keywords: btn-primary, btn-secondary,
+            btn-success, btn-info, btn-warning, btn-danger, btn-light,
+            btn-dark. You can also use the "outline" variant to get
+            outlined buttons (eg. "btn-outline-secondary"). Advanced users can
+            supply their own CSS classes for button-styling.
+        
+        button_round_corners (bool): A boolean switch to toggle whether 
+            the button should be displayed with rounded corners. Defaults 
+            to False. 
+        
+        button_block (bool): A boolean switch to toggle whether the button
+            should take up all horizontal space that is available. Can be
+            quite useful when arranging buttons in :class:`.Rows`s. 
+            Defaults to False.
+        
+        custom_js (str): Custom JavaScript to execute after the python
+            function specified in *func* was called. Only takes effect,
+            if *followup* is set to 'custom'.
+
+        {kwargs}
+    
+    .. warning:: This element is very powerful. Remember that with great
+        power comes great responsibility.
+    
+    Examples:
+
+        A minimal example that will print some text to your terminal
+        window on button click::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+
+            @exp.member
+            class Demo(al.Page):
+
+                def demo_function(self):
+                    print("\nThis is a demonstration")
+                    print(self.exp.exp_id)
+                    print("\n")
+                
+                def on_exp_access(self):
+                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+        
+        An example with a jump after the function call::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+
+            @exp.member
+            class Demo(al.Page):
+
+                def demo_function(self):
+                    print("\nThis is a demonstration")
+                    print(self.exp.exp_id)
+                    print("\n")
+                
+                def on_exp_access(self):
+                    self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3", name="demo_button")
+            
+            exp += al.Page(title="Page 2", name="page2")
+            exp += al.Page(title="Page 3", name="page3")
+
+
+    """
+    element_template = jinja_env.get_template("ActionButtonElement.html.j2")
+    js_template = jinja_env.get_template("actionbutton.js.j2")
+
+    def __init__(
+        self, 
+        text: str, 
+        func: callable, 
+        followup: str = "refresh",
+        button_style: str = "btn-primary",
+        button_round_corners: bool = False, 
+        button_block: bool = False,
+        custom_js: str = "",
+        **kwargs):
+        super().__init__(**kwargs)
+        self.func = func
+        self.followup = followup
+        self.url = None
+        self.text = text
+        self.custom_js = custom_js
+
+        if self.followup == "custom" and not self.custom_js:
+            raise ValueError("If you set 'followup' to 'custom', you must specify custom Javascritp to run.")
+
+        self.button_style = button_style
+        self.button_round_corners = button_round_corners
+        self.button_block = button_block
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        text = emojize(self.text, use_aliases=True)
+        text = cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+        d["text"] = text
+        d["button_block"] = "btn-block" if self.button_block else ""
+        d["button_style"] = self.button_style
+        return d
+    
+    def prepare_web_widget(self):
+        # Javascript part
+        self._js_code = []
+        d = {}
+        d["url"] = self.url
+        d["expurl"] = f"{self.exp.ui.basepath}/experiment"
+        d["followup"] = self.followup
+        d["name"] = self.name
+        js = self.js_template.render(d)
+        self.add_js(js)
+
+        # Round corners part
+        if self.button_round_corners:
+            self._css_code = []
+            css = f"#{ self.name } {{border-radius: 1rem;}}"
+            self.add_css(css)
+    
+    
+    def added_to_experiment(self, exp):
+        super().added_to_experiment(exp)
+        self.url = self.exp.ui.add_callable(self.func)
+    
+    def added_to_page(self, page):
+        # copied from InputElement
+        
+        from .. import page as pg
+
+        if not isinstance(page, pg._PageCore):
+            raise TypeError()
+
+        self.page = page
+        if self.name is None:
+            raise ValueError(f"{self} is not named. Buttons must be named")
+
+        if page.prefix_element_names:
+            self.name = f"{self.page.name}_{self.name}"
+
+        if self.page.experiment and not self.experiment:
+            self.added_to_experiment(self.page.experiment)
+        elif self.experiment:
+            if self.name in self.experiment.root_section.all_updated_elements:
+                raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
+    
+
+
+    
