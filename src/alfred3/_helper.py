@@ -267,9 +267,8 @@ def extract_arguments(obj) -> dict:
     
     def clean(lines: list) -> str:
         """
-        Notes:
-            All occurances of single quotes are replaced by single 
-            backticks, because otherwise they would mess up the csv table.
+        All occurances of single and double quotes are removed, 
+        because otherwise they would mess up the csv table.
             
         """
         joined = " ".join(lines)
@@ -320,7 +319,7 @@ def inherit_kwargs(
         build_function: A function that, as a minimmum, takes an argument
             of *docs*, which is the dictionary of arguments and their
             documentation. It must return a string. Its output is 
-            inserted in the decorated class' docstring. The **kwargs 
+            inserted in the decorated class' docstring. The kwargs 
             will be passed on to the build_function.
         **kwargs: Further keyword arguments. These will be passed on to
             the *build_function*.
