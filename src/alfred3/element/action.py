@@ -415,16 +415,59 @@ class Button(Element):
             @exp.member
             class Demo(al.Page):
 
+                def on_exp_access(self):
+                    self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3", name="demo_button")
+            
                 def demo_function(self):
                     print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
                     print("\\n")
-                
-                def on_exp_access(self):
-                    self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3", name="demo_button")
-            
+
             exp += al.Page(title="Page 2", name="page2")
             exp += al.Page(title="Page 3", name="page3")
+
+        
+        Example 3: An example that uses values entered on the current page::
+            
+            import alfred3 as al
+            exp = al.Experiment()
+
+
+            @exp.member
+            class Demo(al.Page):
+                
+                def on_exp_access(self):
+                    self += al.TextEntry(leftlab="Enter", name="entry1")
+                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+
+                def demo_function(self):
+                    print("\\nThis is a demonstration")
+                    print(self.exp.exp_id)
+                    print(self.exp.values["entry1"])
+                    print("\\n")
+        
+        Example 4: An example that saves a count of how often the button
+        was clicked::
+            
+            import alfred3 as al
+            exp = al.Experiment()
+
+
+            @exp.member
+            class Demo(al.Page):
+                
+                def on_exp_access(self):
+                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+
+                def demo_function(self):
+                    print("\\nThis is a demonstration")
+                    
+                    if "demo_button" in self.exp.adata:
+                        self.exp.adata["demo_button"] += 1
+                    else:
+                        self.exp.adata["demo_button"] = 1
+                        
+                    print("\\n")
 
 
     """
@@ -436,6 +479,7 @@ class Button(Element):
         text: str, 
         func: callable, 
         followup: str = "refresh",
+        submit_first: bool = True,
         button_style: str = "btn-primary",
         button_round_corners: bool = False, 
         button_block: bool = False,
@@ -443,6 +487,7 @@ class Button(Element):
         **kwargs):
         super().__init__(**kwargs)
         self.func = func
+        self.submit_first = submit_first
         self.followup = followup
         self.url = None
         self.text = text
@@ -473,6 +518,7 @@ class Button(Element):
         d["expurl"] = f"{self.exp.ui.basepath}/experiment"
         d["followup"] = self.followup
         d["name"] = self.name
+        d["submit_first"] = self.submit_first
         js = self.js_template.render(d)
         self.add_js(js)
 

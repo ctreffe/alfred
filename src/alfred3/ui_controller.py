@@ -412,7 +412,10 @@ class MovementManager:
             self.log.debug(f"A move was called, but the experiment is aborted. No move is being conducted.")
             return
         
-        if direction == "forward":
+        if direction == "stay":
+            self.log.debug("Movement direction was 'stay' - no move conducted.")
+            return
+        elif direction == "forward":
             self.forward()
         elif direction == "backward":
             self.backward()
@@ -483,6 +486,7 @@ class UserInterface:
 
 
         self._callables["clientinfo"] = self.save_client_info
+        self._callables["set_page_data"] = self._set_page_data
 
         self.forward_enabled = True
         self.backward_enabled = True
@@ -499,6 +503,12 @@ class UserInterface:
         else:
             self._add_resource_links(self._js_files, "js")
             self._add_resource_links(self._css_files, "css")
+
+    def _set_page_data(self, **data):
+        data.pop("page_token", None)
+        self.exp.current_page.set_data(data)
+        self.log.info("Page data set via 'set_page_data' callable route.")
+        self.exp.current_page.save_data()
 
     @property
     def exp(self):
