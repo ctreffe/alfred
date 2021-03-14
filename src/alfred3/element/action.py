@@ -58,7 +58,7 @@ class SubmittingButtons(SingleChoiceButtons):
         
         super().added_to_page(page)
 
-        t = jinja_env.get_template("submittingbuttons.js.j2")
+        t = jinja_env.get_template("js/submittingbuttons.js.j2")
         js = t.render(name=self.name)
 
         page += JavaScript(code=js)
@@ -134,7 +134,7 @@ class JumpButtons(SingleChoiceButtons):
     """
 
     #: JavaScript template for the code that submits the form on click
-    js_template = jinja_env.get_template("jumpbuttons.js.j2")
+    js_template = jinja_env.get_template("js/jumpbuttons.js.j2")
 
     def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-primary", **kwargs):
         super().__init__(*choice_labels, button_style=button_style, **kwargs)
@@ -198,7 +198,7 @@ class DynamicJumpButtons(JumpButtons):
     """
 
     # Documented at :class:`.JumpButtons`
-    js_template = jinja_env.get_template("dynamic_jumpbuttons.js.j2")
+    js_template = jinja_env.get_template("js/dynamic_jumpbuttons.js.j2")
 
     def validate_data(self):
         
@@ -335,22 +335,30 @@ class Button(Element):
         followup (str): What to do after the python function was called.
             Can take the following values: 
             
-            - 'refresh' simply reloads the current page (default),
-            - 'none' does nothing,
-            - 'forward' submits the current page and moves forward,
-            - 'backward' submits the current page and moves backward,
-            - 'jump>page_name' submits the current page and triggers
+            - ``refresh`` submits and reloads the current page (default),
+            - ``none`` does nothing,
+            - ``forward`` submits the current page and moves forward,
+            - ``backward`` submits the current page and moves backward,
+            - ``jump>page_name`` submits the current page and triggers
               a jump to a page with the name 'page_name'
-            - 'custom' executes custom JavaScript. If you choose this 
+            - ``custom`` executes custom JavaScript. If you choose this 
               option, you must supply your custom JavaScript through the
               argument *custom_js*.
+        
+        submit_first (bool): If True, the current values of all input
+            elements on the current page will be saved on button click,
+            before *func* is called. This way, these values will be
+            available in *func* through :attr:`.ExperimentSession.values`, 
+            if func has access to the ExperimentSession object.
+            See Example 3. Defaults to True.
         
         button_style (str): Can be used for quick color-styling, using
             Bootstraps default color keywords: btn-primary, btn-secondary,
             btn-success, btn-info, btn-warning, btn-danger, btn-light,
             btn-dark. You can also use the "outline" variant to get
             outlined buttons (eg. "btn-outline-secondary"). Advanced users can
-            supply their own CSS classes for button-styling.
+            supply their own CSS classes for button-styling. Defaults
+            to "btn-primary".
         
         button_round_corners (bool): A boolean switch to toggle whether 
             the button should be displayed with rounded corners. Defaults 
@@ -358,7 +366,7 @@ class Button(Element):
         
         button_block (bool): A boolean switch to toggle whether the button
             should take up all horizontal space that is available. Can be
-            quite useful when arranging buttons in :class:`.Rows`s. 
+            quite useful when arranging buttons in :class:`.Row`s. 
             Defaults to False.
         
         custom_js (str): Custom JavaScript to execute after the python
@@ -367,12 +375,20 @@ class Button(Element):
 
         {kwargs}
     
-    .. warning:: This element is very powerful. Remember that with great
-        power comes great responsibility.
+    Notes:
+
+        Note that by default, the Button will not save data itself. If
+        you wish to save information about button clicks, you can utilize
+        the :attr:`.ExperimentSession.adata` dictionary in the button's
+        callable. See Example 4.
+
+        .. warning:: This element is very powerful. Remember that with great
+            power comes great responsibility. Be aware that the callable
+            *func* will be executed *every time* the button is clicked.
     
     Examples:
 
-        A minimal example that will print some text to your terminal
+        Example 1: A minimal example that will print some text to your terminal
         window on button click::
 
             import alfred3 as al
@@ -382,15 +398,15 @@ class Button(Element):
             @exp.member
             class Demo(al.Page):
 
+                def on_exp_access(self):
+                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+                
                 def demo_function(self):
                     print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
                     print("\\n")
-                
-                def on_exp_access(self):
-                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
         
-        An example with a jump after the function call::
+        Example 2: An example with a jump after the function call::
 
             import alfred3 as al
             exp = al.Experiment()
@@ -412,8 +428,8 @@ class Button(Element):
 
 
     """
-    element_template = jinja_env.get_template("ActionButtonElement.html.j2")
-    js_template = jinja_env.get_template("actionbutton.js.j2")
+    element_template = jinja_env.get_template("html/ActionButtonElement.html.j2")
+    js_template = jinja_env.get_template("js/actionbutton.js.j2")
 
     def __init__(
         self, 

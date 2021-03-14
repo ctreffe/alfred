@@ -49,7 +49,7 @@ class TextEntry(InputElement):
 
     """
 
-    element_template = jinja_env.get_template("TextEntryElement.html.j2")
+    element_template = jinja_env.get_template("html/TextEntryElement.html.j2")
 
     def __init__(
         self,
@@ -104,7 +104,7 @@ class TextArea(TextEntry):
 
     """
 
-    element_template = jinja_env.get_template("TextAreaElement.html.j2")
+    element_template = jinja_env.get_template("html/TextAreaElement.html.j2")
 
     def __init__(self, nrows: int = 5, **kwargs):
         super().__init__(**kwargs)
@@ -689,7 +689,7 @@ class SingleChoiceList(SingleChoice):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("SelectElement.html.j2")
+    element_template = jinja_env.get_template("html/SelectElement.html.j2")
 
     # Documented at :class:`.SingleChoice`
     type = "select_one"
@@ -726,7 +726,7 @@ class MultipleChoiceList(MultipleChoice):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("SelectElement.html.j2")
+    element_template = jinja_env.get_template("html/SelectElement.html.j2")
 
     # Documented at :class:`.SingleChoice`
     type = "multiple"
@@ -809,7 +809,7 @@ class SingleChoiceButtons(SingleChoice):
 
     """
 
-    element_template = jinja_env.get_template("ChoiceButtons.html.j2")
+    element_template = jinja_env.get_template("html/ChoiceButtons.html.j2")
 
     #: A boolean switch to toggle whether buttons should be layoutet as
     #: a connected toolbar (*True*), or as separate neighbouring buttons

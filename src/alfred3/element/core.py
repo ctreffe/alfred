@@ -81,7 +81,7 @@ class Element:
 
     #: Base template for the element, which will be used to hold the
     #: rendered element template. Gets rendered by :attr:`.Element.web_widget`
-    base_template: Template = jinja_env.get_template("Element.html.j2")
+    base_template: Template = jinja_env.get_template("html/Element.html.j2")
 
     #: The element's specific, inner template. Gets rendered by
     #: :meth:`.render_inner_html`
@@ -536,7 +536,7 @@ class Element:
 
         if on_current_page:
 
-            t = jinja_env.get_template("showif.js.j2")
+            t = jinja_env.get_template("js/showif.js.j2")
             js = t.render(showif=on_current_page, element=self.name)
             self.js_code.append((7, js))
             self._showif_on_current_page = True
@@ -1176,7 +1176,7 @@ class Row(Element):
 
     """
 
-    element_template = jinja_env.get_template("Row.html.j2")
+    element_template = jinja_env.get_template("html/Row.html.j2")
 
     def __init__(
         self,
@@ -1347,7 +1347,7 @@ class LabelledElement(Element):
 
     """
 
-    base_template = jinja_env.get_template("LabelledElement.html.j2")
+    base_template = jinja_env.get_template("html/LabelledElement.html.j2")
 
     def __init__(
         self,
@@ -1941,7 +1941,7 @@ class ChoiceElement(InputElement, ABC):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("ChoiceElement.html.j2")
+    element_template = jinja_env.get_template("html/ChoiceElement.html.j2")
 
     #: Choice type (e.g. "radio" for radio inputs and "checkbox")
     #: for multiple choice inputs

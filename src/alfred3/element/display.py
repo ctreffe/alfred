@@ -99,7 +99,7 @@ class Html(Element):
 
     """
 
-    element_template = jinja_env.get_template("TextElement.html.j2")
+    element_template = jinja_env.get_template("html/TextElement.html.j2")
 
     def __init__(
         self,
@@ -177,7 +177,7 @@ class Text(Element):
     .. _emoji shortcodes: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
 
-    element_template = jinja_env.get_template("TextElement.html.j2")
+    element_template = jinja_env.get_template("html/TextElement.html.j2")
 
     def __init__(
         self,
@@ -284,7 +284,7 @@ class Image(Element):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("ImageElement.html.j2")
+    element_template = jinja_env.get_template("html/ImageElement.html.j2")
 
     def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
         super().__init__(**kwargs)
@@ -360,7 +360,7 @@ class Audio(Image):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("AudioElement.html.j2")
+    element_template = jinja_env.get_template("html/AudioElement.html.j2")
 
     def __init__(
         self,
@@ -426,7 +426,7 @@ class Video(Audio):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("VideoElement.html.j2")
+    element_template = jinja_env.get_template("html/VideoElement.html.j2")
 
     def __init__(
         self,
@@ -490,7 +490,7 @@ class MatPlot(Element):
     """
 
     # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("ImageElement.html.j2")
+    element_template = jinja_env.get_template("html/ImageElement.html.j2")
 
     def __init__(self, fig, align: str = "center", **kwargs):
         super().__init__(align=align, **kwargs)
@@ -710,7 +710,7 @@ class ProgressBar(LabelledElement):
 
     """
 
-    element_template = jinja_env.get_template("ProgressBarElement.html.j2")
+    element_template = jinja_env.get_template("html/ProgressBarElement.html.j2")
 
     def __init__(
         self,
@@ -825,7 +825,7 @@ class Alert(Text):
 
     """
 
-    element_template = jinja_env.get_template("AlertElement.html.j2")
+    element_template = jinja_env.get_template("html/AlertElement.html.j2")
 
     def __init__(
         self, text: str = "", category: str = "info", dismiss: bool = False, **element_args
@@ -939,8 +939,8 @@ class CountUp(Element):
 
     """
 
-    counter_js = jinja_env.get_template("countup.js.j2")
-    element_template = jinja_env.get_template("TextElement.html.j2")
+    counter_js = jinja_env.get_template("js/countup.js.j2")
+    element_template = jinja_env.get_template("html/TextElement.html.j2")
 
     def __init__(self, end_after: int = -1, end_msg: str = "expired", **kwargs):
         super().__init__(**kwargs)
@@ -999,8 +999,8 @@ class CountDown(CountUp):
                         align="center"
                         )
     """
-    counter_js = jinja_env.get_template("countdown.js.j2")
-    element_template = jinja_env.get_template("TextElement.html.j2")
+    counter_js = jinja_env.get_template("js/countdown.js.j2")
+    element_template = jinja_env.get_template("html/TextElement.html.j2")
 
     def __init__(self, end_after: int, end_msg: str = "expired", **kwargs):
         super().__init__(**kwargs)
@@ -1068,12 +1068,3 @@ class CountDown(CountUp):
 
         return cls(end_after=diff.total_seconds(), **kwargs)
 
-
-
-
-# class CountDown(Element):
-
-#     countdown_js = jinja_env.get_template("countdown.js.j2")
-#     element_template = jinja_env.get_template("TextElement.html.j2")
-
-#     def __init__(self, start: float, end: float)
