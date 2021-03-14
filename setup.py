@@ -26,8 +26,9 @@ setuptools.setup(
             "static/img/*",
             "static/js/*",
             "templates/*",
-            "templates/elements/*",
-            "element/templates/*"
+            "element/templates/*",
+            "element/templates/html/*",
+            "element/templates/js/*"
         ]
     },
     package_dir={"": "src"},
