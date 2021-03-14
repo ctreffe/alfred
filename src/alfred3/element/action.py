@@ -394,12 +394,11 @@ class Button(Element):
             import alfred3 as al
             exp = al.Experiment()
 
-
             @exp.member
             class Demo(al.Page):
 
                 def on_exp_access(self):
-                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+                    self += al.Button("Demo Button", func=self.demo_function)
                 
                 def demo_function(self):
                     print("\\nThis is a demonstration")
@@ -411,12 +410,11 @@ class Button(Element):
             import alfred3 as al
             exp = al.Experiment()
 
-
             @exp.member
             class Demo(al.Page):
 
                 def on_exp_access(self):
-                    self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3", name="demo_button")
+                    self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3")
             
                 def demo_function(self):
                     print("\\nThis is a demonstration")
@@ -438,7 +436,7 @@ class Button(Element):
                 
                 def on_exp_access(self):
                     self += al.TextEntry(leftlab="Enter", name="entry1")
-                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+                    self += al.Button("Demo Button", func=self.demo_function)
 
                 def demo_function(self):
                     print("\\nThis is a demonstration")
@@ -452,12 +450,11 @@ class Button(Element):
             import alfred3 as al
             exp = al.Experiment()
 
-
             @exp.member
             class Demo(al.Page):
                 
                 def on_exp_access(self):
-                    self += al.Button("Demo Button", func=self.demo_function, name="demo_button")
+                    self += al.Button("Demo Button", func=self.demo_function)
 
                 def demo_function(self):
                     print("\\nThis is a demonstration")
@@ -486,12 +483,16 @@ class Button(Element):
         custom_js: str = "",
         **kwargs):
         super().__init__(**kwargs)
+        
         self.func = func
         self.submit_first = submit_first
         self.followup = followup
         self.url = None
         self.text = text
         self.custom_js = custom_js
+
+        if not followup in {"refresh", "forward", "backward", "none", "custom"} and not followup.startswith("jump>"):
+            raise ValueError(f"{followup} is an inappropriate value for 'followup'.")
 
         if self.followup == "custom" and not self.custom_js:
             raise ValueError("If you set 'followup' to 'custom', you must specify custom Javascritp to run.")
@@ -511,6 +512,8 @@ class Button(Element):
         return d
     
     def prepare_web_widget(self):
+        self.url = self.exp.ui.add_callable(self.func)
+
         # Javascript part
         self._js_code = []
         d = {}
@@ -527,30 +530,4 @@ class Button(Element):
             self._css_code = []
             css = f"#{ self.name } {{border-radius: 1rem;}}"
             self.add_css(css)
-    
-    
-    def added_to_experiment(self, exp):
-        super().added_to_experiment(exp)
-        self.url = self.exp.ui.add_callable(self.func)
-    
-    def added_to_page(self, page):
-        # copied from InputElement
-        
-        from .. import page as pg
-
-        if not isinstance(page, pg._PageCore):
-            raise TypeError()
-
-        self.page = page
-        if self.name is None:
-            raise ValueError(f"{self} is not named. Buttons must be named")
-
-        if page.prefix_element_names:
-            self.name = f"{self.page.name}_{self.name}"
-
-        if self.page.experiment and not self.experiment:
-            self.added_to_experiment(self.page.experiment)
-        elif self.experiment:
-            if self.name in self.experiment.root_section.all_updated_elements:
-                raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
     
