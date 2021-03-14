@@ -142,6 +142,12 @@ class Element:
         #: *exception*, and *log*.
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
+        if position != "center" and width == "full":
+            self.log.warning((
+                "You have changed the value of 'position' on a full-width element. "
+                "That will most likely not have an effect. Did you mean to change 'align'?"
+                ))
+
     @property
     def page(self):
         """
