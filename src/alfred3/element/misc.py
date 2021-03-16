@@ -301,7 +301,7 @@ class Value(InputElement):
         super().__init__(name=name)
 
         #: The value that you want to save.
-        self.value: Union[str, int, float] = value
+        self.input: Union[str, int, float] = value
         self.should_be_shown = False
 
 
