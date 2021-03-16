@@ -167,6 +167,9 @@ class RegEntry(TextEntry):
         elif not self.pattern.fullmatch(self.input):
             self.hint_manager.post_message(self.match_hint)
             return False
+        
+        else:
+            return True
 
     @property
     def match_hint(self):
