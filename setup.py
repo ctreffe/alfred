@@ -41,7 +41,8 @@ setuptools.setup(
         "thesmuggler==1.0.1",
         "Click>=7.0",
         "emoji>=0.6",
-        "cmarkgfm>=0.4.2"
+        "cmarkgfm>=0.4.2",
+        "requests"
     ],
     entry_points="""
     [console_scripts]
