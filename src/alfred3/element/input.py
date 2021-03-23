@@ -595,12 +595,18 @@ class MultipleChoice(ChoiceElement):
             return msg.format(min=self.min, max=self.max)
 
     def validate_data(self) -> bool:
-        
-        if self.force_input and len(self.input):
+        checked_values = {k: v for k, v in self.input.items() if v}
+
+        if not self.should_be_shown:
+            return True
+
+        elif self.force_input and not checked_values:
             self.hint_manager.post_message(self.no_input_hint)
             return False
+
         elif not (self.min <= sum(list(self.input.values())) <= self.max):
             return False
+
         else:
             return True
 
