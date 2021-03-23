@@ -970,12 +970,12 @@ class ExperimentSession:
     @property
     def all_sections(self) -> dict:
         """dict: Dictionary of all sections in the experiment."""
-        return self.root_section.content_section.all_subsections
+        return self.root_section.content.all_subsections
 
     @property
     def all_pages(self) -> dict:
         """dict: Dictionary of all pages in the experiment."""
-        return self.root_section.content_section.all_pages
+        return self.root_section.content.all_pages
 
     @property
     def final_page(self) -> Page:
