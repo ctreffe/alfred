@@ -1747,9 +1747,13 @@ class InputElement(LabelledElement):
             proceed to the next page, *False*, if the input is not
             in the correct form.
         """
-        if self.force_input and not self.input:
+        if not self.should_be_shown:
+            return True
+
+        elif self.force_input and not self.input:
             self.hint_manager.post_message(self.no_input_hint)
             return False
+
         else:
             return True
 

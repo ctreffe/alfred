@@ -595,12 +595,16 @@ class MultipleChoice(ChoiceElement):
             return msg.format(min=self.min, max=self.max)
 
     def validate_data(self) -> bool:
+        if not self.should_be_shown:
+            return True
         
-        if self.force_input and len(self.input):
+        elif self.force_input and len(self.input):
             self.hint_manager.post_message(self.no_input_hint)
             return False
+
         elif not (self.min <= sum(list(self.input.values())) <= self.max):
             return False
+
         else:
             return True
 
