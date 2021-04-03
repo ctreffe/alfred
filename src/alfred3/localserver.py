@@ -18,6 +18,7 @@ from flask import (
     make_response,
     session,
     send_from_directory,
+    jsonify
 )
 from uuid import uuid4
 from .config import ExperimentConfig, ExperimentSecrets
@@ -176,7 +177,7 @@ def callable(identifier):
         values = request.values.to_dict()
     rv = f(**values)
     if rv is not None:
-        resp = make_response(rv)
+        resp = jsonify(rv)
     else:
         resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
