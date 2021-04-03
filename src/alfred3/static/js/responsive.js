@@ -26,6 +26,14 @@ $(document).ready(function () {
 
     $(window).bind('beforeunload', beforeunload);
     $('#form').submit(glob_unbind_leaving);
+
+    // prevent users from submitting form via enter
+    $(document).on("keydown", ":input:not(textarea):not(:submit)", function(event) {
+        if (event.key == "Enter") {
+            event.preventDefault();
+        }
+    });
+      
 });
 
 // Responsive support for choice elements (switch to vertical layout on XS screens)
