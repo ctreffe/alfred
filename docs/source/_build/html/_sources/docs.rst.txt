@@ -1,0 +1,226 @@
+Documentation Guidelines
+================================
+
+Generally, alfred3 adheres to `Google Style docstrings`_, with a few 
+customizations. Here, I note only the deviations from Google Style. 
+
+Useful resources for writing docstrings concern directives_ 
+(special commands, e.g. for creating notes or warnings), 
+`cross-referencing`_ (i.e. links within the documentation), and a 
+general `ReStructured Text cheat sheet`_. The creation of tables can be
+most convenient via `csv tables`_.
+
+One-Sentence summary
+--------------------
+
+The one-sentence summary of a docstring should start on its own, new 
+line instead of being on the same line as the three opening quotes.
+This improves readability::
+
+    class Example:
+        """
+        One sentence summary
+
+        Extended summary can be placed here.
+        """
+
+        pass
+
+Class and instance attributes
+-----------------------------
+
+Class and instance attributes are documented where they are defined,
+by placing short descriptions starting with ``#:`` directly above
+their definition. This is inspired by Flask's documentation and is 
+done for two reasons:
+
+1) It works with Sphinx's automatic layout
+
+2) The docstrings are available directly where the attribute is defined.
+
+**Note**: For complicated docstrings that exceed five lines, you
+should turn to using properties instead of attributes and document 
+the property in its getter method.
+
+Example::
+
+    class Example:
+
+        #: str: This is a short description of a class attribute
+        class_attribute = "value"
+
+        def __init__(self, inst_attr: str):
+            
+            #: str: This is a short description of an instance attribute
+            self.inst_attr = inst_attr
+
+Remember to include type annotations in the docstrings! They are placed
+at the start of the docstring and end with the first colon (see example
+above).
+
+Docstrings of inherited methods
+-------------------------------
+
+(Quoted in parts from matplotlib_ documentation) If a subclass 
+overrides a method but does not change the semantics, we can reuse the 
+parent docstring for the method of the child class, or tell sphinx not
+to add it to the classes own documentation. 
+
+*Reusing the parent docstring*: Python does this automatically, if 
+the subclass method does not have a docstring. Use a plain comment 
+``# docstring`` inherited to denote the intention to reuse the parent 
+docstring. That way we do not accidentially create a docstring in the 
+future. Example::
+
+    class A:
+          def foo():
+              """The parent docstring."""
+              pass
+
+    class B(A):
+        def foo():
+            # docstring inherited
+            pass
+
+*Suppressing redundant docstrings*: To suppress redundant 
+documentation of a child method, add 
+``:meta private: (documented at <parent>)`` as the method's
+docstring. That way, we know why the docstring is suppressed. Example::
+
+    class A:
+        def foo():
+            """The parent docstring."""
+            pass
+
+    class B(A):
+        def foo():
+            """:meta private: (documented at :class:`.A`)"""
+            pass
+
+
+
+Writing Examples
+----------------
+
+**Examples are one of the most important parts of a docstring**. Never
+forgo writing an example lightly!
+
+Examples in docstrings, besides illustrating the usage of the 
+function or method, must be valid Python code, that can be copied 
+and run by users. Comments describing the examples can be added.
+
+Alfred3 should be imported with the statement ``import alfred3 as al``
+at the beginning of the example. If any other packages are used, they
+should be imported explicitly aswell.
+
+Examples should use minimal alfred experiments written in the object-
+oriented style, that is by adding pages/section by deriving new classes
+and using the :meth:`.Experiment.member` decorator. Unless the example
+requires a different hook, elements (pages) should be added to pages
+(sections) in the ``on_exp_access`` hook::
+
+    import alfred3 as al
+    exp = al.Experiment()
+
+    @exp.member
+    class Example(al.Page):
+        name = "example_page"
+
+        def on_exp_access(self):
+
+            self += al.Text("Example text")
+
+
+Ordinary codeblocks
+^^^^^^^^^^^^^^^^^^^
+When appropriate, ordinary code-blocks 
+without output can be used as examples. This has the advantage that
+it is similar to the style in which alfred experiments are actually
+written, and the code can be copy-pasted directly. Ordinary codeblocks
+can be created simply by ending a line with a double-colon (``::``) and
+indenting the next line by four spaces. You should include a black line
+between the double-colon and the first line of code. Example::
+
+    class A:
+        """
+        This is a testclass
+
+        Examples:
+            This example demonstrates code block usage::
+
+                a = A()
+
+        """
+        pass
+
+Doctest style codeblocks
+^^^^^^^^^^^^^^^^^^^^^^^^
+Another good way to present examples can be to 
+write them as a session in the Python terminal. ``>>>`` is used to 
+present code, ``…`` is used for code continuing from the previous 
+line. Output is presented immediately after the last line of code 
+generating the output (no blank lines in between). Comments 
+describing the examples can be added with blank lines before and 
+after them. Doctest style codeblocks do not need to start with a double-
+colon.
+
+Both styles may be appropriate. It is up to you to choose.
+
+(Inspired by and adapted from the pandas_ docstring guidelines)
+
+
+Code Example using the doctest style (Adding a page directly to the main 
+content section, from the :meth:`.Experiment.member` documentation)::
+
+    def member(self, _member=None, *, of_section: str = "_content"):
+        """
+        Decorator for adding pages and sections to the experiment.
+
+        Works both with and without arguments.
+
+        Args:
+            of_section: Name of the section to which the new member
+                belongs.
+
+        Examples:
+
+            Adding a page directly to the main content section:
+
+            >>> exp = al.Experiment()
+            ... 
+            >>> @exp.member
+            >>> class HelloWorld(al.Page):
+            ...     name = "hello_world"
+            ...     
+            ...     def on_exp_access(self):
+            ...         self += al.Text("This is a 'hello, world!' Page.")
+            ...
+            >>> exp.members
+            {"hello_world": Page(class="HelloWorld", name="hello_world")}
+
+Docstring sections
+------------------
+
+The docstrings can have the following sections in the following order
+(heavily quoting the pandas_ docstring guidelines):
+
+.. csv-table::
+   :header: "Section Name", "Heading", "Description"
+   :widths: 15, 15,  70
+   :width: 100%
+
+   1 **Short summary**,   \-   ,   "A concise one-line summary."
+   2 **Extended summary**, \-  ,   "Provides details on what the function does."
+   3 **Arguments**, Args    ,   "The details of the function arguments."
+   4 **Returns**,   Returns ,   "Return value documentation. *Yields* for generators."
+   5 **See Also**,  See Also ,  "Informs users about related alfred3 functionality."
+   6 **Notes**,     Notes   ,   "Optional section for technical and implementation details."
+   7 **Examples**,  Examples,   "Examples, illustrating function usage. **Very important**."
+
+.. _Google Style docstrings: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+.. _pandas: https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html
+.. _directives: https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
+.. _cross-referencing: https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#cross-referencing-syntax
+.. _ReStructured Text cheat sheet: https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst
+.. _csv tables: https://docutils.sourceforge.io/docs/ref/rst/directives.html#csv-table
+.. _matplotlib: https://matplotlib.org/3.1.1/devel/documenting_mpl.html#inheriting-docstrings

@@ -1,0 +1,4 @@
+Introduction
+============
+
+``alfred3`` is a python package for the development of surveys and behavioral experiments.

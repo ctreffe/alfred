@@ -1,0 +1,1231 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Changelog &mdash; alfred3 1.4.0.a1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation for Beginners" href="installation.html" />
+    <link rel="prev" title="Welcome to alfred3" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> alfred3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">[Unreleased]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#removed">Removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v1-4">v1.4</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#new-page-classes">New page classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-codebook-generation">Automatic codebook generation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-transformation-of-local-data-to-csv">Automatic transformation of local data to .csv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#command-line-interface-for-exporting-alfred3-data">Command line interface for exporting alfred3 data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#new-page-hooks-for-more-control">New page hooks for more control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#new-section-hooks-for-more-control">New section hooks for more control</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-3-1-released-2020-08-24">alfred v1.3.1 (Released 2020-08-24)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-3-0-released-2020-08-19">alfred v1.3.0 (Released 2020-08-19)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-2-1-released-2020-08-18">alfred v1.2.1 (Released 2020-08-18)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-2-0-released-2020-07-13">alfred v1.2.0 (Released 2020-07-13)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Added</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#minor-changes">Minor changes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fullscreen-option-for-google-chrome">Fullscreen option for Google Chrome</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alfred3-run-module-with-command-line-interface"><code class="docutils literal notranslate"><span class="pre">alfred3.run</span></code> module with command line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alfred3-template-command-line-interface-for-experiment-template"><code class="docutils literal notranslate"><span class="pre">alfred3.template</span></code> command line interface for experiment template</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Changed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enhanced-configuration">Enhanced configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enhanced-logging">Enhanced logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Minor changes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Removed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#removed-qt-webkit-support">Removed qt-webkit support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred3-v1-1-5-released-2020-05-13">alfred3 v1.1.5 (Released 2020-05-13)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred3-v1-1-4-released-2020-05-05">alfred3 v1.1.4 (Released 2020-05-05)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#announcement-released-to-pypi-under-the-new-name-alfred3">Announcement: Released to PyPi under the new name <strong>alfred3</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-7">alfred v1.0.7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#security-improvements">Security improvements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#smaller-changes">Smaller changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-6">alfred v1.0.6</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#encryption">Encryption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#smaller-changes-and-bugfixes">Smaller changes and Bugfixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-5">alfred v1.0.5</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bugfixes">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Minor changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-4">alfred v1.0.4</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Minor changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-3">alfred v1.0.3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id15">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-2">alfred v1.0.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id16">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-changes">Other changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0-1">alfred v1.0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id17">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#alfred-v1-0">alfred v1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking changes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#port-to-python-3">Port to Python 3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#new-class-names">New class names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#switch-from-lowercamelcase-to-underscore-case">Switch from <code class="docutils literal notranslate"><span class="pre">lowerCamelCase</span></code> to <code class="docutils literal notranslate"><span class="pre">underscore_case</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#new-names-for-existing-features">New names for existing features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#experiment-metadata">Experiment metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-import">File import</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#define-navigation-button-text-in-config-conf">Define navigation button text in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#new-recommended-script-py-style">New recommended <code class="docutils literal notranslate"><span class="pre">script.py</span></code> style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#increased-security-for-local-experiments">Increased security for local experiments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#page-values"><code class="docutils literal notranslate"><span class="pre">Page.values</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#deprecated">Deprecated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bug-fixes-and-other-changes">Bug fixes and other changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removed-features">Removed features</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation for Beginners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_experiment.html">Your first experiment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">Basic Experiment Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Using Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_elements.html">Deriving new elements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alfred3.html">alfred3 package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment.html">Experiment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation Guidelines</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">alfred3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Changelog</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/CHANGELOG.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<p>All notable changes to this project will be documented in this file.</p>
+<p>The format is based on <a class="reference external" href="https://keepachangelog.com/en/">Keep a Changelog</a>.</p>
+<!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). --><div class="section" id="unreleased">
+<h2>[Unreleased]<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="removed">
+<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">layout.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">settings.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ContentCore.get_page_data</span></code>: Use <code class="docutils literal notranslate"><span class="pre">ExperimentSession.values</span></code> or <code class="docutils literal notranslate"><span class="pre">ExperimentSession.get_page_data</span></code> instead.</p></li>
+</ul>
+</div>
+<div class="section" id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>new way to change final page</p></li>
+</ul>
+<ul class="simple">
+<li><p>New classes</p>
+<ul>
+<li><p>JavaScript</p></li>
+<li><p>Css</p></li>
+<li><p>VerticalSpace</p></li>
+<li><p>Row</p></li>
+<li><p>Stack</p></li>
+</ul>
+</li>
+<li><p>Element</p>
+<ul>
+<li><p>New parameters</p>
+<ul>
+<li><p>align</p></li>
+<li><p>width</p></li>
+<li><p>position</p></li>
+<li><p>showif</p></li>
+</ul>
+</li>
+<li><p>New attributes</p>
+<ul>
+<li><p>element_width</p></li>
+<li><p>showif</p></li>
+<li><p>css_code</p></li>
+<li><p>css_urls</p></li>
+<li><p>js_code</p></li>
+<li><p>js_urls</p></li>
+<li><p>html (For deriving child classes)</p></li>
+<li><p>template_data</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>TextElement</p>
+<ul>
+<li><p>Now supports Markdown</p></li>
+<li><p>New parameters</p>
+<ul>
+<li><p>path</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>InputElement</p>
+<ul>
+<li><p>revamped as an even stronger base clase for input elements</p></li>
+</ul>
+</li>
+<li><p>TextEntryElement</p>
+<ul>
+<li><p>New parameters</p>
+<ul>
+<li><p>placeholder</p></li>
+</ul>
+</li>
+<li><p>New attributes</p>
+<ul>
+<li><p>instruction_col_width</p></li>
+<li><p>input_col_width</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Page</p>
+<ul>
+<li><p>New attributes</p>
+<ul>
+<li><p>fixed_width</p></li>
+<li><p>responsive_width</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Config</p>
+<ul>
+<li><p>New Section “layout”</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="v1-4">
+<h2>v1.4<a class="headerlink" href="#v1-4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<p>With this version, alfred3 gains some powerful new features. This is the overview:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">UnlinkedDataPage</span></code> can be used to safely collect data that cannot be linked to any specific experiment session.</p></li>
+<li><p>Alfred3 now automatically generates a comprehensive raw codebook that describes your data set.</p></li>
+<li><p>Alfred3 now offers functionality for transforming locally collected data from .json to .csv format (both automatically at the end of each session, and manually via a command line interface).</p></li>
+<li><p>New hooks for pages and sections make it easier to tidily organize experiment code.</p></li>
+</ul>
+<p>Details below!</p>
+<div class="section" id="new-page-classes">
+<h4>New page classes<a class="headerlink" href="#new-page-classes" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">page.UnlinkedDataPage</span></code> : Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamps or other metadata are stored that would make it possible to link an unlinked dataset to an experiment dataset. Otherwise, usage is fully equivalent to ordinary pages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">page.CustomSavingPage</span></code> : This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more information, call <code class="docutils literal notranslate"><span class="pre">help(CustomSavingPage)</span></code> .</p></li>
+</ul>
+</div>
+<div class="section" id="automatic-codebook-generation">
+<h4>Automatic codebook generation<a class="headerlink" href="#automatic-codebook-generation" title="Permalink to this headline">¶</a></h4>
+<p>Alfred now automatically generates a raw codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.</p>
+</div>
+<div class="section" id="automatic-transformation-of-local-data-to-csv">
+<h4>Automatic transformation of local data to .csv<a class="headerlink" href="#automatic-transformation-of-local-data-to-csv" title="Permalink to this headline">¶</a></h4>
+<p>Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through two options in config.conf:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[general]</span>
+<span class="na">transform_data_to_csv</span> <span class="o">=</span> <span class="s">true # controls, whether to transform data or not</span>
+<span class="na">csv_directory</span> <span class="o">=</span> <span class="s">data # the .csv files will be placed in this directory</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-line-interface-for-exporting-alfred3-data">
+<h4>Command line interface for exporting alfred3 data<a class="headerlink" href="#command-line-interface-for-exporting-alfred3-data" title="Permalink to this headline">¶</a></h4>
+<p>Through a new command line interface, you can export alfred data, both from your local <code class="docutils literal notranslate"><span class="pre">save</span></code> directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">alfred3</span><span class="o">.</span><span class="n">export</span> <span class="o">--</span><span class="n">src</span><span class="o">=</span><span class="n">local_saving_agent</span>
+</pre></div>
+</div>
+<p>Detailed description of all parameters (available also from the terminal via <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">alfred3.export</span> <span class="pre">--help</span></code> )</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="n">Usage</span><span class="p">:</span> <span class="n">export</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">--</span><span class="n">src</span> <span class="n">TEXT</span>           <span class="n">The</span> <span class="n">name</span> <span class="n">of</span> <span class="n">the</span> <span class="n">configuration</span> <span class="n">section</span> <span class="ow">in</span> <span class="s1">&#39;config.conf&#39;</span>
+                       <span class="ow">or</span> <span class="s1">&#39;secrets.conf&#39;</span> <span class="n">that</span> <span class="n">defines</span> <span class="n">the</span> <span class="n">SavingAgent</span> <span class="n">whose</span>
+                       <span class="n">data</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span> <span class="n">export</span><span class="o">.</span>  <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="n">local_saving_agent</span><span class="p">]</span>
+
+  <span class="o">--</span><span class="n">directory</span> <span class="n">TEXT</span>     <span class="n">The</span> <span class="n">path</span> <span class="n">to</span> <span class="n">the</span> <span class="n">experiment</span> <span class="n">whose</span> <span class="n">data</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span>
+                       <span class="n">export</span><span class="o">.</span> <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="n">Current</span> <span class="n">working</span> <span class="n">directory</span><span class="p">]</span>
+
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">here</span>           <span class="n">With</span> <span class="n">this</span> <span class="n">flag</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">indicate</span> <span class="n">that</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span>
+                       <span class="n">export</span> <span class="o">.</span><span class="n">json</span> <span class="n">files</span> <span class="n">located</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">current</span> <span class="n">working</span>
+                       <span class="n">directory</span><span class="o">.</span>  <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="kc">False</span><span class="p">]</span>
+
+  <span class="o">--</span><span class="n">data_type</span> <span class="n">TEXT</span>     <span class="n">The</span> <span class="nb">type</span> <span class="n">of</span> <span class="n">data</span> <span class="n">that</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span> <span class="n">export</span><span class="o">.</span> <span class="n">Accepted</span>
+                       <span class="n">values</span> <span class="n">are</span> <span class="s1">&#39;exp_data&#39;</span><span class="p">,</span> <span class="s1">&#39;unlinked&#39;</span><span class="p">,</span> <span class="ow">and</span> <span class="s1">&#39;codebook&#39;</span><span class="o">.</span> <span class="n">If</span>
+                       <span class="n">you</span> <span class="n">specify</span> <span class="n">a</span> <span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="n">the</span> <span class="n">function</span> <span class="n">tries</span> <span class="n">to</span> <span class="n">infer</span> <span class="n">the</span>
+                       <span class="n">data</span> <span class="nb">type</span> <span class="kn">from</span> <span class="nn">the</span> <span class="s1">&#39;src&#39;</span><span class="n">s</span> <span class="n">suffix</span><span class="o">.</span> <span class="p">(</span><span class="n">Example</span><span class="p">:</span>
+                       <span class="s1">&#39;mongo_saving_agent_codebook&#39;</span> <span class="n">would</span> <span class="n">lead</span> <span class="n">to</span> <span class="s1">&#39;data_type&#39;</span>
+                       <span class="o">=</span> <span class="s1">&#39;codebook&#39;</span><span class="o">.</span> <span class="n">If</span> <span class="n">you</span> <span class="n">give</span> <span class="n">a</span> <span class="n">value</span> <span class="k">for</span> <span class="s1">&#39;data_type&#39;</span><span class="p">,</span> <span class="n">that</span>
+                       <span class="n">always</span> <span class="n">takes</span> <span class="n">precedence</span><span class="o">.</span> <span class="n">If</span> <span class="n">no</span> <span class="n">data_type</span> <span class="ow">is</span> <span class="n">provided</span> <span class="ow">and</span>
+                       <span class="n">no</span> <span class="n">data_type</span> <span class="n">can</span> <span class="n">be</span> <span class="n">inferred</span><span class="p">,</span> <span class="s1">&#39;exp_data&#39;</span> <span class="ow">is</span> <span class="n">used</span><span class="o">.</span>
+
+  <span class="o">--</span><span class="n">missings</span> <span class="n">TEXT</span>      <span class="n">Here</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">manually</span> <span class="n">specify</span> <span class="n">a</span> <span class="n">value</span> <span class="n">that</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span>
+                       <span class="n">insert</span> <span class="k">for</span> <span class="n">missing</span> <span class="n">values</span><span class="o">.</span>
+
+  <span class="o">--</span><span class="n">remove_linebreaks</span>  <span class="n">Indicates</span><span class="p">,</span> <span class="n">whether</span> <span class="n">linebreak</span> <span class="n">characters</span> <span class="n">should</span> <span class="n">be</span>
+                       <span class="n">deleted</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">file</span><span class="o">.</span> <span class="n">If</span> <span class="n">you</span> <span class="n">don</span><span class="s1">&#39;t use this flag (the</span>
+                       <span class="n">default</span><span class="p">),</span> <span class="n">linebreaks</span> <span class="n">will</span> <span class="n">be</span> <span class="n">replaced</span> <span class="k">with</span> <span class="n">spaces</span><span class="o">.</span>
+                       <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="kc">False</span><span class="p">]</span>
+
+  <span class="o">--</span><span class="n">delimiter</span> <span class="n">TEXT</span>     <span class="n">Here</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">manually</span> <span class="n">specify</span> <span class="n">a</span> <span class="n">delimiter</span> <span class="k">for</span> <span class="n">your</span>
+                       <span class="o">.</span><span class="n">csv</span> <span class="n">file</span><span class="o">.</span> <span class="n">You</span> <span class="n">need</span> <span class="n">to</span> <span class="n">put</span> <span class="n">the</span> <span class="n">delimiter</span> <span class="n">inside</span>
+                       <span class="n">quotation</span> <span class="n">marks</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">like</span> <span class="n">this</span><span class="p">:</span> <span class="o">--</span><span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="o">.</span>
+                       <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="p">,]</span>
+
+  <span class="o">--</span><span class="n">help</span>               <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="new-page-hooks-for-more-control">
+<h4>New page hooks for more control<a class="headerlink" href="#new-page-hooks-for-more-control" title="Permalink to this headline">¶</a></h4>
+<p>All page classes now provide the possibility to define additional hooks, granting you more fine-grained control over the exact time your code gets executed. Here is a list of them:</p>
+<p>| Hook            | Explanation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|—————–|—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————|
+| <code class="docutils literal notranslate"><span class="pre">on_exp_access</span></code> | Hook for code that is meant to be executed as soon as a page is added to an experiment. This is your go-to-hook, if you want to have access to the experiment, but don’t need access to data from other pages.                                                                                                                                                                                                                                                                                                                                    |
+| <code class="docutils literal notranslate"><span class="pre">on_first_show</span></code> | Hook for code that is meant to be executed when a page is shown for the first time. This is your go-to-hook, if you want to have access to data from other pages within the experiment, and your code is meant to be executed only once (i.e. the first time a page is shown).                                                                                                                                                                                                                                                                    |
+| <code class="docutils literal notranslate"><span class="pre">on_each_show</span></code> | Hook for code that is meant to be executed <em>every time</em> the page is shown.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| <code class="docutils literal notranslate"><span class="pre">on_first_hide</span></code> | Hook for code that is meant to be executed only once, when the page is hidden for the first time, <strong>before</strong> saving the page’s data. <strong>Important</strong>: Note the difference to <code class="docutils literal notranslate"><span class="pre">on_close</span></code> , which is executed upon final submission of the page’s data. When using <code class="docutils literal notranslate"><span class="pre">on_first_hide</span></code> , subject input can change (e.g., when a subject revists a page and changes his/her input).                                                                                                                                                                                                                                                                                                   |
+| <code class="docutils literal notranslate"><span class="pre">on_each_hide</span></code> | Hook for code that is meant to be executed <em>every time</em> the page is hidden, <strong>before</strong> saving the page’s data.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| <code class="docutils literal notranslate"><span class="pre">on_close</span></code> | Hook for code that is meant to be executed when a page is closed. This is your go-to-hook, if you want to have the page execute code only once, when submitting the data from a page. Closing happens, when you leave a page for the first time in a <code class="docutils literal notranslate"><span class="pre">HeadOpenSection</span></code> (participants can revisit the page, but can’t change their input), and when you leave a page in a <code class="docutils literal notranslate"><span class="pre">SegmentedSection</span></code> (participants cannot go back to previous pages). That means, this hook has no effect inside a standard <code class="docutils literal notranslate"><span class="pre">Section</span></code> , because its pages don’t get closed. |</p>
+<p>For now, the old hooks <code class="docutils literal notranslate"><span class="pre">on_showing</span></code> , <code class="docutils literal notranslate"><span class="pre">on_showing_widget</span></code> (both equivalent to <code class="docutils literal notranslate"><span class="pre">on_each_show</span></code> ) and <code class="docutils literal notranslate"><span class="pre">on_hiding</span></code> , as well as <code class="docutils literal notranslate"><span class="pre">on_hiding_widget</span></code> (both equivalent to <code class="docutils literal notranslate"><span class="pre">on_each_hide</span></code> ) will still work but are deprecated and will be removed in future versions. Therefore we ask you to use the new hooks from now on.</p>
+<p>Here is an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">alfred3.page</span> <span class="kn">import</span> <span class="n">Page</span>
+<span class="kn">from</span> <span class="nn">alfred3.element</span> <span class="kn">import</span> <span class="n">TextElement</span>
+
+<span class="k">class</span> <span class="nc">Welcome</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">+=</span> <span class="n">TextElement</span><span class="p">(</span><span class="s2">&quot;This code is executed upon adding the page to the experiment.&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">on_first_show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">+=</span> <span class="n">TextElement</span><span class="p">(</span><span class="s2">&quot;This code is executed right before showing the page for the first time&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="new-section-hooks-for-more-control">
+<h4>New section hooks for more control<a class="headerlink" href="#new-section-hooks-for-more-control" title="Permalink to this headline">¶</a></h4>
+<p>The section classes also gain some hooks:</p>
+<p>| Hook | Explanation |
+| — | — |
+| <code class="docutils literal notranslate"><span class="pre">on_exp_access</span></code> | Hook for code that is meant to be executed as soon as a section is added to an experiment. |
+| <code class="docutils literal notranslate"><span class="pre">on_enter</span></code> | Hook for code that is meant to be executed upon entering a section in an ongoing experiment. |
+| <code class="docutils literal notranslate"><span class="pre">on_leave</span></code> | Hook for code that is meant to be executed upon leaving a section in an ongoing experiment. This code will be executed <em>after</em> closing the section’s last page. |</p>
+<p>Here is an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">alfred3.section</span> <span class="kn">import</span> <span class="n">Section</span>
+<span class="kn">from</span> <span class="nn">alfred3.page</span> <span class="kn">import</span> <span class="n">Page</span>
+
+<span class="k">class</span> <span class="nc">Main</span><span class="p">(</span><span class="n">Section</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">+=</span> <span class="n">Page</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Demo Page, added upon adding the section to the experiment.&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">on_enter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Code executed upon entering the section.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="alfred-v1-3-1-released-2020-08-24">
+<h2>alfred v1.3.1 (Released 2020-08-24)<a class="headerlink" href="#alfred-v1-3-1-released-2020-08-24" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed a bug in the template donwloading CLI.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-3-0-released-2020-08-19">
+<h2>alfred v1.3.0 (Released 2020-08-19)<a class="headerlink" href="#alfred-v1-3-0-released-2020-08-19" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Added<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>We defined the <em>iadd</em> ( <code class="docutils literal notranslate"><span class="pre">+=</span></code> ) operator for all pages, sections and the experiment class. In many cases, it can replace a call to the <code class="docutils literal notranslate"><span class="pre">append()</span></code> method of these classes. Don’t worry, the <code class="docutils literal notranslate"><span class="pre">append()</span></code> method is not going away. You can use this operator…</p>
+<ul>
+<li><p>… to append elements to a page</p></li>
+<li><p>… to append pages and sections to a sections</p></li>
+<li><p>… to append pages and section to the experiment</p></li>
+</ul>
+</li>
+</ul>
+<p>Simple examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (assuming correct imports)</span>
+
+<span class="c1"># Append element to a page</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">Page</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Test Page&quot;</span><span class="p">)</span>
+<span class="n">page</span> <span class="o">+=</span> <span class="n">TextElement</span><span class="p">(</span><span class="s2">&quot;Testtext&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;text1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (assuming correct imports)</span>
+<span class="c1"># Append page and section to a section</span>
+<span class="n">main</span> <span class="o">=</span> <span class="n">Section</span><span class="p">()</span>
+
+<span class="n">second</span> <span class="o">=</span> <span class="n">Section</span><span class="p">()</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">Page</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Test Page&quot;</span><span class="p">)</span>
+<span class="n">second</span> <span class="o">+=</span> <span class="n">page</span> <span class="c1"># using the page instance from the</span>
+
+<span class="n">main</span> <span class="o">+=</span> <span class="n">second</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (assuming correct imports)</span>
+<span class="c1"># Append sections and pages to the experiment</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">()</span>
+<span class="n">main</span> <span class="o">=</span> <span class="n">Section</span><span class="p">()</span>
+<span class="n">exp</span> <span class="o">+=</span> <span class="n">main</span>
+</pre></div>
+</div>
+<p>When using the <code class="docutils literal notranslate"><span class="pre">+=</span></code> operator in class definitions, you refer to “self”:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (assuming correct imports)</span>
+
+<span class="k">class</span> <span class="nc">Welcome</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_showing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">+=</span> <span class="n">TextElement</span><span class="p">(</span><span class="s2">&quot;Testtext&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;text1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>Changed<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>When downloading a template, it is now allowed to have a <code class="docutils literal notranslate"><span class="pre">.idea</span></code> and a <code class="docutils literal notranslate"><span class="pre">.git</span></code> file already present in the target directory. Otherwise, the directory must be empty.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-2-1-released-2020-08-18">
+<h2>alfred v1.2.1 (Released 2020-08-18)<a class="headerlink" href="#alfred-v1-2-1-released-2020-08-18" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>Fixed<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed an underspecified filepath handling that caused trouble with the logging initialization under windows.</p></li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h3>Changed<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>We made using the flask debugger easier:</p>
+<ul>
+<li><p>If you use the command line interface, you can add the flag ‘debug’ to start an experiment in debugging mode and use flask’s builtin debugging tools. The command becomes <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">alfred3.run</span> <span class="pre">-debug</span></code> .</p></li>
+<li><p>If you use the small <code class="docutils literal notranslate"><span class="pre">run.py</span></code> , you can pass <code class="docutils literal notranslate"><span class="pre">debug=True</span></code> as a parameter in <code class="docutils literal notranslate"><span class="pre">auto_run()</span></code> : <code class="docutils literal notranslate"><span class="pre">runner.auto_run(debug=True)</span></code></p></li>
+</ul>
+</li>
+<li><p>Upgraded the command line interface for downloading templates.</p>
+<ul>
+<li><p>Most notably, the interface gained the flag ‘-h’/’–here’, that you can use to indicate that you want the template’s files to be placed directly in the ‘–path’ (by default, in the current working directory).</p></li>
+<li><p>Instead of the ‘-b’/’–big’ and ‘-r’/’–runpy’ flags, you can now choose between variants by setting the option ‘–variant’ to ‘s’, ‘m’ (default), or ‘l’.</p></li>
+<li><p>Enhanced handling of naming conflicts.</p></li>
+<li><p>This is the full new usage:</p></li>
+</ul>
+</li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+Usage: template.py [OPTIONS]
+
+Options:
+  --name TEXT     Name of the new experiment directory.  [default:
+                  alfred3_experiment]
+
+  --path TEXT     Path to the target directory. [default: Current working
+                  directory]
+
+  --release TEXT  You can specify a release tag here, if you want to use a
+                  specific version of the template.
+
+  --variant TEXT  Which type of template do you want to download? The
+                  available options are: &#39;s&#39; (minimalistic), &#39;m&#39; (includes
+                  &#39;run.py&#39; and &#39;secrets.conf&#39;) and &#39;b&#39; (includes subdirectory
+                  with imported classes and instructions.)  [default: m]
+
+  -h, --here      If this flag is set to &#39;-h&#39;, the template files will be
+                  placed directly into the directory specified in &#39;--path&#39;,
+                  ignoring the paramter &#39;--name&#39;.  [default: False]
+
+  --help          Show this message and exit.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="alfred-v1-2-0-released-2020-07-13">
+<h2>alfred v1.2.0 (Released 2020-07-13)<a class="headerlink" href="#alfred-v1-2-0-released-2020-07-13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="minor-changes">
+<h4>Minor changes<a class="headerlink" href="#minor-changes" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>We added a new page class <code class="docutils literal notranslate"><span class="pre">page.NoDataPage</span></code> , which does only return the page’s tag and uid when queried by the saving agent. This will prevent any data from being saved to the standard saving agents. You can use this page, if you want to save data to an external database, separated from experimental data (e.g., if you need to save personal data).</p></li>
+<li><p>We added support for custom imports of <code class="docutils literal notranslate"><span class="pre">.py</span></code> files from subdirectories that are transferable to mortimer by including the package <code class="docutils literal notranslate"><span class="pre">thesmuggler</span></code> . If you want to store content in an external <code class="docutils literal notranslate"><span class="pre">.py</span></code> file (which we highly recommend, as it leads to a clearer directory structure), you can import such a file by using <code class="docutils literal notranslate"><span class="pre">thesmuggler.smuggle()</span></code> . Example:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># files/instructions.py</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;This text resides in files/instructions.py&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># script.py</span>
+<span class="kn">from</span> <span class="nn">thesmuggler</span> <span class="kn">import</span> <span class="n">smuggle</span>
+
+<span class="n">inst</span> <span class="o">=</span> <span class="n">smuggle</span><span class="p">(</span><span class="s2">&quot;files/instructions.py&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fullscreen-option-for-google-chrome">
+<h4>Fullscreen option for Google Chrome<a class="headerlink" href="#fullscreen-option-for-google-chrome" title="Permalink to this headline">¶</a></h4>
+<p>We added an option that allows you to make experiments start in Chrome’s fullscreen (or “kiosk”) mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed to a default directory and is only tested on Windows 10.</p>
+<p>You can enable this option in your config.conf:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[experiment]</span>
+<span class="na">fullscreen</span> <span class="o">=</span> <span class="s">true   # default: false</span>
+</pre></div>
+</div>
+<p><strong>In order for this feature to work, you need to use our most recent version of <code class="docutils literal notranslate"><span class="pre">run.py</span></code> . There is an easy way to do this (see below)</strong></p>
+<p>Old <code class="docutils literal notranslate"><span class="pre">run.py</span></code> files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment-running code will be updated together with alfred3.</p>
+</div>
+<div class="section" id="alfred3-run-module-with-command-line-interface">
+<h4><code class="docutils literal notranslate"><span class="pre">alfred3.run</span></code> module with command line interface<a class="headerlink" href="#alfred3-run-module-with-command-line-interface" title="Permalink to this headline">¶</a></h4>
+<p>Added a module <code class="docutils literal notranslate"><span class="pre">alfred3.run</span></code> that contains the functionality for locally running alfred experiments. It can be used via the command line like this:</p>
+<div class="highlight-BASH notranslate"><div class="highlight"><pre><span></span>python3 -m alfred3.run
+</pre></div>
+</div>
+<p>Note that you must run this code from within your experiment directory, or specifiy a path to the experiment directory with the option <code class="docutils literal notranslate"><span class="pre">--path=&lt;path&gt;</span></code> . By setting the flag <code class="docutils literal notranslate"><span class="pre">-m</span></code> ( <code class="docutils literal notranslate"><span class="pre">--manual-open</span></code> ), you can switch off the automatic opening of a browser window upon experiment startup. See <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">alfred3.run</span> <span class="pre">--help</span></code> for all available options.</p>
+<p>You can also continue to use a <code class="docutils literal notranslate"><span class="pre">run.py</span></code> in your experiment directory to run your experiment, if you wish. From now on, this file should look like this (watch <a class="reference external" href="https://www.youtube.com/watch?v=sugvnHA7ElY">this video</a> for an explanation concerning the <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;</span></code> protector.):</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">alfred3.run</span> <span class="kn">import</span> <span class="n">ExperimentRunner</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">ExperimentRunner</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">auto_run</span><span class="p">()</span> 
+</pre></div>
+</div>
+<p>This feature eliminates the need for a <code class="docutils literal notranslate"><span class="pre">run.py</span></code> file in your experiment directory. The API might still change in the future, so this feature is considered experimental.</p>
+<p>If you want to gain more control over your run.py you can execute individual steps (<em>only recommended for advanced users. Usually, this will not be necessary.</em>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">alfred3.run</span> <span class="kn">import</span> <span class="n">ExperimentRunner</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">ExperimentRunner</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">generate_session_id</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">configure_logging</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">create_experiment_app</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">set_port</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">start_browser_thread</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">print_startup_message</span><span class="p">()</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">use_reloader</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will allow you to customize logging configuration or to extract the flask app that is created through your alfred experiment.</p>
+<ul class="simple">
+<li><p>The former can be achieved by configuring a logger of the name <code class="docutils literal notranslate"><span class="pre">exp.&lt;exp_id&gt;</span></code> , where <code class="docutils literal notranslate"><span class="pre">&lt;exp_id&gt;</span></code> is the experiment ID, accessible via <code class="docutils literal notranslate"><span class="pre">runner.config[&quot;exp_config&quot;].get(&quot;metadata&quot;,</span> <span class="pre">&quot;exp_id&quot;)</span></code></p></li>
+<li><p>The latter can be achieved by assigning the returned value of <code class="docutils literal notranslate"><span class="pre">runner.create_experiment_app()</span></code> to an object, or by accessing <code class="docutils literal notranslate"><span class="pre">runner.app</span></code> after <code class="docutils literal notranslate"><span class="pre">create_experiment_app</span></code> was run.</p></li>
+</ul>
+</div>
+<div class="section" id="alfred3-template-command-line-interface-for-experiment-template">
+<h4><code class="docutils literal notranslate"><span class="pre">alfred3.template</span></code> command line interface for experiment template<a class="headerlink" href="#alfred3-template-command-line-interface-for-experiment-template" title="Permalink to this headline">¶</a></h4>
+<p>We have a new convenience feature for accessing the latest experiment template. Just use your terminal to execute the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 -m alfred3.template
+</pre></div>
+</div>
+<p>This will download the latest experiment template from GitHub to your current working directory, including a useful <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> that will automatically prevent your <code class="docutils literal notranslate"><span class="pre">secrets.conf</span></code> from being included in your git repository.</p>
+<p>With the optional argument <code class="docutils literal notranslate"><span class="pre">--path</span></code> , you can hand over a directory path to be used instead of your current working directory.</p>
+<p>Of course, you can still download the template manually from GitHub, if you prefer so.</p>
+<p>Additional options allow for more flexibility. Take a look at them with the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 -m alfred3.template --help
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id6">
+<h3>Changed<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="enhanced-configuration">
+<h4>Enhanced configuration<a class="headerlink" href="#enhanced-configuration" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>If you don’t want to change the default configuration, you don’t need a <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> file in your experiment directory anymore.</p></li>
+<li><p>We separated the values provided in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> into two files to enable easier code sharing and enhance security at the same time:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">config.conf</span></code> from now on holds exclusively publicly available configuration. <strong>This file is meant to be shared.</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">secrets.conf</span></code> is a new configuration file that only holds secret information like database credentials. <strong>This file should never be shared.</strong> It is included in the <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> of our experiment template to prevent accidental sharing.</p></li>
+</ul>
+</li>
+<li><p>You can now supply your own custom configuration options via <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> and <code class="docutils literal notranslate"><span class="pre">secrets.conf</span></code> . The experiment object gains a <code class="docutils literal notranslate"><span class="pre">config</span></code> and a <code class="docutils literal notranslate"><span class="pre">secrets</span></code> attribute, both of which are instances of a modified <a class="reference external" href="https://docs.python.org/3/library/configparser.html">configparser. ConfigParser</a> and provided the same methods for accessing options.</p>
+<ul>
+<li><p>Pay attention to the way that values are returned. <code class="docutils literal notranslate"><span class="pre">ConfigParser</span></code> objects don’t guess the type of your values. Instead, they provide specialized methods. <code class="docutils literal notranslate"><span class="pre">get</span></code> returns <em>str</em>, <code class="docutils literal notranslate"><span class="pre">getint</span></code> returns <em>int</em>, <code class="docutils literal notranslate"><span class="pre">getfloat</span></code> returns <em>float</em>, and <code class="docutils literal notranslate"><span class="pre">getboolean</span></code> returns <em>boolean</em> values (which should be entered as “true”/”false” or “1”/”0” in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> ).</p></li>
+<li><p>All of these methods take as first argument the section and as second argument the key (as demonstrated below).</p></li>
+</ul>
+</li>
+</ul>
+<p>Usage example of custom cofiguration:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.conf</span>
+<span class="k">[my_section]</span>
+<span class="na">my_key</span> <span class="o">=</span> <span class="s">my_value</span>
+<span class="na">my_bool</span> <span class="o">=</span> <span class="s">true</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># script.py</span>
+<span class="kn">from</span> <span class="nn">alfred3</span> <span class="kn">import</span> <span class="n">Experiment</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="n">element</span>
+
+<span class="k">class</span> <span class="nc">Welcome</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">on_showing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">my_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_section&quot;</span><span class="p">,</span> <span class="s2">&quot;my_value&quot;</span><span class="p">)</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">TextElement</span><span class="p">(</span><span class="n">my_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">generate_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">welcome</span> <span class="o">=</span> <span class="n">Welcome</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Welcome page&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;my_section&quot;</span><span class="p">,</span> <span class="s2">&quot;my_bool&quot;</span><span class="p">):</span>
+        <span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">welcome</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">exp</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="enhanced-logging">
+<h4>Enhanced logging<a class="headerlink" href="#enhanced-logging" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>All instances and children of <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> ,           <code class="docutils literal notranslate"><span class="pre">element.Element</span></code> ,           <code class="docutils literal notranslate"><span class="pre">page.Page</span></code> , and <code class="docutils literal notranslate"><span class="pre">section.Section</span></code> gain a <code class="docutils literal notranslate"><span class="pre">log</span></code> attribute.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">log</span></code> attribute is basically a wrapper around a <code class="docutils literal notranslate"><span class="pre">logging.Logger</span></code> . It behaves like a normal logger in many ways, offering the usual methods <code class="docutils literal notranslate"><span class="pre">debug</span></code> ,           <code class="docutils literal notranslate"><span class="pre">info</span></code> ,           <code class="docutils literal notranslate"><span class="pre">warning</span></code> ,           <code class="docutils literal notranslate"><span class="pre">error</span></code> ,           <code class="docutils literal notranslate"><span class="pre">critical</span></code> ,           <code class="docutils literal notranslate"><span class="pre">exception</span></code> ,  <code class="docutils literal notranslate"><span class="pre">log</span></code> , and <code class="docutils literal notranslate"><span class="pre">setLevel</span></code> .</p></li>
+<li><p>If you want to access the logger object directly to apply more detailed configuration, you can do so via <code class="docutils literal notranslate"><span class="pre">log.queue_logger</span></code> .</p></li>
+</ul>
+<p>See <a class="reference external" href="https://docs.python.org/3/howto/logging.html#logging-levels">logging documentation</a> for more information on the levels and configuration.</p>
+<p>Usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">alfred3</span> <span class="kn">import</span> <span class="n">Experiment</span><span class="p">,</span> <span class="n">page</span>
+
+<span class="k">class</span> <span class="nc">Welcome</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_showing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;This message will be logged on showing of the page&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">generate_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">exp</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;This message will be logged after initialization of the experiment.&quot;</span><span class="p">)</span>
+
+    <span class="n">welcome</span> <span class="o">=</span> <span class="n">Welcome</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Welcome page&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Sets the log level to &#39;WARNING&#39;</span>
+    <span class="c1"># The message logged above in the &#39;on_showing&#39; definition will therefore</span>
+    <span class="c1"># not be logged, as it is of level &#39;info&#39;</span>
+    <span class="n">welcome</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">)</span> 
+
+    <span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">welcome</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id7">
+<h4>Minor changes<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>You can now define an encryption key either in <code class="docutils literal notranslate"><span class="pre">secrets.conf</span></code> or in an environment variable named <code class="docutils literal notranslate"><span class="pre">ALFRED_ENCRYPTION_KEY</span></code> .</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id8">
+<h3>Removed<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="removed-qt-webkit-support">
+<h4>Removed qt-webkit support<a class="headerlink" href="#removed-qt-webkit-support" title="Permalink to this headline">¶</a></h4>
+<p>We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf is no longer available:</p>
+<p>We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf no longer has any effect:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[experiment]</span>
+<span class="na">type</span> <span class="o">=</span> <span class="s">qt-wk</span>
+</pre></div>
+</div>
+<p>Instead, you can turn to the new option for running experiments in Google Chrome’s fullscren (aka “kiosk”) mode (see above).</p>
+</div>
+</div>
+</div>
+<div class="section" id="alfred3-v1-1-5-released-2020-05-13">
+<h2>alfred3 v1.1.5 (Released 2020-05-13)<a class="headerlink" href="#alfred3-v1-1-5-released-2020-05-13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h3>Fixed<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed a bug in the parsing of the auth_source parameter in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred3-v1-1-4-released-2020-05-05">
+<h2>alfred3 v1.1.4 (Released 2020-05-05)<a class="headerlink" href="#alfred3-v1-1-4-released-2020-05-05" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="announcement-released-to-pypi-under-the-new-name-alfred3">
+<h3>Announcement: Released to PyPi under the new name <strong>alfred3</strong><a class="headerlink" href="#announcement-released-to-pypi-under-the-new-name-alfred3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>We are proud to announce that alfred is now available on PyPi. Because there already exists a package named “alfred”, we decided to change the name to “alfred3” in celebration of the recent port to Python 3.</p></li>
+<li><p>Alfred3 can now be installed via pip:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">alfred3</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>When alfred is installed via pip, you must change all imports in your <code class="docutils literal notranslate"><span class="pre">script.py</span></code> and <code class="docutils literal notranslate"><span class="pre">run.py</span></code> to the new name.</p></li>
+</ul>
+</div>
+<div class="section" id="id10">
+<h3>Changed<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Changed name to alfred3 (see above).</p></li>
+<li><p>From now on, we will generally be using the changelog format recommended by <a class="reference external" href="https://keepachangelog.com/en/">Keep a Changelog</a></p>
+<ul>
+<li><p>In the course of this change, we changed the name of the former <code class="docutils literal notranslate"><span class="pre">NEWS.md</span></code> to <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code> .</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-7">
+<h2>alfred v1.0.7<a class="headerlink" href="#alfred-v1-0-7" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="security-improvements">
+<h3>Security improvements<a class="headerlink" href="#security-improvements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>We further increased data protection and data security through an improved handling of access to the alfred database from inside web experiments deployed via  mortimer.</p></li>
+<li><p>Updated handling of local experiments: You can now specify an optional <code class="docutils literal notranslate"><span class="pre">auth_source</span></code> parameter in the <code class="docutils literal notranslate"><span class="pre">mongo_saving_agent</span></code> section in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> . The parameter will be passed to the <code class="docutils literal notranslate"><span class="pre">authSource</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">pymongo.MongoClient</span></code> in the initialisation of the saving agent. This allows you to use database accounts that user other databases than “admin” for authentication, which offers greater security.</p></li>
+</ul>
+</div>
+<div class="section" id="smaller-changes">
+<h3>Smaller changes<a class="headerlink" href="#smaller-changes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Disabled the logging of debug messages for the <code class="docutils literal notranslate"><span class="pre">Page.on_showing()</span></code> method. This led to overcrowded logs.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-6">
+<h2>alfred v1.0.6<a class="headerlink" href="#alfred-v1-0-6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="encryption">
+<h3>Encryption<a class="headerlink" href="#encryption" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>In your script.py, you can now use symmetric encryption to encrypt your data. The encryption is performed with an instance of <code class="docutils literal notranslate"><span class="pre">cryptography.fernet.Fernet</span></code> , using a safe, user-specific unique key generated by mortimer (<strong>v0.4.4+</strong>).</p>
+<ul>
+<li><p><strong>Encryption</strong>: Encrypt data of types <code class="docutils literal notranslate"><span class="pre">str</span></code> , <code class="docutils literal notranslate"><span class="pre">int</span></code> , and <code class="docutils literal notranslate"><span class="pre">float</span></code> via <code class="docutils literal notranslate"><span class="pre">alfred.Experiment.encrypt()</span></code> . The method will return an encrypted version of your data, converted to string.</p></li>
+<li><p><strong>Decryption</strong>: Decrypt data of types <code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">bytes</span></code> via <code class="docutils literal notranslate"><span class="pre">alfred.Experiment.decrypt()</span></code> . The method will return a decrypted version of your data, converted to string.</p></li>
+</ul>
+</li>
+<li><p><strong>NOTE</strong> that the saving agent will automatically save all data collected by elements (after the <code class="docutils literal notranslate"><span class="pre">on_hiding()</span></code> method is executed). You will need to encrypt data <strong>before</strong> they are saved in order to secure your data in the database.</p></li>
+<li><p>For offline testing, the Fernet instance will be initialized with the key <code class="docutils literal notranslate"><span class="pre">OnLhaIRmTULrMCkimb0CrBASBc293EYCfdNuUvIohV8=</span></code> . <strong>IMPORTANT</strong>: This key is public. Encrypted data in local (e.g., offline) experiments is not safe. This functionality is provided exclusively for testing your experiment before uploading to mortimer and running.</p></li>
+</ul>
+</div>
+<div class="section" id="smaller-changes-and-bugfixes">
+<h3>Smaller changes and Bugfixes<a class="headerlink" href="#smaller-changes-and-bugfixes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Pages now have a getter method for their experiment, i.e. you can access the experiment via <code class="docutils literal notranslate"><span class="pre">Page.experiment</span></code> , if the page has been added to an experiment instance at the time the method is called.</p></li>
+<li><p>Fixed the display of experimenter messages (e.g. a message that informs the participant about a minimum display time, if he or she tries to move to the next page too early)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-5">
+<h2>alfred v1.0.5<a class="headerlink" href="#alfred-v1-0-5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bugfixes">
+<h3>Bugfixes<a class="headerlink" href="#bugfixes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>fixed #37</p></li>
+</ul>
+</div>
+<div class="section" id="id11">
+<h3>Minor changes<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>rename <code class="docutils literal notranslate"><span class="pre">PageController.change_to_finished_section</span></code> : This was a missed function call from the old naming scheme. Generally, it will not affect the user in most cases, but it still exists as a deprecated function, logging a warning now.</p></li>
+</ul>
+</div>
+<div class="section" id="id12">
+<h3>Bugfixes<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-4">
+<h2>alfred v1.0.4<a class="headerlink" href="#alfred-v1-0-4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id13">
+<h3>Bugfixes<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>This includes a hotfix for an issue with ALfred v1.0.3.</p></li>
+</ul>
+</div>
+<div class="section" id="id14">
+<h3>Minor changes<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Local saving agent now checks, whether the path given in config.conf is absolute. If not, the agent treats it as a relative path, relative to the experiment directory.</p></li>
+<li><p>Alfred now saves its the version number alongside each saved dataset, so that the used version can be identified.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-3">
+<h2>alfred v1.0.3<a class="headerlink" href="#alfred-v1-0-3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id15">
+<h3>Bugfixes<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>This includes a hotfix for an issue with Alfred v1.0.2</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-2">
+<h2>alfred v1.0.2<a class="headerlink" href="#alfred-v1-0-2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id16">
+<h3>Bugfixes<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed a bug in <code class="docutils literal notranslate"><span class="pre">localserver.py</span></code> that caused trouble for videos implemented via <code class="docutils literal notranslate"><span class="pre">alfred.element.WebVideoElement</span></code> in Safari (wouldn’t play at all) and Chrome (forward/backward wouldn’t work)</p></li>
+</ul>
+</div>
+<div class="section" id="other-changes">
+<h3>Other changes<a class="headerlink" href="#other-changes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alfred.element.WebVideoElement</span></code> :</p>
+<ul>
+<li><p>New parameter <code class="docutils literal notranslate"><span class="pre">source</span></code> : A filepath or url that points to the video ( <code class="docutils literal notranslate"><span class="pre">str</span></code> ).</p></li>
+<li><p>New parameter <code class="docutils literal notranslate"><span class="pre">sources_list</span></code> : A list of filepaths and/or urls that point to the video, use this if you want to include fallback options in different formats or from different sources ( <code class="docutils literal notranslate"><span class="pre">list</span></code> of <code class="docutils literal notranslate"><span class="pre">str</span></code> elements).</p></li>
+<li><p>The parameters <code class="docutils literal notranslate"><span class="pre">mp4_path</span></code> , <code class="docutils literal notranslate"><span class="pre">mp4_url</span></code> , <code class="docutils literal notranslate"><span class="pre">ogg_path</span></code> , <code class="docutils literal notranslate"><span class="pre">ogg_url</span></code> , <code class="docutils literal notranslate"><span class="pre">web_m_path</span></code> , and <code class="docutils literal notranslate"><span class="pre">web_m_url</span></code> are replaced by <code class="docutils literal notranslate"><span class="pre">source</span></code> . They still work, but will now log a deprecation warning.</p></li>
+<li><p>New parameter <code class="docutils literal notranslate"><span class="pre">muted=False</span></code> : If <code class="docutils literal notranslate"><span class="pre">True</span></code> , the video will play with muted sound by default.</p></li>
+<li><p>The parameter <code class="docutils literal notranslate"><span class="pre">width</span></code> now defaults to <code class="docutils literal notranslate"><span class="pre">width=720</span></code> .</p></li>
+<li><p>Disabled the right-click context menu for videos included via <code class="docutils literal notranslate"><span class="pre">alfred.element.WebVideoElement</span></code></p></li>
+<li><p>Disabled video download for videos implemented via <code class="docutils literal notranslate"><span class="pre">alfred.element.WebVideoElement</span></code> (was only possible in Chrome).</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Page</span></code> gets a new parameter <code class="docutils literal notranslate"><span class="pre">run_on_showing</span></code> , which defaults to <code class="docutils literal notranslate"><span class="pre">run_on_showing='once'</span></code> . This means, by default a Page executes the <code class="docutils literal notranslate"><span class="pre">on_showing</span></code> method only when it is shown for the first time. This behavior can be altered by setting the new parameter to <code class="docutils literal notranslate"><span class="pre">run_on_showing='always'</span></code> . The latter can lead to duplicate elements on a page, if a subject goes backward inside an experiment, which will be unwanted behavior in most cases.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0-1">
+<h2>alfred v1.0.1<a class="headerlink" href="#alfred-v1-0-1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id17">
+<h3>Bugfixes<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed a bug that caused a mixup with filepaths for web experiments hosted with mortimer.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="alfred-v1-0">
+<h2>alfred v1.0<a class="headerlink" href="#alfred-v1-0" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="breaking-changes">
+<h3>Breaking changes<a class="headerlink" href="#breaking-changes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="port-to-python-3">
+<h4>Port to Python 3<a class="headerlink" href="#port-to-python-3" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>One of the most important changes for us is the port from Python 2.7 to Python 3, which will ensure ongoing support for the coming years.</p></li>
+<li><p>You can find key differences listed here: <a class="reference external" href="https://docs.python.org/3.0/whatsnew/3.0.html">https://docs.python.org/3.0/whatsnew/3.0.html</a></p>
+<ul>
+<li><p>All strings in Python 3 are unicode by default. In Python 2.7, strings with umlauts like ä, ö or ü needed to be preceded by a u to turn them into unicode-strings: <code class="docutils literal notranslate"><span class="pre">u&quot;Example</span> <span class="pre">strüng.&quot;</span></code> . This often lead to unnecessary errors and is not necessary anymore.</p></li>
+<li><p>Printing works a little differently. You used to be able to print output to the console with a command like <code class="docutils literal notranslate"><span class="pre">print</span> <span class="pre">&quot;this</span> <span class="pre">string&quot;</span></code> . This syntax is now deprecated and will throw an error. From now on, you need to use the print statement like any normal function: <code class="docutils literal notranslate"><span class="pre">print(&quot;this</span> <span class="pre">string&quot;)</span></code> .</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="new-class-names">
+<h4>New class names<a class="headerlink" href="#new-class-names" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Page</span></code> replaces <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Section</span></code> replaces <code class="docutils literal notranslate"><span class="pre">QuestionGroup</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SegmentedSection</span></code> replaces <code class="docutils literal notranslate"><span class="pre">SegmentedQG</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HeadOpenSection</span></code> repladces <code class="docutils literal notranslate"><span class="pre">HeadOpenQG</span></code></p></li>
+<li><p>These changes should clarify the functionality of the corresponding classes.</p></li>
+</ul>
+</div>
+<div class="section" id="switch-from-lowercamelcase-to-underscore-case">
+<h4>Switch from <code class="docutils literal notranslate"><span class="pre">lowerCamelCase</span></code> to <code class="docutils literal notranslate"><span class="pre">underscore_case</span></code><a class="headerlink" href="#switch-from-lowercamelcase-to-underscore-case" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Throughout alfreds complete code base, we switched from <code class="docutils literal notranslate"><span class="pre">lowerCamelCase</span></code> to <code class="docutils literal notranslate"><span class="pre">underscore_case</span></code> .<strong>ATTENTION: This affects almost every line of code!</strong></p></li>
+<li><p>This change reflects our effort to adhere to PEP 8 Styleguide (<a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">PEP - click for more info</a>). Some excerpts:</p>
+<ul>
+<li><p>Class names should normally use the CapWords convention.</p></li>
+<li><p>Function names should be lowercase, with words separated by underscores as necessary to improve readability.</p></li>
+<li><p>Variable names follow the same convention as function names.</p></li>
+<li><p>Method names and instance variables: Use the function naming rules: lowercase with words separated by underscores as necessary to improve readability.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="new-names-for-existing-features">
+<h4>New names for existing features<a class="headerlink" href="#new-names-for-existing-features" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Page.on_showing()</span></code> replaces <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.onShowingWidget()</span></code> (Alfred v0.2b5 name).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Page.append()</span></code> replaces <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.addElement()</span></code> and <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.addElements()</span></code> (Alfred v0.2b5 names).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Page.get_page_data()</span></code> is a new shortcut for <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion._experiment.dataManager.findExperimentDataByUid()</span></code> (Alfred v0.2b5 name), a method for accessing data from a previous page inside an <code class="docutils literal notranslate"><span class="pre">on_showing</span></code> hook.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Section.append()</span></code> replaces <code class="docutils literal notranslate"><span class="pre">QuestionGroup.appendItem()</span></code> and <code class="docutils literal notranslate"><span class="pre">QuestionGroup.appendItems()</span></code> (Alfred v0.2b5 names).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Experiment.append()</span></code> replaces <code class="docutils literal notranslate"><span class="pre">Experiment.questionController.appendItem()</span></code> and <code class="docutils literal notranslate"><span class="pre">Experiment.questionController.appendItems()</span></code> (Alfred v0.2b5 names).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Experiment.change_final_page()</span></code> is a new shortcut for <code class="docutils literal notranslate"><span class="pre">Experiment.pageController.appendItemToFinishQuestion()</span></code> (Alfred v0.2b5 name), a method for changing the final page of on exp.</p></li>
+</ul>
+</div>
+<div class="section" id="experiment-metadata">
+<h4>Experiment metadata<a class="headerlink" href="#experiment-metadata" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>There is a new section <code class="docutils literal notranslate"><span class="pre">[metadata]</span></code> in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> , which includes the following information:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code> : The experiment title (previously called experiment name)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">author</span></code> : The experiment author</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code> : The experiment version</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exp_id</span></code> : The experiment ID (<strong>IMPORTANT:</strong> This ID is used to identify your experiment data, if you set up a local alfred experiment to save data to the mortimer database. It is not used, if you deploy your experiment as a web experiment via mortimer.)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alfred.Experiment</span></code> no longer takes the arguments <code class="docutils literal notranslate"><span class="pre">expType</span></code> ,           <code class="docutils literal notranslate"><span class="pre">expName</span></code> and <code class="docutils literal notranslate"><span class="pre">expVersion</span></code> . Instead, these metadata are now defined in the <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> , section <code class="docutils literal notranslate"><span class="pre">[metadata]</span></code> .</p></li>
+<li><p>To process metadata in mortimer, the following changes need to be implemented in <code class="docutils literal notranslate"><span class="pre">script.py</span></code> :</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">generate_experiment(config=None)</span></code> (the function gets a new parameter <code class="docutils literal notranslate"><span class="pre">config</span></code> , which defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> )</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exp</span> <span class="pre">=</span> <span class="pre">Experiment(config=config)</span></code> (the experiment should be initialized with the parameter <code class="docutils literal notranslate"><span class="pre">config</span></code> , defaulting to <code class="docutils literal notranslate"><span class="pre">config</span></code> , which gets handed down from the <code class="docutils literal notranslate"><span class="pre">generate_experiment</span></code> function.)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="file-import">
+<h4>File import<a class="headerlink" href="#file-import" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Importing a file from the project directory now <strong>always</strong> needs to take place within the <code class="docutils literal notranslate"><span class="pre">generate_experiment()</span></code> function. This is necessary for compatibility with the newest version of mortimer. This way, we can handle multiple resources directories.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="define-navigation-button-text-in-config-conf">
+<h4>Define navigation button text in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code><a class="headerlink" href="#define-navigation-button-text-in-config-conf" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">config.conf</span></code> gets a new section <code class="docutils literal notranslate"><span class="pre">[navigation]</span></code> that lets you define <code class="docutils literal notranslate"><span class="pre">forward</span></code> ,           <code class="docutils literal notranslate"><span class="pre">backward</span></code> , and <code class="docutils literal notranslate"><span class="pre">finish</span></code> button texts.</p></li>
+</ul>
+</div>
+<div class="section" id="new-recommended-script-py-style">
+<h4>New recommended <code class="docutils literal notranslate"><span class="pre">script.py</span></code> style<a class="headerlink" href="#new-recommended-script-py-style" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Removed the need to define a script class ( <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Script(object)</span></code> ), saving one layer of indentation</p></li>
+<li><p>Removed the need to end a script with <code class="docutils literal notranslate"><span class="pre">generate_experiment</span> <span class="pre">=</span> <span class="pre">Script().generate_experiment</span></code></p></li>
+<li><p>Removed the need to define <code class="docutils literal notranslate"><span class="pre">expName</span></code> and <code class="docutils literal notranslate"><span class="pre">expVersion</span></code> inside script</p></li>
+<li><p>Recommended style: Define a new class for every page in your experiment. This has a couple of advantages:</p>
+<ul>
+<li><p>No difference between defining static pages and dynamic pages anymore. This lowers the hurdle for creating dynamic experiments.</p></li>
+<li><p>Separation of experiment structure and experiment content is enhanced, which should clarify the <code class="docutils literal notranslate"><span class="pre">script.py</span></code></p></li>
+<li><p>Code reuse is facilitated (Pages can be reused)</p></li>
+</ul>
+</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># -*- coding:utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">alfred</span> <span class="kn">import</span> <span class="n">Experiment</span>
+<span class="kn">from</span> <span class="nn">alfred.page</span> <span class="kn">import</span> <span class="n">Page</span>
+<span class="kn">import</span> <span class="nn">alfred.element</span> <span class="k">as</span> <span class="nn">elm</span>
+<span class="kn">import</span> <span class="nn">alfred.section</span> <span class="k">as</span> <span class="nn">sec</span>
+
+<span class="k">class</span> <span class="nc">HelloWorld</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_showing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hello_text</span> <span class="o">=</span> <span class="n">elm</span><span class="o">.</span><span class="n">TextEntryElement</span><span class="p">(</span><span class="s1">&#39;Please enter some text.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hello_text</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">generate_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+    <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">hello_world</span> <span class="o">=</span> <span class="n">HelloWorld</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Hello, world!&#39;</span><span class="p">)</span>
+
+    <span class="n">main</span> <span class="o">=</span> <span class="n">sec</span><span class="o">.</span><span class="n">Section</span><span class="p">()</span>
+    <span class="n">main</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hello_world</span><span class="p">)</span>
+
+    <span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exp</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="increased-security-for-local-experiments">
+<h4>Increased security for local experiments<a class="headerlink" href="#increased-security-for-local-experiments" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>We implemented a three-step process to access database login data. The first two options make it much safer to share your code, e.g.on the OSF, because you don’t have to worry about accidentally sharing secrets anymore.</p>
+<ul>
+<li><p>Provide login data in environment variables (new, recommended)</p></li>
+<li><p>Provide encrypted login data in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> (new, recommended)</p></li>
+<li><p>Provide raw login data in <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> (<strong>not recommended</strong>, use only for testing)</p></li>
+</ul>
+</li>
+<li><p>If your databse is correctly equipped with a valid commercial SSL certificate, you can now set the option <code class="docutils literal notranslate"><span class="pre">use_ssl</span> <span class="pre">=</span> <span class="pre">true</span></code> in the section <code class="docutils literal notranslate"><span class="pre">[mongo_saving_agent]</span></code> of your <code class="docutils literal notranslate"><span class="pre">config.conf</span></code> to enable a secure connection via SSL. You can also use self-signed SSL certificates, if you set the option <code class="docutils literal notranslate"><span class="pre">ca_file_path</span></code> to the file path of your Certificate Authority (CA) public key file (often a .pem file).</p></li>
+</ul>
+</div>
+<div class="section" id="page-values">
+<h4><code class="docutils literal notranslate"><span class="pre">Page.values</span></code><a class="headerlink" href="#page-values" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Page.values</span></code> is a dictionary that serves as a container for pages. You can use it for example to create pages using loops and if-statements. More on how to use it can soon be found in the wiki. It is a special dictionary that allows for element access (reading and writing) via dot-notation.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># (imports)</span>
+
+<span class="k">class</span> <span class="nc">Welcome</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_showing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text01</span> <span class="o">=</span> <span class="n">TextElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">text01</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;text01&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text01</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">generate_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">page</span> <span class="o">=</span> <span class="n">Welcome</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;page01&#39;</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="s1">&#39;page01&#39;</span><span class="p">)</span>
+    <span class="n">page</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">text01</span> <span class="o">=</span> <span class="s1">&#39;text01&#39;</span>
+
+    <span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exp</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="deprecated">
+<h3>Deprecated<a class="headerlink" href="#deprecated" title="Permalink to this headline">¶</a></h3>
+<p>| Deprecated function (alfred v0.2b5 name)  | Replaced by |
+| ————- | ————- |
+| <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.onShowingWidget()</span></code> | <code class="docutils literal notranslate"><span class="pre">Page.on_showing()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.onHidingWidget()</span></code> | <code class="docutils literal notranslate"><span class="pre">Page.on_hiding()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.addElement()</span></code> | <code class="docutils literal notranslate"><span class="pre">Page.append()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">WebCompositeQuestion.addElements()</span></code> | <code class="docutils literal notranslate"><span class="pre">Page.append()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">QuestionGroup.appendItem()</span></code> | <code class="docutils literal notranslate"><span class="pre">Section.append()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">QuestionGroup.appendItems()</span></code> | <code class="docutils literal notranslate"><span class="pre">Section.append()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">Experiment.questionController.appendItem()</span></code> | <code class="docutils literal notranslate"><span class="pre">Experiment.append()</span></code> |
+| <code class="docutils literal notranslate"><span class="pre">Experiment.questionController.appendItems()</span></code> | <code class="docutils literal notranslate"><span class="pre">Experiment.append()</span></code> |</p>
+</div>
+<div class="section" id="bug-fixes-and-other-changes">
+<h3>Bug fixes and other changes<a class="headerlink" href="#bug-fixes-and-other-changes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Improved handling of browser commands.</strong> In web experiments, subjects used to be able to cause trouble by using the browser controls (forward, backward, refresh) instead of the experiment controls at the bottom of the page to move through an experiment. In some cases, this could render the subject’s data unusable. Now, when a subject uses the browser controls, Alfred will always return the current state of the experiment. This way, no more data should be lost.</p></li>
+<li><p><strong>Fixed a saving agent bug.</strong> When quickly moving through an experiment, the saving agent sometimes didn’t complete it’s tasks correctly and basically crashed. This does not happen anymore.</p></li>
+</ul>
+</div>
+<div class="section" id="removed-features">
+<h3>Removed features<a class="headerlink" href="#removed-features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>No more pure QT experiments.</strong> We completely removed pure QT experiments from the framework. Those have recently seen very little use and have some drawbacks compared to web experiments and qt-webkit (qt-wk) experiments.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation for Beginners" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to alfred3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Christian Treffenstädt, Paul Wiemann, Johannes Brachem
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

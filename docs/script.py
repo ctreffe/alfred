@@ -1,0 +1,1 @@
+../src/alfred3/files/script.py
