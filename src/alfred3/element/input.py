@@ -197,6 +197,32 @@ class RegEntry(TextEntry):
         d["regex_pattern"] = self.pattern.pattern
         return d
 
+
+@inherit_kwargs(exclude=["force_input", "pattern"])
+class PasswordEntry(RegEntry):
+    """
+    Displays a password field.
+
+    The password field is force-entry by default.
+    
+    Args:
+        password (str): Password string to match against user input.
+            Can be a simple string, or a regular expression.
+        
+        force_input (bool): If `True`, users can  only progress to the next page
+            if they enter data into this field. Note that a
+            :class:`.NoValidationSection` or similar sections might
+            overrule this setting. Defaults to *True*.
+
+        {kwargs}
+    """
+
+    element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
+
+    def __init__(self, password: str, force_input: bool = True, **kwargs):
+        super().__init__(pattern=password, force_input=force_input, **kwargs)
+
+
 @inherit_kwargs
 class NumberEntry(TextEntry):
     """
