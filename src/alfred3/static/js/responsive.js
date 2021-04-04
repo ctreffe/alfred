@@ -1,5 +1,3 @@
-$(".text-element table").addClass("table table-hover")
-
 // call this method when you want to leave the page without asking the user
 var glob_unbind_leaving;
 
