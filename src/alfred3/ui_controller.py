@@ -175,6 +175,14 @@ class MovementManager:
         return self.exp.root_section.all_pages_list[0]
     
     @property
+    def first_visible_page(self):
+        i = 0
+        pages = self.exp.root_section.all_pages_list
+        while not pages[i].should_be_shown:
+            i += 1
+        return pages[i]
+    
+    @property
     def last_page(self):
         return self.exp.root_section.all_pages_list[-2]
     
@@ -426,9 +434,7 @@ class MovementManager:
     
     def start(self):
 
-        if not self.current_page.should_be_shown:
-            raise AlfredError("The first page must not be hidden.")
-        
+        self.current_index = self.index_of(self.first_visible_page)
         self.exp.root_section.enter()
         self.current_page._on_showing_widget(show_time=time.time())
 
@@ -632,7 +638,7 @@ class UserInterface:
 
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution
-        first_page = self.exp.movement_manager.first_page
+        first_page = self.exp.movement_manager.first_visible_page
         if page is first_page and self.experiment.config.getboolean("data", "save_client_info"):
             code["js_code"] += [(7, importlib.resources.read_text(js, "clientinfo.js"))]
         
