@@ -1879,7 +1879,8 @@ class ExperimentSession:
 
     @session_timeout.setter
     def session_timeout(self, value):
-        if not isinstance(value, int): raise TypeError
+        if value is not None and not isinstance(value, int): 
+            raise TypeError
         self._session_timeout = value
 
     @property
