@@ -24,3 +24,6 @@ class SavingAgentRunException(AlfredError):
 
 class SavingAgentException(AlfredError):
     pass
+
+class SessionTimeout(AlfredError): 
+    pass
