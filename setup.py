@@ -12,7 +12,7 @@ with open("src/alfred3/_version.py") as f:
 setuptools.setup(
     name="alfred3",
     version=version["__version__"],
-    author="Christian Treffenstädt, Paul Wiemann, Johannes Brachem",
+    author="Christian Treffenstädt, Johannes Brachem, Paul Wiemann",
     author_email="treffenstaedt@psych.uni-goettingen.de",
     description="A library for rapid development of dynamic and interactive online experiments in the social sciences.",
     long_description=long_description,
