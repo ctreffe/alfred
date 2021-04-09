@@ -26,6 +26,7 @@ from .element.core import Stack
 from .element.display import VerticalSpace
 from .element.display import Html
 from .element.display import Text
+from .element.display import Label
 from .element.display import Image
 from .element.display import Audio
 from .element.display import Video
