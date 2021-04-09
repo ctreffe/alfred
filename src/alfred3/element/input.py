@@ -12,6 +12,7 @@ from typing import Tuple
 from typing import List
 from pathlib import Path
 
+import bleach
 from emoji import emojize
 import cmarkgfm
 from cmarkgfm.cmark import Options as cmarkgfmOptions
@@ -60,6 +61,15 @@ class TextEntry(InputElement):
         super().__init__(**kwargs)
 
         self._placeholder = placeholder if placeholder is not None else ""
+
+    @property
+    def input(self) -> str:
+        # docstring inherited
+        return self._input
+    
+    @input.setter
+    def input(self, value):
+        self._input = bleach.clean(value) # sanitizing input
 
     @property
     def placeholder(self) -> str:

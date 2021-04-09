@@ -42,7 +42,8 @@ setuptools.setup(
         "Click>=7.0",
         "emoji>=0.6",
         "cmarkgfm>=0.4.2",
-        "requests"
+        "requests",
+        "bleach>=3.2.1"
     ],
     entry_points="""
     [console_scripts]
