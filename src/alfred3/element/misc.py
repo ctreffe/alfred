@@ -5,8 +5,9 @@ Provides elements that don't fit into the other categories.
 """
 
 from pathlib import Path
-
 from typing import Union
+
+from jinja2 import Template
 
 from .core import Element
 from .core import InputElement
@@ -313,3 +314,74 @@ class Data(Value):
     """Alias for :class:`.Value`."""
     pass
 
+
+class Callback(Element):
+
+    web_widget = None
+    should_be_shown = False
+
+    def __init__(self, func: callable, followup: str = "refresh"):
+        super().__init__()
+        self.func = func
+        self.followup = followup
+        self.url = None
+    
+    def prepare_web_widget(self):
+        self._js_code = []
+        super().prepare_web_widget()
+        self.url = self.exp.ui.add_callable(self.func)
+        
+        js_template = Template("""
+        $(document).ready(function () {
+    
+            $.get( "{{ url }}", function(data) {
+                
+                if ("{{ followup }}" == "refresh") {
+                    move(direction="stay");
+                } else if ("{{ followup }}" == "custom") {
+                    {{ custom_js }}
+                } else if ("{{ followup }}" != "none") {
+                    move(direction="{{ followup }}");
+                }
+            });
+            
+        });
+        """)
+        js = js_template.render(url=self.url, followup=self.followup)
+        self.add_js(js)
+
+
+class RepeatedCallback(Element):
+
+    web_widget = None
+    should_be_shown = False
+
+    def __init__(self, func: callable, submit_first: bool = True, interval: int = 1):
+        super().__init__()
+        self.func = func
+        self.interval = interval
+        self.submit_first = submit_first
+        self.url = None
+    
+    def prepare_web_widget(self):
+        self._js_code = []
+        super().prepare_web_widget()
+        self.url = self.exp.ui.add_callable(self.func)
+        
+        js_template = Template("""
+        var ping = function() {
+            
+            {% if submit_first %}
+                var data = $("#form").serializeArray();
+                $.post("/callable/set_page_data", data);
+            {% endif %}
+
+            $.get( "{{ url }}" );
+        };
+
+        $(document).ready(function () {
+            setInterval(ping, {{ interval }} * 1000)
+        });
+        """)
+        js = js_template.render(url=self.url, submit_first=self.submit_first, interval=self.interval)
+        self.add_js(js)

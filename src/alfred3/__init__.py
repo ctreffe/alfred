@@ -66,6 +66,8 @@ from .element.misc import JavaScript
 from .element.misc import WebExitEnabler
 from .element.misc import Value
 from .element.misc import Data
+from .element.misc import Callback
+from .element.misc import RepeatedCallback
 
 from .util import emoji
 from .util import icon
