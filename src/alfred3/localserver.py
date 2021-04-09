@@ -175,6 +175,7 @@ def callable(identifier):
         values = request.get_json()
     else:
         values = request.values.to_dict()
+    values.pop("_", None)
     rv = f(**values)
     if rv is not None:
         resp = jsonify(rv)
