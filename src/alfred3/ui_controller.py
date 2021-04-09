@@ -382,7 +382,7 @@ class MovementManager:
             move.hide_time = current_page.hide_times[-1]
             move.duration = move.hide_time - move.show_time
         except IndexError:
-            self.log.debug(f"Hide time for {current_page} not available. Moving on.")
+            self.log.debug(f"Hide time for {current_page} not available. This may be normal for an abort page.")
             move.hide_time = None
             move.duration = None
         
@@ -445,7 +445,6 @@ class UserInterface:
     _css_files = [
         "bootstrap-4.5.3.min.css",
         "prism.css",
-        "font-awesome-icons.css",
         "responsive.css",
     ]
 
