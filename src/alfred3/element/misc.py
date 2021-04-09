@@ -95,6 +95,8 @@ class Style(Element):
 
     @property
     def css_code(self):
+        if not self.code:
+            return []
         
         if self.path:
             p = self.experiment.subpath(self.path)
@@ -222,6 +224,8 @@ class JavaScript(Element):
 
     @property
     def js_code(self):
+        if not self.code:
+            return []
         
         if self.path:
             p = self.experiment.subpath(self.path)
