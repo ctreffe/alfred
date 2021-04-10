@@ -78,20 +78,49 @@ Set up your experiment
 
 To apply setup operations to your experiment before it starts, alfred3
 offers the :meth:`.Experiment.setup` decorator. You can use it, for
-example, to assign an experimental condition via :class:`.ListRandomizer`
-or to set the `.ExperimentSession.session_timeout`::
+example, to assign an experimental condition via :class:`.ListRandomizer`::
 
     import alfred3 as al
     exp = al.Experiment()
 
+
+    @exp.setup
+    def setup(exp):
+        # assigning a random condition
+        randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
+        exp.condition = randomizer.get_condition()
+    
+
+    # a demo page that displays the condition
+    @exp.member
+    class Demo(al.Page):
+        title = "Demo Page"
+
+        def on_exp_access(self):
+            txt = f"You have been assigned to condition {self.exp.condition}"
+            self += al.Text(txt)
+
+
+You can also set a :attr:`~.ExperimentSession.session_timeout` for the experiment. The timeout is set in
+seconds::
+
+    import alfred3 as al
+    exp = al.Experiment()
+
+
     @exp.setup
     def setup(exp):
         exp.session_timeout = 60 * 60 * 3 # setting timeout to 3 hours
-        
-        randomizer = al.ListRandomizer.balanced("cond1", "cond2", n_per_condition=10, exp=exp)
-        exp.condition = randomizer.get_condition()
     
-    exp += al.Page(name="demo")
+
+    @exp.member
+    class Demo(al.Page):
+        title = "Demo Page"
+
+        def on_exp_access(self):
+            txt = f"The session will expire after {self.exp.session_timeout} seconds."
+            self += al.Text(txt)
+
 
 
 Add content to your experiment
@@ -162,14 +191,15 @@ In alfred, you can dynamically access data in three ways:
 2. You can access data from other sessions of the same experiment. 
 3. You can access data from other experiments.
 
-To really utilize 2) and 3), alfred needs to work with a database, which can be 
+To utilize 2) and 3) to their full extent, alfred needs to work with a database, which can be 
 done either by using a *mongo_saving_agent* (see :doc:`howto_config`), or
-by runninf your experiment on Mortimer (https://github.com/ctreffe/mortimer).
+by running your experiment on Mortimer (https://github.com/ctreffe/mortimer).
 For 3), you also need to know the experiment ID of the experiment from 
-which you want to query data.
+which you want to query data, which means you have to either be their
+author or ask the author.
 
 The interfaces for dynamic content are, in large parts, provided by
-the :class:`.ExperimentSession` object. So, you will need access to this
+the :class:`.ExperimentSession` object. You will need access to this
 object when writing sections and pages (or when you derive new elements).
 For this purpose, we provide a number of hooks, which can be utilized in 
 the "class style" of writing sections and pages. Our documentation 
