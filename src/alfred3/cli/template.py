@@ -22,7 +22,7 @@ def _write(filename: str, out_filename: str = None, path: Path = None):
     if filepath.exists() and filepath.is_file():
         click.echo(f"File '{filepath}' already exists. Skipping file.")
     else:
-        filepath.write_text(fileobj)
+        filepath.write_text(fileobj, encoding='utf-8')
 
 
 @click.command()
