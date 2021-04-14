@@ -93,7 +93,7 @@ jumplist elements to the section::
         def on_exp_access(self):
             self += al.Page(name="page1")
             self += al.Page(name="page2")
-            self += al.Page(name="page2")
+            self += al.Page(name="page3")
 
             for page in self.pages.values():
                 page += al.JumpList()
@@ -117,7 +117,7 @@ the on_exp_access hook::
     @exp.member
     class Demo(al.Section):
 
-        def on_exp_acces(self):
+        def on_exp_access(self):
             self += al.Page(name="page1")
             self.page1 += al.Text("Example text")
 
@@ -129,7 +129,7 @@ And here is the same example using square bracket syntax::
     @exp.member
     class Demo(al.Section):
 
-        def on_exp_acces(self):
+        def on_exp_access(self):
             self += al.Page(name="page1")
             self["page1"] += al.Text("Example text")
 
