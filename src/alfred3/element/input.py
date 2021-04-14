@@ -1181,6 +1181,8 @@ class SelectPageList(SingleChoiceList):
             list will be marked as disabled options.
         show_all_in_scope: If *True* (default), all pages in the scope
             will be shown, including those that cannot be jumped to.
+        display_page_name: If *True*, the page name will be displayed
+            in the select list. Defaults to *True*.
         {kwargs}
 
     Notes:
@@ -1214,6 +1216,7 @@ class SelectPageList(SingleChoiceList):
         check_jumpto: bool = True,
         check_jumpfrom: bool = True,
         show_all_in_scope: bool = True,
+        display_page_name: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1222,6 +1225,7 @@ class SelectPageList(SingleChoiceList):
         self.check_jumpfrom = check_jumpfrom
         self.show_all_in_scope = show_all_in_scope
         self.include_self = include_self
+        self.display_page_name = display_page_name
 
     def _determine_scope(self) -> List[str]:
         """
@@ -1315,8 +1319,8 @@ class SelectPageList(SingleChoiceList):
         page_title = target_page.title
         if len(page_title) > 35:
             page_title = page_title[:35] + "..."
-
-        return f"{page_title} (name='{page_name}')"
+        pname = f" (name='{page_name}')" if self.display_page_name else ""
+        return f"{page_title}" + pname
 
     def _determine_check(self, i: int) -> bool:
         """

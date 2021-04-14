@@ -238,6 +238,8 @@ class JumpList(Row):
             list will be marked as disabled options.
         show_all_in_scope: If *True* (default), all pages in the scope
             will be shown, including those that cannot be jumped to.
+        display_page_name: If *True*, the page name will be displayed
+            in the select list. Defaults to *True*.
         label: Label to display on the jump button.
         button_style: Style of the jump button. See
             :class:`.SingleChoiceButtons` for more details on this
@@ -283,6 +285,7 @@ class JumpList(Row):
         button_style: Union[str, list] = "btn-dark",
         button_round_corners: bool = False,
         debugmode: bool = False,
+        display_page_name: bool = True,
         **kwargs,
     ):
 
@@ -297,6 +300,7 @@ class JumpList(Row):
             check_jumpto=check_jumpto,
             check_jumpfrom=check_jumpfrom,
             show_all_in_scope=show_all_in_scope,
+            display_page_name=display_page_name
         )
         btn = DynamicJumpButtons(
             (label, select_name),
