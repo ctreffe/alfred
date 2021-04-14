@@ -75,7 +75,7 @@ so we enter a 1 as the second argument::
 
     # notice that we 'collect' two values here at the start: i, img
     # i is the counter
-    for i, img in enumrate(img_dir.iterdir(), 1):
+    for i, img in enumerate(img_dir.iterdir(), 1):
             pass
 
 Within the loop, we now create a page, add the image and a SingleChoice
@@ -88,7 +88,7 @@ page - because we need to make sure that we can adequately connect the
 collected data to the respective image::
 
     
-    for i, img in enumrate(img_dir.iterdir(), 1):
+    for i, img in enumerate(img_dir.iterdir(), 1):
         page_name = f"img_page_{i}"
         self += al.Page(name=page_name)
 
