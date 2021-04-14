@@ -742,6 +742,52 @@ class SingleChoiceList(SingleChoice):
     def __init__(self, *choice_labels, default: int = 1, **kwargs):
         super().__init__(*choice_labels, default=default, **kwargs)
 
+    
+    def define_choices(self) -> List[_Choice]:
+        
+        choices = []
+        for i, label in enumerate(self.choice_labels, start=1):
+            choice = _Choice()
+
+            if not isinstance(label, str):
+                raise TypeError(f"Choice label in {type(self).__name__} must be string, not {type(label)}.")
+
+            choice.label = label
+            choice.type = "radio"
+            choice.value = choice.label
+            choice.name = self.name
+            choice.id = f"{self.name}_choice{i}"
+            if choice.id in self.exp.root_section.all_elements:
+                msg = (
+                    f"You have a SingleChoice-type element of name {self.name}, which means "
+                    f"that the name '{choice.id}' must be reserved. Please check if you are using "
+                    "it for any other element."
+                )
+                raise AlfredError(msg)
+
+            choice.label_id = f"{choice.id}-lab"
+            choice.disabled = True if self.disabled else False
+
+            if self.input:
+                choice.checked = True if int(self.input[f"choice{choice.value}"]) == i else False
+            elif self.default is not None:
+                choice.checked = True if self.default == i else False
+
+            choice.css_class = f"choice-button choice-button-{self.name}"
+
+            choices.append(choice)
+        return choices
+
+
+    def set_data(self, d):
+        if not self.disabled:
+            try:
+                self.input = d[self.name]
+            except KeyError:
+                self.log.debug(f"No data for {self} found in data dictionary. Moving on.")
+                pass
+
+
 @inherit_kwargs
 class MultipleChoiceList(MultipleChoice):
     """
