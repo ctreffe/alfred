@@ -140,6 +140,10 @@ class Section(ExpMember):
         members = list(self.members.items())
         shuffle(members)
         self.members = dict(members)
+    
+    @property
+    def empty(self):
+        return False if self.members else True
 
     @property
     def all_updated_members(self) -> dict:
@@ -183,11 +187,17 @@ class Section(ExpMember):
 
     @property
     def last_member(self):
-        return list(self.members.values())[-1]
+        try:
+            return list(self.members.values())[-1]
+        except IndexError:
+            return None
 
     @property
     def first_member(self):
-        return list(self.members.values())[0]
+        try:
+            return list(self.members.values())[0]
+        except IndexError:
+            return None
 
     @property
     def all_subsections(self) -> dict:
