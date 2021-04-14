@@ -1335,7 +1335,7 @@ class SelectPageList(SingleChoiceList):
         # set default value
         if self.default == i:
             checked = True
-        elif int(self.input) == i:
+        elif self.input == self.choice_labels[i-1]:
             checked = True
         elif self.debug_enabled and i == 1:
             checked = True
@@ -1352,10 +1352,3 @@ class SelectPageList(SingleChoiceList):
         
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
-
-    def set_data(self, d):
-        
-        value = d.get(self.name)
-        if value:
-            self._input = self.choice_labels.index(value) + 1
-
