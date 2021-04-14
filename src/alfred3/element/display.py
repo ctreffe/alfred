@@ -185,6 +185,7 @@ class Text(Element):
         path: Union[Path, str] = None,
         width: str = None,
         emojize: bool = True,
+        render_markdown: bool = True,
         **kwargs,
     ):
 
@@ -199,6 +200,7 @@ class Text(Element):
         #: bool: Boolean flag, indicating whether emoji shortcodes should be
         #: interpreted
         self.emojize: bool = emojize
+        self.render_markdown: bool = render_markdown
 
         if self._text and self.path:
             raise ValueError("You can only specify one of 'text' and 'path'.")
@@ -219,11 +221,13 @@ class Text(Element):
             str: Text rendered to html code
         """
 
+        text = self.text
+
         if self.emojize:
-            text = emojize(self.text, use_aliases=True)
-        else:
-            text = self.text
-        return cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+            text = emojize(text, use_aliases=True)
+        if self.render_markdown:
+            text = cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+        return text
 
     @text.setter
     def text(self, text):
