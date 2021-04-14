@@ -36,9 +36,12 @@ class Element:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
             final data set.
-        font_size: Font size for text in the element. Can be 'normal'
-            (default), 'big', 'huge', or an integer giving the desired
-            size in pt.
+        font_size: Font size for text in the element. You can use a 
+            keyword or an exact specification. The available keywords 
+            are 'tiny', 'small', 'normal', 'big', and 'huge'. The exact
+            specification shoul ideally include a unit, such as '1rem',
+            or '12pt'. If you supply an integer without a unit, a unit
+            of 'pt' will be assumed. Defaults to 'normal'.
         align: Horizontal alignment of text in the element. Does not
             usually apply to labels. Think of it as an alignment that
             applies to the innermost layer of an element (while labels
@@ -507,7 +510,7 @@ class Element:
         d["hide"] = "hide" if self._showif_on_current_page is True else ""
         d["align"] = f"text-{self.align}"
         d["align_raw"] = self.align
-        d["fontsize"] = f"font-size: {self.font_size}pt;" if self.font_size is not None else ""
+        d["fontsize"] = f"font-size: {self.font_size};" if self.font_size is not None else ""
         d["height"] = f"height: {self.height};" if self.height is not None else ""
         d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         return d
@@ -1490,7 +1493,7 @@ class LabelledElement(Element):
         if isinstance(value, Label):
             self._toplab = value
         elif isinstance(value, str):
-            self._toplab = Label(text=value, align="center")
+            self._toplab = Label(text=value, align="center", name=f"{self.name}_toplab")
         else:
             self._toplab = None
 
@@ -1506,7 +1509,7 @@ class LabelledElement(Element):
         if isinstance(value, Label):
             self._bottomlab = value
         elif isinstance(value, str):
-            self._bottomlab = Label(text=value, align="center")
+            self._bottomlab = Label(text=value, align="center", name=f"{self.name}_bottomlab")
         else:
             self._bottomlab = None
 
@@ -1524,7 +1527,7 @@ class LabelledElement(Element):
             self._leftlab.layout = self._layout
             self._leftlab.layout_col = 0
         elif isinstance(value, str):
-            self._leftlab = Label(text=value, align="right")
+            self._leftlab = Label(text=value, align="right", name=f"{self.name}_leftlab")
             self._leftlab.layout = self._layout
             self._leftlab.layout_col = 0
         else:
@@ -1544,7 +1547,7 @@ class LabelledElement(Element):
             self._rightlab.layout = self._layout
             self._rightlab.layout_col = self._input_col + 1
         elif isinstance(value, str):
-            self._rightlab = Label(text=value, align="left")
+            self._rightlab = Label(text=value, align="left", name=f"{self.name}_rightlab")
             self._rightlab.layout = self._layout
             self._rightlab.layout_col = self._input_col + 1
         else:

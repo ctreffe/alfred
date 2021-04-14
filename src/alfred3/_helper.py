@@ -17,7 +17,7 @@ import socket
 import functools
 import inspect
 
-def fontsize_converter(font_argument) -> int:
+def fontsize_converter(font_argument: Union[int, str]) -> str:
     '''
     FontsizeConverter checks any font arguments used in alfred and 
     returns a fontsize variable compatible with any element or page in 
@@ -27,19 +27,26 @@ def fontsize_converter(font_argument) -> int:
     if font_argument is None:
         return None
 
-    if font_argument == 'normal':
-        font_argument = 12
+    elif font_argument == 'normal':
+        return "1rem"
 
-    if font_argument == 'big':
-        font_argument = 16
+    elif font_argument == 'big':
+        return "1.5rem"
+    
+    elif font_argument == "small":
+        return "0.75rem"
+    
+    elif font_argument == "tiny":
+        return "0.5rem"
 
-    if font_argument == 'huge':
-        font_argument = 22
+    elif font_argument == 'huge':
+        return "2rem"
 
-    if not isinstance(font_argument, int):
-        font_argument = 12
-
-    return font_argument
+    elif isinstance(font_argument, int):
+        return f"{font_argument}pt"
+    
+    else:
+        return font_argument
 
 
 def alignment_converter(alignment_argument, type='text'):

@@ -197,6 +197,7 @@ div.input-group-append>div>label {
     flex-grow: 1;
     padding-left: 1rem;
     padding-right: 1rem;
+    overflow-wrap: break-word;
 }
 
 .page-header {
@@ -212,6 +213,7 @@ div.input-group-append>div>label {
     border-style: none none solid none;
     border-width: 1px;
     border-color: lightgrey;
+    overflow-wrap: break-word;
 }
 
 .page-subtitle {
@@ -276,6 +278,8 @@ p.page-subtitle {
     .responsive .multiple-choice-element > div {
         text-align: left;
     }
+
+    
 }
 
 /* Small devices (landscape phones, 576px and up) */
@@ -284,6 +288,8 @@ p.page-subtitle {
     .responsive-width {
         width: 85%;
     }
+
+    
     
 }
 
@@ -294,6 +300,8 @@ p.page-subtitle {
         width: 75%;
     }
 
+    
+
 }
 
 /* Large devices (desktops, 992px and up) */
@@ -302,6 +310,8 @@ p.page-subtitle {
     .responsive-width {
         width: 65%;
     }
+
+    
 
 }
 
@@ -312,6 +322,8 @@ p.page-subtitle {
         width: 55%;
         max-width: 928px;
     }
+
+    
 }
 
 
