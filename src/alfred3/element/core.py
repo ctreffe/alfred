@@ -877,7 +877,7 @@ class RowLayout:
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
 
         self._width_xs = value
 
@@ -899,7 +899,7 @@ class RowLayout:
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
 
         self._width_sm = value
 
@@ -921,7 +921,7 @@ class RowLayout:
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
 
         self._width_md = value
 
@@ -943,7 +943,7 @@ class RowLayout:
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
 
         self._width_lg = value
 
@@ -965,7 +965,7 @@ class RowLayout:
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
 
         self._width_xl = value
 
