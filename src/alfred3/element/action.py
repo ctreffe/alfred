@@ -151,6 +151,8 @@ class JumpButtons(SingleChoiceButtons):
             self.add_js(js)
 
     def validate_data(self):
+        if not self.should_be_shown:
+            return True
         
         cond1 = bool(self.input) if self.force_input else True
         return cond1

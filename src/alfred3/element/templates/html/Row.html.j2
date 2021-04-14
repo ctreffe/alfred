@@ -3,7 +3,9 @@
     {% for col in columns  %}
 
     <div class="{{ col.breaks }} {{ col.vertical_position }} Col-element" id="{{ col.id }}">
-        {{ col.element.web_widget }}
+        {% if col.element.should_be_shown %}
+            {{ col.element.web_widget }}
+        {% endif %}
     </div>
         
     {% endfor %}

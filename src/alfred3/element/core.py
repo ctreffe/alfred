@@ -128,6 +128,8 @@ class Element:
         self._showif_on_current_page = False
         self._should_be_shown = True  # documented in getter property
 
+        self.display_standalone = True
+
         # additional code
         self._css_code = []  # documented in getter property
         self._css_urls = []  # documented in getter property
@@ -186,6 +188,30 @@ class Element:
     @experiment.setter
     def experiment(self, exp):
         self.exp = exp
+
+    @property
+    def display_standalone(self):
+        """
+        bool: If *True* (default), the element will be displayed as 
+        usual on its own. If *False*, the element will not be displayed
+        unless you incorporate its :attr:`.Element.web_widget` in some
+        other way.
+
+        Notes:
+            An element with ``display_standalone = False`` will still be validated.
+
+        See Also:
+            Similar to :attr:`.Element.should_be_shown`. The main 
+            difference is that an element with 
+            ``display_standalone = False`` will still be validated, while an
+            element with ``should_be_shown = False`` will never be 
+            validated.
+        """
+        return self._display_standalone
+    
+    @display_standalone.setter
+    def display_standalone(self, value):
+        self._display_standalone = value
 
     @property
     def showif(self) -> dict:
@@ -1279,7 +1305,7 @@ class Row(Element):
         for element in self.elements:
             if element is None:
                 continue
-            element.should_be_shown = False
+            element.display_standalone = False
             page += element
 
             if self.elements_full_width:
