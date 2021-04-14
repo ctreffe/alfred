@@ -47,8 +47,8 @@ class Element:
             Can be 'left' (default), 'center', 'right', or 'justify'.
         position: Horizontal position of the full element on the
             page. Values can be 'left', 'center' (default), 'end',
-            or any valid value for the justify-content 
-            `flexbox utility <https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content>`_. 
+            or any valid value for the justify-content
+            `flexbox utility <https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content>`_.
             Takes effect only, when the element is not
             full-width.
         width: Defines the horizontal width of the element from
@@ -74,7 +74,7 @@ class Element:
 
     Notes:
         The Element does not have its own display. It is used only
-        to inherit functionality. 
+        to inherit functionality.
 
 
     """
@@ -102,9 +102,9 @@ class Element:
     ):
 
         self.name: str = name  # documented in getter property
-        self.page = None # documented in getter 
-        self.exp = None # documented in getter 
-        self.experiment = None # documented in getter 
+        self.page = None  # documented in getter
+        self.exp = None  # documented in getter
+        self.experiment = None  # documented in getter
 
         #: Alignment of inner element (does not apply to labels)
         self.align = align
@@ -143,10 +143,12 @@ class Element:
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
         if position != "center" and width == "full":
-            self.log.warning((
-                "You have changed the value of 'position' on a full-width element. "
-                "That will most likely not have an effect. Did you mean to change 'align'?"
-                ))
+            self.log.warning(
+                (
+                    "You have changed the value of 'position' on a full-width element. "
+                    "That will most likely not have an effect. Did you mean to change 'align'?"
+                )
+            )
 
     @property
     def page(self):
@@ -154,7 +156,7 @@ class Element:
         alfred3.Page: The page to which this element belongs.
         """
         return self._page
-    
+
     @page.setter
     def page(self, page):
         self._page = page
@@ -166,18 +168,18 @@ class Element:
         element belongs.
         """
         return self._exp
-    
+
     @exp.setter
     def exp(self, exp):
         self._exp = exp
-    
+
     @property
     def experiment(self):
         """
         Alias for :attr:`.exp`
         """
         return self._exp
-    
+
     @experiment.setter
     def experiment(self, exp):
         self.exp = exp
@@ -350,7 +352,7 @@ class Element:
 
             element = Element()
             element.element_width = [12, 12, 6]
-        
+
         .. _Bootstrap 4's 12-column-grid system: https://getbootstrap.com/docs/4.0/layout/grid/
 
         """
@@ -796,7 +798,7 @@ class RowLayout:
     breakpoint on extra small screens (i.e. all columns get the bootstrap
     class 'col-sm' by default).
 
-    The layout's width attributes can be accessed an changed to customize
+    The layout's width attributes can be accessed and changed to customize
     appearance. In this example, we change the width of the columns on
     screens of "small" and bigger width, so that we have narrow columns
     to the right and left (each taking up 2/12 of the available space),
@@ -827,21 +829,21 @@ class RowLayout:
         """Constructor method."""
         self.ncols: int = ncols
         self._valign_cols = valign_cols if valign_cols is not None else []
-        self.responsive: bool = responsive # documented in getter
+        self.responsive: bool = responsive  # documented in getter
 
-        self._width_xs: List[int] = None # documented in getter
-        self._width_sm: List[int] = None # documented in getter
-        self._width_md: List[int] = None # documented in getter
-        self._width_lg: List[int] = None # documented in getter
-        self._width_xl: List[int] = None # documented in getter
-    
+        self._width_xs: List[int] = None  # documented in getter
+        self._width_sm: List[int] = None  # documented in getter
+        self._width_md: List[int] = None  # documented in getter
+        self._width_lg: List[int] = None  # documented in getter
+        self._width_xl: List[int] = None  # documented in getter
+
     @property
     def ncols(self):
         """
         int: Number of columns
         """
         return self._ncols
-    
+
     @ncols.setter
     def ncols(self, value):
         self._ncols = value
@@ -852,7 +854,7 @@ class RowLayout:
         bool: Indicates whether breakpoints should be responsive, or not.
         """
         return self._responsive
-    
+
     @responsive.setter
     def responsive(self, value):
         self._responsive = value
@@ -864,7 +866,7 @@ class RowLayout:
         (<576px). Content must be integers between 1 and 12.
         """
         return self._width_xs
-    
+
     @width_xs.setter
     def width_xs(self, value):
         try:
@@ -872,8 +874,13 @@ class RowLayout:
         except (AssertionError, TypeError):
             raise ValueError("width must be a list of integers")
         
+        try:
+            assert len(value) <= self.ncols
+        except AssertionError:
+            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+
         self._width_xs = value
-    
+
     @property
     def width_sm(self):
         """
@@ -881,16 +888,21 @@ class RowLayout:
         (>=576px). Content must be integers between 1 and 12.
         """
         return self._width_sm
-    
+
     @width_sm.setter
     def width_sm(self, value):
         try:
             assert isinstance(value[0], int)
         except AssertionError:
             raise ValueError("width must be a list of integers")
-        
+
+        try:
+            assert len(value) <= self.ncols
+        except AssertionError:
+            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+
         self._width_sm = value
-    
+
     @property
     def width_md(self):
         """
@@ -898,7 +910,7 @@ class RowLayout:
         (>=768px). Content must be integers between 1 and 12.
         """
         return self._width_md
-    
+
     @width_md.setter
     def width_md(self, value):
         try:
@@ -906,8 +918,13 @@ class RowLayout:
         except AssertionError:
             raise ValueError("width must be a list of integers")
         
+        try:
+            assert len(value) <= self.ncols
+        except AssertionError:
+            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+
         self._width_md = value
-    
+
     @property
     def width_lg(self):
         """
@@ -915,7 +932,7 @@ class RowLayout:
         (>=992px). Content must be integers between 1 and 12.
         """
         return self._width_lg
-    
+
     @width_lg.setter
     def width_lg(self, value):
         try:
@@ -923,8 +940,13 @@ class RowLayout:
         except AssertionError:
             raise ValueError("width must be a list of integers")
         
+        try:
+            assert len(value) <= self.ncols
+        except AssertionError:
+            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
+
         self._width_lg = value
-    
+
     @property
     def width_xl(self):
         """
@@ -932,7 +954,7 @@ class RowLayout:
         (>=1200px). Content must be integers between 1 and 12.
         """
         return self._width_xl
-    
+
     @width_xl.setter
     def width_xl(self, value):
         try:
@@ -940,8 +962,12 @@ class RowLayout:
         except AssertionError:
             raise ValueError("width must be a list of integers")
         
-        self._width_xl = value
+        try:
+            assert len(value) <= self.ncols
+        except AssertionError:
+            raise ValueError(f"Length of replacement must be smaller or equal to the number of columns ({self.ncols}).")
 
+        self._width_xl = value
 
     def col_breaks(self, col: int) -> str:
         """
@@ -1113,7 +1139,7 @@ class Row(Element):
             This switch exists, because some elements might default to
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
-        
+
         {kwargs}
 
     Notes:
@@ -1197,9 +1223,11 @@ class Row(Element):
         """Constructor method."""
         super().__init__(name=name, showif=showif, height=height, **kwargs)
 
-        self.elements: list = elements # documented in getter
-        self.layout = RowLayout(ncols=len(self.elements), valign_cols=valign_cols) # documented in getter
-        self.elements_full_width: bool = elements_full_width # documented in getter
+        self.elements: list = elements  # documented in getter
+        self.layout = RowLayout(
+            ncols=len(self.elements), valign_cols=valign_cols
+        )  # documented in getter
+        self.elements_full_width: bool = elements_full_width  # documented in getter
 
     @property
     def elements(self):
@@ -1207,24 +1235,24 @@ class Row(Element):
         List[Element]: List of the elements in this row.
         """
         return self._elements
-    
+
     @elements.setter
     def elements(self, value):
         self._elements = value
-    
+
     @property
     def layout(self):
         """
-        RowLayout: The layout of this row, can be used to finetune 
+        RowLayout: The layout of this row, can be used to finetune
         column widths via its attributes. See :class:`.RowLayout` for
         the available width attributes.
         """
         return self._layout
-    
+
     @layout.setter
     def layout(self, value):
         self._layout = value
-    
+
     @property
     def elements_full_width(self):
         """
@@ -1236,13 +1264,13 @@ class Row(Element):
         This is done by default for better default layouting.
         """
         return self._elements_full_width
-    
+
     @elements_full_width.setter
     def elements_full_width(self, value):
         self._elements_full_width = value
 
     def added_to_page(self, page):
-        
+
         super().added_to_page(page)
 
         for element in self.elements:
@@ -1255,7 +1283,7 @@ class Row(Element):
                 element.width = "full"
 
     def _prepare_web_widget(self):
-        
+
         for element in self.elements:
             element.prepare_web_widget()
 
@@ -1275,11 +1303,12 @@ class Row(Element):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["columns"] = self._cols
         d["name"] = self.name
         return d
+
 
 @inherit_kwargs
 class Stack(Row):
@@ -1291,7 +1320,7 @@ class Stack(Row):
 
     Args:
         *elements: The elements to stack.
-        
+
         {kwargs}
 
     Examples:
@@ -1328,6 +1357,7 @@ class Stack(Row):
         super().__init__(*elements, **kwargs)
         self.layout.width_xs = [12 for element in elements]
 
+
 @inherit_kwargs
 class LabelledElement(Element):
     """
@@ -1337,14 +1367,22 @@ class LabelledElement(Element):
     equipped with labels.
 
     Args:
-        toplab, bottomlab, leftlab, rightlab: Labels above, below, left 
+        toplab, bottomlab, leftlab, rightlab: Labels above, below, left
             and right of the element.
 
-        layout: A list of integers, specifying the allocation of
-            horizontal space between leftlab, main element widget and
-            rightlab. Uses Bootstraps 12-column-grid, i.e. you can
-            choose integers between 1 and 12.
-        
+        layout: Can be one of the following: 1) An instance of
+            :class:`.RowLayout`, or 2) a tuple of integers, specifying 
+            the allocation of horizontal space between leftlab, main 
+            element widget and rightlab on small screens upwards. 
+
+            Option 1) offers fine-tuned flexibility, 2) uses a default
+            RowLayout and changes the :attr:`.RowLayout.width_sm` 
+            attribute.
+
+            By default, the layout is set automatically depending on the
+            specification of the left and right labels.
+
+
         {kwargs}
 
     Notes:
@@ -1361,42 +1399,62 @@ class LabelledElement(Element):
         leftlab: str = None,
         rightlab: str = None,
         bottomlab: str = None,
-        layout: List[int] = None,
+        layout: Union[RowLayout, Tuple[int]] = None,
         **kwargs,
     ):
         """Constructor method."""
         super().__init__(**kwargs)
-        # default for width
-        if leftlab and rightlab:
-            # for accessing the right col in layout.col_breaks for the input field
-            self._input_col = 1
-            self._layout = RowLayout(ncols=3)
-            self._layout.width_sm = layout if layout is not None else [2, 8, 2]
-        elif leftlab:
-            # for accessing the right col in layout.col_breaks for the input field
-            self._input_col = 1
-            self._layout = RowLayout(ncols=2)
-            self._layout.width_sm = layout if layout is not None else [3, 9]
-        elif rightlab:
-            # for accessing the right col in layout.col_breaks for the input field
-            self._input_col = 0
-            self._layout = RowLayout(ncols=2)
-            self._layout.width_sm = layout if layout is not None else [9, 3]
-        else:
-            # for accessing the right col in layout.col_breaks for the input field
-            self._input_col = 0
-            self._layout = RowLayout(ncols=1)
-            self._layout.width_sm = [12]
 
-        self._layout.valign_cols = ["center" for el in range(self._layout.ncols)]
+        self._ncols = len([x for x in [leftlab, rightlab, 1] if x is not None])
+        self._input_col = 1 if leftlab is not None else 0
+
+        if isinstance(layout, RowLayout):
+            self.layout = layout
+        else:
+            self.layout = RowLayout(ncols=self._ncols)
+            self.layout.valign_cols = ["center"]
+
+            if leftlab and rightlab:
+                width_sm = layout if layout is not None else [2, 8, 2]
+            elif leftlab:
+                width_sm = layout if layout is not None else [3, 9]
+            elif rightlab:
+                width_sm = layout if layout is not None else [9, 3]
+            else:
+                width_sm = [12]
+
+            self.layout.width_sm = width_sm
 
         self.toplab = toplab
         self.leftlab = leftlab
         self.rightlab = rightlab
         self.bottomlab = bottomlab
 
+    @property
+    def layout(self):
+        """
+        RowLayout: Controls the allocation of horizontal space between
+        the left and right label, as well as the main element.
+        """
+        return self._layout
+
+    @layout.setter
+    def layout(self, value: RowLayout):
+        try:
+            if not value.ncols == self._ncols:
+                raise AlfredError(
+                    (
+                        "The number of layout columns must match the specification of "
+                        f"left and right labels. In this case, you need {self._ncols} columns."
+                    )
+                )
+            self._layout = value
+        except AttributeError:
+            raise TypeError("Layout must be an instance of 'alfred3.RowLayout'.")
+
+
     def added_to_page(self, page):
-        
+
         super().added_to_page(page)
 
         for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
@@ -1404,7 +1462,7 @@ class LabelledElement(Element):
                 getattr(self, lab).name = f"{self.name}_{lab}"
 
     def added_to_experiment(self, experiment):
-        
+
         super().added_to_experiment(experiment)
         self._layout.responsive = self.experiment.config.getboolean("layout", "responsive")
 
@@ -1511,15 +1569,16 @@ class LabelledElement(Element):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["toplab"] = self.toplab
         d["leftlab"] = self.leftlab
         d["rightlab"] = self.rightlab
         d["bottomlab"] = self.bottomlab
-        d["input_breaks"] = self._layout.col_breaks(col=self._input_col)
-        d["input_valign"] = self._layout.valign_cols[self._input_col]
+        d["input_breaks"] = self.layout.col_breaks(col=self._input_col)
+        d["input_valign"] = self.layout.valign_cols[self._input_col]
         return d
+
 
 @inherit_kwargs
 class InputElement(LabelledElement):
@@ -1535,8 +1594,8 @@ class InputElement(LabelledElement):
             A general, experiment-wide setting for force_input can be
             placed in the config.conf (section "general"). That setting
             is used by default and can be overruled here for individual
-            elements. Defaults to False. 
-            
+            elements. Defaults to False.
+
             The experiment-wide default can be changed in config.conf.
 
         default: Default value. Type depends on the element type.
@@ -1546,11 +1605,11 @@ class InputElement(LabelledElement):
             show up in the alfred-generated codebook. It has
             no effect on the display of the experiment, as it only
             serves as a descriptor for humans.
-        no_input_hint: Hint to be displayed if 
-            *force_input* set to True and no user input registered. 
-            Defaults to the experiment-wide default value 
+        no_input_hint: Hint to be displayed if
+            *force_input* set to True and no user input registered.
+            Defaults to the experiment-wide default value
             specified in config.conf.
-        
+
         {kwargs}
 
     Notes:
@@ -1573,23 +1632,23 @@ class InputElement(LabelledElement):
     ):
         super().__init__(toplab=toplab, **kwargs)
 
-        self.description = description # documented in getter
-        self.input = "" # documented in getter
+        self.description = description  # documented in getter
+        self.input = ""  # documented in getter
         self._force_input = force_input  # documented in getter property
         self._no_input_hint = no_input_hint
         self._default = default  # documented in getter property
         self._prefix = prefix  # documented in getter property
         self._suffix = suffix  # documented in getter property
         self.show_hints: bool = True
-        self._hint_manager = MessageManager(default_level="danger") # documented in getter
-        self.disabled: bool = disabled # documented in getter
+        self._hint_manager = MessageManager(default_level="danger")  # documented in getter
+        self.disabled: bool = disabled  # documented in getter
 
         if default is not None:
             self.input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
             raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
-    
+
     @property
     def show_hints(self):
         """
@@ -1597,11 +1656,11 @@ class InputElement(LabelledElement):
         this element should be shown.
         """
         return self._show_hints
-    
+
     @show_hints.setter
     def show_hints(self, value):
         self._show_hints = value
-    
+
     @property
     def description(self):
         """
@@ -1609,11 +1668,11 @@ class InputElement(LabelledElement):
         automatically generated codebook
         """
         return self._description
-    
+
     @description.setter
     def description(self, value):
         self._description = value
-    
+
     @property
     def disabled(self):
         """
@@ -1622,11 +1681,11 @@ class InputElement(LabelledElement):
         value, but subjects cannot enter any data.
         """
         return self._disabled
-    
+
     @disabled.setter
     def disabled(self, value):
         self._disabled = value
-    
+
     @property
     def hint_manager(self):
         """
@@ -1636,7 +1695,7 @@ class InputElement(LabelledElement):
         return self._hint_manager
 
     def _prepare_web_widget(self):
-        
+
         super()._prepare_web_widget()
 
         try:
@@ -1727,7 +1786,7 @@ class InputElement(LabelledElement):
 
     @property
     def template_data(self) -> dict:
-        
+
         d = super().template_data
         d["default"] = self.default
         d["prefix"] = self.prefix
@@ -1885,7 +1944,7 @@ class InputElement(LabelledElement):
         return data
 
     def added_to_page(self, page):
-        
+
         from .. import page as pg
 
         if not isinstance(page, pg._PageCore):
@@ -1902,8 +1961,9 @@ class InputElement(LabelledElement):
             self.added_to_experiment(self.page.experiment)
         elif self.experiment:
             if self.name in self.experiment.root_section.all_updated_elements:
-                raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
-
+                raise AlfredError(
+                    f"Element name '{self.name}' is already present in the experiment."
+                )
 
         for fix in (self._prefix, self._suffix):
             try:
@@ -1912,7 +1972,6 @@ class InputElement(LabelledElement):
             except AttributeError as e:
                 self.log.debug(f"Exception passed silently: {e}")
                 pass
-
 
 
 @dataclass
@@ -1945,9 +2004,9 @@ class ChoiceElement(InputElement, ABC):
         vertical: Boolean switch, indicating whether the choices should
             be listed vertically. Defaults to *False*, i.e. horizontal
             display.
-        
+
         {kwargs}
-        
+
     """
 
     # Documented at :class:`.Element`
@@ -1972,30 +2031,30 @@ class ChoiceElement(InputElement, ABC):
 
         self._input = {}
 
-        self.choice_labels = choice_labels # documented in getter
-        self.vertical = vertical # documented in getter
+        self.choice_labels = choice_labels  # documented in getter
+        self.vertical = vertical  # documented in getter
 
         #: List of choices that belong to this element.
         self.choices: List[_Choice] = None
-    
+
     @property
     def vertical(self):
         """
         bool: Attribute defining, whether the element is displayed vertically.
         """
         return self._vertical
-    
+
     @vertical.setter
     def vertical(self, value):
         self._vertical = value
-    
+
     @property
     def choice_labels(self):
         """
         list: Stored list of choice labels.
         """
         return self._choice_labels
-    
+
     @choice_labels.setter
     def choice_labels(self, value: list):
         self._choice_labels = value
@@ -2016,12 +2075,12 @@ class ChoiceElement(InputElement, ABC):
                 label.width = "full"  # in case of TextElement, b/c its default is a special width
 
     def prepare_web_widget(self):
-        
+
         self.choices = self.define_choices()
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["choices"] = self.choices
         d["vertical"] = self.vertical
@@ -2041,7 +2100,7 @@ class ChoiceElement(InputElement, ABC):
 
     @property
     def codebook_data(self):
-        
+
         d = super().codebook_data
 
         for i, lab in enumerate(self.choice_labels, start=1):
