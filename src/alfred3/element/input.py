@@ -478,6 +478,28 @@ class SingleChoice(ChoiceElement):
                 def on_exp_access(self):
                     self += al.SingleChoice("Yes", "No", name="c1")
         
+        Accessing the input to a SingleChoice element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo_page"
+
+                def on_exp_access(self):
+                    self += al.SingleChoice("Yes", "No", name="c1")
+                
+                def on_first_hide(self):
+                    
+                    # access values
+                    c1_yes = self.exp.values["c1"]["choice1"]
+                    c1_no = self.exp.values["c1"]["choice2"]
+
+                    # log values
+                    self.log.info(f"'Yes' selected: {{c1_yes}}")
+                    self.log.info(f"'No' selected: {{c1_no}}")
+        
 
     """
 
@@ -569,6 +591,10 @@ class MultipleChoice(ChoiceElement):
 
         The keys are of the form "choice{{i}}", where {{i}} is a placeholer
         for the number of the choice.
+
+    See Also:
+        See :class:`.SingleChoice` for an example that shows how to access
+        data from a normal choice-type element within the experiment.
     
     Examples:
         A multiple choice element with three options::
@@ -715,6 +741,16 @@ class SingleChoiceList(SingleChoice):
         design. A typical way to remove meaning from this default is
         to make the fist choice a no-choice option (see examples).
 
+        Also, note that the SingleChoiceList uses a different data
+        representation than other choice elements. This is due to the
+        fact that a typical use case for a SingleChoiceList is selection
+        from a long list of possible choices. Also, choices can only be
+        strings, while other choice elements also allow, for example, images.
+
+        For this reason, the SingleChoiceList does not save a True/False
+        status for each choice, but simply the label of the selected choice
+        as a string. 
+
     Examples:
         A single choice list with a no-choice option as first option::
 
@@ -730,6 +766,25 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
+        
+        Accessing the value of a SingleChoiceList::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceList(
+                        "-no selection-", "choi1", "choi2", "choi3",
+                         name="sel1"
+                         )
+                
+                def on_first_hide(self):
+                    selection = self.exp.values["sel1"] # accesses selection
+                    self.log.info(selection) # logs selection string
 
     """
 
@@ -884,6 +939,10 @@ class SingleChoiceButtons(SingleChoice):
 
         - The *align* parameter does not affect the alignment of choice
           labels.
+
+    See Also:
+        See :class:`.SingleChoice` for an example that shows how to access
+        data from a normal choice-type element within the experiment.
 
     Examples:
         A single choice button element with three choices::
@@ -1064,6 +1123,10 @@ class SingleChoiceBar(SingleChoiceButtons):
     Args:
         {kwargs}
 
+    See Also:
+        See :class:`.SingleChoice` for an example that shows how to access
+        data from a normal choice-type element within the experiment.
+
     Examples:
         A single choice bar with three options::
 
@@ -1110,6 +1173,10 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
         
         {kwargs}
 
+    See Also:
+        See :class:`.SingleChoice` for an example that shows how to access
+        data from a normal choice-type element within the experiment.
+
     Examples:
         Multiple choice buttons with three options::
 
@@ -1136,6 +1203,10 @@ class MultipleChoiceBar(MultipleChoiceButtons):
 
     Args:
         {kwargs}
+
+    See Also:
+        See :class:`.SingleChoice` for an example that shows how to access
+        data from a normal choice-type element within the experiment.
 
     Examples:
         A multiple choice bar with three options::
