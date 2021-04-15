@@ -74,7 +74,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## v1.4
 
-### Added
+### Added v1.4
 
 With this version, alfred3 gains some powerful new features. This is the overview:
 
@@ -213,13 +213,13 @@ class Main(Section):
 
 ## alfred v1.3.1 (Released 2020-08-24)
 
-### Fixed
+### Fixed v1.3.1
 
 * Fixed a bug in the template donwloading CLI.
 
 ## alfred v1.3.0 (Released 2020-08-19)
 
-### Added
+### Added v1.3.0
 
 * We defined the *iadd* ( `+=` ) operator for all pages, sections and the experiment class. In many cases, it can replace a call to the `append()` method of these classes. Don't worry, the `append()` method is not going away. You can use this operator...
     - ... to append elements to a page
@@ -266,17 +266,17 @@ class Welcome(Page):
         self += TextElement("Testtext", name="text1")
 ```
 
-### Changed
+### Changed v1.3.0
 
 * When downloading a template, it is now allowed to have a `.idea` and a `.git` file already present in the target directory. Otherwise, the directory must be empty.
 
 ## alfred v1.2.1 (Released 2020-08-18)
 
-### Fixed
+### Fixed v1.2.1
 
 * Fixed an underspecified filepath handling that caused trouble with the logging initialization under windows.
 
-### Changed
+### Changed v1.2.1
 
 * We made using the flask debugger easier:
     - If you use the command line interface, you can add the flag 'debug' to start an experiment in debugging mode and use flask's builtin debugging tools. The command becomes `python -m alfred3.run -debug` .
@@ -315,7 +315,7 @@ Options:
 
 ## alfred v1.2.0 (Released 2020-07-13)
 
-### Added
+### Added v1.2.0
 
 #### Minor changes
 
@@ -418,7 +418,7 @@ Additional options allow for more flexibility. Take a look at them with the foll
 python3 -m alfred3.template --help
 ```
 
-### Changed
+### Changed v1.2.0
 
 #### Enhanced configuration
 
@@ -500,7 +500,7 @@ def generate_experiment(self, config=None):
 
 * You can now define an encryption key either in `secrets.conf` or in an environment variable named `ALFRED_ENCRYPTION_KEY` .
 
-### Removed
+### Removed v1.2.0
 
 #### Removed qt-webkit support
 
@@ -517,7 +517,7 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 
 ## alfred3 v1.1.5 (Released 2020-05-13)
 
-### Fixed
+### Fixed v1.1.5
 
 * Fixed a bug in the parsing of the auth_source parameter in `config.conf`
 
@@ -536,7 +536,7 @@ pip install alfred3
 
 * When alfred is installed via pip, you must change all imports in your `script.py` and `run.py` to the new name.
 
-### Changed
+### Changed v1.1.4
 
 * Changed name to alfred3 (see above).
 
@@ -571,40 +571,39 @@ pip install alfred3
 
 ## alfred v1.0.5
 
-### Bugfixes
+### Bugfixes v1.0.5
 
 * fixed #37 
 
-### Minor changes
+### Minor changes v1.0.5
 
 * rename `PageController.change_to_finished_section` : This was a missed function call from the old naming scheme. Generally, it will not affect the user in most cases, but it still exists as a deprecated function, logging a warning now.
 
-### Bugfixes
 
 ## alfred v1.0.4
 
-### Bugfixes
+### Bugfixes v1.0.4
 
 * This includes a hotfix for an issue with ALfred v1.0.3.
 
-### Minor changes
+### Minor changes v1.0.4
 
 * Local saving agent now checks, whether the path given in config.conf is absolute. If not, the agent treats it as a relative path, relative to the experiment directory.
 * Alfred now saves its the version number alongside each saved dataset, so that the used version can be identified.
 
 ## alfred v1.0.3
 
-### Bugfixes
+### Bugfixes v1.0.3
 
 * This includes a hotfix for an issue with Alfred v1.0.2
 
 ## alfred v1.0.2
 
-### Bugfixes
+### Bugfixes v1.0.2
 
 * Fixed a bug in `localserver.py` that caused trouble for videos implemented via `alfred.element.WebVideoElement` in Safari (wouldn't play at all) and Chrome (forward/backward wouldn't work)
 
-### Other changes
+### Other changes v1.0.2
 
 * `alfred.element.WebVideoElement` :
     - New parameter `source` : A filepath or url that points to the video ( `str` ).
@@ -618,13 +617,13 @@ pip install alfred3
 
 ## alfred v1.0.1
 
-### Bugfixes
+### Bugfixes v1.0.1
 
 * Fixed a bug that caused a mixup with filepaths for web experiments hosted with mortimer.
 
 ## alfred v1.0
 
-### Breaking changes
+### Breaking changes v1.0
 
 #### Port to Python 3
 
@@ -675,7 +674,7 @@ pip install alfred3
 
 * Importing a file from the project directory now **always** needs to take place within the `generate_experiment()` function. This is necessary for compatibility with the newest version of mortimer. This way, we can handle multiple resources directories.
 
-### New Features
+### New Features v1.0
 
 #### Define navigation button text in `config.conf`
 
@@ -750,7 +749,7 @@ def generate_experiment(self, config=None):
 
 ```
 
-### Deprecated
+### Deprecated v1.0
 
 | Deprecated function (alfred v0.2b5 name)  | Replaced by |
 | ------------- | ------------- | 
@@ -763,11 +762,11 @@ def generate_experiment(self, config=None):
 | `Experiment.questionController.appendItem()` | `Experiment.append()` |
 | `Experiment.questionController.appendItems()` | `Experiment.append()` |
 
-### Bug fixes and other changes
+### Bug fixes and other changes v1.0
 
 * **Improved handling of browser commands.** In web experiments, subjects used to be able to cause trouble by using the browser controls (forward, backward, refresh) instead of the experiment controls at the bottom of the page to move through an experiment. In some cases, this could render the subject's data unusable. Now, when a subject uses the browser controls, Alfred will always return the current state of the experiment. This way, no more data should be lost.
 * **Fixed a saving agent bug.** When quickly moving through an experiment, the saving agent sometimes didn't complete it's tasks correctly and basically crashed. This does not happen anymore.
 
-### Removed features
+### Removed features v1.0
 
 * **No more pure QT experiments.** We completely removed pure QT experiments from the framework. Those have recently seen very little use and have some drawbacks compared to web experiments and qt-webkit (qt-wk) experiments.
