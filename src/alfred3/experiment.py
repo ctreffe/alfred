@@ -766,7 +766,7 @@ class ExperimentSession:
         bar.added_to_experiment(self)
         self._progress_bar = bar
 
-    def start(self):
+    def _start(self):
         """
         Starts the experiment.
 
@@ -810,12 +810,12 @@ class ExperimentSession:
             raise AlfredError("There are no pages in your experiment.")
 
         if self.start_time:
-            msg = "ExperimentSession.start() was called. The experiment was already running. Leaving method."
+            msg = "ExperimentSession._start() was called. The experiment was already running. Leaving method."
             self.log.warning(msg)
             return
 
         self._start_time = time.time()
-        self.log.info("ExperimentSession.start() called. Session is starting.")
+        self.log.info("ExperimentSession._start() called. Session is starting.")
         self.user_interface_controller.start()
 
         jumpto = self.urlargs.get("jumpto")
@@ -910,7 +910,7 @@ class ExperimentSession:
         self.aborted = True
         self._aborted_because = reason
 
-    def finish(self):
+    def _finish(self):
         """
         Closes all pages and saves data.
 
@@ -923,10 +923,10 @@ class ExperimentSession:
             func(self)
 
         if self.finished:
-            msg = "ExperimentSession.finish() called. Experiment was already finished. Leaving method."
+            msg = "ExperimentSession._finish() called. Experiment was already finished. Leaving method."
             self.log.warning(msg)
             return
-        self.log.info("ExperimentSession.finish() called. Session is finishing.")
+        self.log.info("ExperimentSession._finish() called. Session is finishing.")
         self.finished = True
 
         for page in self.root_section.all_pages.values():

@@ -134,7 +134,7 @@ class Section(ExpMember):
         else:
             self.__dict__[name] = value
 
-    def shuffle_members(self):
+    def _shuffle_members(self):
         """Non-recursive shuffling of this section's members."""
 
         members = list(self.members.items())
@@ -444,7 +444,7 @@ class Section(ExpMember):
         self._update_members()
 
         if self.shuffle:
-            self.shuffle_members()
+            self._shuffle_members()
 
         if isinstance(self.first_member, Section) and not self.first_member.active:
             self._hand_over()
@@ -649,7 +649,7 @@ class _FinishedSection(Section):
 
     def _enter(self):
         super()._enter()
-        self.experiment.finish()
+        self.experiment._finish()
 
 
 class _AbortSection(Section):

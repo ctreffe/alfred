@@ -60,7 +60,7 @@ def start():
 
     # start experiment
     try:
-        script.exp_session.start()
+        script.exp_session._start()
     except Exception:
         log.exception("Exception during experiment startup.")
         abort(500)
