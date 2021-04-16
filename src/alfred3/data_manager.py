@@ -126,7 +126,6 @@ class DataManager(object):
     @property
     def element_data(self):
         eldata = self.experiment.root_section.data
-        # ul_eldata = self.experiment.root_section.unlinked_element_data
         return {**eldata}
     
     @property
