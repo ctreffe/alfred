@@ -122,7 +122,7 @@ class Section(ExpMember):
         try:
             return self.all_members[name]
         except KeyError:
-            return AttributeError(f"{self} has no attribute '{name}'.")
+            raise AttributeError(f"{self} has no attribute '{name}'.")
 
     def __setattr__(self, name, value):
 
