@@ -73,6 +73,7 @@ class DataManager(object):
     _metadata["exp_condition"] = None
     _metadata["exp_id"] = None
     _metadata["exp_session_id"] = None
+    _metadata["exp_plugin_queries"] = None
     _metadata["session_status"] = None
     _metadata["alfred_version"] = None
     _metadata["type"] = None
@@ -107,6 +108,7 @@ class DataManager(object):
         data["exp_condition"] = self._experiment.condition
         data["exp_id"] = self._experiment.exp_id
         data["exp_session_id"] = self._experiment.session_id
+        data["exp_plugin_queries"] = self._experiment._plugin_data_queries
         data["session_status"] = self._experiment.session_status
         data["alfred_version"] = self._experiment.alfred_version
         data["type"] = self.EXP_DATA
@@ -298,6 +300,7 @@ class DataManager(object):
     def flatten(data: dict) -> dict:
         eldata = data.pop("exp_data")
         data.pop("exp_move_history", None)
+        data.pop("exp_plugin_queries", None)
         data.pop("_id", None)
 
         values = {}

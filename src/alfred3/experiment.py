@@ -585,6 +585,13 @@ class ExperimentSession:
     ):
 
         self._plugins = _DictObj()  # docs in getter
+        
+        # list of dictionaries, each containing a query specification
+        # that can be used to query plugin-related data from a mongoDB
+        # (if a mongoDB is used). The query is saved along with the
+        # experiment data
+        self._plugin_data_queries = [] 
+        
         self._finish_functions: List[callable] = []  # docs in getter
         self._abort_functions: List[callable] = []  # docs in getter
 
@@ -645,6 +652,49 @@ class ExperimentSession:
                 f"Experiment version: {self.version}"
             )
         )
+
+    def append_plugin_data_query(self, query: dict):
+        """
+        Appends a query dictionary to the internal list of plugin data
+        queries.
+
+        The query dictionary must have the following basic structure::
+
+            {
+                "title": "Short title",
+                "type": "data_type",
+                "query": {
+                    "filter": {"field1": "val1"},
+                    ...
+                }
+            }
+        
+        The 'filter' subfield of 'query' contains the actual filter to
+        be passed on to the database. You can also define a 'projection'
+        subfield to control exactly which field will be returned by the
+        query. If part of the data is saved in encrypted form, you should
+        specify the field ``'encrypted': True``.
+
+        Raises:
+            ValueError: If the input dictionary does not conform to the
+            specifications.
+        """
+        if query in self._plugin_data_queries:
+            return
+
+        elif not "title" in query:
+            raise ValueError("Query must contain field 'title'.")
+        
+        elif not "type" in query:
+            raise ValueError("Query must contain field 'filename'.")
+        
+        elif not "query" in query:
+            raise ValueError("Query must contain field 'query'.")
+        
+        elif not "filter" in query["query"]:
+            raise ValueError("Field 'query' must contain subfield 'filter'.")
+        
+        self._plugin_data_queries.append(query)
 
     @property
     def session_expired(self) -> bool:
