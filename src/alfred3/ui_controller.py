@@ -232,25 +232,25 @@ class MovementManager:
         page_status_before = from_page.is_closed
         
         if direction == "jump":
-            from_page.section.move("jumpfrom")
+            from_page.section._move("jumpfrom")
         else:
-            from_page.section.move(direction)
+            from_page.section._move(direction)
 
         if to_page.section.name in from_page.section.all_members:
-            from_page.section.hand_over()
+            from_page.section._hand_over()
         else:
-            from_page.section.leave()
+            from_page.section._leave()
 
         if self.exp.config.getboolean("data", "record_move_history"):
             self.record_move(page_status_before, direction=direction, to_page=to_page)
         
         if direction == "jump":
-            to_page.section.move("jumpto")
+            to_page.section._move("jumpto")
 
         if from_page.section.name in to_page.section.all_members:
-            to_page.section.resume()
+            to_page.section._resume()
         else:
-            to_page.section.enter()
+            to_page.section._enter()
             
     def _conduct_movement(self, to_page, direction: str) -> Tuple[int, int]:
         """
@@ -280,10 +280,10 @@ class MovementManager:
         else:
             try:
                 if direction == "jump":
-                    current_page.section.move("jumpfrom")
-                    current_page.section.move("jumpto")
+                    current_page.section._move("jumpfrom")
+                    current_page.section._move("jumpto")
                 else:
-                    current_page.section.move(direction)
+                    current_page.section._move(direction)
             except ValidationError:
                 raise AbortMove()
 
@@ -433,7 +433,7 @@ class MovementManager:
     def start(self):
 
         self.current_index = self.index_of(self.first_visible_page)
-        self.exp.root_section.enter()
+        self.exp.root_section._enter()
         self.current_page._on_showing_widget(show_time=time.time())
 
 

@@ -108,11 +108,11 @@ class ExpMember:
         self._name_set_via = {}
 
         if self.name is not None:
-            self.set_name(self.name, via="class")
+            self._set_name(self.name, via="class")
         elif name is None:
-            self.set_name(type(self).__name__, via="class-auto")
+            self._set_name(type(self).__name__, via="class-auto")
         else:
-            self.set_name(name, via="argument")
+            self._set_name(name, via="argument")
     
     @property
     def vargs(self):
@@ -157,7 +157,7 @@ class ExpMember:
         return self._vargs
         
         
-    def set_name(self, name: str, via: str):
+    def _set_name(self, name: str, via: str):
         """
         Helps organize the different ways a name can be set.
 
@@ -231,28 +231,26 @@ class ExpMember:
     def uid(self):
         return self._uid
     
-    def visible(self, attr):
+    def visible(self, attr: str) -> dict:
+        """
+        Returns the subset of members in the given attribute that should
+        be shown.
+        
+        Args:
+            attr (str): Name of an attribute of the class which returns
+                a dictionary of members. For instance, sections allow
+                'all_members', 'members', 'all_pages', 'pages', and 
+                pages allow 'elements', 'all_elements', 'input_elements',
+                'filled_input_elements'.
+        """
         d = getattr(self, attr)
         return {name: value for name, value in d.items() if value.should_be_shown}
 
-    def set_should_be_shown_filter_function(self, f):
-        """
-        Sets a filter function. f must take Experiment as parameter
-        :type f: function
-        """
-        self._should_be_shown_filter_function = f
-
-    def remove_should_be_shown_filter_function(self):
-        """
-        remove the filter function
-        """
-        self._should_be_shown_filter_function = lambda exp: True
-
     @property
-    def should_be_shown(self):
+    def should_be_shown(self) -> bool:
         """
-        Returns True if should_be_shown is set to True (default) and all should_be_shown_filter_functions return True.
-        Otherwise False is returned
+        bool: Returns True if should_be_shown is set to True (default) and all
+        showif conditions return True.
         """
         cond1 = self._should_be_shown
         cond2 = all(self._evaluate_showif())

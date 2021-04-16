@@ -332,9 +332,9 @@ class Section(ExpMember):
         super().added_to_experiment(exp)
         self.log.add_queue_logger(self, __name__)
         self.on_exp_access()
-        self.update_members_recursively()
+        self._update_members_recursively()
 
-    def update_members(self):
+    def _update_members(self):
 
         for member in self.members.values():
             if not member.experiment:
@@ -342,21 +342,21 @@ class Section(ExpMember):
             if not member.section:
                 member.added_to_section(self)
 
-    def update_members_recursively(self):
+    def _update_members_recursively(self):
 
-        self.update_members()
+        self._update_members()
 
         for member in self.members.values():
-            member.update_members_recursively()
+            member._update_members_recursively()
 
-    def generate_unset_tags_in_subtree(self):
+    def _generate_unset_tags_in_subtree(self):
         for i, member in enumerate(self.members.values(), start=1):
 
             if member.tag is None:
                 member.tag = str(i)
 
             if isinstance(member, Section):
-                member.generate_unset_tags_in_subtree()
+                member._generate_unset_tags_in_subtree()
 
     def append(self, *items):
         for item in items:
@@ -373,7 +373,7 @@ class Section(ExpMember):
 
             if self.experiment is not None:
                 item.added_to_experiment(self.experiment)
-                item.update_members_recursively()
+                item._update_members_recursively()
 
             if not item.tag:
                 item.tag = str(len(self.members) + 1)
@@ -436,73 +436,73 @@ class Section(ExpMember):
         """
         pass
 
-    def enter(self):
+    def _enter(self):
         self.active = True
 
         self.log.debug(f"Entering {self}.")
         self.on_enter()
-        self.update_members()
+        self._update_members()
 
         if self.shuffle:
             self.shuffle_members()
 
         if isinstance(self.first_member, Section) and not self.first_member.active:
-            self.hand_over()
-            self.first_member.enter()
+            self._hand_over()
+            self.first_member._enter()
 
-    def leave(self):
+    def _leave(self):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
 
-        self.validate_on_leave()
+        self._validate_on_leave()
         for page in self.pages.values():
             page.close()
 
         if self is self.parent.last_member:
-            self.parent.leave()
+            self.parent._leave()
 
-    def resume(self):
+    def _resume(self):
         self.log.debug(f"Resuming to {self}.")
         self.on_resume()
 
-    def hand_over(self):
+    def _hand_over(self):
         self.log.debug(f"{self} handing over to child section.")
         self.on_hand_over()
 
-    def forward(self):
+    def _forward(self):
         pass
 
-    def backward(self):
+    def _backward(self):
         pass
 
-    def jumpfrom(self):
+    def _jumpfrom(self):
         pass
 
-    def jumpto(self):
+    def _jumpto(self):
         pass
 
-    def move(self, direction):
+    def _move(self, direction):
         """
         Conducts a section's part of moving in an alfred experiment.
 
         Raises:
             ValidationError: If validation of the current page fails.
         """
-        self.validate_on_move()
+        self._validate_on_move()
 
         if direction == "forward":
-            self.forward()
+            self._forward()
         elif direction == "backward":
-            self.backward()
+            self._backward()
         elif direction == "jumpfrom":
-            self.jumpfrom()
+            self._jumpfrom()
         elif direction == "jumpto":
-            self.jumpto()
+            self._jumpto()
 
         if self.exp.aborted:
             raise AbortMove
 
-    def validate_on_leave(self):
+    def _validate_on_leave(self):
         """
         Validates pages and their input elements within the section.
 
@@ -528,7 +528,7 @@ class Section(ExpMember):
                 self.exp.post_message(msg, level="danger")
                 raise ValidationError()
 
-    def validate_on_move(self):
+    def _validate_on_move(self):
         """
         Validates the current page and its elements.
 
@@ -585,12 +585,12 @@ class RevisitSection(Section):
     allow_jumpfrom: bool = True
     allow_jumpto: bool = True
 
-    def forward(self):
-        super().forward()
+    def _forward(self):
+        super()._forward()
         self.exp.movement_manager.current_page.close()
 
-    def jumpfrom(self):
-        super().jumpfrom()
+    def _jumpfrom(self):
+        super()._jumpfrom()
         self.exp.movement_manager.current_page.close()
 
 
@@ -647,8 +647,8 @@ class _FinishedSection(Section):
     allow_jumpfrom: bool = False
     allow_jumpto: bool = True
 
-    def enter(self):
-        super().enter()
+    def _enter(self):
+        super()._enter()
         self.experiment.finish()
 
 

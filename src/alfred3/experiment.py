@@ -635,8 +635,8 @@ class ExperimentSession:
 
         self._root_section = _RootSection(self)
         self.root_section.append_root_sections()
-        self.root_section.update_members_recursively()
-        self.root_section.generate_unset_tags_in_subtree()
+        self.root_section._update_members_recursively()
+        self.root_section._generate_unset_tags_in_subtree()
 
         self.user_interface_controller = UserInterface(self)
         self.ui = self.user_interface_controller

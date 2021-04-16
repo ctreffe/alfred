@@ -530,16 +530,16 @@ class _CoreCompositePage(_PageCore):
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self.on_exp_access()
-        self.update_elements()
+        self._update_elements()
 
     def added_to_section(self, section):
         super().added_to_section(section)
-        self.update_elements()
+        self._update_elements()
 
-    def update_members_recursively(self):
-        self.update_elements()
+    def _update_members_recursively(self):
+        self._update_elements()
 
-    def update_elements(self):
+    def _update_elements(self):
         if self.exp and self.section and self.tree.startswith("_root"):
             for element in self.elements.values():
                 if not element.exp:
