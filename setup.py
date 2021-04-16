@@ -34,7 +34,6 @@ setuptools.setup(
     package_dir={"": "src"},
     install_requires=[
         "pymongo>=3.10",
-        "future>=0.18",
         "cryptography>=2.9",
         "jinja2>=2.11",
         "Flask>=1.1",
