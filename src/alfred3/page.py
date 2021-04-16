@@ -128,12 +128,6 @@ class _PageCore(ExpMember):
         else:
             return self.experiment.config.get("hints", "minimum_display_time")
 
-        try:
-            self.experiment.page_controller.add_page(self)
-        except AttributeError:
-            if self.parent.tag == "finishedSection":
-                pass
-
     @minimum_display_time_msg.setter
     def minimum_display_time_msg(self, value: str):
         self._minimum_display_time_msg = value
