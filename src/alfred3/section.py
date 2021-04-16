@@ -4,6 +4,7 @@ Sections organize movement between pages in an experiment.
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
+from typing import Union
 
 from . import element as elm
 from ._core import ExpMember
@@ -142,18 +143,28 @@ class Section(ExpMember):
         self.members = dict(members)
     
     @property
-    def empty(self):
+    def empty(self) -> bool:
+        """
+        True, if there are no pages or subsections in this section.
+        """
         return False if self.members else True
 
     @property
     def all_updated_members(self) -> dict:
         """
         Returns a dict of all members that already have exp access.
+        Operates recursively, i.e. pages and subsections of subsections
+        are included.
         """
         return {name: m for name, m in self.all_members.items() if m.exp is not None}
 
     @property
     def all_updated_pages(self) -> dict:
+        """
+        Returns a dict of all pages in the current section that have
+        access to the experiment session. Operates recursively, i.e. 
+        pages in subsections are included.
+        """
         pages = {}
         for name, member in self.all_updated_members.items():
             if isinstance(member, _PageCore):
@@ -163,6 +174,11 @@ class Section(ExpMember):
 
     @property
     def all_updated_elements(self) -> dict:
+        """
+        Returns a dict of all elements in the current section that have
+        access to the experiment session. Operates recursively, i.e. 
+        elements on pages in subsections are included.
+        """
         elements = {}
         for page in self.all_updated_pages.values():
             elements.update(page.updated_elements)
@@ -186,14 +202,22 @@ class Section(ExpMember):
         return members
 
     @property
-    def last_member(self):
+    def last_member(self) -> Union[_PageCore, Section]:
+        """
+        Returns the last member of the current section. Can be a page
+        or a subsection.
+        """
         try:
             return list(self.members.values())[-1]
         except IndexError:
             return None
 
     @property
-    def first_member(self):
+    def first_member(self) -> Union[_PageCore, Section]:
+        """
+        Returns the first member of the current section. Can be a page
+        or a subsection.
+        """
         try:
             return list(self.members.values())[0]
         except IndexError:
@@ -246,10 +270,24 @@ class Section(ExpMember):
 
     @property
     def all_closed_pages(self) -> dict:
+        """
+        Returns a flat dict of all *closed* pages in this section and its 
+        subsections.
+
+        The order is preserved, i.e. pages are listed in this dict in
+        the same order in which they appear in the experiment.
+        """
         return {name: page for name, page in self.all_pages.items() if page.is_closed}
 
     @property
     def all_shown_pages(self) -> dict:
+        """
+        Returns a flat dict of all pages in this section and its 
+        subsections that have already been shown.
+
+        The order is preserved, i.e. pages are listed in this dict in
+        the same order in which they appear in the experiment.
+        """
         return {name: page for name, page in self.all_pages.items() if page.has_been_shown}
 
     @property
@@ -306,29 +344,30 @@ class Section(ExpMember):
         return elements
 
     @property
-    def data(self):
+    def data(self) -> dict:
+        """
+        Returns a dictionary of user input data for all pages in this
+        section and its subsections.
+        """
         data = {}
         for page in self.all_pages.values():
             data.update(page.data)
         return data
 
     @property
-    def unlinked_data(self):
+    def unlinked_data(self) -> dict:
+        """
+        Returns a dictionary of user input data for all *unlinked* pages 
+        in this section and its subsections.
+        """
         data = {}
         for page in self.all_pages.values():
             data.update(page.unlinked_data)
 
         return data
 
-    @property
-    def unlinked_element_data(self):
-        data = {}
-        for page in self.all_pages.values():
-            data.update(page.unlinked_element_data)
-
-        return data
-
     def added_to_experiment(self, exp):
+        # docstring inherited
         super().added_to_experiment(exp)
         self.log.add_queue_logger(self, __name__)
         self.on_exp_access()
@@ -359,6 +398,12 @@ class Section(ExpMember):
                 member._generate_unset_tags_in_subtree()
 
     def append(self, *items):
+        """
+        Appends pages or subsections to the section.
+
+        In practice, it is recommended to use the augmented assignment
+        operator ``+=`` instead in order to add pages or subsections.
+        """
         for item in items:
 
             if item.name in dir(self):

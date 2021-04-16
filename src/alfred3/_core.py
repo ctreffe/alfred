@@ -283,6 +283,12 @@ class ExpMember:
         self._subtitle = subtitle
 
     def added_to_experiment(self, exp):
+        """
+        Informs the member that it was added to an experiment session.
+
+        After this method is called, the member has access to the
+        experiment session through the attribute :attr:`.exp`
+        """
         if not self.name:
             raise AlfredError(f"{type(self).__name__} must have a unique name.")
         self._check_name_uniqueness(exp)
