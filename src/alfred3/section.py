@@ -202,7 +202,7 @@ class Section(ExpMember):
         return members
 
     @property
-    def last_member(self) -> Union[_PageCore, Section]:
+    def last_member(self):
         """
         Returns the last member of the current section. Can be a page
         or a subsection.
@@ -213,7 +213,7 @@ class Section(ExpMember):
             return None
 
     @property
-    def first_member(self) -> Union[_PageCore, Section]:
+    def first_member(self):
         """
         Returns the first member of the current section. Can be a page
         or a subsection.
@@ -399,7 +399,7 @@ class Section(ExpMember):
 
     def append(self, *items):
         """
-        Appends pages or subsections to the section.
+        Appends a variable number of pages or subsections to the section.
 
         In practice, it is recommended to use the augmented assignment
         operator ``+=`` instead in order to add pages or subsections.

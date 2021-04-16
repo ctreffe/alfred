@@ -327,6 +327,9 @@ class ExpMember:
         self._experiment = value
 
     def added_to_section(self, section):
+        """
+        Informs the member that it was added to a section.
+        """
         self._parent_section = section
         self._section = section
 

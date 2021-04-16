@@ -45,6 +45,8 @@ class _PageCore(ExpMember):
         {kwargs}
     """
 
+    #: If *True*, the names of all elements added to this page will
+    #: receive a prefix of the page's name.
     prefix_element_names: bool = False
 
     def __init__(
@@ -79,7 +81,7 @@ class _PageCore(ExpMember):
         super().__init__(**kwargs)
 
     @property
-    def minimum_display_time(self):
+    def minimum_display_time(self) -> str:
         """
         str: Minimal amount of time that a page must be displayed
         before participants can move forward.
@@ -107,7 +109,7 @@ class _PageCore(ExpMember):
         self._minimum_display_time = value
 
     def added_to_experiment(self, experiment):
-
+        # docstring inherited
         super().added_to_experiment(experiment)
         self.log.add_queue_logger(self, __name__)
 
@@ -118,7 +120,11 @@ class _PageCore(ExpMember):
                 self.minimum_display_time = "0s"
 
     @property
-    def minimum_display_time_msg(self):
+    def minimum_display_time_msg(self) -> str:
+        """
+        Message that is displayed if participants try to leave a page
+        before the minimum display time is up.
+        """
         msg = self._minimum_display_time_msg
         if msg is not None:
             return msg
@@ -130,7 +136,10 @@ class _PageCore(ExpMember):
         self._minimum_display_time_msg = value
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
+        """
+        Returns *True*, if the page is closed.
+        """
         return self._is_closed
 
     @property
@@ -141,7 +150,6 @@ class _PageCore(ExpMember):
         Evaluates the page's own settings, as well as the status of all
         of its parent sections. The page is only shown, if all
         conditions evaluate to *True*.
-
         """
         thispage = super().should_be_shown
         sections = [sec.should_be_shown for sec in self.uptree()]
@@ -178,6 +186,10 @@ class _PageCore(ExpMember):
 
     @property
     def has_been_shown(self) -> bool:
+        """
+        Returns *True*, if the page has been displayed in the ongoing
+        experiment session.
+        """
         return self._has_been_shown
 
     def _on_showing_widget(self, show_time: float = None):
@@ -332,17 +344,30 @@ class _PageCore(ExpMember):
         pass
 
     def close(self):
+        """
+        Closes the page. Usually, sections will take care of closing
+        pages. Only call this method, if you cannot solve your problem
+        by using a certain section.
+        """
         self.on_close()
         self._is_closed = True
 
-    def validate_page(self):
+    def validate_page(self) -> bool:
+        """
+        Returns *True*, if the validation checks pass, *False* otherwise.
+        """
         return True
 
-    def validate_elements(self):
+    def validate_elements(self) -> bool:
+        """
+        Returns *True*, if validation of all input elements passes,
+        *False* otherwise.
+        """
         return True
 
     def save_data(self, level: int = 1, sync: bool = False):
-        """Saves current experiment data.
+        """
+        Saves current experiment data.
 
         Collects the current experimental data and calls the
         experiment's main SavingAgentController to save the data with
@@ -356,6 +381,11 @@ class _PageCore(ExpMember):
             sync: If True, the saving task will be prioritised and the
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
+
+        Notes:
+            Note that this function will be called automatically on every
+            move in the experiment. Only call it yourself if it is 
+            really necessary.
         """
         if not self.exp.data_saver.main.agents and not self.exp.config.getboolean(
             "general", "debug"
@@ -371,7 +401,7 @@ class _PageCore(ExpMember):
         """
         Hook for computations for preparing a page for display.
 
-        Gets executed every time before the page is displayed.
+        Gets executed *every time* before the page is displayed.
         """
         pass
 
@@ -391,7 +421,10 @@ class _PageCore(ExpMember):
     def _js_urls(self):
         return []
 
-    def set_data(self, dictionary):
+    def _set_data(self, dictionary: dict):
+        """
+        Informs the page's input elements about user input.
+        """
         pass
 
 
@@ -429,7 +462,8 @@ class _CoreCompositePage(_PageCore):
 
     @property
     def input_elements(self) -> dict:
-        """Dict of all input elements on this page.
+        """
+        Dict of all input elements on this page.
 
         Does not evaluate whether an input element should be shown or
         not, because that might change over the course of an experiment.
@@ -443,29 +477,43 @@ class _CoreCompositePage(_PageCore):
 
     @property
     def all_input_elements(self) -> dict:
+        """
+        Alias for :attr:`.input_elements`.
+        """
         return self.input_elements
 
     @property
     def all_elements(self) -> dict:
+        """
+        Alias for :attr:`.elements`.
+        """
         return self.elements
 
     @property
     def updated_elements(self) -> dict:
+        """
+        Returns a dict of all elements on the page that already have 
+        access to the experiment session.
+        """
         return {name: elm for name, elm in self.elements.items() if elm.exp is not None}
 
     @property
     def filled_input_elements(self) -> dict:
-        """Dict of all input elements on this page with non-empty data attribute."""
+        """
+        Dict of all input elements on this page with non-empty data 
+        attribute. This includes elements that hav received participant
+        input and elements with default values.
+        """
 
         return {name: el for name, el in self.input_elements.items() if el.input}
 
-    @property
-    def all_parent_sections(self) -> dict:
-
-        pass
-
-
     def append(self, *elements):
+        """
+        Appends a variable number of elements to the page.
+
+        In practice, it is recommended to use the augmented assignment
+        operator ``+=`` instead in order to add elements.
+        """
         for elmnt in elements:
             if not isinstance(elmnt, (elm.core.Element)):
                 raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
@@ -496,11 +544,13 @@ class _CoreCompositePage(_PageCore):
 
 
     def added_to_experiment(self, experiment):
+        # docstring inherited
         super().added_to_experiment(experiment)
         self.on_exp_access()
         self._update_elements()
 
     def added_to_section(self, section):
+        # docstring inherited
         super().added_to_section(section)
         self._update_elements()
 
@@ -513,8 +563,8 @@ class _CoreCompositePage(_PageCore):
                 if not element.exp:
                     element.added_to_experiment(self.experiment)
 
-
     def close(self):
+        # docstring inherited
         super().close()
 
         for elmnt in self.elements.values():
@@ -527,7 +577,13 @@ class _CoreCompositePage(_PageCore):
                 elmnt.disabled = False
 
     @property
-    def data(self):
+    def data(self) -> dict:
+        """
+        Returns a dict of data for all input elements on the page. 
+
+        If the page has not been shown yet, an empty dict is returned.
+        """
+
         if not self.has_been_shown:
             return {}
         else:
@@ -537,10 +593,14 @@ class _CoreCompositePage(_PageCore):
             return data
 
     @property
-    def unlinked_data(self):
+    def unlinked_data(self) -> dict:
+        """
+        Returns an empty dict for 'normal' pages and the input data
+        for unlinked pages.
+        """
         return {}
 
-    def _set_data(self, dictionary):
+    def _set_data(self, dictionary: dict):
         for elmnt in self.input_elements.values():
             elmnt.set_data(dictionary)
 
@@ -611,10 +671,11 @@ class _CoreCompositePage(_PageCore):
 
     def durations(self) -> Iterator[float]:
         """
-        Iterates over the visit durations for this page.
-
+        Iterates over the visit durations for this page. 
+        
         Yields:
             float: Duration of a visit in seconds.
+        
         """
 
         if len(self.show_times) > len(self.hide_times):
@@ -626,12 +687,18 @@ class _CoreCompositePage(_PageCore):
             yield hide - show
 
     def last_duration(self) -> float:
-
-        *_, last_duration = self.duration()
+        """
+        Returns the duration of the last visit to this page in the 
+        current session in seconds.
+        """
+        *_, last_duration = self.durations()
         return last_duration
 
     def first_duration(self) -> float:
-
+        """
+        Returns the duration of the last visit to this page in the 
+        current session in seconds.
+        """
         first_duration, *_ = self.durations()
         return first_duration
 
@@ -764,7 +831,15 @@ class Page(_CoreCompositePage):
             self.background_color = background_color
 
     @property
-    def fixed_width(self):
+    def fixed_width(self) -> str:
+        """
+        Custom value for defining a fixed width of
+        the page. Only takes effect, if the experiment is set to
+        generally operate with a fixed page width in *config.conf*
+        (option *responsive* in section *layout* must be "false").
+        Must be a string including a unit, e.g. "900px". Can be
+        defined as a class attribute.
+        """
         return self._fixed_width
 
     @fixed_width.setter
@@ -773,6 +848,22 @@ class Page(_CoreCompositePage):
 
     @property
     def responsive_width(self):
+        """
+        Custom values for definig the width of
+        the page in percent of the screen width. Only takes
+        effect, if the option *responsive* in section *layout* is
+        "true" (which is the default). Must be a single string with
+        1 to 5 relative widths separated by commas, e.g. "60%, 50%".
+        The first value refers to extra small ('xs') screens, the
+        following values to the next bigger ones. If the string
+        contains less than five values, the last value will be used
+        for all screens from that size on upward.
+
+        The sizes are taken from Bootstrap and correspond to the
+        five width attributes of a :class:`.RowLayout`.
+
+        Can be defined as a class attribute.
+        """
         return self._responsive_width
 
     @responsive_width.setter
@@ -781,6 +872,12 @@ class Page(_CoreCompositePage):
 
     @property
     def header_color(self):
+        """
+        A color to be used for the header
+        of this page. Can be any color value understood by CSS,
+        including hex and RGB. Can be defined as a class
+        attribute.
+        """
         return self._header_color
 
     @header_color.setter
@@ -789,6 +886,12 @@ class Page(_CoreCompositePage):
 
     @property
     def background_color(self):
+        """
+        A color to be used for the background of
+        this page. Can be any color value understood by CSS,
+        including hex and RGB. Can be defined as a class
+        attribute.
+        """
         return self._background_color
 
     @background_color.setter
@@ -816,10 +919,12 @@ class Page(_CoreCompositePage):
         return " ".join(out)
 
     def prepare_web_widget(self):
+        # docstring inherited
         for elmnt in self.elements.values():
             elmnt._prepare_web_widget()
 
     def added_to_experiment(self, experiment):
+        # docstring inherited
         super().added_to_experiment(experiment)
         self._set_width()
         self._set_color()
@@ -1005,15 +1110,16 @@ class TimeoutPage(Page):
             )
 
     def added_to_experiment(self, experiment):
+        # docstring inherited
         super().added_to_experiment(experiment)
-        self._end_link = self._experiment.user_interface_controller.add_callable(self.callback)
+        self._end_link = self._experiment.user_interface_controller.add_callable(self._callback)
 
         if self._experiment.config.getboolean("general", "debug"):
             if self._experiment.config.getboolean("debug", "reduce_countdown"):
                 self.timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
 
     @property
-    def js_code(self):
+    def _js_code(self):
         code = (
             5,
             """
@@ -1051,7 +1157,7 @@ class TimeoutPage(Page):
             js_code.append((5, """$(document).ready(function(){$(".timeout-label").html(0);});"""))
         return js_code
 
-    def callback(self, **kwargs):
+    def _callback(self, **kwargs):
         self._run_timeout = False
         self._experiment.movement_manager.current_page._set_data(kwargs)
         self.on_timeout()
@@ -1222,6 +1328,10 @@ class NoSavingPage(Page):
     """
 
     def save_data(self, *args, **kwargs):
+        """
+        This page type does not save data on its own, so this method has
+        no effect.
+        """
         pass
 
 
@@ -1295,7 +1405,8 @@ class UnlinkedDataPage(NoDataPage):
             )
 
     @property
-    def unlinked_data(self):
+    def unlinked_data(self) -> dict:
+        # docstring inherited
         if not self.has_been_shown:
             return {}
         else:
@@ -1305,7 +1416,8 @@ class UnlinkedDataPage(NoDataPage):
             return data
 
     def save_data(self, level: int = 1, sync: bool = False):
-        """Saves current unlinked data.
+        """
+        Saves current unlinked data.
 
         Collects the unlinked data from all UnlinkedDataPages in the
         experiment and engages the experiment's unlinked
