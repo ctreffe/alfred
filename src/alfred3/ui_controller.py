@@ -509,7 +509,7 @@ class UserInterface:
 
     def _set_page_data(self, **data):
         data.pop("page_token", None)
-        self.exp.current_page.set_data(data)
+        self.exp.current_page._set_data(data)
         self.log.info("Page data set via 'set_page_data' callable route.")
         self.exp.current_page.save_data()
 
@@ -628,10 +628,10 @@ class UserInterface:
         code["layout_css_code"] = sorted(self.css_code)
         code["layout_js_code"] = sorted(self.js_code)
 
-        code["css_urls"] = page.css_urls
-        code["css_code"] = page.css_code
-        code["js_urls"] = page.js_urls
-        code["js_code"] = page.js_code
+        code["css_urls"] = page._css_urls
+        code["css_code"] = page._css_code
+        code["js_urls"] = page._js_urls
+        code["js_code"] = page._js_code
 
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution

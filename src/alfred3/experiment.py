@@ -937,7 +937,7 @@ class ExperimentSession:
             if self.config.getboolean("debug", "disable_saving"):
                 return
 
-        self.save_data(sync=True)
+        self._save_data(sync=True)
         self._export_data()
 
     def _export_data(self):
@@ -962,7 +962,7 @@ class ExperimentSession:
         if cfg.getboolean("export_move_history") and cfg.getboolean("record_move_history"):
             exporter.export(DataManager.HISTORY)
 
-    def save_data(self, sync: bool = False):
+    def _save_data(self, sync: bool = False):
         """
         Saves data with the main and unlinked saving agents.
 

@@ -103,7 +103,7 @@ def experiment():
             data.pop("par", None)
             data.pop("page_token", None)
 
-            script.exp_session.movement_manager.current_page.set_data(data)
+            script.exp_session.movement_manager.current_page._set_data(data)
 
             if move is None and not data:
                 pass

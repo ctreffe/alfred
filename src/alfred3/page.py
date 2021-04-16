@@ -69,14 +69,11 @@ class _PageCore(ExpMember):
 
         self._data = {}
         self._is_closed = False
-        self._show_corrective_hints = False
         self.show_times = []
         self.hide_times = []
 
         self.elements = {}
 
-        self._element_list = []
-        self._element_dict = {}
         self._element_name_counter = 1
 
         super().__init__(**kwargs)
@@ -133,18 +130,6 @@ class _PageCore(ExpMember):
         self._minimum_display_time_msg = value
 
     @property
-    def show_thumbnail(self):
-        return True
-
-    @property
-    def show_corrective_hints(self):
-        return self._show_corrective_hints
-
-    @show_corrective_hints.setter
-    def show_corrective_hints(self, b):
-        self._show_corrective_hints = bool(b)
-
-    @property
     def is_closed(self):
         return self._is_closed
 
@@ -181,9 +166,6 @@ class _PageCore(ExpMember):
             If a page that must be shown has not been shown, the
             experiment will display the hint *page_must_be_shown* as defined
             in config.conf, section "hints".
-
-            Such a message might still be quite confusing for
-            participants, and
 
             ..warning::
                 It is easy to end up in a situation where
@@ -349,17 +331,9 @@ class _PageCore(ExpMember):
         """
         pass
 
-    def close_page(self):
+    def close(self):
         self.on_close()
         self._is_closed = True
-
-    def corrective_hints(self):
-        """
-        returns a list of corrective hints
-
-        :rtype: list of unicode strings
-        """
-        return []
 
     def validate_page(self):
         return True
@@ -402,19 +376,19 @@ class _PageCore(ExpMember):
         pass
 
     @property
-    def css_code(self):
+    def _css_code(self):
         return []
 
     @property
-    def css_urls(self):
+    def _css_urls(self):
         return []
 
     @property
-    def js_code(self):
+    def _js_code(self):
         return []
 
     @property
-    def js_urls(self):
+    def _js_urls(self):
         return []
 
     def set_data(self, dictionary):
@@ -490,9 +464,6 @@ class _CoreCompositePage(_PageCore):
 
         pass
 
-    @property
-    def element_dict(self):
-        return self._element_dict
 
     def append(self, *elements):
         for elmnt in elements:
@@ -512,7 +483,7 @@ class _CoreCompositePage(_PageCore):
 
             self.elements[elmnt.name] = elmnt
 
-    def generate_element_name(self, element):
+    def _generate_element_name(self, element):
         i = self._element_name_counter
         c = element.__class__.__name__
         self._element_name_counter += 1
@@ -523,9 +494,6 @@ class _CoreCompositePage(_PageCore):
         self.append(other)
         return self
 
-    @property
-    def element_list(self):
-        return self._element_list
 
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
@@ -545,11 +513,9 @@ class _CoreCompositePage(_PageCore):
                 if not element.exp:
                     element.added_to_experiment(self.experiment)
 
-    def close(self):
-        self.close_page()
 
-    def close_page(self):
-        super().close_page()
+    def close(self):
+        super().close()
 
         for elmnt in self.elements.values():
             if isinstance(elmnt, elm.core.InputElement):
@@ -574,7 +540,7 @@ class _CoreCompositePage(_PageCore):
     def unlinked_data(self):
         return {}
 
-    def set_data(self, dictionary):
+    def _set_data(self, dictionary):
         for elmnt in self.input_elements.values():
             elmnt.set_data(dictionary)
 
@@ -669,7 +635,7 @@ class _CoreCompositePage(_PageCore):
         first_duration, *_ = self.durations()
         return first_duration
 
-    def validate_page(self):
+    def _validate_page(self):
 
         if not self.has_been_shown:
             if self.must_be_shown:
@@ -688,7 +654,7 @@ class _CoreCompositePage(_PageCore):
 
         return True
 
-    def validate_elements(self):
+    def _validate_elements(self):
         return all([el.validate_data() for el in self.input_elements.values()])
 
 
@@ -895,19 +861,19 @@ class Page(_CoreCompositePage):
             self += Style(code=f"body {{background-color: {c};}}")
 
     @property
-    def css_code(self):
+    def _css_code(self):
         return reduce(lambda l, element: l + element.css_code, self.elements.values(), [])
 
     @property
-    def css_urls(self):
+    def _css_urls(self):
         return reduce(lambda l, element: l + element.css_urls, self.elements.values(), [])
 
     @property
-    def js_code(self):
+    def _js_code(self):
         return reduce(lambda l, element: l + element.js_code, self.elements.values(), [])
 
     @property
-    def js_urls(self):
+    def _js_urls(self):
         return reduce(lambda l, element: l + element.js_urls, self.elements.values(), [])
 
 @inherit_kwargs
@@ -1078,7 +1044,7 @@ class TimeoutPage(Page):
         """
             % (self.timeout, self._end_link),
         )
-        js_code = super().js_code
+        js_code = super()._js_code
         if self._run_timeout:
             js_code.append(code)
         else:
@@ -1087,7 +1053,7 @@ class TimeoutPage(Page):
 
     def callback(self, **kwargs):
         self._run_timeout = False
-        self._experiment.movement_manager.current_page.set_data(kwargs)
+        self._experiment.movement_manager.current_page._set_data(kwargs)
         self.on_timeout()
 
     def on_timeout(self):
@@ -1159,7 +1125,7 @@ class AutoClosePage(TimeoutPage):
     """
 
     def on_timeout(self):
-        self.close_page()
+        self.close()
 
 
 @inherit_kwargs

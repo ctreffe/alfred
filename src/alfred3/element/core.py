@@ -624,7 +624,7 @@ class Element:
 
         self.page = page
         if self.name is None:
-            self.name = self.page.generate_element_name(self)
+            self.name = self.page._generate_element_name(self)
 
         if self.page.experiment and not self.experiment:
             self.added_to_experiment(self.page.experiment)

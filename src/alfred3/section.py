@@ -519,10 +519,10 @@ class Section(ExpMember):
         """
         for page in self.pages.values():
 
-            if not page.validate_page():
+            if not page._validate_page():
                 raise ValidationError()
 
-            if not page.validate_elements():
+            if not page._validate_elements():
                 msg = self.exp.config.get("hints", "no_input_section_validation")
                 msg = msg.format(n=len(self.pages))
                 self.exp.post_message(msg, level="danger")
@@ -539,10 +539,10 @@ class Section(ExpMember):
             ValidationError: If validation fails.
         """
 
-        if not self.exp.current_page.validate_page():
+        if not self.exp.current_page._validate_page():
             raise ValidationError()
 
-        if not self.exp.current_page.validate_elements():
+        if not self.exp.current_page._validate_elements():
             raise ValidationError()
 
 
