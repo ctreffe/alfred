@@ -5,8 +5,6 @@ Pages hold and organize elements.
 
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
-from __future__ import absolute_import
-
 import time
 import logging
 import string
@@ -16,8 +14,6 @@ from functools import reduce
 from pathlib import Path
 from typing import Union
 from typing import Iterator
-
-from future.utils import with_metaclass
 
 from . import alfredlog
 from . import element as elm

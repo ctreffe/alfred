@@ -17,8 +17,6 @@ from dataclasses import dataclass
 from typing import Union, Tuple
 
 import importlib.resources
-
-from future.utils import with_metaclass
 from jinja2 import Environment, PackageLoader
 
 from .alfredlog import QueuedLoggingInterface
