@@ -1,4 +1,4 @@
-﻿alfred3.element.action
+alfred3.element.action
 ======================
 
 .. automodule:: alfred3.element.action

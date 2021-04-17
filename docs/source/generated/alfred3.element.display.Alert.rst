@@ -57,6 +57,7 @@ Alert
          ~Alert.css_class_element
          ~Alert.css_code
          ~Alert.css_urls
+         ~Alert.display_standalone
          ~Alert.element_template
          ~Alert.element_width
          ~Alert.exp

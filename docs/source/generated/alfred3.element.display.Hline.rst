@@ -54,6 +54,7 @@ Hline
          ~Hline.css_class_element
          ~Hline.css_code
          ~Hline.css_urls
+         ~Hline.display_standalone
          ~Hline.element_template
          ~Hline.element_width
          ~Hline.exp

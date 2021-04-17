@@ -74,6 +74,7 @@ ChoiceElement
          ~ChoiceElement.default_no_input_hint
          ~ChoiceElement.description
          ~ChoiceElement.disabled
+         ~ChoiceElement.display_standalone
          ~ChoiceElement.element_template
          ~ChoiceElement.element_width
          ~ChoiceElement.emojize
@@ -86,6 +87,7 @@ ChoiceElement
          ~ChoiceElement.js_code
          ~ChoiceElement.js_urls
          ~ChoiceElement.labels
+         ~ChoiceElement.layout
          ~ChoiceElement.leftlab
          ~ChoiceElement.name
          ~ChoiceElement.no_input_hint

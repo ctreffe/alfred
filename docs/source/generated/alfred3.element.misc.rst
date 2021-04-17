@@ -20,9 +20,11 @@ alfred3.element.misc
       :template: autosummary/class.rst
       :nosignatures:
    
+      Callback
       Data
       HideNavigation
       JavaScript
+      RepeatedCallback
       Style
       Value
       WebExitEnabler

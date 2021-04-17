@@ -77,6 +77,7 @@ MultipleChoiceButtons
          ~MultipleChoiceButtons.default_no_input_hint
          ~MultipleChoiceButtons.description
          ~MultipleChoiceButtons.disabled
+         ~MultipleChoiceButtons.display_standalone
          ~MultipleChoiceButtons.element_template
          ~MultipleChoiceButtons.element_width
          ~MultipleChoiceButtons.emojize
@@ -89,6 +90,7 @@ MultipleChoiceButtons
          ~MultipleChoiceButtons.js_code
          ~MultipleChoiceButtons.js_urls
          ~MultipleChoiceButtons.labels
+         ~MultipleChoiceButtons.layout
          ~MultipleChoiceButtons.leftlab
          ~MultipleChoiceButtons.name
          ~MultipleChoiceButtons.no_input_hint

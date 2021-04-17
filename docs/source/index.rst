@@ -25,6 +25,7 @@ Documentation content
    :maxdepth: 2
    :caption: How To
 
+   howto_attributes_and_methods
    howto_exp
    howto_config
    howto_pages
@@ -61,6 +62,7 @@ This is an overview of the modules, for which documentation is available.
    :hidden:
 
    dev_docs
+   dev_plugin_data
 
 
 Indices and tables

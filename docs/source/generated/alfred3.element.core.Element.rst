@@ -54,6 +54,7 @@ Element
          ~Element.css_class_element
          ~Element.css_code
          ~Element.css_urls
+         ~Element.display_standalone
          ~Element.element_template
          ~Element.element_width
          ~Element.exp

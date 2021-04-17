@@ -27,16 +27,7 @@ AutoForwardPage
       ~AutoForwardPage.append
    
    
-      ~AutoForwardPage.callback
-   
-   
       ~AutoForwardPage.close
-   
-   
-      ~AutoForwardPage.close_page
-   
-   
-      ~AutoForwardPage.corrective_hints
    
    
       ~AutoForwardPage.custom_move
@@ -46,12 +37,6 @@ AutoForwardPage
    
    
       ~AutoForwardPage.first_duration
-   
-   
-      ~AutoForwardPage.generate_element_name
-   
-   
-      ~AutoForwardPage.get_page_data
    
    
       ~AutoForwardPage.last_duration
@@ -81,25 +66,7 @@ AutoForwardPage
       ~AutoForwardPage.prepare_web_widget
    
    
-      ~AutoForwardPage.remove_should_be_shown_filter_function
-   
-   
       ~AutoForwardPage.save_data
-   
-   
-      ~AutoForwardPage.set_data
-   
-   
-      ~AutoForwardPage.set_name
-   
-   
-      ~AutoForwardPage.set_should_be_shown_filter_function
-   
-   
-      ~AutoForwardPage.update_elements
-   
-   
-      ~AutoForwardPage.update_members_recursively
    
    
       ~AutoForwardPage.uptree
@@ -128,13 +95,9 @@ AutoForwardPage
       
          ~AutoForwardPage.all_elements
          ~AutoForwardPage.all_input_elements
-         ~AutoForwardPage.all_parent_sections
          ~AutoForwardPage.background_color
-         ~AutoForwardPage.css_code
-         ~AutoForwardPage.css_urls
          ~AutoForwardPage.data
-         ~AutoForwardPage.element_dict
-         ~AutoForwardPage.element_list
+         ~AutoForwardPage.elements
          ~AutoForwardPage.exp
          ~AutoForwardPage.experiment
          ~AutoForwardPage.filled_input_elements
@@ -144,8 +107,6 @@ AutoForwardPage
          ~AutoForwardPage.input_elements
          ~AutoForwardPage.instance_log
          ~AutoForwardPage.is_closed
-         ~AutoForwardPage.js_code
-         ~AutoForwardPage.js_urls
          ~AutoForwardPage.minimum_display_time
          ~AutoForwardPage.minimum_display_time_msg
          ~AutoForwardPage.must_be_shown
@@ -157,8 +118,6 @@ AutoForwardPage
          ~AutoForwardPage.section
          ~AutoForwardPage.short_tree
          ~AutoForwardPage.should_be_shown
-         ~AutoForwardPage.show_corrective_hints
-         ~AutoForwardPage.show_thumbnail
          ~AutoForwardPage.showif
          ~AutoForwardPage.subtitle
          ~AutoForwardPage.tag

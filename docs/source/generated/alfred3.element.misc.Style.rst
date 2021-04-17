@@ -54,6 +54,7 @@ Style
          ~Style.css_class_element
          ~Style.css_code
          ~Style.css_urls
+         ~Style.display_standalone
          ~Style.element_template
          ~Style.element_width
          ~Style.exp

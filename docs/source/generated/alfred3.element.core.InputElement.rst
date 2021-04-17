@@ -70,6 +70,7 @@ InputElement
          ~InputElement.default_no_input_hint
          ~InputElement.description
          ~InputElement.disabled
+         ~InputElement.display_standalone
          ~InputElement.element_template
          ~InputElement.element_width
          ~InputElement.exp
@@ -81,6 +82,7 @@ InputElement
          ~InputElement.js_code
          ~InputElement.js_urls
          ~InputElement.labels
+         ~InputElement.layout
          ~InputElement.leftlab
          ~InputElement.name
          ~InputElement.no_input_hint

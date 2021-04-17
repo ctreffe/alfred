@@ -58,6 +58,7 @@ CountDown
          ~CountDown.css_class_element
          ~CountDown.css_code
          ~CountDown.css_urls
+         ~CountDown.display_standalone
          ~CountDown.element_template
          ~CountDown.element_width
          ~CountDown.exp

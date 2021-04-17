@@ -30,12 +30,6 @@ NoDataPage
       ~NoDataPage.close
    
    
-      ~NoDataPage.close_page
-   
-   
-      ~NoDataPage.corrective_hints
-   
-   
       ~NoDataPage.custom_move
    
    
@@ -43,12 +37,6 @@ NoDataPage
    
    
       ~NoDataPage.first_duration
-   
-   
-      ~NoDataPage.generate_element_name
-   
-   
-      ~NoDataPage.get_page_data
    
    
       ~NoDataPage.last_duration
@@ -75,25 +63,7 @@ NoDataPage
       ~NoDataPage.prepare_web_widget
    
    
-      ~NoDataPage.remove_should_be_shown_filter_function
-   
-   
       ~NoDataPage.save_data
-   
-   
-      ~NoDataPage.set_data
-   
-   
-      ~NoDataPage.set_name
-   
-   
-      ~NoDataPage.set_should_be_shown_filter_function
-   
-   
-      ~NoDataPage.update_elements
-   
-   
-      ~NoDataPage.update_members_recursively
    
    
       ~NoDataPage.uptree
@@ -122,13 +92,9 @@ NoDataPage
       
          ~NoDataPage.all_elements
          ~NoDataPage.all_input_elements
-         ~NoDataPage.all_parent_sections
          ~NoDataPage.background_color
-         ~NoDataPage.css_code
-         ~NoDataPage.css_urls
          ~NoDataPage.data
-         ~NoDataPage.element_dict
-         ~NoDataPage.element_list
+         ~NoDataPage.elements
          ~NoDataPage.exp
          ~NoDataPage.experiment
          ~NoDataPage.filled_input_elements
@@ -138,8 +104,6 @@ NoDataPage
          ~NoDataPage.input_elements
          ~NoDataPage.instance_log
          ~NoDataPage.is_closed
-         ~NoDataPage.js_code
-         ~NoDataPage.js_urls
          ~NoDataPage.minimum_display_time
          ~NoDataPage.minimum_display_time_msg
          ~NoDataPage.must_be_shown
@@ -151,8 +115,6 @@ NoDataPage
          ~NoDataPage.section
          ~NoDataPage.short_tree
          ~NoDataPage.should_be_shown
-         ~NoDataPage.show_corrective_hints
-         ~NoDataPage.show_thumbnail
          ~NoDataPage.showif
          ~NoDataPage.subtitle
          ~NoDataPage.tag

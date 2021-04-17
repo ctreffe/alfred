@@ -77,6 +77,7 @@ SingleChoiceButtons
          ~SingleChoiceButtons.default_no_input_hint
          ~SingleChoiceButtons.description
          ~SingleChoiceButtons.disabled
+         ~SingleChoiceButtons.display_standalone
          ~SingleChoiceButtons.element_template
          ~SingleChoiceButtons.element_width
          ~SingleChoiceButtons.emojize
@@ -89,6 +90,7 @@ SingleChoiceButtons
          ~SingleChoiceButtons.js_code
          ~SingleChoiceButtons.js_urls
          ~SingleChoiceButtons.labels
+         ~SingleChoiceButtons.layout
          ~SingleChoiceButtons.leftlab
          ~SingleChoiceButtons.name
          ~SingleChoiceButtons.no_input_hint

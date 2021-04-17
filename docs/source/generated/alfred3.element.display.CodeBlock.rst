@@ -57,6 +57,7 @@ CodeBlock
          ~CodeBlock.css_class_element
          ~CodeBlock.css_code
          ~CodeBlock.css_urls
+         ~CodeBlock.display_standalone
          ~CodeBlock.element_template
          ~CodeBlock.element_width
          ~CodeBlock.exp

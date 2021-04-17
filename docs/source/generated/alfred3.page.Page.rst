@@ -30,12 +30,6 @@ Page
       ~Page.close
    
    
-      ~Page.close_page
-   
-   
-      ~Page.corrective_hints
-   
-   
       ~Page.custom_move
    
    
@@ -43,12 +37,6 @@ Page
    
    
       ~Page.first_duration
-   
-   
-      ~Page.generate_element_name
-   
-   
-      ~Page.get_page_data
    
    
       ~Page.last_duration
@@ -75,25 +63,7 @@ Page
       ~Page.prepare_web_widget
    
    
-      ~Page.remove_should_be_shown_filter_function
-   
-   
       ~Page.save_data
-   
-   
-      ~Page.set_data
-   
-   
-      ~Page.set_name
-   
-   
-      ~Page.set_should_be_shown_filter_function
-   
-   
-      ~Page.update_elements
-   
-   
-      ~Page.update_members_recursively
    
    
       ~Page.uptree
@@ -122,13 +92,9 @@ Page
       
          ~Page.all_elements
          ~Page.all_input_elements
-         ~Page.all_parent_sections
          ~Page.background_color
-         ~Page.css_code
-         ~Page.css_urls
          ~Page.data
-         ~Page.element_dict
-         ~Page.element_list
+         ~Page.elements
          ~Page.exp
          ~Page.experiment
          ~Page.filled_input_elements
@@ -138,8 +104,6 @@ Page
          ~Page.input_elements
          ~Page.instance_log
          ~Page.is_closed
-         ~Page.js_code
-         ~Page.js_urls
          ~Page.minimum_display_time
          ~Page.minimum_display_time_msg
          ~Page.must_be_shown
@@ -151,8 +115,6 @@ Page
          ~Page.section
          ~Page.short_tree
          ~Page.should_be_shown
-         ~Page.show_corrective_hints
-         ~Page.show_thumbnail
          ~Page.showif
          ~Page.subtitle
          ~Page.tag

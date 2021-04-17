@@ -77,6 +77,7 @@ ButtonLabels
          ~ButtonLabels.default_no_input_hint
          ~ButtonLabels.description
          ~ButtonLabels.disabled
+         ~ButtonLabels.display_standalone
          ~ButtonLabels.element_template
          ~ButtonLabels.element_width
          ~ButtonLabels.emojize
@@ -89,6 +90,7 @@ ButtonLabels
          ~ButtonLabels.js_code
          ~ButtonLabels.js_urls
          ~ButtonLabels.labels
+         ~ButtonLabels.layout
          ~ButtonLabels.leftlab
          ~ButtonLabels.name
          ~ButtonLabels.no_input_hint

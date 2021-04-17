@@ -78,6 +78,7 @@ MultipleChoiceBar
          ~MultipleChoiceBar.default_no_input_hint
          ~MultipleChoiceBar.description
          ~MultipleChoiceBar.disabled
+         ~MultipleChoiceBar.display_standalone
          ~MultipleChoiceBar.element_template
          ~MultipleChoiceBar.element_width
          ~MultipleChoiceBar.emojize
@@ -90,6 +91,7 @@ MultipleChoiceBar
          ~MultipleChoiceBar.js_code
          ~MultipleChoiceBar.js_urls
          ~MultipleChoiceBar.labels
+         ~MultipleChoiceBar.layout
          ~MultipleChoiceBar.leftlab
          ~MultipleChoiceBar.name
          ~MultipleChoiceBar.no_input_hint

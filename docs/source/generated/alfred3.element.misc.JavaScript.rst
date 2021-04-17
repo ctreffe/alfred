@@ -54,6 +54,7 @@ JavaScript
          ~JavaScript.css_class_element
          ~JavaScript.css_code
          ~JavaScript.css_urls
+         ~JavaScript.display_standalone
          ~JavaScript.element_template
          ~JavaScript.element_width
          ~JavaScript.exp

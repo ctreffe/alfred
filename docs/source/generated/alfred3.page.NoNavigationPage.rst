@@ -30,12 +30,6 @@ NoNavigationPage
       ~NoNavigationPage.close
    
    
-      ~NoNavigationPage.close_page
-   
-   
-      ~NoNavigationPage.corrective_hints
-   
-   
       ~NoNavigationPage.custom_move
    
    
@@ -43,12 +37,6 @@ NoNavigationPage
    
    
       ~NoNavigationPage.first_duration
-   
-   
-      ~NoNavigationPage.generate_element_name
-   
-   
-      ~NoNavigationPage.get_page_data
    
    
       ~NoNavigationPage.last_duration
@@ -75,25 +63,7 @@ NoNavigationPage
       ~NoNavigationPage.prepare_web_widget
    
    
-      ~NoNavigationPage.remove_should_be_shown_filter_function
-   
-   
       ~NoNavigationPage.save_data
-   
-   
-      ~NoNavigationPage.set_data
-   
-   
-      ~NoNavigationPage.set_name
-   
-   
-      ~NoNavigationPage.set_should_be_shown_filter_function
-   
-   
-      ~NoNavigationPage.update_elements
-   
-   
-      ~NoNavigationPage.update_members_recursively
    
    
       ~NoNavigationPage.uptree
@@ -122,13 +92,9 @@ NoNavigationPage
       
          ~NoNavigationPage.all_elements
          ~NoNavigationPage.all_input_elements
-         ~NoNavigationPage.all_parent_sections
          ~NoNavigationPage.background_color
-         ~NoNavigationPage.css_code
-         ~NoNavigationPage.css_urls
          ~NoNavigationPage.data
-         ~NoNavigationPage.element_dict
-         ~NoNavigationPage.element_list
+         ~NoNavigationPage.elements
          ~NoNavigationPage.exp
          ~NoNavigationPage.experiment
          ~NoNavigationPage.filled_input_elements
@@ -138,8 +104,6 @@ NoNavigationPage
          ~NoNavigationPage.input_elements
          ~NoNavigationPage.instance_log
          ~NoNavigationPage.is_closed
-         ~NoNavigationPage.js_code
-         ~NoNavigationPage.js_urls
          ~NoNavigationPage.minimum_display_time
          ~NoNavigationPage.minimum_display_time_msg
          ~NoNavigationPage.must_be_shown
@@ -151,8 +115,6 @@ NoNavigationPage
          ~NoNavigationPage.section
          ~NoNavigationPage.short_tree
          ~NoNavigationPage.should_be_shown
-         ~NoNavigationPage.show_corrective_hints
-         ~NoNavigationPage.show_thumbnail
          ~NoNavigationPage.showif
          ~NoNavigationPage.subtitle
          ~NoNavigationPage.tag

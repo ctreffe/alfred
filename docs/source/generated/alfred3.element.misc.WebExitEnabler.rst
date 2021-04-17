@@ -54,6 +54,7 @@ WebExitEnabler
          ~WebExitEnabler.css_class_element
          ~WebExitEnabler.css_code
          ~WebExitEnabler.css_urls
+         ~WebExitEnabler.display_standalone
          ~WebExitEnabler.element_template
          ~WebExitEnabler.element_width
          ~WebExitEnabler.exp

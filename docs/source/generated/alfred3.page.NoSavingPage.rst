@@ -30,12 +30,6 @@ NoSavingPage
       ~NoSavingPage.close
    
    
-      ~NoSavingPage.close_page
-   
-   
-      ~NoSavingPage.corrective_hints
-   
-   
       ~NoSavingPage.custom_move
    
    
@@ -43,12 +37,6 @@ NoSavingPage
    
    
       ~NoSavingPage.first_duration
-   
-   
-      ~NoSavingPage.generate_element_name
-   
-   
-      ~NoSavingPage.get_page_data
    
    
       ~NoSavingPage.last_duration
@@ -75,25 +63,7 @@ NoSavingPage
       ~NoSavingPage.prepare_web_widget
    
    
-      ~NoSavingPage.remove_should_be_shown_filter_function
-   
-   
       ~NoSavingPage.save_data
-   
-   
-      ~NoSavingPage.set_data
-   
-   
-      ~NoSavingPage.set_name
-   
-   
-      ~NoSavingPage.set_should_be_shown_filter_function
-   
-   
-      ~NoSavingPage.update_elements
-   
-   
-      ~NoSavingPage.update_members_recursively
    
    
       ~NoSavingPage.uptree
@@ -122,13 +92,9 @@ NoSavingPage
       
          ~NoSavingPage.all_elements
          ~NoSavingPage.all_input_elements
-         ~NoSavingPage.all_parent_sections
          ~NoSavingPage.background_color
-         ~NoSavingPage.css_code
-         ~NoSavingPage.css_urls
          ~NoSavingPage.data
-         ~NoSavingPage.element_dict
-         ~NoSavingPage.element_list
+         ~NoSavingPage.elements
          ~NoSavingPage.exp
          ~NoSavingPage.experiment
          ~NoSavingPage.filled_input_elements
@@ -138,8 +104,6 @@ NoSavingPage
          ~NoSavingPage.input_elements
          ~NoSavingPage.instance_log
          ~NoSavingPage.is_closed
-         ~NoSavingPage.js_code
-         ~NoSavingPage.js_urls
          ~NoSavingPage.minimum_display_time
          ~NoSavingPage.minimum_display_time_msg
          ~NoSavingPage.must_be_shown
@@ -151,8 +115,6 @@ NoSavingPage
          ~NoSavingPage.section
          ~NoSavingPage.short_tree
          ~NoSavingPage.should_be_shown
-         ~NoSavingPage.show_corrective_hints
-         ~NoSavingPage.show_thumbnail
          ~NoSavingPage.showif
          ~NoSavingPage.subtitle
          ~NoSavingPage.tag

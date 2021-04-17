@@ -77,6 +77,7 @@ JumpButtons
          ~JumpButtons.default_no_input_hint
          ~JumpButtons.description
          ~JumpButtons.disabled
+         ~JumpButtons.display_standalone
          ~JumpButtons.element_template
          ~JumpButtons.element_width
          ~JumpButtons.emojize
@@ -90,6 +91,7 @@ JumpButtons
          ~JumpButtons.js_template
          ~JumpButtons.js_urls
          ~JumpButtons.labels
+         ~JumpButtons.layout
          ~JumpButtons.leftlab
          ~JumpButtons.name
          ~JumpButtons.no_input_hint

@@ -70,6 +70,7 @@ Data
          ~Data.default_no_input_hint
          ~Data.description
          ~Data.disabled
+         ~Data.display_standalone
          ~Data.element_template
          ~Data.element_width
          ~Data.exp
@@ -81,6 +82,7 @@ Data
          ~Data.js_code
          ~Data.js_urls
          ~Data.labels
+         ~Data.layout
          ~Data.leftlab
          ~Data.name
          ~Data.no_input_hint

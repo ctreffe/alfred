@@ -71,6 +71,7 @@ RegEntry
          ~RegEntry.default_no_input_hint
          ~RegEntry.description
          ~RegEntry.disabled
+         ~RegEntry.display_standalone
          ~RegEntry.element_template
          ~RegEntry.element_width
          ~RegEntry.exp
@@ -82,6 +83,7 @@ RegEntry
          ~RegEntry.js_code
          ~RegEntry.js_urls
          ~RegEntry.labels
+         ~RegEntry.layout
          ~RegEntry.leftlab
          ~RegEntry.match_hint
          ~RegEntry.name

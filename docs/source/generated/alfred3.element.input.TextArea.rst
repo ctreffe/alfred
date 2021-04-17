@@ -70,6 +70,7 @@ TextArea
          ~TextArea.default_no_input_hint
          ~TextArea.description
          ~TextArea.disabled
+         ~TextArea.display_standalone
          ~TextArea.element_template
          ~TextArea.element_width
          ~TextArea.exp
@@ -81,6 +82,7 @@ TextArea
          ~TextArea.js_code
          ~TextArea.js_urls
          ~TextArea.labels
+         ~TextArea.layout
          ~TextArea.leftlab
          ~TextArea.name
          ~TextArea.no_input_hint

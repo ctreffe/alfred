@@ -27,36 +27,6 @@ RevisitSection
       ~RevisitSection.append
    
    
-      ~RevisitSection.backward
-   
-   
-      ~RevisitSection.enter
-   
-   
-      ~RevisitSection.forward
-   
-   
-      ~RevisitSection.generate_unset_tags_in_subtree
-   
-   
-      ~RevisitSection.get_page_data
-   
-   
-      ~RevisitSection.hand_over
-   
-   
-      ~RevisitSection.jumpfrom
-   
-   
-      ~RevisitSection.jumpto
-   
-   
-      ~RevisitSection.leave
-   
-   
-      ~RevisitSection.move
-   
-   
       ~RevisitSection.on_enter
    
    
@@ -70,27 +40,6 @@ RevisitSection
    
    
       ~RevisitSection.on_resume
-   
-   
-      ~RevisitSection.remove_should_be_shown_filter_function
-   
-   
-      ~RevisitSection.resume
-   
-   
-      ~RevisitSection.set_name
-   
-   
-      ~RevisitSection.set_should_be_shown_filter_function
-   
-   
-      ~RevisitSection.shuffle_members
-   
-   
-      ~RevisitSection.update_members
-   
-   
-      ~RevisitSection.update_members_recursively
    
    
       ~RevisitSection.uptree
@@ -133,11 +82,13 @@ RevisitSection
          ~RevisitSection.allow_jumpfrom
          ~RevisitSection.allow_jumpto
          ~RevisitSection.data
+         ~RevisitSection.empty
          ~RevisitSection.exp
          ~RevisitSection.experiment
          ~RevisitSection.first_member
          ~RevisitSection.instance_log
          ~RevisitSection.last_member
+         ~RevisitSection.members
          ~RevisitSection.name
          ~RevisitSection.pages
          ~RevisitSection.parent
@@ -154,7 +105,6 @@ RevisitSection
          ~RevisitSection.tree
          ~RevisitSection.uid
          ~RevisitSection.unlinked_data
-         ~RevisitSection.unlinked_element_data
          ~RevisitSection.vargs
       
    

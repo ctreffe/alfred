@@ -57,6 +57,7 @@ Text
          ~Text.css_class_element
          ~Text.css_code
          ~Text.css_urls
+         ~Text.display_standalone
          ~Text.element_template
          ~Text.element_width
          ~Text.exp

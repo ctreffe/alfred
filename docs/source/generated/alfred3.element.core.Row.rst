@@ -54,6 +54,7 @@ Row
          ~Row.css_class_element
          ~Row.css_code
          ~Row.css_urls
+         ~Row.display_standalone
          ~Row.element_template
          ~Row.element_width
          ~Row.elements

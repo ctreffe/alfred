@@ -74,6 +74,7 @@ SingleChoice
          ~SingleChoice.default_no_input_hint
          ~SingleChoice.description
          ~SingleChoice.disabled
+         ~SingleChoice.display_standalone
          ~SingleChoice.element_template
          ~SingleChoice.element_width
          ~SingleChoice.emojize
@@ -86,6 +87,7 @@ SingleChoice
          ~SingleChoice.js_code
          ~SingleChoice.js_urls
          ~SingleChoice.labels
+         ~SingleChoice.layout
          ~SingleChoice.leftlab
          ~SingleChoice.name
          ~SingleChoice.no_input_hint

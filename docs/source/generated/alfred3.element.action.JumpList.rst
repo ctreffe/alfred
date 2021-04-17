@@ -54,6 +54,7 @@ JumpList
          ~JumpList.css_class_element
          ~JumpList.css_code
          ~JumpList.css_urls
+         ~JumpList.display_standalone
          ~JumpList.element_template
          ~JumpList.element_width
          ~JumpList.elements

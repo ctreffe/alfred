@@ -74,6 +74,7 @@ SingleChoiceList
          ~SingleChoiceList.default_no_input_hint
          ~SingleChoiceList.description
          ~SingleChoiceList.disabled
+         ~SingleChoiceList.display_standalone
          ~SingleChoiceList.element_template
          ~SingleChoiceList.element_width
          ~SingleChoiceList.emojize
@@ -86,6 +87,7 @@ SingleChoiceList
          ~SingleChoiceList.js_code
          ~SingleChoiceList.js_urls
          ~SingleChoiceList.labels
+         ~SingleChoiceList.layout
          ~SingleChoiceList.leftlab
          ~SingleChoiceList.name
          ~SingleChoiceList.no_input_hint

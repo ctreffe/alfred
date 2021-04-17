@@ -54,6 +54,7 @@ VerticalSpace
          ~VerticalSpace.css_class_element
          ~VerticalSpace.css_code
          ~VerticalSpace.css_urls
+         ~VerticalSpace.display_standalone
          ~VerticalSpace.element_template
          ~VerticalSpace.element_width
          ~VerticalSpace.exp

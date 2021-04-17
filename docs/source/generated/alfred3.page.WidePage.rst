@@ -30,12 +30,6 @@ WidePage
       ~WidePage.close
    
    
-      ~WidePage.close_page
-   
-   
-      ~WidePage.corrective_hints
-   
-   
       ~WidePage.custom_move
    
    
@@ -43,12 +37,6 @@ WidePage
    
    
       ~WidePage.first_duration
-   
-   
-      ~WidePage.generate_element_name
-   
-   
-      ~WidePage.get_page_data
    
    
       ~WidePage.last_duration
@@ -75,25 +63,7 @@ WidePage
       ~WidePage.prepare_web_widget
    
    
-      ~WidePage.remove_should_be_shown_filter_function
-   
-   
       ~WidePage.save_data
-   
-   
-      ~WidePage.set_data
-   
-   
-      ~WidePage.set_name
-   
-   
-      ~WidePage.set_should_be_shown_filter_function
-   
-   
-      ~WidePage.update_elements
-   
-   
-      ~WidePage.update_members_recursively
    
    
       ~WidePage.uptree
@@ -122,13 +92,9 @@ WidePage
       
          ~WidePage.all_elements
          ~WidePage.all_input_elements
-         ~WidePage.all_parent_sections
          ~WidePage.background_color
-         ~WidePage.css_code
-         ~WidePage.css_urls
          ~WidePage.data
-         ~WidePage.element_dict
-         ~WidePage.element_list
+         ~WidePage.elements
          ~WidePage.exp
          ~WidePage.experiment
          ~WidePage.filled_input_elements
@@ -138,8 +104,6 @@ WidePage
          ~WidePage.input_elements
          ~WidePage.instance_log
          ~WidePage.is_closed
-         ~WidePage.js_code
-         ~WidePage.js_urls
          ~WidePage.minimum_display_time
          ~WidePage.minimum_display_time_msg
          ~WidePage.must_be_shown
@@ -151,8 +115,6 @@ WidePage
          ~WidePage.section
          ~WidePage.short_tree
          ~WidePage.should_be_shown
-         ~WidePage.show_corrective_hints
-         ~WidePage.show_thumbnail
          ~WidePage.showif
          ~WidePage.subtitle
          ~WidePage.tag

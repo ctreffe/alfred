@@ -55,6 +55,7 @@ CountUp
          ~CountUp.css_class_element
          ~CountUp.css_code
          ~CountUp.css_urls
+         ~CountUp.display_standalone
          ~CountUp.element_template
          ~CountUp.element_width
          ~CountUp.exp

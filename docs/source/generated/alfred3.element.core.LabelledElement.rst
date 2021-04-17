@@ -55,6 +55,7 @@ LabelledElement
          ~LabelledElement.css_class_element
          ~LabelledElement.css_code
          ~LabelledElement.css_urls
+         ~LabelledElement.display_standalone
          ~LabelledElement.element_template
          ~LabelledElement.element_width
          ~LabelledElement.exp
@@ -63,6 +64,7 @@ LabelledElement
          ~LabelledElement.js_code
          ~LabelledElement.js_urls
          ~LabelledElement.labels
+         ~LabelledElement.layout
          ~LabelledElement.leftlab
          ~LabelledElement.name
          ~LabelledElement.page

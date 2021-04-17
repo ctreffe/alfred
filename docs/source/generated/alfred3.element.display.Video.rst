@@ -54,6 +54,7 @@ Video
          ~Video.css_class_element
          ~Video.css_code
          ~Video.css_urls
+         ~Video.display_standalone
          ~Video.element_template
          ~Video.element_width
          ~Video.exp

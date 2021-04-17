@@ -72,6 +72,7 @@ NumberEntry
          ~NumberEntry.default_no_input_hint
          ~NumberEntry.description
          ~NumberEntry.disabled
+         ~NumberEntry.display_standalone
          ~NumberEntry.element_template
          ~NumberEntry.element_width
          ~NumberEntry.exp
@@ -83,6 +84,7 @@ NumberEntry
          ~NumberEntry.js_code
          ~NumberEntry.js_urls
          ~NumberEntry.labels
+         ~NumberEntry.layout
          ~NumberEntry.leftlab
          ~NumberEntry.match_hint
          ~NumberEntry.max

@@ -58,6 +58,7 @@ Label
          ~Label.css_class_element
          ~Label.css_code
          ~Label.css_urls
+         ~Label.display_standalone
          ~Label.element_template
          ~Label.element_width
          ~Label.exp

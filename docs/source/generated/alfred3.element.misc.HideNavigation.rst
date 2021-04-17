@@ -54,6 +54,7 @@ HideNavigation
          ~HideNavigation.css_class_element
          ~HideNavigation.css_code
          ~HideNavigation.css_urls
+         ~HideNavigation.display_standalone
          ~HideNavigation.element_template
          ~HideNavigation.element_width
          ~HideNavigation.exp

@@ -54,6 +54,7 @@ Image
          ~Image.css_class_element
          ~Image.css_code
          ~Image.css_urls
+         ~Image.display_standalone
          ~Image.element_template
          ~Image.element_width
          ~Image.exp

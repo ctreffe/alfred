@@ -77,6 +77,7 @@ SubmittingButtons
          ~SubmittingButtons.default_no_input_hint
          ~SubmittingButtons.description
          ~SubmittingButtons.disabled
+         ~SubmittingButtons.display_standalone
          ~SubmittingButtons.element_template
          ~SubmittingButtons.element_width
          ~SubmittingButtons.emojize
@@ -89,6 +90,7 @@ SubmittingButtons
          ~SubmittingButtons.js_code
          ~SubmittingButtons.js_urls
          ~SubmittingButtons.labels
+         ~SubmittingButtons.layout
          ~SubmittingButtons.leftlab
          ~SubmittingButtons.name
          ~SubmittingButtons.no_input_hint

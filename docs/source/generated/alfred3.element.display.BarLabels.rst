@@ -77,6 +77,7 @@ BarLabels
          ~BarLabels.default_no_input_hint
          ~BarLabels.description
          ~BarLabels.disabled
+         ~BarLabels.display_standalone
          ~BarLabels.element_template
          ~BarLabels.element_width
          ~BarLabels.emojize
@@ -89,6 +90,7 @@ BarLabels
          ~BarLabels.js_code
          ~BarLabels.js_urls
          ~BarLabels.labels
+         ~BarLabels.layout
          ~BarLabels.leftlab
          ~BarLabels.name
          ~BarLabels.no_input_hint

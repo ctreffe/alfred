@@ -77,6 +77,7 @@ SingleChoiceBar
          ~SingleChoiceBar.default_no_input_hint
          ~SingleChoiceBar.description
          ~SingleChoiceBar.disabled
+         ~SingleChoiceBar.display_standalone
          ~SingleChoiceBar.element_template
          ~SingleChoiceBar.element_width
          ~SingleChoiceBar.emojize
@@ -89,6 +90,7 @@ SingleChoiceBar
          ~SingleChoiceBar.js_code
          ~SingleChoiceBar.js_urls
          ~SingleChoiceBar.labels
+         ~SingleChoiceBar.layout
          ~SingleChoiceBar.leftlab
          ~SingleChoiceBar.name
          ~SingleChoiceBar.no_input_hint

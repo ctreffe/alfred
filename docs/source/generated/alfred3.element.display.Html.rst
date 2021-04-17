@@ -54,6 +54,7 @@ Html
          ~Html.css_class_element
          ~Html.css_code
          ~Html.css_urls
+         ~Html.display_standalone
          ~Html.element_template
          ~Html.element_width
          ~Html.exp

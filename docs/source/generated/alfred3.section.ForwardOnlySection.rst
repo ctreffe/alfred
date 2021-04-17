@@ -27,36 +27,6 @@ ForwardOnlySection
       ~ForwardOnlySection.append
    
    
-      ~ForwardOnlySection.backward
-   
-   
-      ~ForwardOnlySection.enter
-   
-   
-      ~ForwardOnlySection.forward
-   
-   
-      ~ForwardOnlySection.generate_unset_tags_in_subtree
-   
-   
-      ~ForwardOnlySection.get_page_data
-   
-   
-      ~ForwardOnlySection.hand_over
-   
-   
-      ~ForwardOnlySection.jumpfrom
-   
-   
-      ~ForwardOnlySection.jumpto
-   
-   
-      ~ForwardOnlySection.leave
-   
-   
-      ~ForwardOnlySection.move
-   
-   
       ~ForwardOnlySection.on_enter
    
    
@@ -70,27 +40,6 @@ ForwardOnlySection
    
    
       ~ForwardOnlySection.on_resume
-   
-   
-      ~ForwardOnlySection.remove_should_be_shown_filter_function
-   
-   
-      ~ForwardOnlySection.resume
-   
-   
-      ~ForwardOnlySection.set_name
-   
-   
-      ~ForwardOnlySection.set_should_be_shown_filter_function
-   
-   
-      ~ForwardOnlySection.shuffle_members
-   
-   
-      ~ForwardOnlySection.update_members
-   
-   
-      ~ForwardOnlySection.update_members_recursively
    
    
       ~ForwardOnlySection.uptree
@@ -133,11 +82,13 @@ ForwardOnlySection
          ~ForwardOnlySection.allow_jumpfrom
          ~ForwardOnlySection.allow_jumpto
          ~ForwardOnlySection.data
+         ~ForwardOnlySection.empty
          ~ForwardOnlySection.exp
          ~ForwardOnlySection.experiment
          ~ForwardOnlySection.first_member
          ~ForwardOnlySection.instance_log
          ~ForwardOnlySection.last_member
+         ~ForwardOnlySection.members
          ~ForwardOnlySection.name
          ~ForwardOnlySection.pages
          ~ForwardOnlySection.parent
@@ -154,7 +105,6 @@ ForwardOnlySection
          ~ForwardOnlySection.tree
          ~ForwardOnlySection.uid
          ~ForwardOnlySection.unlinked_data
-         ~ForwardOnlySection.unlinked_element_data
          ~ForwardOnlySection.vargs
       
    

@@ -54,6 +54,7 @@ Button
          ~Button.css_class_element
          ~Button.css_code
          ~Button.css_urls
+         ~Button.display_standalone
          ~Button.element_template
          ~Button.element_width
          ~Button.exp

@@ -77,6 +77,7 @@ DynamicJumpButtons
          ~DynamicJumpButtons.default_no_input_hint
          ~DynamicJumpButtons.description
          ~DynamicJumpButtons.disabled
+         ~DynamicJumpButtons.display_standalone
          ~DynamicJumpButtons.element_template
          ~DynamicJumpButtons.element_width
          ~DynamicJumpButtons.emojize
@@ -90,6 +91,7 @@ DynamicJumpButtons
          ~DynamicJumpButtons.js_template
          ~DynamicJumpButtons.js_urls
          ~DynamicJumpButtons.labels
+         ~DynamicJumpButtons.layout
          ~DynamicJumpButtons.leftlab
          ~DynamicJumpButtons.name
          ~DynamicJumpButtons.no_input_hint

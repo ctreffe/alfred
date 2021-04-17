@@ -24,6 +24,9 @@ ExperimentSession
       ~ExperimentSession.append
    
    
+      ~ExperimentSession.append_plugin_data_query
+   
+   
       ~ExperimentSession.backward
    
    
@@ -31,9 +34,6 @@ ExperimentSession
    
    
       ~ExperimentSession.encrypt
-   
-   
-      ~ExperimentSession.finish
    
    
       ~ExperimentSession.forward
@@ -55,12 +55,6 @@ ExperimentSession
    
    
       ~ExperimentSession.read_csv_tolist
-   
-   
-      ~ExperimentSession.save_data
-   
-   
-      ~ExperimentSession.start
    
    
       ~ExperimentSession.subpath

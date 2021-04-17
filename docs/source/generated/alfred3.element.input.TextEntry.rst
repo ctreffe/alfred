@@ -70,6 +70,7 @@ TextEntry
          ~TextEntry.default_no_input_hint
          ~TextEntry.description
          ~TextEntry.disabled
+         ~TextEntry.display_standalone
          ~TextEntry.element_template
          ~TextEntry.element_width
          ~TextEntry.exp
@@ -81,6 +82,7 @@ TextEntry
          ~TextEntry.js_code
          ~TextEntry.js_urls
          ~TextEntry.labels
+         ~TextEntry.layout
          ~TextEntry.leftlab
          ~TextEntry.name
          ~TextEntry.no_input_hint

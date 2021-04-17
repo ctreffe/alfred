@@ -74,6 +74,7 @@ MultipleChoiceList
          ~MultipleChoiceList.default_no_input_hint
          ~MultipleChoiceList.description
          ~MultipleChoiceList.disabled
+         ~MultipleChoiceList.display_standalone
          ~MultipleChoiceList.element_template
          ~MultipleChoiceList.element_width
          ~MultipleChoiceList.emojize
@@ -86,6 +87,7 @@ MultipleChoiceList
          ~MultipleChoiceList.js_code
          ~MultipleChoiceList.js_urls
          ~MultipleChoiceList.labels
+         ~MultipleChoiceList.layout
          ~MultipleChoiceList.leftlab
          ~MultipleChoiceList.name
          ~MultipleChoiceList.no_input_hint

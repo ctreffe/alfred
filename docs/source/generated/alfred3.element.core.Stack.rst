@@ -54,6 +54,7 @@ Stack
          ~Stack.css_class_element
          ~Stack.css_code
          ~Stack.css_urls
+         ~Stack.display_standalone
          ~Stack.element_template
          ~Stack.element_width
          ~Stack.elements

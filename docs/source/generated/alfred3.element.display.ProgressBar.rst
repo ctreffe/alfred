@@ -55,6 +55,7 @@ ProgressBar
          ~ProgressBar.css_class_element
          ~ProgressBar.css_code
          ~ProgressBar.css_urls
+         ~ProgressBar.display_standalone
          ~ProgressBar.element_template
          ~ProgressBar.element_width
          ~ProgressBar.exp
@@ -63,6 +64,7 @@ ProgressBar
          ~ProgressBar.js_code
          ~ProgressBar.js_urls
          ~ProgressBar.labels
+         ~ProgressBar.layout
          ~ProgressBar.leftlab
          ~ProgressBar.name
          ~ProgressBar.page

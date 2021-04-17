@@ -54,6 +54,7 @@ MatPlot
          ~MatPlot.css_class_element
          ~MatPlot.css_code
          ~MatPlot.css_urls
+         ~MatPlot.display_standalone
          ~MatPlot.element_template
          ~MatPlot.element_width
          ~MatPlot.exp

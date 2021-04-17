@@ -70,6 +70,7 @@ Value
          ~Value.default_no_input_hint
          ~Value.description
          ~Value.disabled
+         ~Value.display_standalone
          ~Value.element_template
          ~Value.element_width
          ~Value.exp
@@ -81,6 +82,7 @@ Value
          ~Value.js_code
          ~Value.js_urls
          ~Value.labels
+         ~Value.layout
          ~Value.leftlab
          ~Value.name
          ~Value.no_input_hint

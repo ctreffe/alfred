@@ -27,16 +27,7 @@ AutoClosePage
       ~AutoClosePage.append
    
    
-      ~AutoClosePage.callback
-   
-   
       ~AutoClosePage.close
-   
-   
-      ~AutoClosePage.close_page
-   
-   
-      ~AutoClosePage.corrective_hints
    
    
       ~AutoClosePage.custom_move
@@ -46,12 +37,6 @@ AutoClosePage
    
    
       ~AutoClosePage.first_duration
-   
-   
-      ~AutoClosePage.generate_element_name
-   
-   
-      ~AutoClosePage.get_page_data
    
    
       ~AutoClosePage.last_duration
@@ -81,25 +66,7 @@ AutoClosePage
       ~AutoClosePage.prepare_web_widget
    
    
-      ~AutoClosePage.remove_should_be_shown_filter_function
-   
-   
       ~AutoClosePage.save_data
-   
-   
-      ~AutoClosePage.set_data
-   
-   
-      ~AutoClosePage.set_name
-   
-   
-      ~AutoClosePage.set_should_be_shown_filter_function
-   
-   
-      ~AutoClosePage.update_elements
-   
-   
-      ~AutoClosePage.update_members_recursively
    
    
       ~AutoClosePage.uptree
@@ -128,13 +95,9 @@ AutoClosePage
       
          ~AutoClosePage.all_elements
          ~AutoClosePage.all_input_elements
-         ~AutoClosePage.all_parent_sections
          ~AutoClosePage.background_color
-         ~AutoClosePage.css_code
-         ~AutoClosePage.css_urls
          ~AutoClosePage.data
-         ~AutoClosePage.element_dict
-         ~AutoClosePage.element_list
+         ~AutoClosePage.elements
          ~AutoClosePage.exp
          ~AutoClosePage.experiment
          ~AutoClosePage.filled_input_elements
@@ -144,8 +107,6 @@ AutoClosePage
          ~AutoClosePage.input_elements
          ~AutoClosePage.instance_log
          ~AutoClosePage.is_closed
-         ~AutoClosePage.js_code
-         ~AutoClosePage.js_urls
          ~AutoClosePage.minimum_display_time
          ~AutoClosePage.minimum_display_time_msg
          ~AutoClosePage.must_be_shown
@@ -157,8 +118,6 @@ AutoClosePage
          ~AutoClosePage.section
          ~AutoClosePage.short_tree
          ~AutoClosePage.should_be_shown
-         ~AutoClosePage.show_corrective_hints
-         ~AutoClosePage.show_thumbnail
          ~AutoClosePage.showif
          ~AutoClosePage.subtitle
          ~AutoClosePage.tag

@@ -54,6 +54,7 @@ Audio
          ~Audio.css_class_element
          ~Audio.css_code
          ~Audio.css_urls
+         ~Audio.display_standalone
          ~Audio.element_template
          ~Audio.element_width
          ~Audio.exp

@@ -74,6 +74,7 @@ SelectPageList
          ~SelectPageList.default_no_input_hint
          ~SelectPageList.description
          ~SelectPageList.disabled
+         ~SelectPageList.display_standalone
          ~SelectPageList.element_template
          ~SelectPageList.element_width
          ~SelectPageList.emojize
@@ -86,6 +87,7 @@ SelectPageList
          ~SelectPageList.js_code
          ~SelectPageList.js_urls
          ~SelectPageList.labels
+         ~SelectPageList.layout
          ~SelectPageList.leftlab
          ~SelectPageList.name
          ~SelectPageList.no_input_hint

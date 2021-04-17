@@ -27,36 +27,6 @@ Section
       ~Section.append
    
    
-      ~Section.backward
-   
-   
-      ~Section.enter
-   
-   
-      ~Section.forward
-   
-   
-      ~Section.generate_unset_tags_in_subtree
-   
-   
-      ~Section.get_page_data
-   
-   
-      ~Section.hand_over
-   
-   
-      ~Section.jumpfrom
-   
-   
-      ~Section.jumpto
-   
-   
-      ~Section.leave
-   
-   
-      ~Section.move
-   
-   
       ~Section.on_enter
    
    
@@ -70,27 +40,6 @@ Section
    
    
       ~Section.on_resume
-   
-   
-      ~Section.remove_should_be_shown_filter_function
-   
-   
-      ~Section.resume
-   
-   
-      ~Section.set_name
-   
-   
-      ~Section.set_should_be_shown_filter_function
-   
-   
-      ~Section.shuffle_members
-   
-   
-      ~Section.update_members
-   
-   
-      ~Section.update_members_recursively
    
    
       ~Section.uptree
@@ -133,11 +82,13 @@ Section
          ~Section.allow_jumpfrom
          ~Section.allow_jumpto
          ~Section.data
+         ~Section.empty
          ~Section.exp
          ~Section.experiment
          ~Section.first_member
          ~Section.instance_log
          ~Section.last_member
+         ~Section.members
          ~Section.name
          ~Section.pages
          ~Section.parent
@@ -154,7 +105,6 @@ Section
          ~Section.tree
          ~Section.uid
          ~Section.unlinked_data
-         ~Section.unlinked_element_data
          ~Section.vargs
       
    

@@ -74,6 +74,7 @@ MultipleChoice
          ~MultipleChoice.default_no_input_hint
          ~MultipleChoice.description
          ~MultipleChoice.disabled
+         ~MultipleChoice.display_standalone
          ~MultipleChoice.element_template
          ~MultipleChoice.element_width
          ~MultipleChoice.emojize
@@ -86,6 +87,7 @@ MultipleChoice
          ~MultipleChoice.js_code
          ~MultipleChoice.js_urls
          ~MultipleChoice.labels
+         ~MultipleChoice.layout
          ~MultipleChoice.leftlab
          ~MultipleChoice.name
          ~MultipleChoice.no_input_hint
