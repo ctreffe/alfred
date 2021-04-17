@@ -54,8 +54,15 @@ class ExpMember:
     """
 
 
+    #: Unique name of the member.
     name: str = None
+
+    #: If *True*, the member will spawn a logger that can be configured
+    #: individually for each instance
     instance_log: bool = False
+
+    #: Dictionary of conditions that must be fulfilled for the member
+    #: to be shown. Works similar to :attr:`.Element.showif`
     showif: dict = None
     
     #: Name of the parent section. Used when a member is appended to 
@@ -73,8 +80,6 @@ class ExpMember:
     ):
 
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
-        self.members = {}
-
         
         self._should_be_shown = True
 
@@ -115,7 +120,7 @@ class ExpMember:
             self._set_name(name, via="argument")
     
     @property
-    def vargs(self):
+    def vargs(self) -> dict:
         """
         A dictionary of additional arguments passed on the class upon
         initialization. Can be defined as a class attribute.
@@ -205,14 +210,18 @@ class ExpMember:
             return [True]
     
     @property
-    def all_input_elements(self):
+    def all_input_elements(self) -> dict:
         """
         Redefined by pages and section.
         """
         return {}
 
     @property
-    def tag(self):
+    def tag(self) -> str:
+        """
+        Alias for :attr:`.name`, included under this name for backwards
+        compatibility. For new code, use *name*.
+        """
         return self._tag
 
     @tag.setter
@@ -224,7 +233,11 @@ class ExpMember:
         self._tag = tag
 
     @property
-    def uid(self):
+    def uid(self) -> str:
+        """
+        Alias for :attr:`.name`, included under this name for backwards
+        compatibility. For new code, use *name*.
+        """
         return self._uid
     
     def visible(self, attr: str) -> dict:
@@ -264,7 +277,10 @@ class ExpMember:
         self._should_be_shown = b
 
     @property
-    def title(self):
+    def title(self) -> str:
+        """
+        Page title (str).
+        """
         if self._title is not None:
             return self._title
         else:
@@ -275,7 +291,10 @@ class ExpMember:
         self._title = title
 
     @property
-    def subtitle(self):
+    def subtitle(self) -> str:
+        """
+        Page subtitle (str).
+        """
         return self._subtitle
 
     @subtitle.setter
@@ -312,10 +331,16 @@ class ExpMember:
     
     @property
     def experiment(self):
+        """
+        The :class:`.ExperimentSession` to which this member belongs.
+        """
         return self._experiment
     
     @property
     def exp(self):
+        """
+        The :class:`.ExperimentSession` to which this member belongs.
+        """
         return self._experiment
     
     @exp.setter
@@ -335,13 +360,22 @@ class ExpMember:
 
     @property
     def section(self):
+        """
+        The member's parent section.
+        """
         return self._section
 
     @property
     def parent(self):
+        """
+        Alias for :attr:`.section`.
+        """
         return self._parent_section
     
-    def uptree(self):
+    def uptree(self) -> list:
+        """
+        List of the parent section and the grandparent sections (recursive).
+        """
         out = []
         if self.parent:
             out += [self.parent]
@@ -352,6 +386,11 @@ class ExpMember:
 
     @property
     def tree(self) -> str:
+        """
+        A single string, indicating the member's position in the experiment.
+        Consist of the names of the parent section and all grandparent
+        sections, separated by dots.
+        """
         if not self.parent:
             return self.tag
 
@@ -362,5 +401,9 @@ class ExpMember:
 
     @property
     def short_tree(self) -> str:
+        """
+        Short version of :attr:`.tree`, without the ``_root._content``
+        part that is the same for all members.
+        """
         return self.tree.replace("_root._content.", "")
 

@@ -78,7 +78,7 @@ class Section(ExpMember):
     def __init__(self, title: str = None, name: str = None, shuffle: bool = None, **kwargs):
         super().__init__(title=title, name=name, **kwargs)
 
-        self.members = {}
+        self._members = {}
         self._should_be_shown = True
 
         #: bool: Boolean flag, indicating whether the experiment session
@@ -142,6 +142,17 @@ class Section(ExpMember):
         shuffle(members)
         self.members = dict(members)
     
+    @property
+    def members(self) -> dict:
+        """
+        Dictionary of the section's members.
+        """
+        return self._members
+    
+    @members.setter
+    def members(self, value):
+        self._members = value
+
     @property
     def empty(self) -> bool:
         """
@@ -499,7 +510,7 @@ class Section(ExpMember):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
 
-        self._validate_on_leave()
+        self.validate_on_leave()
         for page in self.pages.values():
             page.close()
 
@@ -533,7 +544,7 @@ class Section(ExpMember):
         Raises:
             ValidationError: If validation of the current page fails.
         """
-        self._validate_on_move()
+        self.validate_on_move()
 
         if direction == "forward":
             self._forward()
@@ -547,7 +558,7 @@ class Section(ExpMember):
         if self.exp.aborted:
             raise AbortMove
 
-    def _validate_on_leave(self):
+    def validate_on_leave(self):
         """
         Validates pages and their input elements within the section.
 
@@ -573,7 +584,7 @@ class Section(ExpMember):
                 self.exp.post_message(msg, level="danger")
                 raise ValidationError()
 
-    def _validate_on_move(self):
+    def validate_on_move(self):
         """
         Validates the current page and its elements.
 

@@ -81,6 +81,17 @@ class _PageCore(ExpMember):
         super().__init__(**kwargs)
 
     @property
+    def elements(self):
+        """
+        Dictionary of elements belonging to this page.
+        """
+        return self._elements
+    
+    @elements.setter
+    def elements(self, value):
+        self._elements = value
+
+    @property
     def minimum_display_time(self) -> str:
         """
         str: Minimal amount of time that a page must be displayed
