@@ -440,7 +440,7 @@ class Section(ExpMember):
         available to the section.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -451,7 +451,7 @@ class Section(ExpMember):
         Executed *every time* this section is entered.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
         """
         pass
@@ -461,7 +461,7 @@ class Section(ExpMember):
         Executed *every time* this section is left.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
         """
         pass
@@ -476,7 +476,7 @@ class Section(ExpMember):
         resumes its status.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
         """
         pass
@@ -486,7 +486,7 @@ class Section(ExpMember):
         Executed *every time* a direct subsection of this section is entered.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """

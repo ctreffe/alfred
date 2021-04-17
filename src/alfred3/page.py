@@ -245,7 +245,7 @@ class _PageCore(ExpMember):
         to be executed only once (i.e. the first time a page is shown).
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -257,7 +257,7 @@ class _PageCore(ExpMember):
         :meth:`~.Page.on_first_show`.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -303,7 +303,7 @@ class _PageCore(ExpMember):
             subject revists a page and changes his/her input).
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -316,7 +316,7 @@ class _PageCore(ExpMember):
         :meth:`~.Page.on_first_hide`.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -333,7 +333,7 @@ class _PageCore(ExpMember):
         :meth:`on_first_hide` and :meth`on_each_hide`.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -348,7 +348,7 @@ class _PageCore(ExpMember):
         experiment, but don't need access to data from other pages.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
         """
@@ -780,7 +780,7 @@ class Page(_CoreCompositePage):
 
         .. note:: In class style, you can use the initialization 
            arguments of a page by defining them as class attributes.
-           See :ref:`page-class-style` for details.
+           See "How to use pages" for details.
     
     Examples:
 
@@ -1178,7 +1178,7 @@ class TimeoutPage(Page):
         Executed *once*, after the timeout of the page runs out.
 
         See Also:
-            See :ref:`hooks-how-to` for a how to on using hooks and an overview
+            See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
 
             This hook is defined by :class:`.AutoForwardPage` and
