@@ -304,6 +304,31 @@ class ListRandomizer:
                         lab = "label in condition 2"
             
                     self += al.TextEntry(leftlab=lab, name="t1")
+        
+        You can use the alternative constructor :meth:`.balanced` for
+        simplified initialization, if you use the same sample size for 
+        all experiment conditions::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.setup
+            def setup(exp):
+                randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
+                exp.condition = randomizer.get_condition()
+            
+            @exp.member
+            class DemoPage(al.Page):
+
+                def on_exp_access(self):
+
+                    if self.exp.condition == "cond1":
+                        lab = "label in condition 1"
+                    
+                    elif self.exp.condition == "cond2":
+                        lab = "label in condition 2"
+            
+                    self += al.TextEntry(leftlab=lab, name="t1")
 
     """
 
