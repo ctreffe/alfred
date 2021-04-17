@@ -106,7 +106,7 @@ class Exporter:
 
         This version of 'load' is available as a public static method.
         """
-        with open(path, "r", encoding="utf-8") as csvfile:
+        with open(path, "r", encoding="utf-8", newline="") as csvfile:
             reader = csv.DictReader(csvfile, delimiter=delimiter)
             existing_data = [dict(row) for row in reader]
         return existing_data
@@ -127,7 +127,7 @@ class Exporter:
 
         This version of 'write' is available as a public static method.
         """
-        with open(path, "w", encoding="utf-8") as csvfile:
+        with open(path, "w", encoding="utf-8", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=delimiter)
             writer.writeheader()
             writer.writerows(data)
