@@ -143,3 +143,4 @@ src/tests/manualtesting.py
 tests/manual/
 alfred_venv/
 .alfred.venv/
+.alenv/
