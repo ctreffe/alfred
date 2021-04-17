@@ -5,74 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## [Unreleased]
+## alfred3 v2.0.0 (Released 2021-04-17)
 
-### Added
+We are excited to announce the release of alfred3 v2.0! 
 
-- The new `alfred3.ListRandomizer` class offers list randomization
-- The new `alfred3.ExperimentSession.abort` method allows experimenters
-  to abort an experiment in a controlled fashion.
+**Note**: This is a major release. While the basic building blocks of 
+alfred3 experiments – sections, pages, and elements – remain at the heart
+of the framework's logic, many other aspects have undergone 
+disruptive changes. These are too many to sensibly detail all of them
+here. We recommend instead to start from scratch using the new 
+documentation: https://alfred3.readthedocs.io
 
-### Removed
+In short, the biggest changes are the following:
 
-- `layout.py`
-- `settings.py`
-- `ContentCore.get_page_data`: Use `ExperimentSession.values` or `ExperimentSession.get_page_data` instead.
+* New syntax: Experiments in alfred3 v2.0 can be written in what we call
+  the instance-style or the class-style. Together they replace the previous
+  style of writing an experiment. We also streamlined the
+  element names, removing the suffix "Element". For instance, 
+  `TextEntryElement` can now be accessed under the name `TextEntry`.
 
+* We added a number of elements that 
+  should make your life easier when writing dynamic, or even interactive
+  experiments.
 
-### Changed
+* We added a number of attributes to the `ExperimentSession` object to
+  make your life a lot easier.
 
-- new way to change final page
+* New Layout: We did a complete redesign of alfred3's page layout, moving
+  to Bootstrap v4.5 and making the layout responsive to screen size. This 
+  introduces the possibility for participants to use their mobile devices
+  for completing alfred experiments - an important feature nowadays. Of
+  course, experimenters can choose to turn off responsiveness if their
+  experiments require a fixed layout.
 
+* Documentation and tutorials for alfred3's most important features
+  is now available and hosted on readthedocs: https://alfred3.readthedocs.io/
 
-* New classes
-    - JavaScript
-    - Css
-    - VerticalSpace
-    - Row
-    - Stack
+* Integrated list randomization: We integrated the possibility for smart list 
+  randomization directly into alfred3 through `alfred3.ListRandomizer`,
+  thereby offering a remarkably simple way for efficient randomization.
 
+* Movement history: Alfred3 can now record detailed information about 
+  participants' movements in an experiment, such as the duration of
+  individual visists to a page.
 
-* Element
-    - New parameters
-        - align
-        - width
-        - position
-        - showif
-    - New attributes
-        - element_width
-        - showif
-        - css_code
-        - css_urls
-        - js_code
-        - js_urls
-        - html (For deriving child classes)
-        - template_data
-
-* TextElement
-    - Now supports Markdown
-    - New parameters
-        - path
-
-* InputElement
-    - revamped as an even stronger base clase for input elements
-
-* TextEntryElement
-    - New parameters
-        - placeholder
-    - New attributes
-        - instruction_col_width
-        - input_col_width
-
-* Page
-    - New attributes
-        - fixed_width
-        - responsive_width
-
-* Config
-    - New Section "layout"
-
-## v1.4
+## alfred3 v1.4
 
 ### Added v1.4
 
