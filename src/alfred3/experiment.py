@@ -677,7 +677,7 @@ class ExperimentSession:
 
         Raises:
             ValueError: If the input dictionary does not conform to the
-            specifications.
+                specifications.
         """
         if query in self._plugin_data_queries:
             return
