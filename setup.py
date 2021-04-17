@@ -34,15 +34,15 @@ setuptools.setup(
     package_dir={"": "src"},
     install_requires=[
         "pymongo>=3.10",
-        "cryptography>=2.9",
+        "cryptography>=3.4",
         "jinja2>=2.11",
         "Flask>=1.1",
-        "thesmuggler==1.0.1",
-        "Click>=7.0",
-        "emoji>=0.6",
-        "cmarkgfm>=0.4.2",
-        "requests",
-        "bleach>=3.2.1"
+        "thesmuggler>=1.0",
+        "Click>=7.1",
+        "emoji>=1.2",
+        "cmarkgfm>=0.5",
+        "requests>=2.25",
+        "bleach>=3.3"
     ],
     entry_points="""
     [console_scripts]
