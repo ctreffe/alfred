@@ -42,7 +42,7 @@ class _PageCore(ExpMember):
             display time has expired. Defaults to None, which means that
             the default message defined in config.conf will be used.
             Can be defined as a class attribute.
-        progress (int, float): Can be used to manually determine to 
+        progress (int, float): Can be used to manually determine the 
             level of experiment progress displayed in the experiment's
             progress bar. Can be an int or float between 0 and 100.
             Defaults to 'None', which means that the experiment-wide
