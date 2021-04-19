@@ -644,22 +644,52 @@ class ProgressBar(LabelledElement):
     Displays a progress bar.
 
     Args:
-        progress: Can be either "auto", or a number between 0 and 100.
-            If "auto", the progress is calculated from the current
-            progress of the experiment. If a number is supplied, that
-            number will be used as the progress to be displayed.
-        bar_height: Height of the progress bar. Supply a string with
+        progress (str, float, int): Can be either "auto", or a number 
+            between 0 and 100. If "auto", the progress is calculated 
+            from the current progress of the experiment. The exact 
+            calculation can be further refined with the arguments
+            'progress_base', 'n_elements', and 'n_pages'.
+            
+            If a number is supplied, that number will be used as the 
+            progress to be displayed.
+
+            Defaults to 'auto'.
+
+        bar_height (str): Height of the progress bar. Supply a string with
             unit, e.g. "6px".
-        show text: Indicates, whether the progress bar should include
+
+        show_text (bool): Indicates, whether the progress bar should include
             text with the current progress.
-        striped: Indicates, whether the progress bar shoulb be striped.
-        style: Determines the color of the progress bar. Possible values
+
+        striped (bool): Indicates, whether the progress bar shoulb be striped.
+
+        style (str): Determines the color of the progress bar. Possible values
             are "primary", "secondary", "info", "success", "warning",
             "danger", "light", "dark".
-        animated: Determines, whether a striped progress bar should be
+
+        animated (bool): Determines, whether a striped progress bar should be
             equipped with an animation.
-        round: Determines, whether the corners of the progress bar
+
+        round (bool): Determines, whether the corners of the progress bar
             should be round.
+
+        progress_base (str): A string, specifying the unit to use as the
+            basis upon which progress should be calculated. Can be either
+            'pages_elements', 'pages', or 'elements'. Defaults to
+            'pages_elements', in which case the number of pages and the
+            number of input elements are added together to form the 
+            denominator in the fraction for calculating progress.
+        
+        n_elements (int): Manual specification of the number of input 
+            elements in the experiment. If 'None', the experiment will 
+            try to infer the number of elements automatically, which may
+            not always find the correct result. Defaults to *None*.
+        
+        n_pages (int): Manual specification of the number of 
+            page in the experiment. If 'None', the experiment will 
+            try to infer the number of pages automatically, which may
+            not always find the correct result. Defaults to *None*.
+
         {kwargs}
 
     See Also:
@@ -725,15 +755,21 @@ class ProgressBar(LabelledElement):
         style: str = "primary",
         animated: bool = False,
         round_corners: bool = False,
+        progress_base: str = "pages_elements",
+        n_elements: int = None,
+        n_pages: int = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
+
+        self._progress = None
+        if progress != "auto":
+            self.progress = progress
+        
         self._progress_setting = progress
-
-        if not isinstance(progress, (str, float, int)):
-            raise TypeError
-
-        self._progress: int = None
+        self._progress_base = progress_base
+        self._n_elements = n_elements
+        self._n_pages = n_pages
         self._bar_height: str = bar_height
         self._show_text: bool = show_text
         self._striped: bool = striped
@@ -749,11 +785,6 @@ class ProgressBar(LabelledElement):
         self.add_css(code=css)
 
     def _prepare_web_widget(self):
-        if self._progress_setting == "auto":
-            self._progress = self._calculate_progress()
-        elif isinstance(self._progress_setting, (int, float)):
-            self._progress = self._progress_setting
-
         self.prepare_web_widget()
 
         try:
@@ -765,36 +796,100 @@ class ProgressBar(LabelledElement):
                 pass
             else:
                 raise e
+    
+    @property
+    def progress(self) -> Union[int, float]:
+        
+        if self._progress: # manually defined via element
+            return self._progress
 
-    def _calculate_progress(self) -> float:
+        elif self.exp.current_page.progress: # manually defined via page
+            return self.exp.current_page.progress
+        
+        else: # calculate automatically
+            exact_progress = (self.numerator / self.denominator) * 100
+
+            if not self.experiment.finished and not self.experiment.aborted:
+                
+                hi_bounded = min(round(exact_progress, 1), 95)
+                lo_bounded = max(hi_bounded, 1)
+                return lo_bounded
+            else:
+                return 100
+    
+    @progress.setter
+    def progress(self, value: Union[int, float]):
+        try:
+            assert isinstance(value, (int, float))
+            assert 0 < value and value < 100
+        except AssertionError:
+            raise ValueError("Progress must be a number between 0 and 100.")
+        self._progress = value
+
+    
+    @property
+    def n_elements(self):
         """
-        Calculates the current progress.
-
-        Returns:
-            float: Current progress
+        int: Number of elements. 
         """
-        n_el = 0
-        for el in self.exp.root_section.all_input_elements.values():
-            if el.should_be_shown:
-                n_el += 1
-            elif el.showif or el.page.showif or el.section.showif:
-                n_el += 0.3
-
-        n_pg = len(self.experiment.root_section.visible("all_pages"))
-        shown_el = len(self.experiment.root_section.all_shown_input_elements)
-        shown_pg = len(self.experiment.root_section.all_shown_pages)
-        exact_progress = ((shown_el + shown_pg) / (n_el + n_pg)) * 100
-
-        if not self.experiment.finished and not self.experiment.aborted:
-            return min(round(exact_progress, 1), 95)
+        if self._n_elements:
+            n_el = self._n_elements
         else:
-            return 100
+            n_el = 0
+            for el in self.exp.root_section.all_input_elements.values():
+                if el.should_be_shown:
+                    n_el += 1
+                elif el.showif or el.page.showif or el.section.showif:
+                    n_el += 0.3
+        return n_el
+    
+    @property
+    def n_pages(self):
+        """
+        int: Number of pages.
+        """
+        if self._n_pages:
+            n_pg = self._n_pages
+        else:
+            n_pg = len(self.experiment.root_section.visible("all_pages"))
+        
+        return n_pg
+    
+    @property
+    def denominator(self) -> int:
+        """
+        int: Denominator for the fraction in calculating the progress.
+        """
+        if self._progress_base == "pages_elements":
+            return self.n_elements + self.n_pages
+        elif self._progress_base == "pages":
+            return self.n_pages
+        elif self._progress_base == "elements":
+            return self.n_elements
+    
+    @property
+    def numerator(self) -> int:
+        """
+        int: Numerator for the fraction in calculating the progress.
+        """
+        if self._progress_base == "pages_elements":
+            shown_el = len(self.experiment.root_section.all_shown_input_elements)
+            shown_pg = len(self.experiment.root_section.all_shown_pages)
+            return shown_el + shown_pg
+
+        elif self._progress_base == "pages":
+            shown_pg = len(self.experiment.root_section.all_shown_pages)
+            return shown_pg
+
+        elif self._progress_base == "elements":
+            shown_el = len(self.experiment.root_section.all_shown_input_elements)
+            return shown_el
 
     @property
     def template_data(self):
         
         d = super().template_data
-        d["progress"] = self._progress
+        d["progress"] = self.progress
         d["show_text"] = self._show_text
         d["bar_height"] = self._bar_height
         d["bar_style"] = f"bg-{self._bar_style}"
