@@ -52,7 +52,7 @@ Citation
     **If you are publishing research conducted using alfred3, the 
     following citation is required:**
 
-    Treffenstaedt, C., Wiemann, P. & Brachem, J. (2021). Alfred3 - A 
+    Treffenstaedt, C., Brachem, J., & Wiemann, P. (2021). Alfred3 - A 
     library for rapid experiment development (Version x.x.x). Göttingen, 
     Germany: https://doi.org/10.5281/zenodo.1437219
 
