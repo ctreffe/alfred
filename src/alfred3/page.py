@@ -42,6 +42,12 @@ class _PageCore(ExpMember):
             display time has expired. Defaults to None, which means that
             the default message defined in config.conf will be used.
             Can be defined as a class attribute.
+        progress (int, float): Can be used to manually determine to 
+            level of experiment progress displayed in the experiment's
+            progress bar. Can be an int or float between 0 and 100.
+            Defaults to 'None', which means that the experiment-wide
+            setting is used (see :attr:`.ExperimentSession.progress_bar`).
+            Can be defined as a class attribute.
         {kwargs}
     """
 
@@ -49,11 +55,19 @@ class _PageCore(ExpMember):
     #: receive a prefix of the page's name.
     prefix_element_names: bool = False
 
+    #: Can be used to manually determine to 
+    #: level of experiment progress displayed in the experiment's
+    #: progress bar. Can be an int or float between 0 and 100.
+    #: Defaults to 'None', which means that the experiment-wide
+    #: setting is used (see :attr:`.ExperimentSession.progress_bar`).
+    progress: int = None
+
     def __init__(
         self,
         prefix_element_names: bool = None,
         minimum_display_time: str = None,
         minimum_display_time_msg: str = None,
+        progress: Union[int, float] = None,
         **kwargs,
     ):
         self._minimum_display_time = "0s"
@@ -68,6 +82,9 @@ class _PageCore(ExpMember):
         
         if prefix_element_names is not None:
             self.prefix_element_names = prefix_element_names
+        
+        if progress is not None:
+            self.progress = progress
 
         self._data = {}
         self._is_closed = False
