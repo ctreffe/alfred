@@ -237,7 +237,7 @@ def build_kwargs(docs: dict, text: str = "Inherited keyword arguments\n", **kwar
             **kwargs: Passed on to :meth:`.build_table`
 
         """
-        heading = f"**kwargs: {text}\n"
+        heading = f"\*\*kwargs: {text}\n"
         body = build_table(docs=docs, **kwargs)
         body = add_indent(body, spaces=12)
         return heading + body
