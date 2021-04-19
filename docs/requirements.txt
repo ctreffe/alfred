@@ -1,3 +1,4 @@
+alfred3==2.0.0b13
 commonmark==0.9.1
 pydata-sphinx-theme==0.4.1
 Pygments==2.7.4
