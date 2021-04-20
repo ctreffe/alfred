@@ -332,7 +332,7 @@ class MovementManager:
     def _check_jump_permission(self, next_page):
         if self.experiment.config.getboolean("general", "debug"):
             self.log.debug("Debug mode enabled. Jump permission not checked.")
-            self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="debug")
+            self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="info")
             return True
 
         elif not self.current_page is next_page and not self.current_page.section.allow_jumpfrom:
