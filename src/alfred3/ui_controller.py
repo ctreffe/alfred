@@ -277,11 +277,11 @@ class MovementManager:
             except ValidationError:
                 raise AbortMove()
         
-        else:
+        else: # sections are equal
             try:
                 if direction == "jump":
                     current_page.section._move("jumpfrom")
-                    current_page.section._move("jumpto")
+                    to_page.section._move("jumpto")
                 else:
                     current_page.section._move(direction)
             except ValidationError:
@@ -404,11 +404,6 @@ class MovementManager:
                 )
         
         proceed = self.current_page.custom_move()
-        now = time.time()
-        try:
-            self.current_page._on_hiding_widget(hide_time=now)
-        except AbortMove:
-            return
         
         if not proceed:
             self.log.debug(f"Page defined its own move method. Alfred's move system stands by.")
