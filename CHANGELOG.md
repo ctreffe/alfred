@@ -14,7 +14,7 @@ alfred3 experiments – sections, pages, and elements – remain at the heart
 of the framework's logic, many other aspects have undergone 
 disruptive changes. These are too many to sensibly detail all of them
 here. We recommend instead to start from scratch using the new 
-documentation: https://alfred3.readthedocs.io
+documentation: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
 
 In short, the biggest changes are the following:
 
@@ -39,7 +39,7 @@ In short, the biggest changes are the following:
   experiments require a fixed layout.
 
 * Documentation and tutorials for alfred3's most important features
-  is now available and hosted on readthedocs: https://alfred3.readthedocs.io/
+  is now available: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
 
 * Integrated list randomization: We integrated the possibility for smart list 
   randomization directly into alfred3 through `alfred3.ListRandomizer`,

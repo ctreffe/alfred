@@ -13,6 +13,11 @@ If you have Python 3.7 or newer installed, just install alfred3 via pip
 $ pip3 install alfred3
 ```
 
+## Documentation
+
+Documentation and tutorials for alfred3's most important features
+is available here: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
+
 ## A "Hello, world" experiment
 
 Creating a hello-world experiment is as easy as writing this *script.py*
@@ -51,7 +56,7 @@ experiment, visit our tutorials: (to be filled)
 **If you are publishing research conducted using alfred3, the 
 following citation is required:**
 
->Treffenstaedt, C., Wiemann, P. & Brachem, J. (2021). Alfred3 - A 
+>Treffenstaedt, C., Brachem, J., & Wiemann, P. (2021). Alfred3 - A 
 library for rapid experiment development (Version x.x.x). Göttingen, 
 Germany: https://doi.org/10.5281/zenodo.1437219
 
