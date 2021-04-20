@@ -1,4 +1,4 @@
-AutoClosePage
+﻿AutoClosePage
 ==========================
 
 .. currentmodule:: alfred3.page
@@ -114,6 +114,7 @@ AutoClosePage
          ~AutoClosePage.parent
          ~AutoClosePage.parent_name
          ~AutoClosePage.prefix_element_names
+         ~AutoClosePage.progress
          ~AutoClosePage.responsive_width
          ~AutoClosePage.section
          ~AutoClosePage.short_tree

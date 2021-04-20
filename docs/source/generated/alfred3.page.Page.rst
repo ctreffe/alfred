@@ -1,4 +1,4 @@
-Page
+﻿Page
 =================
 
 .. currentmodule:: alfred3.page
@@ -111,6 +111,7 @@ Page
          ~Page.parent
          ~Page.parent_name
          ~Page.prefix_element_names
+         ~Page.progress
          ~Page.responsive_width
          ~Page.section
          ~Page.short_tree

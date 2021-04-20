@@ -1,4 +1,4 @@
-NoNavigationPage
+﻿NoNavigationPage
 =============================
 
 .. currentmodule:: alfred3.page
@@ -111,6 +111,7 @@ NoNavigationPage
          ~NoNavigationPage.parent
          ~NoNavigationPage.parent_name
          ~NoNavigationPage.prefix_element_names
+         ~NoNavigationPage.progress
          ~NoNavigationPage.responsive_width
          ~NoNavigationPage.section
          ~NoNavigationPage.short_tree

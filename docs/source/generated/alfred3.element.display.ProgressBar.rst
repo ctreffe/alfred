@@ -1,4 +1,4 @@
-ProgressBar
+﻿ProgressBar
 ===================================
 
 .. currentmodule:: alfred3.element.display
@@ -55,6 +55,7 @@ ProgressBar
          ~ProgressBar.css_class_element
          ~ProgressBar.css_code
          ~ProgressBar.css_urls
+         ~ProgressBar.denominator
          ~ProgressBar.display_standalone
          ~ProgressBar.element_template
          ~ProgressBar.element_width
@@ -66,9 +67,13 @@ ProgressBar
          ~ProgressBar.labels
          ~ProgressBar.layout
          ~ProgressBar.leftlab
+         ~ProgressBar.n_elements
+         ~ProgressBar.n_pages
          ~ProgressBar.name
+         ~ProgressBar.numerator
          ~ProgressBar.page
          ~ProgressBar.position
+         ~ProgressBar.progress
          ~ProgressBar.rightlab
          ~ProgressBar.section
          ~ProgressBar.short_tree

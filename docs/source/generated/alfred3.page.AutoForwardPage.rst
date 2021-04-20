@@ -1,4 +1,4 @@
-AutoForwardPage
+﻿AutoForwardPage
 ============================
 
 .. currentmodule:: alfred3.page
@@ -114,6 +114,7 @@ AutoForwardPage
          ~AutoForwardPage.parent
          ~AutoForwardPage.parent_name
          ~AutoForwardPage.prefix_element_names
+         ~AutoForwardPage.progress
          ~AutoForwardPage.responsive_width
          ~AutoForwardPage.section
          ~AutoForwardPage.short_tree

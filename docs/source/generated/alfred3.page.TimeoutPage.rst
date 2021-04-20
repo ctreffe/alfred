@@ -1,4 +1,4 @@
-TimeoutPage
+﻿TimeoutPage
 ========================
 
 .. currentmodule:: alfred3.page
@@ -114,6 +114,7 @@ TimeoutPage
          ~TimeoutPage.parent
          ~TimeoutPage.parent_name
          ~TimeoutPage.prefix_element_names
+         ~TimeoutPage.progress
          ~TimeoutPage.responsive_width
          ~TimeoutPage.section
          ~TimeoutPage.short_tree
