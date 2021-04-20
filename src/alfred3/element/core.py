@@ -1964,7 +1964,7 @@ class InputElement(LabelledElement):
         data["tree"] = self.short_tree
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
-        data["force_input"] = self._force_input
+        data["force_input"] = self.force_input
         data["prefix"] = self.prefix
         data["suffix"] = self.suffix
         data["default"] = self.default
