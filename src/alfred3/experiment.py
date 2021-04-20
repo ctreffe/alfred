@@ -1680,7 +1680,7 @@ class ExperimentSession:
         """
         mongodata = self.data_manager.iter_flat_mongo_data()
         localdata = self.data_manager.iter_flat_local_data()
-        if self.config.getboolean("general", "runs_on_mortimer"):
+        if self.config.getboolean("mortimer_specific", "runs_on_mortimer"):
             return list(mongodata)
         else:
             return list(mongodata) + list(localdata)
@@ -1716,7 +1716,7 @@ class ExperimentSession:
         """
         mongodata = self.data_manager.iter_flat_mongo_data(data_type="unlinked")
         localdata = self.data_manager.iter_flat_local_data(data_type="unlinked")
-        if self.config.getboolean("general", "runs_on_mortimer"):
+        if self.config.getboolean("mortimer_specific", "runs_on_mortimer"):
             return list(mongodata)
         else:
             return list(mongodata) + list(localdata)
