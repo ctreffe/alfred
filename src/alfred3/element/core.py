@@ -1662,7 +1662,7 @@ class InputElement(LabelledElement):
         super().__init__(toplab=toplab, **kwargs)
 
         self.description = description  # documented in getter
-        self.input = ""  # documented in getter
+        self.input = None  # documented in getter
         self._force_input = force_input  # documented in getter property
         self._no_input_hint = no_input_hint
         self._default = default  # documented in getter property
@@ -1908,13 +1908,17 @@ class InputElement(LabelledElement):
     @property
     def input(self) -> str:
         """
-        str: Subject input to this element.
+        str: Subject input to this element. Returns *None*, if there
+        is no input.
         """
         return self._input
 
     @input.setter
     def input(self, value):
-        self._input = value
+        if not value:
+            self._input = None
+        else:
+            self._input = value
 
     @property
     def data(self) -> dict:
@@ -2058,8 +2062,6 @@ class ChoiceElement(InputElement, ABC):
     ):
         super().__init__(align=align, **kwargs)
 
-        self._input = {}
-
         self.choice_labels = choice_labels  # documented in getter
         self.vertical = vertical  # documented in getter
 
@@ -2139,17 +2141,3 @@ class ChoiceElement(InputElement, ABC):
                 d.update({f"choice{i}": str(lab)})  # otherwise __str__
 
         return d
-
-    @property
-    def input(self) -> dict:
-        """
-        Dict[str, bool]: Dictionary of subject inputs.
-
-        Contains the choice labels as keys and their selection status
-        (*True* for selected choices, *False* otherwise) as values.
-        """
-        return self._input
-
-    @input.setter
-    def input(self, value):
-        self._input = value

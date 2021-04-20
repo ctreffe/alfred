@@ -26,6 +26,7 @@ from .core import InputElement
 from .core import _Choice
 from .core import ChoiceElement
 
+
 @inherit_kwargs
 class TextEntry(InputElement):
     """
@@ -69,7 +70,10 @@ class TextEntry(InputElement):
     
     @input.setter
     def input(self, value):
-        self._input = bleach.clean(value) # sanitizing input
+        if not value:
+            self._input = None
+        else:
+            self._input = bleach.clean(value) # sanitizing input
 
     @property
     def placeholder(self) -> str:
@@ -386,23 +390,26 @@ class NumberEntry(TextEntry):
         return " ".join(hints)
 
     @property
-    def input(self):
-        
+    def input(self) -> str:
+        # docstring inherited
         return self._input
 
     @input.setter
     def input(self, value: str):
-        value = str(value)
-        for sign in self.decimal_signs:
-            value = value.replace(sign, ".")
-        self._input = value
+        if not value:
+            self._input = None
+        else:
+            value = str(value)
+            for sign in self.decimal_signs:
+                value = value.replace(sign, ".")
+            self._input = value
 
     def validate_data(self):
         
         if not self.should_be_shown:
             return True
 
-        if not self.force_input and self.input == "":
+        if not self.force_input and not self.input:
             return True
 
         elif not self.input:
@@ -534,7 +541,7 @@ class SingleChoice(ChoiceElement):
             choice.disabled = True if self.disabled else False
 
             if self.input:
-                choice.checked = True if int(self.input[f"choice{choice.value}"]) == i else False
+                choice.checked = i == self.input
             elif self.default is not None:
                 choice.checked = True if self.default == i else False
 
@@ -557,10 +564,25 @@ class SingleChoice(ChoiceElement):
         # method.
         if not self.name in d:
             return
+        else:
+            self.input = d[self.name]
 
-        chosen_option = d.get(self.name)
-        for choice in self.choices:
-            self._input[f"choice{choice.value}"] = str(choice.value) == chosen_option
+    @property
+    def input(self) -> int:
+        """
+        int: Index of selected choice (starting at 1). Returns *None*, 
+        if there is no input.
+        """
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        if not value:
+            self._input = None
+        else:
+            self._input = int(value)
+
+
 
 
 @inherit_kwargs
@@ -715,7 +737,7 @@ class MultipleChoice(ChoiceElement):
             if self.debug_enabled:
                 choice.checked = True if i <= self.max else False
             elif self.input:
-                choice.checked = True if self.input[f"choice{choice.value}"] is True else False
+                choice.checked = self.input[f"choice{i}"]
             elif self.default:
                 choice.checked = True if i in self.default else False
 
@@ -726,6 +748,23 @@ class MultipleChoice(ChoiceElement):
     def default_no_input_hint(self) -> str:
         # docstring inherited
         return self.experiment.config.get("hints", "no_inputMultipleChoice")
+
+    @property
+    def input(self) -> dict:
+        """
+        Dict[str, bool]: Dictionary of subject inputs. Returns an empty
+        dictionary, if there is no input.
+
+        The keys are 'choice{{i}}', with {{i}} being replaced by the
+        choice number. The values are *True* or *False*, indicating
+        whether the respective choice has been selected.
+        
+        """
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
 
 
 @inherit_kwargs
@@ -824,7 +863,7 @@ class SingleChoiceList(SingleChoice):
             choice.disabled = True if self.disabled else False
 
             if self.input:
-                choice.checked = True if int(self.input[f"choice{choice.value}"]) == i else False
+                choice.checked = self.input == choice.value
             elif self.default is not None:
                 choice.checked = True if self.default == i else False
 
@@ -833,14 +872,27 @@ class SingleChoiceList(SingleChoice):
             choices.append(choice)
         return choices
 
+    @property
+    def input(self) -> str:
+        """
+        str: Text of selected choice. Returns *None*, 
+        if there is no input.
 
-    def set_data(self, d):
-        if not self.disabled:
-            try:
-                self.input = d[self.name]
-            except KeyError:
-                self.log.debug(f"No data for {self} found in data dictionary. Moving on.")
-                pass
+        Note that, differing from :class:`.SingleChoice`, we do not
+        use an index here. This is due to the fact that in 
+        :class:`.SingleChoiceList`, all labels must be strings, while
+        they can have other classes in SingleChoice elements. Thus, it
+        is safe to use the label in SingleChoiceLists, but not in
+        ordinary SingleChoice elements.
+        """
+        return self._input
+
+    @input.setter
+    def input(self, value):
+        if not value:
+            self._input = None
+        else:
+            self._input = value
 
 
 @inherit_kwargs
@@ -892,13 +944,15 @@ class MultipleChoiceList(MultipleChoice):
         
         name_map = {str(choice.value): choice.name for choice in self.choices}
         val = d.get(self.name, None)
+        if not val:
+            return
         val_name = name_map[val]
 
-        for choice in self.choices:
+        for i, choice in enumerate(self.choices, start=1):
             if choice.name == val_name:
-                self.input[choice.name] = True
+                self.input[f"choice{i}"] = True
             else:
-                self.input[choice.name] = False
+                self.input[f"choice{i}"] = False
 
 @inherit_kwargs
 class SingleChoiceButtons(SingleChoice):
