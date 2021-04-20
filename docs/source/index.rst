@@ -10,6 +10,7 @@
    :hidden:
 
    CHANGELOG
+   plugins
 
 .. toctree
    :maxdepth: 2
