@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## alfred3 v2.0.1 (Released 2021-04-20)
+
+### Added v2.0.1
+
+- `alfred3.multiple_choice_names`: A new utility function that you can use to find the indexes of selected choices in multiple choice elements. You can apply it to the data dictionary corresponding to the element of interest in `alfred3.experiment.ExperimentSession.values`, or to the `input` attribute of the element directly.
+- Four new hooks for finetuning a section's validation behavior. All except `validate_on_jumpto` default to calling `validate_on_move`. Their intended use is to allow for specialized behavior by being overloaded. For example, you can implement a section that does not validate input on backwards movements by overriding the `validate_on_backward` method with an empty method. These are the locations:
+    - `alfred3.section.Section.validate_on_forward`
+    - `alfred3.section.Section.validate_on_backward`
+    - `alfred3.section.Section.validate_on_jumpfrom`
+    - `alfred3.section.Section.validate_on_jumpto`
+
+### Changed v2.0.1
+
+- Clarified the default match hints for NumberEntry elements.
+- For all input elements, their `input` attribute now clearly states the type of the returned input.
+
+### Fixed v2.0.1
+
+- Some problems with input handling in choice elements
+- A small visual hickup with a verbose message displayed upon using the debug jump mode
+- Fixed a problem in `ExperimentSession.all_exp_data` and `ExperimentSession.all_unlinked_data`.
+
+
 ## alfred3 v2.0.0 (Released 2021-04-20)
 
 We are excited to announce the release of alfred3 v2.0! 
