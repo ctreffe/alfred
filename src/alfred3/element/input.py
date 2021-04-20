@@ -776,19 +776,9 @@ class SingleChoiceList(SingleChoice):
         {kwargs}
 
     Notes:
-        The SingleChoiceList's default value defaults to "1" due to its
+        The SingleChoiceList's input always defaults to "1" due to its
         design. A typical way to remove meaning from this default is
         to make the fist choice a no-choice option (see examples).
-
-        Also, note that the SingleChoiceList uses a different data
-        representation than other choice elements. This is due to the
-        fact that a typical use case for a SingleChoiceList is selection
-        from a long list of possible choices. Also, choices can only be
-        strings, while other choice elements also allow, for example, images.
-
-        For this reason, the SingleChoiceList does not save a True/False
-        status for each choice, but simply the label of the selected choice
-        as a string. 
 
     Examples:
         A single choice list with a no-choice option as first option::
