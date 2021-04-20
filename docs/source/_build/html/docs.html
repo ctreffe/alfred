@@ -1,0 +1,474 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Documentation Guidelines &mdash; alfred3 1.4.0.a1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Experiment" href="experiment.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> alfred3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="CHANGELOG.html">Changelog</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation for Beginners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_experiment.html">Your first experiment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">Basic Experiment Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Using Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_elements.html">Deriving new elements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alfred3.html">alfred3 package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment.html">Experiment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developers</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation Guidelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#one-sentence-summary">One-Sentence summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-and-instance-attributes">Class and instance attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docstrings-of-inherited-methods">Docstrings of inherited methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-examples">Writing Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ordinary-codeblocks">Ordinary codeblocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doctest-style-codeblocks">Doctest style codeblocks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#docstring-sections">Docstring sections</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">alfred3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Documentation Guidelines</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/docs.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="documentation-guidelines">
+<h1>Documentation Guidelines<a class="headerlink" href="#documentation-guidelines" title="Permalink to this headline">¶</a></h1>
+<p>Generally, alfred3 adheres to <a class="reference external" href="https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google Style docstrings</a>, with a few
+customizations. Here, I note only the deviations from Google Style.</p>
+<p>Useful resources for writing docstrings concern <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html">directives</a>
+(special commands, e.g. for creating notes or warnings),
+<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#cross-referencing-syntax">cross-referencing</a> (i.e. links within the documentation), and a
+general <a class="reference external" href="https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst">ReStructured Text cheat sheet</a>. The creation of tables can be
+most convenient via <a class="reference external" href="https://docutils.sourceforge.io/docs/ref/rst/directives.html#csv-table">csv tables</a>.</p>
+<div class="section" id="one-sentence-summary">
+<h2>One-Sentence summary<a class="headerlink" href="#one-sentence-summary" title="Permalink to this headline">¶</a></h2>
+<p>The one-sentence summary of a docstring should start on its own, new
+line instead of being on the same line as the three opening quotes.
+This improves readability:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Example</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    One sentence summary</span>
+
+<span class="sd">    Extended summary can be placed here.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="class-and-instance-attributes">
+<h2>Class and instance attributes<a class="headerlink" href="#class-and-instance-attributes" title="Permalink to this headline">¶</a></h2>
+<p>Class and instance attributes are documented where they are defined,
+by placing short descriptions starting with <code class="docutils literal notranslate"><span class="pre">#:</span></code> directly above
+their definition. This is inspired by Flask’s documentation and is
+done for two reasons:</p>
+<ol class="arabic simple">
+<li><p>It works with Sphinx’s automatic layout</p></li>
+<li><p>The docstrings are available directly where the attribute is defined.</p></li>
+</ol>
+<p><strong>Note</strong>: For complicated docstrings that exceed five lines, you
+should turn to using properties instead of attributes and document
+the property in its getter method.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Example</span><span class="p">:</span>
+
+    <span class="c1">#: str: This is a short description of a class attribute</span>
+    <span class="n">class_attribute</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inst_attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+        <span class="c1">#: str: This is a short description of an instance attribute</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inst_attr</span> <span class="o">=</span> <span class="n">inst_attr</span>
+</pre></div>
+</div>
+<p>Remember to include type annotations in the docstrings! They are placed
+at the start of the docstring and end with the first colon (see example
+above).</p>
+</div>
+<div class="section" id="docstrings-of-inherited-methods">
+<h2>Docstrings of inherited methods<a class="headerlink" href="#docstrings-of-inherited-methods" title="Permalink to this headline">¶</a></h2>
+<p>(Quoted in parts from <a class="reference external" href="https://matplotlib.org/3.1.1/devel/documenting_mpl.html#inheriting-docstrings">matplotlib</a> documentation) If a subclass
+overrides a method but does not change the semantics, we can reuse the
+parent docstring for the method of the child class, or tell sphinx not
+to add it to the classes own documentation.</p>
+<p><em>Reusing the parent docstring</em>: Python does this automatically, if
+the subclass method does not have a docstring. Use a plain comment
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">docstring</span></code> inherited to denote the intention to reuse the parent
+docstring. That way we do not accidentially create a docstring in the
+future. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A</span><span class="p">:</span>
+      <span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+          <span class="sd">&quot;&quot;&quot;The parent docstring.&quot;&quot;&quot;</span>
+          <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+        <span class="c1"># docstring inherited</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p><em>Suppressing redundant docstrings</em>: To suppress redundant
+documentation of a child method, add
+<code class="docutils literal notranslate"><span class="pre">:meta</span> <span class="pre">private:</span> <span class="pre">(documented</span> <span class="pre">at</span> <span class="pre">&lt;parent&gt;)</span></code> as the method’s
+docstring. That way, we know why the docstring is suppressed. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;The parent docstring.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;:meta private: (documented at :class:`.A`)&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-examples">
+<h2>Writing Examples<a class="headerlink" href="#writing-examples" title="Permalink to this headline">¶</a></h2>
+<p><strong>Examples are one of the most important parts of a docstring</strong>. Never
+forgo writing an example lightly!</p>
+<p>Examples in docstrings, besides illustrating the usage of the
+function or method, must be valid Python code, that can be copied
+and run by users. Comments describing the examples can be added.</p>
+<p>Alfred3 should be imported with the statement <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">alfred3</span> <span class="pre">as</span> <span class="pre">al</span></code>
+at the beginning of the example. If any other packages are used, they
+should be imported explicitly aswell.</p>
+<p>Examples should use minimal alfred experiments written in the object-
+oriented style, that is by adding pages/section by deriving new classes
+and using the <a class="reference internal" href="experiment.html#alfred3.experiment.Experiment.member" title="alfred3.experiment.Experiment.member"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Experiment.member()</span></code></a> decorator. Unless the example
+requires a different hook, elements (pages) should be added to pages
+(sections) in the <code class="docutils literal notranslate"><span class="pre">on_exp_access</span></code> hook:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;example_page&quot;</span>
+
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="bp">self</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Example text&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="ordinary-codeblocks">
+<h3>Ordinary codeblocks<a class="headerlink" href="#ordinary-codeblocks" title="Permalink to this headline">¶</a></h3>
+<p>When appropriate, ordinary code-blocks
+without output can be used as examples. This has the advantage that
+it is similar to the style in which alfred experiments are actually
+written, and the code can be copy-pasted directly. Ordinary codeblocks
+can be created simply by ending a line with a double-colon (<code class="docutils literal notranslate"><span class="pre">::</span></code>) and
+indenting the next line by four spaces. You should include a black line
+between the double-colon and the first line of code. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a testclass</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        This example demonstrates code block usage::</span>
+
+<span class="sd">            a = A()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doctest-style-codeblocks">
+<h3>Doctest style codeblocks<a class="headerlink" href="#doctest-style-codeblocks" title="Permalink to this headline">¶</a></h3>
+<p>Another good way to present examples can be to
+write them as a session in the Python terminal. <code class="docutils literal notranslate"><span class="pre">&gt;&gt;&gt;</span></code> is used to
+present code, <code class="docutils literal notranslate"><span class="pre">…</span></code> is used for code continuing from the previous
+line. Output is presented immediately after the last line of code
+generating the output (no blank lines in between). Comments
+describing the examples can be added with blank lines before and
+after them. Doctest style codeblocks do not need to start with a double-
+colon.</p>
+<p>Both styles may be appropriate. It is up to you to choose.</p>
+<p>(Inspired by and adapted from the <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html">pandas</a> docstring guidelines)</p>
+<p>Code Example using the doctest style (Adding a page directly to the main
+content section, from the <a class="reference internal" href="experiment.html#alfred3.experiment.Experiment.member" title="alfred3.experiment.Experiment.member"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Experiment.member()</span></code></a> documentation):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">member</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_member</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">of_section</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;_content&quot;</span><span class="p">):</span>
+    <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Decorator for adding pages and sections to the experiment.</span>
+
+<span class="s2">    Works both with and without arguments.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        of_section: Name of the section to which the new member</span>
+<span class="s2">            belongs.</span>
+
+<span class="s2">    Examples:</span>
+
+<span class="s2">        Adding a page directly to the main content section:</span>
+
+<span class="s2">        &gt;&gt;&gt; exp = al.Experiment()</span>
+<span class="s2">        ...</span>
+<span class="s2">        &gt;&gt;&gt; @exp.member</span>
+<span class="s2">        &gt;&gt;&gt; class HelloWorld(al.Page):</span>
+<span class="s2">        ...     name = &quot;hello_world&quot;</span>
+<span class="s2">        ...</span>
+<span class="s2">        ...     def on_exp_access(self):</span>
+<span class="s2">        ...         self += al.Text(&quot;This is a &#39;hello, world!&#39; Page.&quot;)</span>
+<span class="s2">        ...</span>
+<span class="s2">        &gt;&gt;&gt; exp.members</span>
+<span class="s2">        {&quot;hello_world&quot;: Page(class=&quot;HelloWorld&quot;, name=&quot;hello_world&quot;)}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="docstring-sections">
+<h2>Docstring sections<a class="headerlink" href="#docstring-sections" title="Permalink to this headline">¶</a></h2>
+<p>The docstrings can have the following sections in the following order
+(heavily quoting the <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html">pandas</a> docstring guidelines):</p>
+<table class="colwidths-given docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Section Name</p></th>
+<th class="head"><p>Heading</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1 <strong>Short summary</strong></p></td>
+<td><p>-</p></td>
+<td><p>A concise one-line summary.</p></td>
+</tr>
+<tr class="row-odd"><td><p>2 <strong>Extended summary</strong></p></td>
+<td><p>-</p></td>
+<td><p>Provides details on what the function does.</p></td>
+</tr>
+<tr class="row-even"><td><p>3 <strong>Arguments</strong></p></td>
+<td><p>Args</p></td>
+<td><p>The details of the function arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p>4 <strong>Returns</strong></p></td>
+<td><p>Returns</p></td>
+<td><p>Return value documentation. <em>Yields</em> for generators.</p></td>
+</tr>
+<tr class="row-even"><td><p>5 <strong>See Also</strong></p></td>
+<td><p>See Also</p></td>
+<td><p>Informs users about related alfred3 functionality.</p></td>
+</tr>
+<tr class="row-odd"><td><p>6 <strong>Notes</strong></p></td>
+<td><p>Notes</p></td>
+<td><p>Optional section for technical and implementation details.</p></td>
+</tr>
+<tr class="row-even"><td><p>7 <strong>Examples</strong></p></td>
+<td><p>Examples</p></td>
+<td><p>Examples, illustrating function usage. <strong>Very important</strong>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="experiment.html" class="btn btn-neutral float-left" title="Experiment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Christian Treffenstädt, Paul Wiemann, Johannes Brachem
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

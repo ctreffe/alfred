@@ -1,0 +1,10 @@
+$("#{{ id }}").click(function() {
+    var target = document.getElementById('{{ target }}').selectedOptions[0].text;
+    
+    if (target != "") {
+        $("#alt-submit").attr("name", "move");
+        $("#alt-submit").val("jump>" + target);
+        $("#form").submit();
+    }
+})
+

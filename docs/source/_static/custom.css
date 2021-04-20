@@ -1,0 +1,9 @@
+code.sig-prename.descclassname {
+    font-size: small!important;
+    color: #8599ad;
+}
+
+/* override table no-wrap */
+.wy-table-responsive table td, .wy-table-responsive table th {
+    white-space: normal;
+}

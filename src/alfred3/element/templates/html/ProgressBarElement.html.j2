@@ -1,0 +1,8 @@
+<div class="progress {{ css_class_element }}" id="{{ name }}">
+    <div class="progress-bar {{ striped }} {{ animated }} {{ bar_style }}" role="progressbar" style="width: {{ progress }}%;"
+        aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+        {% if show_text %}
+        <span class="progress-text {{ css_class_element }}-text" id="{{ name }}-text">{{ progress }} %</span>
+        {% endif %}
+    </div>
+</div>

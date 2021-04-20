@@ -1,0 +1,8 @@
+
+<div class="btn-group{% if vertical %}-vertical{% endif %} btn-group-toggle flex-wrap {{ button_group_class }} {{ css_class_element }}" data-toggle="buttons" id="{{ name }}" style="{{ height }}">
+    {% for choice in choices %}
+    <label class="btn {{ button_style[loop.index0] }} {% if choice.checked %}active{% endif %} {{ choice.css_class }} d-flex align-items-center justify-content-center {{ align_raw }}" id="{{ choice.label_id }}" style="{{ fontsize }} {% if disabled %}pointer-events: none;{% endif %}">
+      <input type="{{ choice.type }}" name="{{ choice.name }}" id="{{ choice.id }}" value="{{ choice.value }}" autocomplete="off" {% if choice.checked %}checked{% endif %} {% if disabled %}disabled{% endif %}>{{ choice.label }}
+    </label>
+    {% endfor %}
+  </div>

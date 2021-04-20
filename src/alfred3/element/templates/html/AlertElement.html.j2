@@ -1,0 +1,5 @@
+<div class="{{ css_class_element }} {{role}} {{role}}-{{category}} {% if dismiss == True %} alert-dismissible fade show {% endif %}" role="{{role}}" id="{{ name }}" style="{{ fontsize }}"> {{ text }}
+ {% if dismiss == True %}
+ <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+ {% endif %}
+</div>

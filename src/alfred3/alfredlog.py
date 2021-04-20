@@ -17,76 +17,6 @@ from typing import Union
 
 from .config import ExperimentConfig
 
-
-def init_logging(name: str):
-    """Initialize logging with configuration from config.conf.
-
-    Included for backwards compatibility with old run.py from v1.2.0
-    onwards.
-
-    TODO: Remove in v2.0.0
-    """
-
-    wd = Path.cwd()
-    config = ExperimentConfig(wd)
-
-    formatter = prepare_alfred_formatter(exp_id=config.get("metadata", "exp_id"))
-
-    logdir = Path(config.get("log", "path")).resolve()
-    logfile = logdir / "alfred.log"
-    file_handler = prepare_file_handler(filepath=logfile)
-    file_handler.setFormatter(formatter)
-
-    stream_handler = logging.StreamHandler(sys.stderr)
-    stream_handler.setFormatter(formatter)
-
-    alfred_logger = logging.getLogger("alfred")
-    alfred3_logger = logging.getLogger("alfred3")
-
-    level = config.get("log", "level").upper()
-
-    alfred_logger.addHandler(file_handler)
-    alfred_logger.addHandler(stream_handler)
-    alfred_logger.setLevel(getattr(logging, level))
-    alfred3_logger.addHandler(file_handler)
-    alfred3_logger.addHandler(stream_handler)
-    alfred3_logger.setLevel(getattr(logging, level))
-
-    msg = (
-        "The function init_logging is deprecated. You are probably seeing this warning, "
-        "because you are using the traditional run.py formulation. "
-        "Please switch to the current version. "
-        "The function will be removed in the next major release (v2.0)."
-    )
-
-    DeprecationWarning(msg)
-
-    if name == "alfred":
-        alfred_logger.warning(msg)
-    elif name == "alfred3":
-        alfred3_logger.warning(msg)
-    else:
-        logger = logging.getLogger(name)
-        logger.addHandler(file_handler)
-        logger.addHandler(stream_handler)
-        logger.setLevel(getattr(logging, level))
-        logger.warning(msg)
-
-
-def getLogger(name: str):
-    """Get an instance of :class:`QueuedLoggingInterface` with a
-    *queue_logger* of the given name.
-
-    Included for backwards compatibility.
-
-    TODO: Remove in v2.0.0
-    """
-
-    DeprecationWarning("This function is deprecated. Please use the QueuedLoggingInterface class.")
-
-    return BWCompatibleLogger(base_logger=name)
-
-
 def prepare_file_handler(filepath: Union[str, Path]) -> logging.FileHandler:
     """Returns a :class:`~logging.FileHandler` and creates the necessary
     directories on the fly, if needed.
@@ -169,7 +99,7 @@ class QueuedLoggingInterface:
             configuration.
         
         session_id (str): Allows you to set a session ID that will be
-            included in logged messages. (Defaults to "n/a".)
+            included in logged messages. (Defaults to "NA".)
     """
 
     def __init__(self, base_logger: str = None, queue_logger: str = None):
@@ -180,18 +110,81 @@ class QueuedLoggingInterface:
         self._queue_logger = logging.getLogger(queue_logger) if queue_logger is not None else None
         self._queue = queue.Queue()
         self._level = None
-        self.session_id = "n/a"
+        self.session_id = "NA"
 
     @property
     def queue_logger(self):
         return self._queue_logger
-
+    
     @queue_logger.setter
     def queue_logger(self, logger):
-        if not self.queue_logger:
-            self._queue_logger = logger
+
+        if self.queue_logger is not None:
+            self.warning(
+                (
+                    "Queue logger already present. Overriding queue logger "
+                    f"{self.queue_logger} with {logger}."
+                )
+            )
+        
+        self._queue_logger = logger
+
+    def add_queue_logger(self, obj, module: str):
+        name = self.loggername(obj, module)
+        self.queue_logger = logging.getLogger(name)
+        if "experiment" in obj.__dict__:
+            self.session_id = obj.experiment.session_id
+        elif "exp" in obj.__dict__:
+            self.session_id = obj.exp.session_id
         else:
-            raise ValueError("Queue logger is already set and can only be set once.")
+            self.session_id = obj.experiment.session_id
+        self.log_queued_messages()
+
+    def loggername(self, obj, module: str) -> str:
+        """Returns a logger name for use in :class:`~alfred3.alfredlog.QueueLoggingInterface.
+
+        The name has the following format::
+
+            exp.exp_id.module_name.class_name.object_identifier
+        
+        The identifier is only added if the object has an attribute
+        *instance_log* that is set to *True*. If the object
+        has a *name* attribute, that is used as the identifier. Else,
+        the object's *uid* is used.
+        
+        Args:
+            obj: The object for which a logger name should be generated.
+        """
+        # remove "alfred3" from module name
+        module_name = module.split(".")
+        module_name.pop(0)
+
+        name = []
+        name.append("exp")
+        if "experiment" in obj.__dict__:
+            name.append(obj.experiment.exp_id)
+        elif "exp" in obj.__dict__:
+            name.append(obj.exp.exp_id)
+        else:
+            name.append(obj.experiment.exp_id)
+
+        
+        name.append(".".join(module_name))
+        name.append(type(obj).__name__)
+
+        if "instance_log" in obj.__dict__:
+
+            try:
+                if obj.instance_log:
+                    try:
+                        name.append(obj.name)
+                    except AttributeError:
+                        name.append(obj.uid)
+
+            except AttributeError as e:
+                self.debug(f"Suppressed exception: {e}")
+
+        return ".".join(name)
 
     def _unpack_worker(self):
         while not self._queue.empty():
@@ -206,7 +199,7 @@ class QueuedLoggingInterface:
 
         if self._level:
             self.queue_logger.setLevel(self._level)
-        threading.Thread(target=self._unpack_worker).start()
+        threading.Thread(target=self._unpack_worker, name="alfredlog").start()
 
     def setLevel(self, level: str):
         """Sets a level for the queue logger. Since the level will be

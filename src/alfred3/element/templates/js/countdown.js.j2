@@ -1,0 +1,40 @@
+function countdown( elementName, duration, msg)
+{
+    var element, hours, mins, msToGo, time, duration, msg, delta;
+    var startTime = Date.now();
+    var targetTime = startTime + duration * 1000;
+
+    function twoDigits( n )
+    {
+        return (n <= 9 ? "0" + n : n);
+    }
+
+    function updateTimer()
+    {
+        msToGo = targetTime - Date.now();
+       
+        if (msToGo < 500) {
+            // if time is up
+            element.innerHTML = msg;
+        } else if ( msToGo < 1000 ) {
+            // if time is almost up
+            element.innerHTML = "00:00";
+            setTimeout( updateTimer, 500 );
+
+        } else {
+            // if there is still time
+            time = new Date( msToGo );
+            timeSecs = time / 1000;
+            hours = Math.floor(timeSecs / 60 / 60);
+            mins = time.getUTCMinutes();
+            element.innerHTML = (hours ? twoDigits(hours) + ':' + twoDigits( mins ) : twoDigits( mins ) ) + ':' + twoDigits( time.getUTCSeconds() );
+            setTimeout( updateTimer, 500 );
+        }
+    }
+
+    element = document.getElementById( elementName );
+    updateTimer();
+}
+$(document).ready(
+    countdown( '{{ name }}', {{ end_after }}, '{{ end_msg }}')
+)

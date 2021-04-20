@@ -1,0 +1,100 @@
+{% extends "layout.html.j2" %}
+
+{% block page %}
+
+
+<div class="container-fluid page-container {% if responsive %} responsive-width {% else %} fixed-width {% endif %}"
+id="page-container">
+
+<div class="progress-container {% if fix_progress_top %}progress-sticky{% endif %}" id="progress-container">
+
+    {% if show_progress %}
+    {{ progress|safe }}
+        {# <div class="progress page-progress">
+            <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ progress }}%;"
+                aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+                <!-- <span class="progress-text">{{ progress }}%</span> -->
+            </div>
+        </div> #}
+        {% endif %}
+</div>
+
+    <!-- Experimenter Messages -->
+    <!-- and corrective hints -->
+    {% if messages %}
+    <div id="experimenter-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.level }}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {% if message.title %}
+        <strong>{{message.title}}</strong> <br>
+        {% endif %}
+        {{ message.msg }}
+    </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page Header -->
+    <div class="page-header" id="page-header">
+        {% if title %}
+        <h1 class="page-title">{{ title }}</h1>
+        {% endif %}
+
+        {% if subtitle %}
+        <p class="page-subtitle">{{ subtitle }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Main Page Body -->
+    <form class="page-form" method="post" id="form">
+
+        <!-- Element widgets -->
+        <div class="page-body" id="page-body">
+
+            {% for element in elements %}
+
+            {% if element.should_be_shown and element.display_standalone %}
+            {{ element.web_widget | safe }}
+            {% endif %}
+
+            {% endfor %}
+
+            <!-- Hidden fields -->
+            <input type="hidden" name="page_token" value="{{ page_token }}">
+            <input type="hidden" id="alt-submit">
+        </div>
+
+        <!-- navigation area-->
+        <div class="page-navigation" id="page-navigation">
+            <hr />
+            <div class="row justify-content-center p-1">
+                <div class="col-12 text-center form-actions" id="controls">
+
+                    <!-- backward button -->
+                    {% if backward_text %}
+                    <button type="submit" class="btn btn-dark" id="back_button" name="move" value="backward"
+                        submit="backward">{{ backward_text }}</button>
+                    {% endif %}
+
+                    <!-- forward button -->
+                    {% if forward_text %}
+                    <button type="submit" class="btn btn-dark" id="forward_button" name="move" value="forward"
+                        submit="forward">{{ forward_text }}</button>
+                    {% endif %}
+
+                    <!-- finish button -->
+                    {% if finish_text %}
+                    <button type="submit" class="btn btn-dark" id="finish_button" name="move" value="forward"
+                        submit="forward">{{ finish_text }}</button>
+                    {% endif %}
+
+                </div>
+                
+            </div>
+        </div>
+    </form>
+
+</div>
+
+{% endblock page %}

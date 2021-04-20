@@ -5,7 +5,194 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## [Unreleased]
+## alfred3 v2.0.0 (Released 2021-04-20)
+
+We are excited to announce the release of alfred3 v2.0! 
+
+**Note**: This is a major release. While the basic building blocks of 
+alfred3 experiments – sections, pages, and elements – remain at the heart
+of the framework's logic, many other aspects have undergone 
+disruptive changes. These are too many to sensibly detail all of them
+here. We recommend instead to start from scratch using the new 
+documentation: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
+
+In short, the biggest changes are the following:
+
+* New syntax: Experiments in alfred3 v2.0 can be written in what we call
+  the instance-style or the class-style. Together they replace the previous
+  style of writing an experiment. We also streamlined the
+  element names, removing the suffix "Element". For instance, 
+  `TextEntryElement` can now be accessed under the name `TextEntry`.
+
+* We added a number of elements that 
+  should make your life easier when writing dynamic, or even interactive
+  experiments.
+
+* We added a number of attributes to the `ExperimentSession` object to
+  make your life a lot easier.
+
+* New Layout: We did a complete redesign of alfred3's page layout, moving
+  to Bootstrap v4.5 and making the layout responsive to screen size. This 
+  introduces the possibility for participants to use their mobile devices
+  for completing alfred experiments - an important feature nowadays. Of
+  course, experimenters can choose to turn off responsiveness if their
+  experiments require a fixed layout.
+
+* Documentation and tutorials for alfred3's most important features
+  is now available: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
+
+* Integrated list randomization: We integrated the possibility for smart list 
+  randomization directly into alfred3 through `alfred3.ListRandomizer`,
+  thereby offering a remarkably simple way for efficient randomization.
+
+* Movement history: Alfred3 can now record detailed information about 
+  participants' movements in an experiment, such as the duration of
+  individual visists to a page.
+
+## alfred3 v1.4
+
+### Added v1.4
+
+With this version, alfred3 gains some powerful new features. This is the overview:
+
+* The `UnlinkedDataPage` can be used to safely collect data that cannot be linked to any specific experiment session.
+* Alfred3 now automatically generates a comprehensive, machine-readable codebook that describes your data set.
+* Alfred3 now offers functionality for transforming locally collected data from .json to .csv format (both automatically at the end of each session, and manually via a command line interface).
+* New hooks for pages and sections make it easier to tidily organize experiment code.
+
+Details below!
+
+#### New page classes
+
+* `page.UnlinkedDataPage` : Use this page to collect data that should not be linkeable to the experiment data. All data from UnlinkedDataPages will be shuffled and saved in a separate file. No timestamps or other metadata are stored that would make it possible to link an unlinked dataset to an experiment dataset. Otherwise, usage is fully equivalent to ordinary pages.
+* `page.CustomSavingPage` : This is an abstract page class for advanced users. It grants you detailed control over the saving behavior of your page. Basically, you give the page its own saving agent and manually define exactly, which data will be saved. For more information, call `help(CustomSavingPage)` .
+
+#### Automatic codebook generation
+
+Alfred now automatically generates a raw codebook from your experiment. The codebook contains descriptions for all user-input elements and can be exported as .csv or .json.
+
+#### Automatic transformation of local data to .csv
+
+Upon completion of an experiment session, alfred now automatically converts experiment data (including unlinked and codebook data) to .csv by default. You can control this behavior through the following options in config.conf:
+
+``` ini
+[general]
+transform_data_to_csv = true # controls, whether to transform data or not
+csv_directory = data # the .csv files will be placed in this directory
+csv_delimiter = ; # Controls the delimiter. Default is semicolon.
+```
+
+#### Command line interface for exporting alfred3 data
+
+Through a new command line interface, you can export alfred data, both from your local `save` directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.
+
+``` 
+
+python3 -m alfred3.export --src=local_saving_agent
+```
+
+Detailed description of all parameters (available also from the terminal via `python3 -m alfred3.export --help` )
+
+``` 
+
+Usage: export.py [OPTIONS]
+
+Options:
+  --src TEXT           The name of the configuration section in 'config.conf'
+                       or 'secrets.conf' that defines the SavingAgent whose
+                       data you want to export.  [default: local_saving_agent]
+
+  --directory TEXT     The path to the experiment whose data you want to
+                       export. [default: Current working directory]
+
+  -h, --here           With this flag, you can indicate that you want to
+                       export .json files located in the current working
+                       directory.  [default: False]
+
+  --data_type TEXT     The type of data that you want to export. Accepted
+                       values are 'exp_data', 'unlinked', and 'codebook'. If
+                       you specify a 'src', the function tries to infer the
+                       data type from the 'src's suffix. (Example:
+                       'mongo_saving_agent_codebook' would lead to 'data_type'
+                       = 'codebook'. If you give a value for 'data_type', that
+                       always takes precedence. If no data_type is provided and
+                       no data_type can be inferred, 'exp_data' is used.
+
+  --missings TEXT      Here, you can manually specify a value that you want to
+                       insert for missing values.
+
+  --remove_linebreaks  Indicates, whether linebreak characters should be
+                       deleted from the file. If you don't use this flag (the
+                       default), linebreaks will be replaced with spaces.
+                       [default: False]
+
+  --delimiter TEXT     Here, you can manually specify a delimiter for your
+                       .csv file. You need to put the delimiter inside
+                       quotation marks, e.g. like this: --delimiter=';'.
+                       [default: ,]
+
+  --help               Show this message and exit.
+```
+
+#### New page hooks for more control 
+
+All page classes now provide the possibility to define additional hooks, granting you more fine-grained control over the exact time your code gets executed. Here is a list of them:
+
+| Hook            | Explanation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `on_exp_access` | Hook for code that is meant to be executed as soon as a page is added to an experiment. This is your go-to-hook, if you want to have access to the experiment, but don't need access to data from other pages.                                                                                                                                                                                                                                                                                                                                    |
+| `on_first_show` | Hook for code that is meant to be executed when a page is shown for the first time. This is your go-to-hook, if you want to have access to data from other pages within the experiment, and your code is meant to be executed only once (i.e. the first time a page is shown).                                                                                                                                                                                                                                                                    |
+| `on_each_show` | Hook for code that is meant to be executed *every time* the page is shown.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `on_first_hide` | Hook for code that is meant to be executed only once, when the page is hidden for the first time, **before** saving the page's data. **Important**: Note the difference to `on_close` , which is executed upon final submission of the page's data. When using `on_first_hide` , subject input can change (e.g., when a subject revists a page and changes his/her input).                                                                                                                                                                                                                                                                                                   |
+| `on_each_hide` | Hook for code that is meant to be executed *every time* the page is hidden, **before** saving the page's data.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `on_close` | Hook for code that is meant to be executed when a page is closed. This is your go-to-hook, if you want to have the page execute code only once, when submitting the data from a page. Closing happens, when you leave a page for the first time in a `HeadOpenSection` (participants can revisit the page, but can't change their input), and when you leave a page in a `SegmentedSection` (participants cannot go back to previous pages). That means, this hook has no effect inside a standard `Section` , because its pages don't get closed. |
+
+For now, the old hooks `on_showing` , `on_showing_widget` (both equivalent to `on_each_show` ) and `on_hiding` , as well as `on_hiding_widget` (both equivalent to `on_each_hide` ) will still work but are deprecated and will be removed in future versions. Therefore we ask you to use the new hooks from now on.
+
+Here is an example:
+
+``` python
+from alfred3.page import Page
+from alfred3.element import TextElement
+
+class Welcome(Page):
+    def on_exp_access(self):
+        self += TextElement("This code is executed upon adding the page to the experiment.")
+    
+    def on_first_show(self):
+        self += TextElement("This code is executed right before showing the page for the first time")
+
+```
+
+#### New section hooks for more control
+
+The section classes also gain some hooks:
+
+| Hook | Explanation |
+| --- | --- |
+| `on_exp_access` | Hook for code that is meant to be executed as soon as a section is added to an experiment. |
+| `on_enter` | Hook for code that is meant to be executed upon entering a section in an ongoing experiment. |
+| `on_leave` | Hook for code that is meant to be executed upon leaving a section in an ongoing experiment. This code will be executed *after* closing the section's last page. |
+
+Here is an example:
+
+``` python
+from alfred3.section import Section
+from alfred3.page import Page
+
+class Main(Section):
+    def on_exp_access(self):
+        self += Page(title="Demo Page, added upon adding the section to the experiment.")
+    
+    def on_enter(self):
+        print("Code executed upon entering the section.")
+```
+
+## alfred v1.3.1 (Released 2020-08-24)
+
+### Fixed v1.3.1
+
+* Fixed a bug in the template donwloading CLI.
 
 ## alfred v1.3.1 (Released 2020-08-24)
 
@@ -15,7 +202,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ## alfred v1.3.0 (Released 2020-08-19)
 
-### Added
+### Added v1.3.0
 
 * We defined the *iadd* ( `+=` ) operator for all pages, sections and the experiment class. In many cases, it can replace a call to the `append()` method of these classes. Don't worry, the `append()` method is not going away. You can use this operator...
     - ... to append elements to a page
@@ -62,17 +249,17 @@ class Welcome(Page):
         self += TextElement("Testtext", name="text1")
 ```
 
-### Changed
+### Changed v1.3.0
 
 * When downloading a template, it is now allowed to have a `.idea` and a `.git` file already present in the target directory. Otherwise, the directory must be empty.
 
 ## alfred v1.2.1 (Released 2020-08-18)
 
-### Fixed
+### Fixed v1.2.1
 
 * Fixed an underspecified filepath handling that caused trouble with the logging initialization under windows.
 
-### Changed
+### Changed v1.2.1
 
 * We made using the flask debugger easier:
     - If you use the command line interface, you can add the flag 'debug' to start an experiment in debugging mode and use flask's builtin debugging tools. The command becomes `python -m alfred3.run -debug` .
@@ -84,6 +271,7 @@ class Welcome(Page):
     - This is the full new usage:
 
 ``` 
+
 Usage: template.py [OPTIONS]
 
 Options:
@@ -110,7 +298,7 @@ Options:
 
 ## alfred v1.2.0 (Released 2020-07-13)
 
-### Added
+### Added v1.2.0
 
 #### Minor changes
 
@@ -119,12 +307,14 @@ Options:
 * We added support for custom imports of `.py` files from subdirectories that are transferable to mortimer by including the package `thesmuggler` . If you want to store content in an external `.py` file (which we highly recommend, as it leads to a clearer directory structure), you can import such a file by using `thesmuggler.smuggle()` . Example:
 
 ``` 
+
 # files/instructions.py
 
 text = "This text resides in files/instructions.py"
 ```
 
 ``` 
+
 # script.py
 from thesmuggler import smuggle
 
@@ -211,7 +401,7 @@ Additional options allow for more flexibility. Take a look at them with the foll
 python3 -m alfred3.template --help
 ```
 
-### Changed
+### Changed v1.2.0
 
 #### Enhanced configuration
 
@@ -259,8 +449,8 @@ def generate_experiment(self, config=None):
 
 #### Enhanced logging
 
-* All instances and children of `Experiment` , `element.Element` , `page.Page` , and `section.Section` gain a `log` attribute.
-* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` , `info` , `warning` , `error` , `critical` , `exception` , `log` , and `setLevel` .
+* All instances and children of `Experiment` ,           `element.Element` ,           `page.Page` , and `section.Section` gain a `log` attribute.
+* The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` ,           `info` ,           `warning` ,           `error` ,           `critical` ,           `exception` ,  `log` , and `setLevel` .
 * If you want to access the logger object directly to apply more detailed configuration, you can do so via `log.queue_logger` .
 
 See [logging documentation](https://docs.python.org/3/howto/logging.html#logging-levels) for more information on the levels and configuration.
@@ -293,7 +483,7 @@ def generate_experiment(self, config=None):
 
 * You can now define an encryption key either in `secrets.conf` or in an environment variable named `ALFRED_ENCRYPTION_KEY` .
 
-### Removed
+### Removed v1.2.0
 
 #### Removed qt-webkit support
 
@@ -310,7 +500,7 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 
 ## alfred3 v1.1.5 (Released 2020-05-13)
 
-### Fixed
+### Fixed v1.1.5
 
 * Fixed a bug in the parsing of the auth_source parameter in `config.conf`
 
@@ -323,12 +513,13 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 * Alfred3 can now be installed via pip:
 
 ``` 
+
 pip install alfred3
 ```
 
 * When alfred is installed via pip, you must change all imports in your `script.py` and `run.py` to the new name.
 
-### Changed
+### Changed v1.1.4
 
 * Changed name to alfred3 (see above).
 
@@ -363,40 +554,39 @@ pip install alfred3
 
 ## alfred v1.0.5
 
-### Bugfixes
+### Bugfixes v1.0.5
 
 * fixed #37 
 
-### Minor changes
+### Minor changes v1.0.5
 
 * rename `PageController.change_to_finished_section` : This was a missed function call from the old naming scheme. Generally, it will not affect the user in most cases, but it still exists as a deprecated function, logging a warning now.
 
-### Bugfixes
 
 ## alfred v1.0.4
 
-### Bugfixes
+### Bugfixes v1.0.4
 
 * This includes a hotfix for an issue with ALfred v1.0.3.
 
-### Minor changes
+### Minor changes v1.0.4
 
 * Local saving agent now checks, whether the path given in config.conf is absolute. If not, the agent treats it as a relative path, relative to the experiment directory.
 * Alfred now saves its the version number alongside each saved dataset, so that the used version can be identified.
 
 ## alfred v1.0.3
 
-### Bugfixes
+### Bugfixes v1.0.3
 
 * This includes a hotfix for an issue with Alfred v1.0.2
 
 ## alfred v1.0.2
 
-### Bugfixes
+### Bugfixes v1.0.2
 
 * Fixed a bug in `localserver.py` that caused trouble for videos implemented via `alfred.element.WebVideoElement` in Safari (wouldn't play at all) and Chrome (forward/backward wouldn't work)
 
-### Other changes
+### Other changes v1.0.2
 
 * `alfred.element.WebVideoElement` :
     - New parameter `source` : A filepath or url that points to the video ( `str` ).
@@ -410,13 +600,13 @@ pip install alfred3
 
 ## alfred v1.0.1
 
-### Bugfixes
+### Bugfixes v1.0.1
 
 * Fixed a bug that caused a mixup with filepaths for web experiments hosted with mortimer.
 
 ## alfred v1.0
 
-### Breaking changes
+### Breaking changes v1.0
 
 #### Port to Python 3
 
@@ -458,7 +648,7 @@ pip install alfred3
     - `author` : The experiment author
     - `version` : The experiment version
     - `exp_id` : The experiment ID (**IMPORTANT:** This ID is used to identify your experiment data, if you set up a local alfred experiment to save data to the mortimer database. It is not used, if you deploy your experiment as a web experiment via mortimer.)
-* `alfred.Experiment` no longer takes the arguments `expType` , `expName` and `expVersion` . Instead, these metadata are now defined in the `config.conf` , section `[metadata]` .
+* `alfred.Experiment` no longer takes the arguments `expType` ,           `expName` and `expVersion` . Instead, these metadata are now defined in the `config.conf` , section `[metadata]` .
 * To process metadata in mortimer, the following changes need to be implemented in `script.py` :
     - `def generate_experiment(config=None)` (the function gets a new parameter `config` , which defaults to `None` )
     - `exp = Experiment(config=config)` (the experiment should be initialized with the parameter `config` , defaulting to `config` , which gets handed down from the `generate_experiment` function.)
@@ -467,11 +657,11 @@ pip install alfred3
 
 * Importing a file from the project directory now **always** needs to take place within the `generate_experiment()` function. This is necessary for compatibility with the newest version of mortimer. This way, we can handle multiple resources directories.
 
-### New Features
+### New Features v1.0
 
 #### Define navigation button text in `config.conf`
 
-* `config.conf` gets a new section `[navigation]` that lets you define `forward` , `backward` , and `finish` button texts.
+* `config.conf` gets a new section `[navigation]` that lets you define `forward` ,           `backward` , and `finish` button texts.
 
 #### New recommended `script.py` style
 
@@ -542,7 +732,7 @@ def generate_experiment(self, config=None):
 
 ```
 
-### Deprecated
+### Deprecated v1.0
 
 | Deprecated function (alfred v0.2b5 name)  | Replaced by |
 | ------------- | ------------- | 
@@ -555,11 +745,11 @@ def generate_experiment(self, config=None):
 | `Experiment.questionController.appendItem()` | `Experiment.append()` |
 | `Experiment.questionController.appendItems()` | `Experiment.append()` |
 
-### Bug fixes and other changes
+### Bug fixes and other changes v1.0
 
 * **Improved handling of browser commands.** In web experiments, subjects used to be able to cause trouble by using the browser controls (forward, backward, refresh) instead of the experiment controls at the bottom of the page to move through an experiment. In some cases, this could render the subject's data unusable. Now, when a subject uses the browser controls, Alfred will always return the current state of the experiment. This way, no more data should be lost.
 * **Fixed a saving agent bug.** When quickly moving through an experiment, the saving agent sometimes didn't complete it's tasks correctly and basically crashed. This does not happen anymore.
 
-### Removed features
+### Removed features v1.0
 
 * **No more pure QT experiments.** We completely removed pure QT experiments from the framework. Those have recently seen very little use and have some drawbacks compared to web experiments and qt-webkit (qt-wk) experiments.

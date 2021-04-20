@@ -1,0 +1,37 @@
+function countup( elementName, maxSecs, msg)
+{
+    var element, hours, mins, msCount, time, maxSecs, msg, delta;
+    var startTime = Date.now();
+
+    function twoDigits( n )
+    {
+        return (n <= 9 ? "0" + n : n);
+    }
+
+    function updateTimer()
+    {
+        msCount = Date.now() - startTime;
+       
+        if ( msCount < 1000 ) {
+
+            element.innerHTML = "00:00";
+            setTimeout( updateTimer, 500 );
+        } else if ( maxSecs > 0 & msCount/1000 >= maxSecs ) {
+
+        		element.innerHTML = msg
+        } else {
+
+            time = new Date( msCount );
+            hours = time.getUTCHours();
+            mins = time.getUTCMinutes();
+            element.innerHTML = (hours ? twoDigits(hours) + ':' + twoDigits( mins ) : twoDigits( mins ) ) + ':' + twoDigits( time.getUTCSeconds() );
+            setTimeout( updateTimer, 500 );
+        }
+    }
+
+    element = document.getElementById( elementName );
+    updateTimer();
+}
+$(document).ready(
+    countup( '{{ name }}', {{ end_after }}, '{{ end_msg }}')
+)

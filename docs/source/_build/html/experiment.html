@@ -1,0 +1,1490 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Experiment &mdash; alfred3 1.4.0.a1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation Guidelines" href="docs.html" />
+    <link rel="prev" title="alfred3 package" href="alfred3.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> alfred3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="CHANGELOG.html">Changelog</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation for Beginners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_experiment.html">Your first experiment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">Basic Experiment Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Using Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_elements.html">Deriving new elements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alfred3.html">alfred3 package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Experiment</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation Guidelines</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">alfred3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Experiment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/experiment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-alfred3.experiment">
+<span id="experiment"></span><h1>Experiment<a class="headerlink" href="#module-alfred3.experiment" title="Permalink to this headline">¶</a></h1>
+<p>This module contains the main experiment and experiment session objects.</p>
+<p><strong>What’s the difference between the Experiment and the
+ExperimentSession?</strong></p>
+<ul class="simple">
+<li><p>The Experiment class is the first thing you create in your <em>script.py</em>.
+Its purpose is simply to collect all pages and functions that you
+add to the experiment. For this purpose it offers decorators like
+<em>setup</em> and <em>member</em>.
+From this collection, it creates a new ExperimentSession for every new
+subject.</p></li>
+<li><p>The ExperimentSession class is the main experiment organizer. This is
+the class that actually coordinates all the work in an ongoing
+experiment. When you interact with a Section’s or a Page’s <em>exp</em>
+attribute, you are actually interacting with the current
+<em>ExperimentSession</em> object.</p></li>
+</ul>
+<dl class="py class">
+<dt id="alfred3.experiment.Experiment">
+<em class="property">class </em><code class="sig-prename descclassname">alfred3.experiment.</code><code class="sig-name descname">Experiment</code><a class="headerlink" href="#alfred3.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Holds pages and section and creates experiment sessions.</p>
+<p>Experiment members can be accessed via dictionary-style square
+brackets and added with the augmented assigment operator <code class="docutils literal notranslate"><span class="pre">+=</span></code>
+(see exampples).</p>
+<p>The class acts as an organizing container for pages and section for
+orderly instantiation of the <a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a>.</p>
+<p class="rubric">Examples</p>
+<p>Create an experiment and add simple page in linear style</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;page1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">members</span>
+<span class="go">{&quot;page1&quot;: Page(class=&quot;Page&quot;, name=&quot;page1&quot;)}</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">[</span><span class="s2">&quot;page1&quot;</span><span class="p">]</span>
+<span class="go">Page(class=&quot;Page&quot;, name=&quot;page1&quot;)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+<dl class="py attribute">
+<dt id="alfred3.experiment.Experiment.members">
+<code class="sig-name descname">members</code><em class="property">: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></em><em class="property"> = {}</em><a class="headerlink" href="#alfred3.experiment.Experiment.members" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of all pages and sections added to the experiment.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.Experiment.setup_functions">
+<code class="sig-name descname">setup_functions</code><em class="property">: List<span class="p">[</span>callable<span class="p">]</span></em><em class="property"> = []</em><a class="headerlink" href="#alfred3.experiment.Experiment.setup_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of function that will be called upon creation of an
+experiment session. They are added with the <a class="reference internal" href="#alfred3.experiment.Experiment.setup" title="alfred3.experiment.Experiment.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a>
+decorator</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.Experiment.finish_functions">
+<code class="sig-name descname">finish_functions</code><em class="property">: List<span class="p">[</span>callable<span class="p">]</span></em><em class="property"> = []</em><a class="headerlink" href="#alfred3.experiment.Experiment.finish_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of function that will be called upon finishing an
+experiment session. They are added with the <a class="reference internal" href="#alfred3.experiment.Experiment.finish" title="alfred3.experiment.Experiment.finish"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finish()</span></code></a>
+decorator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.Experiment.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for functions that work on the experiment session.</p>
+<p>The decorated function can have an arbitrary name. It <em>must</em>
+take an <a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a> object as its only argument
+(usually spelled as <em>exp</em>). You can use this decorator on as
+many function as you like.</p>
+<p>The purpose of this decorator is to allow manipulation of the
+<a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a> object generated by
+<a class="reference internal" href="#alfred3.experiment.Experiment" title="alfred3.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a>.</p>
+<p class="rubric">Examples</p>
+<p>In this example, we use the the <code class="docutils literal notranslate"><span class="pre">&#64;exp.setup</span></code> decorator to
+add a plugin to the experiment session’s plugin dictionary and
+access that same plugin later in a page hook.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@exp</span><span class="o">.</span><span class="n">setup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">exp</span><span class="p">):</span>  <span class="c1"># the decorated function can have any name</span>
+<span class="gp">... </span>    <span class="n">exp</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mock plugin&quot;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">HelloWorld</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;hello_world&quot;</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">])</span>
+<span class="go">mock plugin</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.finish">
+<code class="sig-name descname">finish</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.Experiment.finish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for code to be run upon <a class="reference internal" href="#alfred3.experiment.ExperimentSession.finish" title="alfred3.experiment.ExperimentSession.finish"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ExperimentSession.finish()</span></code></a>.</p>
+<p>The decorated function can have an arbitrary name. It <em>must</em>
+take an <a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a> object as its only argument
+(usually spelled as <em>exp</em>). You can use this decorator on as
+many functions as you like.</p>
+<p>The purpose of this decorator is to allow manipulation of the
+<a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a> object generated by
+<a class="reference internal" href="#alfred3.experiment.Experiment" title="alfred3.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> a last time before the final page is shown.
+The decorated functions are the first things to be called in the
+<a class="reference internal" href="#alfred3.experiment.ExperimentSession.finish" title="alfred3.experiment.ExperimentSession.finish"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ExperimentSession.finish()</span></code></a> method.</p>
+<p>A common usecase would be to conditionally assign the
+experiment’s final page based on subject input during the
+experiment.</p>
+<p class="rubric">Examples</p>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">&#64;exp.finish</span></code> decorator for conditionally
+changing the final page:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="n">exp</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;page1&quot;</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">page1</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">TextEntry</span><span class="p">(</span><span class="s2">&quot;Enter text&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;text1&quot;</span><span class="p">)</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">finish</span>
+<span class="k">def</span> <span class="nf">set_final_page</span><span class="p">(</span><span class="n">exp</span><span class="p">):</span>  <span class="c1"># the decorated function can have any name</span>
+    <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s2">&quot;text1&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span>
+       <span class="n">exp</span><span class="o">.</span><span class="n">final_page</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="s2">&quot;Option A&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;final_page_a&quot;</span><span class="p">)</span>
+   <span class="k">else</span><span class="p">:</span>
+       <span class="n">exp</span><span class="o">.</span><span class="n">final_page</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="s2">&quot;Option B&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;final_page_b&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.member">
+<code class="sig-name descname">member</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">_member</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">of_section</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">'_content'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.Experiment.member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for adding pages and sections to the experiment.</p>
+<p>Works both with and without arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>of_section</strong> – Name of the section to which the new member
+belongs.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Adding a page directly to the main content section:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">HelloWorld</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;hello_world&quot;</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="s2">&quot;This is a &#39;hello, world!&#39; Page.&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">members</span>
+<span class="go">{&quot;hello_world&quot;: Page(class=&quot;HelloWorld&quot;, name=&quot;hello_world&quot;)}</span>
+</pre></div>
+</div>
+<p>Adding a page to a specific section:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Section</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@exp</span><span class="o">.</span><span class="n">member</span><span class="p">(</span><span class="n">of_section</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">HelloWorld</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;hello_world&quot;</span>
+<span class="gp">... </span>    <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Hello, World!&quot;</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="s2">&quot;This is a &#39;hello, world!&#39; Page.&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">[</span><span class="s2">&quot;hello_world&quot;</span><span class="p">]</span>
+<span class="go">Page(class=&quot;HelloWorld&quot;, name=&quot;hello_world&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.final_page">
+<em class="property">property </em><code class="sig-name descname">final_page</code><a class="headerlink" href="#alfred3.experiment.Experiment.final_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>The experiment’s final page.</p>
+<p>You can set this property to a Page class or Page instance
+directly. For more complex final pages, we recommend the use
+of the <a class="reference internal" href="#alfred3.experiment.Experiment.as_final_page" title="alfred3.experiment.Experiment.as_final_page"><code class="xref py py-meth docutils literal notranslate"><span class="pre">as_final_page()</span></code></a> decorator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The experiment’s final page.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>page.Page</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>This property will return <em>None</em>, if the final page was not
+set manually. The experiment session will then use a
+default final page.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">final_page</span>
+<span class="go">None</span>
+</pre></div>
+</div>
+<p>Setting a class instance as final page:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">final_page</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;final_page&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">final_page</span>
+<span class="go">Page(class=&#39;Page&#39;, name=&#39;final_page&#39;)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#alfred3.experiment.Experiment.as_final_page" title="alfred3.experiment.Experiment.as_final_page"><code class="xref py py-meth docutils literal notranslate"><span class="pre">as_final_page()</span></code></a>: Class decorator for adding custom
+final pages to the experiment.</p></li>
+<li><p><a class="reference internal" href="#alfred3.experiment.ExperimentSession.final_page" title="alfred3.experiment.ExperimentSession.final_page"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ExperimentSession.final_page</span></code></a> the final page
+property of the experiment session object.</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>page.Page</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.as_final_page">
+<code class="sig-name descname">as_final_page</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">page</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.Experiment.as_final_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class decorator for adding a custom final page to the experiment.</p>
+<p>Use this decorator, if you want to define a new final page with
+full access to all experiment hooks.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@exp</span><span class="o">.</span><span class="n">as_final_page</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Final</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;final_page&quot;</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span> <span class="o">+=</span> <span class="n">al</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="s2">&quot;This is the final page.&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">final_page</span><span class="o">.</span><span class="n">name</span>
+<span class="go">final_page</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#alfred3.experiment.Experiment.final_page" title="alfred3.experiment.Experiment.final_page"><code class="xref py py-attr docutils literal notranslate"><span class="pre">final_page</span></code></a>: The final page as a property.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.init_members">
+<code class="sig-name descname">init_members</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a><a class="headerlink" href="#alfred3.experiment.Experiment.init_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes all pages and sections in the members dictionary.</p>
+<p>Also appends all members to their respective parents. If a
+member is already instantiated, the instance is copied to ensure
+uniqueness of instances across experiments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dictionary of initialized sections and pages.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.create_session">
+<code class="sig-name descname">create_session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em>, <em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n">alfred3.config.ExperimentConfig</span></em>, <em class="sig-param"><span class="n">secrets</span><span class="p">:</span> <span class="n">alfred3.config.ExperimentSecrets</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">urlargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.Experiment.create_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an experiment session.</p>
+<p>The arguments get passed on directly to the
+<a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a> object and are documented there.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#alfred3.experiment.ExperimentSession" title="alfred3.experiment.ExperimentSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSession</span></code></a> contains documentation on how
+to interact with an experiment session object.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.Experiment.append">
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">members</span></em>, <em class="sig-param"><span class="n">to_section</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">'_content'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.Experiment.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append members to the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*members</strong> – The members to append</p></li>
+<li><p><strong>to_section</strong> – The parent section for the members to append.
+All members in a function call will be appended to the
+same section.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Members can be classes that inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code> or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Page</span></code>, as well as instances of these classes or their
+subclasses. To append Page or Section classes to the experiment,
+you should use the <a class="reference internal" href="#alfred3.experiment.Experiment.member" title="alfred3.experiment.Experiment.member"><code class="xref py py-meth docutils literal notranslate"><span class="pre">member()</span></code></a> decorator.</p>
+<p>While it is perfectly possible to use the <a class="reference internal" href="#alfred3.experiment.Experiment.append" title="alfred3.experiment.Experiment.append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">append()</span></code></a> method,
+usually it is preferable to use to augmented assigment operator
+<code class="docutils literal notranslate"><span class="pre">+=</span></code> to append members to the experiment.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All members must have a unique name.</p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Page</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;page1&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">members</span>
+<span class="go">{&quot;page1&quot;: Page(class=&quot;Page&quot;, name=&quot;page1&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="alfred3.experiment.ExperimentSession">
+<em class="property">class </em><code class="sig-prename descclassname">alfred3.experiment.</code><code class="sig-name descname">ExperimentSession</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em>, <em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n">alfred3.config.ExperimentConfig</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secrets</span><span class="p">:</span> <span class="n">alfred3.config.ExperimentSecrets</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">urlargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Coordinates all parts of an experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session_id</strong> – Unique session identifier</p></li>
+<li><p><strong>config</strong> – Non-secret experiment configuration</p></li>
+<li><p><strong>secrets</strong> – Secret experiment configuration, such as database
+credentials</p></li>
+<li><p><strong>**urlargs</strong> – Keyword arguments from url parameters. Will be stored
+in the attribute <a class="reference internal" href="#alfred3.experiment.ExperimentSession.urlargs" title="alfred3.experiment.ExperimentSession.urlargs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">urlargs</span></code></a> for access in the
+experiment session.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Usually, there is no need to initialize an ExperimentSession
+manually. The <a class="reference internal" href="#alfred3.experiment.Experiment" title="alfred3.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> object will take care of that
+for you.</p>
+<p>You have access to this object in Page and Section hooks through
+their accessors <code class="xref py py-attr docutils literal notranslate"><span class="pre">Page.exp</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">Section.exp</span></code>.
+It connects all parts of an experiment and allows you to access
+data from other pages and even other experiment sessions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because the experiment session is newly created for every new
+subject, you can only access it in the <em>object-oriented</em> style
+of writing an alfred experiment by deriving new <code class="xref py py-class docutils literal notranslate"><span class="pre">Page</span></code>
+and/or <code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code> classes and using their hooks to add
+elements.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>Object-oriented style</p></li>
+<li><p>Page hooks</p></li>
+<li><p>Section hooks</p></li>
+<li><p>Experiment object</p></li>
+</ul>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 2.0: </span>Many changes, including new methods and properties for improved
+usability. Name changed from “Experiment” to “ExperimentSession”.</p>
+</div>
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.plugins">
+<code class="sig-name descname">plugins</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.plugins" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of experiment plugins for use in the experiment
+session.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.finish_functions">
+<code class="sig-name descname">finish_functions</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.finish_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of functions that will be called upon finishing an
+experiment session. They are added with the <a class="reference internal" href="#alfred3.experiment.ExperimentSession.finish" title="alfred3.experiment.ExperimentSession.finish"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finish()</span></code></a>
+decorator</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.finished">
+<code class="sig-name descname">finished</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the experiment session is finished</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.start_timestamp">
+<code class="sig-name descname">start_timestamp</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.start_timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp saved upon experiment start</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.start_time">
+<code class="sig-name descname">start_time</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.start_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time of experiment start in seconds since epoch</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.alfred_version">
+<code class="sig-name descname">alfred_version</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.alfred_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The alfred3 version used for this experiment session</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.session_id">
+<code class="sig-name descname">session_id</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.session_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique session identifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.config">
+<code class="sig-name descname">config</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Non-sensitive experiment configuration. This is an
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentConfig</span></code> object. It offers access
+to all values defined in the experiment’s <em>config.conf</em>
+through the methods <em>get</em>, <em>getint</em>, <em>getfloat</em>, and
+<em>getboolean</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.secrets">
+<code class="sig-name descname">secrets</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.secrets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sensitive experiment configuration (e.g. database credentials).
+This is an <code class="xref py py-class docutils literal notranslate"><span class="pre">ExperimentSecrets</span></code> object. It
+offers access to all values defined in the experiment’s
+<em>secrets.conf</em> through the methods <em>get</em>, <em>getint</em>,
+<em>getfloat</em>, and <em>getboolean</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.urlargs">
+<code class="sig-name descname">urlargs</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.urlargs" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of parameters passed as url parameters for use
+in the experiment session.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="alfred3.experiment.ExperimentSession.log">
+<code class="sig-name descname">log</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">QueuedLoggingInterface</span></code>, offering logging
+through the methods <em>debug</em>, <em>info</em>, <em>warning</em>, <em>error</em>,
+<em>exception</em>, and <em>log</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.progress_bar">
+<em class="property">property </em><code class="sig-name descname">progress_bar</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.progress_bar" title="Permalink to this definition">¶</a></dt>
+<dd><p>The experiment’s progress bar.</p>
+<p>There are two options in <em>config.conf</em> that control the progress
+bar, both in the <em>layout</em> section:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">show_progress</span></code> (true/false) toggles whether a progress bar
+is displayed at all</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fix_progress_top</span></code> (true/false) toggles whether the progress
+bar  should stay at a fixed position at the top of the page,
+when subjects scroll down on a long page.</p></li>
+</ul>
+<p>The progress bar can be customized by redefining it with a
+<a class="reference internal" href="alfred3.html#alfred3.element.ProgressBar" title="alfred3.element.ProgressBar"><code class="xref py py-class docutils literal notranslate"><span class="pre">element.ProgressBar</span></code></a> of your choosing.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="alfred3.html#alfred3.element.ProgressBar" title="alfred3.element.ProgressBar"><code class="xref py py-class docutils literal notranslate"><span class="pre">element.ProgressBar</span></code></a> for more information on
+how to specify a custom progress bar.</p>
+</div>
+<p class="rubric">Notes</p>
+<p>The experiment-wide progress bar <em>always</em> receives a name
+of “<em>progress_bar_</em>”.</p>
+<p class="rubric">Examples</p>
+<p>Example of controlling the progress bar in the config.conf:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[layout]</span>
+<span class="na">show_progress</span> <span class="o">=</span> <span class="s">true</span>
+<span class="na">fix_progress_top</span> <span class="o">=</span> <span class="s">false</span>
+</pre></div>
+</div>
+<p>Example of redefining the experiment-wide progress bar:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">setup</span>
+<span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">exp</span><span class="p">):</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">progress_bar</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">ProgressBar</span><span class="p">(</span><span class="n">show_text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bar_height</span><span class="o">=</span><span class="s2">&quot;10px&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the experiment.</p>
+<p>Usually, this method does not need to be called manually. It
+will be called automatically, when the <code class="docutils literal notranslate"><span class="pre">/experiment/start</span></code>
+url route is called.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.finish">
+<code class="sig-name descname">finish</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.finish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes all pages and saves data.</p>
+<p>Usually, this method does not need to be called manually. It
+will be called automatically upon entering the finished section.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sync</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves data with the main and unlinked saving agents.</p>
+<p>Usually, there is no need to call this method manually, as data
+is saved automatically on every move.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sync</strong> – If <em>True</em>, the experiment will only proceed after the
+saving task was completed.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Note that a call to this function will NOT prompt a call to
+the <code class="xref py py-meth docutils literal notranslate"><span class="pre">save_data()</span></code> method of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">CustomSavingPage</span></code> instances in the experiment.
+You need to call those manually.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.all_members">
+<em class="property">property </em><code class="sig-name descname">all_members</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.all_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of all sections and pages in the experiment.</p>
+<p>Excludes the final page.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.all_sections">
+<em class="property">property </em><code class="sig-name descname">all_sections</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.all_sections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of all sections in the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.all_pages">
+<em class="property">property </em><code class="sig-name descname">all_pages</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.all_pages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of all pages in the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.final_page">
+<em class="property">property </em><code class="sig-name descname">final_page</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.final_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>The experiment’s final page.</p>
+<p>This page will be displayed after a subject has finished the
+experiment. It will not contain any navigation elements. You can
+use this property to change the final page by assigning a page
+of your design.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>You can change the final page in a similar way using
+<a class="reference internal" href="#alfred3.experiment.Experiment.final_page" title="alfred3.experiment.Experiment.final_page"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Experiment.final_page</span></code></a>.</p></li>
+<li><p>For conditional assignment of the experiment’s final page,
+doing so using a function with the
+<a class="reference internal" href="#alfred3.experiment.Experiment.finish" title="alfred3.experiment.Experiment.finish"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Experiment.finish()</span></code></a> decorator is the recommended
+way to go.</p></li>
+</ul>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">ExperimentSession</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">final_page</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_final_page&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">final_page</span>
+<span class="go">Page(class=&quot;Page&quot;, name=&quot;my_final_page&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.subpath">
+<code class="sig-name descname">subpath</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.9)">pathlib.Path</a><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.9)">pathlib.Path</a><a class="headerlink" href="#alfred3.experiment.ExperimentSession.subpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the full path of an experiment subdirectory.</p>
+<p>If the given <em>path</em> is absolute, it will not be altered, but
+transformed to a <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Absolute path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.9)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.read_csv_todict">
+<code class="sig-name descname">read_csv_todict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.9)">pathlib.Path</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">'utf-8'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; Iterator<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a><span class="p">]</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.read_csv_todict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates over the rows in a .csv file, yielding dictionaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – The path to the .csv file. Usually, you want this to
+be a relative path to a file in a subdirectory of the
+experiment directory.</p></li>
+<li><p><strong>encoding</strong> – Encoding of the .csv file. Defaults to ‘utf-8’.</p></li>
+<li><p><strong>**kwargs</strong> – Further arguments passed on to <a class="reference external" href="https://docs.python.org/3/library/csv.html#csv.DictReader" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">csv.DictReader</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>dict</em> – A dictionary in which the keys are the column names.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Consider the following csv-file, located at
+<code class="docutils literal notranslate"><span class="pre">files/data.csv</span></code> in your experiment directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">col1</span>    <span class="p">,</span>   <span class="n">col2</span>    <span class="p">,</span>   <span class="n">col3</span>
+<span class="n">text_a</span>  <span class="p">,</span>   <span class="n">text_b</span>  <span class="p">,</span>   <span class="n">text_c</span>
+<span class="n">text_d</span>  <span class="p">,</span>   <span class="n">text_e</span>  <span class="p">,</span>   <span class="n">text_f</span>
+</pre></div>
+</div>
+<p>When building a page, usual usage would be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="k">class</span> <span class="nc">CSVDemoPage</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>     <span class="c1"># this could also be a Section</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;csv_demo&quot;</span>
+
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">read_csv_todict</span><span class="p">(</span><span class="s2">&quot;files/data.csv&quot;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output would be the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="s2">&quot;text_a&quot;</span><span class="p">,</span> <span class="s2">&quot;col2&quot;</span><span class="p">:</span> <span class="s2">&quot;text_b&quot;</span><span class="p">,</span> <span class="s2">&quot;col3&quot;</span><span class="p">:</span> <span class="s2">&quot;text_c&quot;</span><span class="p">}</span>  <span class="c1"># first iteration</span>
+<span class="p">{</span><span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="s2">&quot;text_d&quot;</span><span class="p">,</span> <span class="s2">&quot;col2&quot;</span><span class="p">:</span> <span class="s2">&quot;text_e&quot;</span><span class="p">,</span> <span class="s2">&quot;col3&quot;</span><span class="p">:</span> <span class="s2">&quot;text_f&quot;</span><span class="p">}</span>  <span class="c1"># second iteration</span>
+</pre></div>
+</div>
+<p>If you need a full list of the rows, you can wrap the
+function call in <code class="docutils literal notranslate"><span class="pre">list()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="k">class</span> <span class="nc">CSVDemoPage</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>     <span class="c1"># this could also be a Section</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;csv_demo&quot;</span>
+
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">read_csv_todict</span><span class="p">(</span><span class="s2">&quot;files/data.csv&quot;</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output would be the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[{</span><span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="s2">&quot;text_a&quot;</span><span class="p">,</span> <span class="s2">&quot;col2&quot;</span><span class="p">:</span> <span class="s2">&quot;text_b&quot;</span><span class="p">,</span> <span class="s2">&quot;col3&quot;</span><span class="p">:</span> <span class="s2">&quot;text_c&quot;</span><span class="p">},</span>
+<span class="p">{</span><span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="s2">&quot;text_d&quot;</span><span class="p">,</span> <span class="s2">&quot;col2&quot;</span><span class="p">:</span> <span class="s2">&quot;text_e&quot;</span><span class="p">,</span> <span class="s2">&quot;col3&quot;</span><span class="p">:</span> <span class="s2">&quot;text_f&quot;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.read_csv_tolist">
+<code class="sig-name descname">read_csv_tolist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.9)">pathlib.Path</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">encoding</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">'utf-8'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; Iterator<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a><span class="p">]</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.read_csv_tolist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates over the rows in a .csv file, yielding lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – The path to the .csv file. Usually, you want this to
+be a relative path to a file in a subdirectory of the
+experiment directory.</p></li>
+<li><p><strong>encoding</strong> – Encoding of the .csv file. Defaults to ‘utf-8’.</p></li>
+<li><p><strong>**kwargs</strong> – Further arguments passed on to <code class="xref py py-class docutils literal notranslate"><span class="pre">csv.reader</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>list</em> – A list of the values in one row.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Consider the following csv-file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">col1</span>    <span class="p">,</span>   <span class="n">col2</span>    <span class="p">,</span>   <span class="n">col3</span>
+<span class="n">text_a</span>  <span class="p">,</span>   <span class="n">text_b</span>  <span class="p">,</span>   <span class="n">text_c</span>
+<span class="n">text_d</span>  <span class="p">,</span>   <span class="n">text_e</span>  <span class="p">,</span>   <span class="n">text_f</span>
+</pre></div>
+</div>
+<p>When building a page, usual usage would be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="k">class</span> <span class="nc">CSVDemoPage</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>     <span class="c1"># this could also be a Section</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;csv_demo&quot;</span>
+
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">read_csv_tolist</span><span class="p">(</span><span class="s2">&quot;files/data.csv&quot;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output would be the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s2">&quot;col1&quot;</span><span class="p">,</span> <span class="s2">&quot;col2&quot;</span><span class="p">,</span> <span class="s2">&quot;col3&quot;</span><span class="p">]</span>        <span class="c1"># first iteration yields column names</span>
+<span class="p">[</span><span class="s2">&quot;text_a&quot;</span><span class="p">,</span> <span class="s2">&quot;text_b&quot;</span><span class="p">,</span> <span class="s2">&quot;text_c&quot;</span><span class="p">]</span>  <span class="c1"># second iteration</span>
+<span class="p">[</span><span class="s2">&quot;text_a&quot;</span><span class="p">,</span> <span class="s2">&quot;text_b&quot;</span><span class="p">,</span> <span class="s2">&quot;text_c&quot;</span><span class="p">]</span>  <span class="c1"># third iteration</span>
+</pre></div>
+</div>
+<p>If you need a full list of the rows, you can wrap the
+function call in <code class="docutils literal notranslate"><span class="pre">list()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">Experiment</span><span class="p">()</span>
+
+<span class="nd">@exp</span><span class="o">.</span><span class="n">member</span>
+<span class="k">class</span> <span class="nc">CSVDemoPage</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">):</span>     <span class="c1"># this could also be a Section</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;csv_demo&quot;</span>
+
+    <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">read_csv_tolist</span><span class="p">(</span><span class="s2">&quot;files/data.csv&quot;</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output would be the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="s2">&quot;col1&quot;</span><span class="p">,</span> <span class="s2">&quot;col2&quot;</span><span class="p">,</span> <span class="s2">&quot;col3&quot;</span><span class="p">],</span>
+<span class="p">[</span><span class="s2">&quot;text_a&quot;</span><span class="p">,</span> <span class="s2">&quot;text_b&quot;</span><span class="p">,</span> <span class="s2">&quot;text_c&quot;</span><span class="p">],</span>
+<span class="p">[</span><span class="s2">&quot;text_a&quot;</span><span class="p">,</span> <span class="s2">&quot;text_b&quot;</span><span class="p">,</span> <span class="s2">&quot;text_c&quot;</span><span class="p">]]</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.author">
+<em class="property">property </em><code class="sig-name descname">author</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the experiment author.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.type">
+<em class="property">property </em><code class="sig-name descname">type</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the experiment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.version">
+<em class="property">property </em><code class="sig-name descname">version</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Experiment version</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.title">
+<em class="property">property </em><code class="sig-name descname">title</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Experiment title</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.exp_id">
+<em class="property">property </em><code class="sig-name descname">exp_id</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.exp_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Experiment id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.path">
+<em class="property">property </em><code class="sig-name descname">path</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to the experiment directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.adata">
+<em class="property">property </em><code class="sig-name descname">adata</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.adata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut for accessing the additional data dictionary.</p>
+<p>The additional data dictionary is meant to be a place where you
+can store data manually. It will be saved to the final dataset,
+where all additional data for a session will be stored as a
+single string.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>You can add specific values to a page with the
+<a class="reference internal" href="alfred3.html#alfred3.element.Value" title="alfred3.element.Value"><code class="xref py py-class docutils literal notranslate"><span class="pre">Value</span></code></a> element. For each Value element, alfred will
+save an individual column to the final dataset.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.additional_data">
+<em class="property">property </em><code class="sig-name descname">additional_data</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.additional_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>The additional data dictionary. See <a class="reference internal" href="#alfred3.experiment.ExperimentSession.adata" title="alfred3.experiment.ExperimentSession.adata"><code class="xref py py-attr docutils literal notranslate"><span class="pre">adata</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.condition">
+<em class="property">property </em><code class="sig-name descname">condition</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current experiment condition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.session">
+<em class="property">property </em><code class="sig-name descname">session</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.session" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>read-only</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Current TestCondition (<em>str or unicode</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.append">
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">items</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends Sections or Pages to the experiment’s root section.</p>
+<p>While it is perfectly possible to use the <a class="reference internal" href="#alfred3.experiment.ExperimentSession.append" title="alfred3.experiment.ExperimentSession.append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">append()</span></code></a> method,
+usually it is preferable to use to augmented assigment operator
+<code class="docutils literal notranslate"><span class="pre">+=</span></code> to append members to the experiment.</p>
+<p>All members must have a unique name.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">alfred3</span> <span class="k">as</span> <span class="nn">al</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span> <span class="o">=</span> <span class="n">al</span><span class="o">.</span><span class="n">ExperimentSession</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">Page</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;page1&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="o">.</span><span class="n">members</span>
+<span class="go">{&quot;page1&quot;: Page(class=&quot;Page&quot;, name=&quot;page1&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.encrypt">
+<code class="sig-name descname">encrypt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><a class="headerlink" href="#alfred3.experiment.ExperimentSession.encrypt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encrypts the input and returns the encrypted string.</p>
+<p>In web experiments deployed via mortimer, a safe, user-specific
+secret key will be used for encryption.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The method will also work in offline experiments, but does
+NOT provide safe encryption in this case, as a PUBLIC key
+is used for encryption. This is only ok for testing purposes.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – Input object that you want to encrypt. If the input is
+<em>None</em>, the function will return <em>None</em>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Encrypted data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.decrypt">
+<code class="sig-name descname">decrypt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.9)">bytes</a><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><a class="headerlink" href="#alfred3.experiment.ExperimentSession.decrypt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrypts input and returns the decrypted object as <cite>str</cite>.</p>
+<p>The method uses the built-in Fernet instance to decrypt the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – Encrypted string or bytes object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Decrypted data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.set_additional_data">
+<code class="sig-name descname">set_additional_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.set_additional_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut for <code class="xref py py-meth docutils literal notranslate"><span class="pre">DataManager.add_additional_data()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.get_additional_data">
+<code class="sig-name descname">get_additional_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.get_additional_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut for <code class="xref py py-meth docutils literal notranslate"><span class="pre">DataManager.get_additional_data_by_key()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the experiment forward one page.</p>
+<p>Can be called in the <code class="xref py py-meth docutils literal notranslate"><span class="pre">Page.custom_move()</span></code> hook to implement
+very specific movement behavior.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Refer to the documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">Page.custom_move()</span></code> for
+guidance on how to implement a custom movement method.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.backward">
+<code class="sig-name descname">backward</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the experiment backward one page.</p>
+<p>Can be called in the <code class="xref py py-meth docutils literal notranslate"><span class="pre">Page.custom_move()</span></code> hook to implement
+very specific movement behavior.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Refer to the documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">Page.custom_move()</span></code> for
+guidance on how to implement a custom movement method.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.jump">
+<code class="sig-name descname">jump</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.jump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jumps to a specific page in the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>to</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The name or index of the target page.
+<strong>Preferred usage is by name</strong>, because that reduces
+ambiguity.</p>
+</dd>
+</dl>
+<p>Can be called in the <code class="xref py py-meth docutils literal notranslate"><span class="pre">Page.custom_move()</span></code> hook to implement
+very specific movement behavior.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Refer to the documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">Page.custom_move()</span></code> for
+guidance on how to implement a custom movement method.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.values">
+<em class="property">property </em><code class="sig-name descname">values</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of input elements and their current values.</p>
+<p>Elements are identified by their name. Only elements from
+pages that have already been shown to a user appear in this
+dictionary.</p>
+<p>You cannot (and should not) change subject data by manipulating
+the dictionary returned by this property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dictionary of input elements and their current values.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.session_data">
+<em class="property">property </em><code class="sig-name descname">session_data</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.session_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full dataset of the current experimental session.</p>
+<p>Contains client information, experiment metadata, element values,
+movement history, and additional data.</p>
+<p>You cannot (and should not) change subject data by manipulating
+the dictionary returned by this property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Full dataset of the current experimental session.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.move_history">
+<em class="property">property </em><code class="sig-name descname">move_history</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.move_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list, containing the movement history for the current session.</p>
+<p>Each entry in this list is a dictionary. The entries in each
+of these dictionaries are based on the <code class="xref py py-class docutils literal notranslate"><span class="pre">Move</span></code> dataclass.</p>
+<p>You cannot (and should not) change subject data by manipulating
+the dictionary returned by this property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list, containing a dictionary for each move of the
+subject in the current session.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Please refer to the documentation of <code class="xref py py-class docutils literal notranslate"><span class="pre">Move</span></code> for an
+explanation of the saved fields.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.metadata">
+<em class="property">property </em><code class="sig-name descname">metadata</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dict of information about the experiment.</p>
+<p>This dict contains general information about the experiment,
+such as</p>
+<ul class="simple">
+<li><p>Start time</p></li>
+<li><p>Experiment version</p></li>
+<li><p>Title</p></li>
+<li><p>Author</p></li>
+<li><p>(…)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dict of information about the experiment.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.get_page_data">
+<code class="sig-name descname">get_page_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a><a class="headerlink" href="#alfred3.experiment.ExperimentSession.get_page_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data dictionary of a specific page.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the target page</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data dictionary of a specific page.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.get_section_data">
+<code class="sig-name descname">get_section_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a><a class="headerlink" href="#alfred3.experiment.ExperimentSession.get_section_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data dictionary for all pages in a specific section.</p>
+<p>Includes pages in child-sections of the target section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the target section</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data dictionary of a specific section.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.post_message">
+<code class="sig-name descname">post_message</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em>, <em class="sig-param"><span class="n">title</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">level</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">'info'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#alfred3.experiment.ExperimentSession.post_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post a message for <em>one-time</em> display after the next move.</p>
+<p>Both the message and its title can contain github flavored
+markdown and emoji shortcodes.</p>
+<p>The message will always be displayed only once. If the current
+page cannot be left, e.g. due to invalid input, it will be
+displayed on the current page. Otherwise, it will always be
+displayed on the <em>next</em> displayed page.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg</strong> – Message main text.</p></li>
+<li><p><strong>title</strong> – Message title, will be displayed as a bold heading.</p></li>
+<li><p><strong>level</strong> – Message level, controls the display style. Can be
+‘info’ (default), ‘warning’, ‘danger’, ‘success’,
+‘primary’, ‘secondary’, ‘dark’, or ‘light’.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.db">
+<em class="property">property </em><code class="sig-name descname">db</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Database object of the main mongo saving agent.</p>
+<p>You can use this property to access multiple collections in the
+used database, if your monogo saving agent is connected through
+an account with the necessary privileges.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is the <em>database</em> object, which can contain multiple
+<em>collections</em> of documents. Data is always saved to a
+collection in a database, not to a database directly.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#alfred3.experiment.ExperimentSession.db_main" title="alfred3.experiment.ExperimentSession.db_main"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_main</span></code></a> returns the collection, to which the main
+mongo saving agent writes its data.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A database object. If no mongo
+saving agent is present in the experiment, <em>None</em> is returned.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pymongo.database.Database</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.db_main">
+<em class="property">property </em><code class="sig-name descname">db_main</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.db_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Document collection of the main mongo saving agent.</p>
+<p>You can use this property to interact with the collection
+through the pymongo api: <a class="reference external" href="https://pymongo.readthedocs.io/en/stable/">https://pymongo.readthedocs.io/en/stable/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A collection object. If no
+mongo saving agent is present in the experiment, <em>None</em> is
+returned.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pymongo.collections.Collection</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.db_unlinked">
+<em class="property">property </em><code class="sig-name descname">db_unlinked</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.db_unlinked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Document collection of the unlinked mongo saving agent.</p>
+<p>You can use this property to interact with the collection
+through the pymongo api: <a class="reference external" href="https://pymongo.readthedocs.io/en/stable/">https://pymongo.readthedocs.io/en/stable/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A collection object. If no
+unlinked mongo saving agent is present in the experiment,
+<em>None</em> is returned.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pymongo.collections.Collection</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="alfred3.experiment.ExperimentSession.db_misc">
+<em class="property">property </em><code class="sig-name descname">db_misc</code><a class="headerlink" href="#alfred3.experiment.ExperimentSession.db_misc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Document collection for miscellaneous data.</p>
+<p>You can use this property to interact with the collection
+through the pymongo api: <a class="reference external" href="https://pymongo.readthedocs.io/en/stable/">https://pymongo.readthedocs.io/en/stable/</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This property assumes that the database credentials used by
+the main mongo saving agent are valid for a collection with
+the name <em>misc</em> in the same database aswell. If that is not
+the case, you will receive authentication errors when
+interacting with this property.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A collection object. If no
+mongo saving agent is present in the experiment, <em>None</em> is
+returned.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pymongo.collections.Collection</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 2.0.</span></p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="docs.html" class="btn btn-neutral float-right" title="Documentation Guidelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="alfred3.html" class="btn btn-neutral float-left" title="alfred3 package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Christian Treffenstädt, Paul Wiemann, Johannes Brachem
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

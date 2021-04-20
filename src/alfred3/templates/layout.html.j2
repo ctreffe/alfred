@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- CSS -->
+
+    {% for _, url in code.get("layout_css") %}
+    <link rel="stylesheet" href="{{ url }}" type="text/css">
+    {% endfor %}
+
+    <style type="text/css">
+    {% for _, css in code.get("layout_css_code") %}
+        {{ css }}
+    {% endfor %}
+    </style>
+
+    {% for _, url in code.get("css_urls") %}
+    <link rel="stylesheet" href="{{ url }}" type="text/css">
+    {% endfor %}
+
+    <style type="text/css">
+    {% for _, css in code.get("css_code") %}
+        {{ css }}
+    {% endfor %}
+    </style>
+
+    <title>{{ website_title }}</title>
+</head>
+
+<body class="line-numbers{% if responsive %} responsive{% endif %}" id="main-body">
+
+    
+    <div class="container-fluid d-flex justify-content-center logo-bg {% if not responsive %} min-width {% endif %}" id="logo-container">
+        <div class="logo-content {% if responsive %} responsive-width {% else %} fixed-width {% endif %}">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" class="float-left logo" alt="Logo">
+            <span
+                class="float-right text-right logo-text {% if responsive %} logo-text-responsive {% endif %}  small">{{ logo_text }}</span>
+            {% else %}
+            <div
+                class="text-right logo-text {% if responsive %} logo-text-responsive {% endif %}  small">{{ logo_text }}</div>
+            {% endif %}
+            </div>
+    </div>
+
+    
+    
+    {% block page %}
+    {% endblock page %}
+
+    
+    {% if debug %}
+    <div class="container-fluid {% if responsive %} responsive-width {% else %} fixed-width {% endif %} mt-4" id="jumplist">
+    <div class="jumplist-container">
+    <div class="row">
+    <div class="col-12">
+    {{ jumplist.web_widget | safe }}
+    </div>
+    </div>
+    </div>
+    </div>
+    {% endif %}
+    
+
+    <div class="footer-container d-flex justify-content-center {% if not responsive %} min-width {% endif %}" id="footer-container">
+    
+            <div class="footer text-center small muted mt-1">
+                {% if footer_text %}
+                <p class="footer-text mt-1">{{ footer_text }}</p>
+                {% endif %}
+                <img src="{{ alfred_logo_url }}" class="alfred-logo" alt="Alfred logo"> <br>
+                <span class="footer-brand">alfred3 experiment. <br> Developed by Christian Treffenstädt, Johannes Brachem, and Paul Wiemann.</span>
+            </div>
+
+        </div>
+
+
+        <!-- Javascript -->
+        {% for _, url in code.get("layout_js") %}
+        <script type="text/javascript" src="{{ url }}"></script>
+        {% endfor %}
+
+        {% for _, js in code.get("layout_js_code") %}
+        <script type="text/javascript">
+            {{ js }}
+        </script>
+        {% endfor %}
+
+        {% for _, url in code.get("js_urls") %}
+        <script type="text/javascript" src="{{ url }}"></script>
+        {% endfor %}
+
+        {% for _, js in code.get("js_code") %}
+        <script type="text/javascript">
+            {{ js }}
+        </script>
+        {% endfor %}
+
+
+</body>
+
+</html>

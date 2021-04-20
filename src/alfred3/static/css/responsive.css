@@ -1,0 +1,348 @@
+/* CLASSES */
+
+.alfred-logo {
+    height: 30px;
+}
+
+.corrective-hint>p:last-child, .Alert-element>p:last-child, .Button-element>p:last-child {
+    margin-bottom: 0;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:only-child {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:first-child {
+    margin-left: 0;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:last-child {
+    margin-right: 0;
+}
+
+.changed-btns {
+    margin-left: 0!important;
+    margin-right: 0!important;
+}
+
+/* make button group separate */
+div.btn-group.choice-button-group>label.btn.choice-button {
+    margin-right: .25rem;
+    margin-left: .25rem;
+}
+div.btn-group.choice-button-group {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:not(:last-child) {
+    border-radius: 0.25rem;
+}
+
+div.btn-group.choice-button-group>label.btn.choice-button:not(:first-child) {
+    border-radius: 0.25rem;
+}
+
+div.input-group-append>div {
+    flex-grow: 1;
+    margin-left: 0!important;
+    margin-right: 0!important;
+}
+
+div.input-group-append>div>label {
+    border-top-left-radius: 0!important;
+    border-bottom-left-radius: 0!important;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+}
+
+.btn-group-vertical.choice-button-group>label.btn.choice-button:not(:last-child) {
+    margin-bottom: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.btn-group-vertical.choice-button-group>label.btn.choice-button:not(:first-child) {
+    margin-top: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.SingleChoiceButtons-element, .MultipleChoiceButtons-element, .SingleChoiceBar-element, .MultipleChoiceBar-element, .ButtonChoiceLabels-element, .BarChoiceLabels-element {
+    /* balancing the margins */
+    margin-bottom: -0.5rem;
+}
+
+.SingleChoiceButtons-element .Leftlab-element, .SingleChoiceButtons-element .Rightlab-element, .MultipleChoiceButtons-element .Leftlab-element, .MultipleChoiceButtons-element .Rightlab-element, .SingleChoiceBar-element .Leftlab-element, .SingleChoiceBar-element .Rightlab-element, .MultipleChoiceBar-element .Leftlab-element, .MultipleChoiceBar-element .Rightlab-element, .ButtonChoiceLabels-element .Leftlab-element, .ButtonChoiceLabels-element .Rightlab-element, .BarChoiceLabels-element .Leftlab-element, .BarChoiceLabels-element .Rightlab-element {
+    /* label spacing */
+    margin-bottom: 0.5rem!important;
+}
+
+.Bottomlab-element {
+    margin-bottom: 0;
+    margin-top: 0.25rem;
+}
+
+.choice-button-group, .choice-button-bar {
+    width: 100%;
+}
+
+.choice-button-group>.btn {
+    margin-bottom: .5rem;
+}
+
+.JumpList-element .choice-button-group>.btn {
+    margin-bottom: 0;
+}
+
+.element {
+    display: flex;
+    flex-direction: row;
+}
+
+.element.SingleChoice-element {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.input-element>label.Leftlab-element, .input-element>label.Rightlab-element {
+    margin-bottom: 0;
+    /* align-self: center; */
+}
+
+.input-element>label.Leftlab-element>.label-element, .input-element>label.Leftlab-element>.label-element>div {
+    padding-right: 0;
+}
+
+.input-element>label.Rightlab-element>.label-element, .input-element>label.Rightlab-element>.label-element>div {
+    padding-left: 0;
+}
+
+.input-element {
+    margin-bottom: 1rem;
+}
+
+.img-fluid {
+    margin-bottom: 1rem;
+}
+
+.btn img.img-fluid {
+    margin-bottom: 0;
+}
+
+.hide {
+    display: none !important;
+}
+
+.Text-element {
+    margin-bottom: 0;
+}
+
+.input-field {
+    border-radius: 1rem;
+}
+
+.jumplist-container {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+
+.footer-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-rounded {
+    border-radius: 1rem;
+}
+
+.logo-bg {
+    height: 65px;
+}
+
+.logo {
+    max-height: 100%;
+    padding: 8px;
+}
+
+.logo-content {
+    width: 100%;
+}
+
+.logo-text {
+    padding: 1rem;
+}
+
+.min-width {
+    min-width: 920px;
+}
+
+.page-container {
+    width: 95%;
+    min-height: 65vh;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+.page-form {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.page-body {
+    flex-grow: 1;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    overflow-wrap: break-word;
+}
+
+.page-header {
+    margin-bottom: 1rem;
+}
+
+.fixed-width {
+    width: 920px;
+}
+
+.page-title {
+    text-align: center;
+    border-style: none none solid none;
+    border-width: 1px;
+    border-color: lightgrey;
+    overflow-wrap: break-word;
+}
+
+.page-subtitle {
+    text-align: center;
+}
+
+p.page-subtitle {
+    margin-bottom: 0;
+}
+
+.progress-container {
+    margin-top: -1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-bottom: .5rem;
+}
+
+.progress-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.page-progress {
+    font-size: 8pt;
+}
+
+/* .Row-element-container .Col-element:not(:last-child) {
+    padding-right: 0;
+} */
+
+
+/* BREAKPOINTS */
+
+/* Extra small devices (portrait phones, less than 576px) */
+
+
+@media (max-width: 768px) {
+    .logo-text-responsive {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+
+    .input-element>label.Rightlab-element>.label-element, .input-element>label.Rightlab-element>.label-element>div {
+        padding-left: 0.5rem;
+    }
+
+    .responsive .Rightlab-element > div {
+        text-align: left!important;
+    }
+
+    .responsive .Leftlab-element > div {
+        text-align: left!important;
+    }
+
+    .responsive .SingleChoice-element > div {
+        text-align: left;
+    }
+    
+    .responsive .multiple-choice-element > div {
+        text-align: left;
+    }
+
+    
+}
+
+/* Small devices (landscape phones, 576px and up) */
+
+@media (min-width: 576px) {
+    .responsive-width {
+        width: 85%;
+    }
+
+    
+    
+}
+
+/* Medium devices (tablets, 768px and up) */
+
+@media (min-width: 768px) {
+    .responsive-width {
+        width: 75%;
+    }
+
+    
+
+}
+
+/* Large devices (desktops, 992px and up) */
+
+@media (min-width: 992px) {
+    .responsive-width {
+        width: 65%;
+    }
+
+    
+
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+
+@media (min-width: 1200px) {
+    .responsive-width {
+        width: 55%;
+        max-width: 928px;
+    }
+
+    
+}
+
+
+
+blockquote {
+    background: #f9f9f9;
+    border-left: 10px solid #ccc;
+    margin: 1.5rem 10px;
+    padding: 0.5rem 10px;
+    quotes: "\201C""\201D""\2018""\2019";
+}
+
+label p {
+    margin-bottom: 0;
+}
+
+/* Code block font size */
+pre[class*="language-"] {
+    font-size: 10pt;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
