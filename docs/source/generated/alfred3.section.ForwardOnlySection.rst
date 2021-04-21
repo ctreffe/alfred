@@ -1,4 +1,4 @@
-ForwardOnlySection
+﻿ForwardOnlySection
 ==================================
 
 .. currentmodule:: alfred3.section
@@ -43,6 +43,18 @@ ForwardOnlySection
    
    
       ~ForwardOnlySection.uptree
+   
+   
+      ~ForwardOnlySection.validate_on_backward
+   
+   
+      ~ForwardOnlySection.validate_on_forward
+   
+   
+      ~ForwardOnlySection.validate_on_jumpfrom
+   
+   
+      ~ForwardOnlySection.validate_on_jumpto
    
    
       ~ForwardOnlySection.validate_on_leave

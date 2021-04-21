@@ -1,4 +1,4 @@
-RevisitSection
+﻿RevisitSection
 ==============================
 
 .. currentmodule:: alfred3.section
@@ -43,6 +43,18 @@ RevisitSection
    
    
       ~RevisitSection.uptree
+   
+   
+      ~RevisitSection.validate_on_backward
+   
+   
+      ~RevisitSection.validate_on_forward
+   
+   
+      ~RevisitSection.validate_on_jumpfrom
+   
+   
+      ~RevisitSection.validate_on_jumpto
    
    
       ~RevisitSection.validate_on_leave
