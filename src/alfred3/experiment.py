@@ -1678,7 +1678,10 @@ class ExperimentSession:
                         df = pd.DataFrame(self.exp.all_exp_data)
 
         """
-        mongodata = self.data_manager.iter_flat_mongo_data()
+        if self.secrets.getboolean("mongo_saving_agent", "use"):
+            mongodata = self.data_manager.iter_flat_mongo_data()
+        else:
+            mongodata = []
         localdata = self.data_manager.iter_flat_local_data()
         if self.config.getboolean("mortimer_specific", "runs_on_mortimer"):
             return list(mongodata)
