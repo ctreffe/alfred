@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## alfred3 v2.0.1 (Released 2021-04-20)
+## alfred3 v2.0.1 [unreleased]
 
 ### Added v2.0.1
 
@@ -28,7 +28,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 ### Changed v2.0.1
 
 - Clarified the default match hints for NumberEntry elements.
-- For all input elements, their `input` attribute now clearly states the type of the returned input.
+- For all input elements, their `input` attribute now clearly states the 
+  type of the returned input.
+- On last notice, we decided to change the input representation of single
+  choice elements:
+    - SingleChoice type elements use an integer to represent participant
+      input, which starts counting at 1. Previously, they used the same
+      representation as MultipleChoice type elements, which lead to
+      unnecessarily overcrowded output data. Now, each SingleChoice 
+      element will by represented by only one variable in the final dataset.
+    - MultipleChoice type elements remain the same: For each choice, they 
+      have a dummy variable, which indicates whether that specific choice
+      was selected (True/False). Within alfred3, this takes the form of
+      a dictionary with an entry for each choice. In the final dataset,
+      there is a dummy variable for each choice.
+    - SingleChoice**List** type elements use a string to represent 
+      participant input. The string is the exact choice label that was
+      selected. This representation reflects the fact that SingleChoiceLists
+      are intended to be comfortable with really long lists of possible
+      choices. In such lists, it is hard to keep track of the meaning
+      of integers. Also, the SingleChoiceList does not accept any other
+      form of labels than strings. That is a difference from ordinary
+      SingleChoice type elements, which can accept other elements (e.g.
+      ImageElements). This fact makes it unproblematic to use the string
+      representation. You can still access the index of a selected choice
+      label: The list of labels is saved in the element's attribute
+      `choice_labels`, which has a method `index`. Supply this method
+      with the selected choice string, and you get the index of that string
+      in the list of choice labels. *Be aware though, that in this case, 
+      python will start counting at 0!*
 
 ### Fixed v2.0.1
 
