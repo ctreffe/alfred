@@ -9,8 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 
 ### Added v2.0.1
 
-- `alfred3.multiple_choice_names`: A new utility function that you can use to find the indexes of selected choices in multiple choice elements. You can apply it to the data dictionary corresponding to the element of interest in `alfred3.experiment.ExperimentSession.values`, or to the `input` attribute of the element directly.
-- Four new hooks for finetuning a section's validation behavior. All except `validate_on_jumpto` default to calling `validate_on_move`. Their intended use is to allow for specialized behavior by being overloaded. For example, you can implement a section that does not validate input on backwards movements by overriding the `validate_on_backward` method with an empty method. These are the locations:
+- `alfred3.multiple_choice_names`: A new utility function that you can 
+  use to find the indexes of selected choices in multiple choice elements. 
+  You can apply it to the data dictionary corresponding to the element of 
+  interest in `alfred3.experiment.ExperimentSession.values`, or to the 
+  `input` attribute of the element directly.
+- Four new hooks for finetuning a section's validation behavior. All 
+  except `validate_on_jumpto` default to calling `validate_on_move`. Their 
+  intended use is to allow for specialized behavior by being overloaded. 
+  For example, you can implement a section that does not validate input on 
+  backwards movements by overriding the `validate_on_backward` method with 
+  an empty method. These are the locations:
     - `alfred3.section.Section.validate_on_forward`
     - `alfred3.section.Section.validate_on_backward`
     - `alfred3.section.Section.validate_on_jumpfrom`
