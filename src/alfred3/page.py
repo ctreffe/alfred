@@ -36,7 +36,9 @@ class _PageCore(ExpMember):
             Defaults to None. Can be defined as a class attribute.
         minimum_display_time (str): The minimal amount of time that the page
             must be displayed, before participants can move to the next
-            page. Defaults to None. Can be defined as a class attribute.
+            page. Must be specified as a string with a unit of 's' 
+            (for seconds), or 'm' (for minutes), for instance '30s'. 
+            Defaults to None. Can be defined as a class attribute.
         minimum_display_time_msg (str): A page-specific message to be displayed,
             if participants try to move forward before the minimum
             display time has expired. Defaults to None, which means that
