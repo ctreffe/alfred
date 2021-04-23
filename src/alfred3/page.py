@@ -1086,6 +1086,19 @@ class TimeoutPage(Page):
         timeout (str): Length of the timeout. Specify it as a string 
             with a unit of "s" for seconds, and "m" for minutes, 
             for example "10s". Can be specified as a class attribute.
+        callbackargs (dict): Dictionary of keyword arguments to be 
+            passed on to the :class:`.Callback` element that internally
+            handles the call to the *on_timeout* method. You can specifiy
+            things like *followup* behavior and determine whether data
+            on the page should be submitted before calling *on_timeout*.
+            Refer to the :class:`.Callback` documentation for a full
+            view of the possibilities. You cannot specify the *func*
+            argument in *callbackargs*, since this is fixed to 
+            :meth:`.on_timeout`. You can also not specify the *delay*
+            argument, since this is fixed to the page's own argument
+            *timeout*. Defaults to *None*. Can be specified
+            as a class attribute.
+        
         {kwargs}
     
     See Also:
@@ -1117,12 +1130,16 @@ class TimeoutPage(Page):
     """
 
     timeout = None
+    callbackargs = None
 
-    def __init__(self, timeout: str = None, **kwargs):
+    def __init__(self, timeout: str = None, callbackargs: dict = None, **kwargs):
         super().__init__(**kwargs)
 
-        self._end_link = "unset"
-        self._run_timeout = True
+        if callbackargs is not None:
+            self.callbackargs = callbackargs
+        elif self.callbackargs is None:
+            self.callbackargs = {}
+
         if timeout is not None:
             self.timeout = timeout
 
@@ -1138,60 +1155,9 @@ class TimeoutPage(Page):
             raise ValueError(
                 "You must specify the unit of your timeout ('s' - seconds, or 'm' - minutes)"
             )
-
-    def added_to_experiment(self, experiment):
-        # docstring inherited
-        super().added_to_experiment(experiment)
-        self._end_link = self._experiment.user_interface_controller.add_callable(self._callback)
-
-        if self._experiment.config.getboolean("general", "debug"):
-            if self._experiment.config.getboolean("debug", "reduce_countdown"):
-                self.timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
-
-    @property
-    def _js_code(self):
-        code = (
-            5,
-            """
-            $(document).ready(function(){
-                var start_time = new Date();
-                var timeout = %s;
-                var action_url = '%s';
-
-                var update_counter = function() {
-                    var now = new Date();
-                    var time_left = timeout - Math.floor((now - start_time) / 1000);
-                    if (time_left < 0) {
-                        time_left = 0;
-                    }
-                    $(".timeout-label").html(time_left);
-                    if (time_left > 0) {
-                        setTimeout(update_counter, 200);
-                    }
-                };
-                update_counter();
-
-                var timeout_function = function() {
-                    $("#form").attr("action", action_url);
-                    $("#form").submit();
-                };
-                setTimeout(timeout_function, timeout*1000);
-            });
-        """
-            % (self.timeout, self._end_link),
-        )
-        js_code = super()._js_code
-        if self._run_timeout:
-            js_code.append(code)
-        else:
-            js_code.append((5, """$(document).ready(function(){$(".timeout-label").html(0);});"""))
-        return js_code
-
-    def _callback(self, **kwargs):
-        self._run_timeout = False
-        self._experiment.movement_manager.current_page._set_data(kwargs)
-        self.on_timeout()
-
+        
+        self += elm.misc.Callback(func=self.on_timeout, delay=self.timeout, **self.callbackargs)
+    
     def on_timeout(self):
         """
         Executed *once*, after the timeout of the page runs out.
@@ -1233,8 +1199,7 @@ class AutoForwardPage(TimeoutPage):
 
     """
 
-    def on_timeout(self):
-        self.experiment.movement_manager.move(direction="forward")
+    callbackargs = {"followup": "forward"}
 
 
 @inherit_kwargs
