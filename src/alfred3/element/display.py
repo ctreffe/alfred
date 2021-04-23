@@ -952,6 +952,12 @@ class ButtonLabels(SingleChoiceButtons):
             :class:`.ChoiceElement` for details.
         {kwargs}
 
+    .. warning:: Keep in mind that a table-like layout that uses
+        :class:`.ButtonLabels` or :class:`.BarLabels` to label 
+        choice buttons will break on very small screens! Such layouts
+        are only feasible on medium screens upwards.
+
+
     Examples:
         Using button labels to label single choice buttons::
 
@@ -987,6 +993,11 @@ class BarLabels(ButtonLabels):
         *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
         {kwargs}
+    
+    .. warning:: Keep in mind that a table-like layout that uses
+        :class:`.ButtonLabels` or :class:`.BarLabels` to label 
+        choice buttons will break on very small screens! Such layouts
+        are only feasible on medium screens upwards.
 
     Examples:
         Using button labels to label single choice buttons::
