@@ -1162,12 +1162,24 @@ class Row(Element):
         valign_cols: List of vertical column alignments. Valid values
             are 'auto' (default), 'top', 'center', and 'bottom'. The
             elements of the list correspond to the row's columns. See
-            :attr:`.RowLayout.valign_cols`
+            :attr:`.RowLayout.valign_cols`. This argument is overridden
+            if you use a custom :class:`.RowLayout` instance for the 
+            *layout* argument.
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
             This switch exists, because some elements might default to
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
+        layout: Can be one of the following: 1) An instance of
+            :class:`.RowLayout`, or 2) a tuple of integers, specifying 
+            the allocation of horizontal space between the columns
+            on small screens upwards (using bootstraps 12-column grid). 
+
+            Option 1) offers fine-tuned flexibility, 2) uses a default
+            RowLayout and changes the :attr:`.RowLayout.width_sm` 
+            attribute.
+
+            By default, the layout is set automatically.
 
         {kwargs}
 
@@ -1247,15 +1259,24 @@ class Row(Element):
         height: str = "auto",
         name: str = None,
         showif: dict = None,
+        layout: Union[RowLayout, Tuple[int]] = None,
         **kwargs,
     ):
         """Constructor method."""
         super().__init__(name=name, showif=showif, height=height, **kwargs)
 
         self.elements: list = elements  # documented in getter
-        self.layout = RowLayout(
-            ncols=len(self.elements), valign_cols=valign_cols
-        )  # documented in getter
+        if isinstance(layout, RowLayout):
+            self.layout = layout
+        elif layout is not None:
+            self.layout = RowLayout(
+                ncols=len(self.elements), valign_cols=valign_cols
+            )  # documented in getter
+            self.layout.width_sm = layout
+        else:
+            self.layout = RowLayout(
+                ncols=len(self.elements), valign_cols=valign_cols
+            )  # documented in getter
         self.elements_full_width: bool = elements_full_width  # documented in getter
 
     @property
