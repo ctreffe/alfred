@@ -5,6 +5,7 @@ Provides elements that display content.
 """
 
 import io
+import time
 
 from datetime import datetime
 from typing import Union
@@ -23,7 +24,6 @@ from .core import Element
 from .core import RowLayout
 from .core import LabelledElement
 from .input import SingleChoiceButtons
-
 
 
 class VerticalSpace(Element):
@@ -59,9 +59,10 @@ class VerticalSpace(Element):
 
     @property
     def web_widget(self):
-        
+
         # documented at baseclass
         return f"<div class='vertical-space-element' style='margin-bottom: {self.space};'></div>"
+
 
 @inherit_kwargs
 class Html(Element):
@@ -72,7 +73,7 @@ class Html(Element):
         html: Html to be displayed.
         path: Filepath to a file with html code (relative to the
             experiment directory).
-        
+
         {kwargs}
 
     Notes:
@@ -131,11 +132,12 @@ class Html(Element):
 
     @property
     def template_data(self) -> dict:
-        
+
         d = super().template_data
         d["text"] = self.html_code
 
         return d
+
 
 @inherit_kwargs
 class Text(Element):
@@ -226,7 +228,9 @@ class Text(Element):
         if self.emojize:
             text = emojize(text, use_aliases=True)
         if self.render_markdown:
-            text = cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+            text = cmarkgfm.github_flavored_markdown_to_html(
+                text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+            )
         return text
 
     @text.setter
@@ -235,7 +239,7 @@ class Text(Element):
 
     @property
     def element_width(self) -> str:
-        
+
         if self.width is not None:
             return " ".join(self.converted_width)
 
@@ -250,11 +254,12 @@ class Text(Element):
 
     @property
     def template_data(self) -> dict:
-        
+
         d = super().template_data
         d["text"] = self.render_text()
 
         return d
+
 
 @inherit_kwargs
 class Image(Element):
@@ -321,10 +326,11 @@ class Image(Element):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["src"] = self.src
         return d
+
 
 @inherit_kwargs
 class Audio(Image):
@@ -383,13 +389,14 @@ class Audio(Image):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["controls"] = self.controls
         d["autoplay"] = self.autoplay
         d["loop"] = self.loop
 
         return d
+
 
 @inherit_kwargs
 class Video(Audio):
@@ -448,13 +455,14 @@ class Video(Audio):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["video_height"] = self.video_height
         d["video_width"] = self.video_width
         d["allow_fullscreen"] = self.allow_fullscreen
 
         return d
+
 
 @inherit_kwargs
 class MatPlot(Element):
@@ -502,7 +510,7 @@ class MatPlot(Element):
         self.src = None
 
     def prepare_web_widget(self):
-        
+
         out = io.BytesIO()
         self.fig.savefig(out, format="svg")
         out.seek(0)
@@ -510,7 +518,7 @@ class MatPlot(Element):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["src"] = self.src
         return d
@@ -519,7 +527,7 @@ class MatPlot(Element):
 class Hline(Element):
     """
     A simple horizontal line.
-    
+
     Examples:
         Two text elements, separated by a horizontal line::
 
@@ -534,7 +542,7 @@ class Hline(Element):
                     self += al.Text(text="Text 1")
                     self += al.Hline()
                     self += al.Text(text="Text 2")
-              
+
     """
 
     def __init__(self):
@@ -548,6 +556,7 @@ class Hline(Element):
         :meta private: (documented at :class:`.Element`)
         """
         return "<hr>"
+
 
 @inherit_kwargs
 class CodeBlock(Text):
@@ -595,7 +604,7 @@ class CodeBlock(Text):
 
     @property
     def text(self):
-        
+
         if self.path:
             text = self.experiment.subpath(self.path).read_text()
 
@@ -605,11 +614,12 @@ class CodeBlock(Text):
             code = f"```{self.lang}\n{self._text}\n```"
             return code
 
+
 @inherit_kwargs
 class Label(Text):
     """
     A utility class, serving as label for other elements.
-    
+
     Args:
         text: Text to be displayed.
         width: Usage as in :class:`.Element`, with the same default ('full').
@@ -638,19 +648,20 @@ class Label(Text):
         """The label's vertical alignment"""
         return self.layout.valign_cols[self.layout_col]
 
+
 @inherit_kwargs
 class ProgressBar(LabelledElement):
     """
     Displays a progress bar.
 
     Args:
-        progress (str, float, int): Can be either "auto", or a number 
-            between 0 and 100. If "auto", the progress is calculated 
-            from the current progress of the experiment. The exact 
+        progress (str, float, int): Can be either "auto", or a number
+            between 0 and 100. If "auto", the progress is calculated
+            from the current progress of the experiment. The exact
             calculation can be further refined with the arguments
             'progress_base', 'n_elements', and 'n_pages'.
-            
-            If a number is supplied, that number will be used as the 
+
+            If a number is supplied, that number will be used as the
             progress to be displayed.
 
             Defaults to 'auto'.
@@ -677,16 +688,16 @@ class ProgressBar(LabelledElement):
             basis upon which progress should be calculated. Can be either
             'pages_elements', 'pages', or 'elements'. Defaults to
             'pages_elements', in which case the number of pages and the
-            number of input elements are added together to form the 
+            number of input elements are added together to form the
             denominator in the fraction for calculating progress.
-        
-        n_elements (int): Manual specification of the number of input 
-            elements in the experiment. If 'None', the experiment will 
+
+        n_elements (int): Manual specification of the number of input
+            elements in the experiment. If 'None', the experiment will
             try to infer the number of elements automatically, which may
             not always find the correct result. Defaults to *None*.
-        
-        n_pages (int): Manual specification of the number of 
-            page in the experiment. If 'None', the experiment will 
+
+        n_pages (int): Manual specification of the number of
+            page in the experiment. If 'None', the experiment will
             try to infer the number of pages automatically, which may
             not always find the correct result. Defaults to *None*.
 
@@ -765,7 +776,7 @@ class ProgressBar(LabelledElement):
         self._progress = None
         if progress != "auto":
             self.progress = progress
-        
+
         self._progress_setting = progress
         self._progress_base = progress_base
         self._n_elements = n_elements
@@ -778,7 +789,7 @@ class ProgressBar(LabelledElement):
         self._round_corners: bool = "border-radius: 0;" if round_corners == False else ""
 
     def added_to_experiment(self, exp):
-        
+
         super().added_to_experiment(exp)
 
         css = f".progress#{self.name}  {{height: {self._bar_height}; {self._round_corners}}}"
@@ -796,27 +807,27 @@ class ProgressBar(LabelledElement):
                 pass
             else:
                 raise e
-    
+
     @property
     def progress(self) -> Union[int, float]:
-        
-        if self._progress: # manually defined via element
+
+        if self._progress:  # manually defined via element
             return self._progress
 
-        elif self.exp.current_page.progress: # manually defined via page
+        elif self.exp.current_page.progress:  # manually defined via page
             return self.exp.current_page.progress
-        
-        else: # calculate automatically
+
+        else:  # calculate automatically
             exact_progress = (self.numerator / self.denominator) * 100
 
             if not self.experiment.finished and not self.experiment.aborted:
-                
+
                 hi_bounded = min(round(exact_progress, 1), 95)
                 lo_bounded = max(hi_bounded, 1)
                 return lo_bounded
             else:
                 return 100
-    
+
     @progress.setter
     def progress(self, value: Union[int, float]):
         try:
@@ -826,11 +837,10 @@ class ProgressBar(LabelledElement):
             raise ValueError("Progress must be a number between 0 and 100.")
         self._progress = value
 
-    
     @property
     def n_elements(self):
         """
-        int: Number of elements. 
+        int: Number of elements.
         """
         if self._n_elements:
             n_el = self._n_elements
@@ -842,7 +852,7 @@ class ProgressBar(LabelledElement):
                 elif el.showif or el.page.showif or el.section.showif:
                     n_el += 0.3
         return n_el
-    
+
     @property
     def n_pages(self):
         """
@@ -852,9 +862,9 @@ class ProgressBar(LabelledElement):
             n_pg = self._n_pages
         else:
             n_pg = len(self.experiment.root_section.visible("all_pages"))
-        
+
         return n_pg
-    
+
     @property
     def denominator(self) -> int:
         """
@@ -866,7 +876,7 @@ class ProgressBar(LabelledElement):
             return self.n_pages
         elif self._progress_base == "elements":
             return self.n_elements
-    
+
     @property
     def numerator(self) -> int:
         """
@@ -887,7 +897,7 @@ class ProgressBar(LabelledElement):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["progress"] = self.progress
         d["show_text"] = self._show_text
@@ -953,7 +963,7 @@ class ButtonLabels(SingleChoiceButtons):
         {kwargs}
 
     .. warning:: Keep in mind that a table-like layout that uses
-        :class:`.ButtonLabels` or :class:`.BarLabels` to label 
+        :class:`.ButtonLabels` or :class:`.BarLabels` to label
         choice buttons will break on very small screens! Such layouts
         are only feasible on medium screens upwards.
 
@@ -981,8 +991,9 @@ class ButtonLabels(SingleChoiceButtons):
 
     @property
     def data(self):
-        
+
         return {}
+
 
 @inherit_kwargs
 class BarLabels(ButtonLabels):
@@ -993,9 +1004,9 @@ class BarLabels(ButtonLabels):
         *choice_labels: Variable numbers of choice labels. See
             :class:`.ChoiceElement` for details.
         {kwargs}
-    
+
     .. warning:: Keep in mind that a table-like layout that uses
-        :class:`.ButtonLabels` or :class:`.BarLabels` to label 
+        :class:`.ButtonLabels` or :class:`.BarLabels` to label
         choice buttons will break on very small screens! Such layouts
         are only feasible on medium screens upwards.
 
@@ -1022,26 +1033,27 @@ class BarLabels(ButtonLabels):
     # Documented at :class:`.SingleChoiceButtons`
     button_toolbar = True
 
+
 @inherit_kwargs
 class CountUp(Element):
     """
     Displays a timer, counting up from 00:00:00 (hh:mm:ss).
 
     Args:
-        end_after (int): Optional argument for specifying an end for 
+        end_after (int): Optional argument for specifying an end for
             the counter after a number of seconds. Defaults to *-1*, which
             will let the counter run indefinitely.
         end_msg (str): Text to be displayed in the counter's place upon
             expiration.
         {kwargs}
-    
+
     Examples:
-        
+
         ::
 
             import alfred3 as al
             exp = al.Experiment()
-            
+
             @exp.member
             class Demo(al.Page):
                 def on_exp_access(self):
@@ -1057,8 +1069,7 @@ class CountUp(Element):
 
         self.end_after = end_after
         self.end_msg = end_msg
-        
-    
+
     def prepare_web_widget(self):
         self._js_code = []
         js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg)
@@ -1077,11 +1088,20 @@ class CountDown(CountUp):
             the alternative constructor :meth:`.tilldate`.
         end_msg (str): Text to be displayed in the countdown's place upon
             expiration.
+        reset (bool): If *True*, the countdown will start anew every time
+            the page is reopened, reloaded, or refreshed. Defaults to 
+            *False*, i.e. the countdown will continue where it left off.
         {kwargs}
-    
+
+    Notes:
+        The CountDown element offers two alternative constructors:
+        :meth:`.tilltime` (construction from UNIX timestamp) and 
+        :meth:`.tilldate` (construction from date and 24h time 
+        representation).
+
     Examples:
         Countdown running 30 seconds::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
@@ -1089,7 +1109,7 @@ class CountDown(CountUp):
             class Demo(al.Page):
                 def on_exp_access(self):
                     self += al.CounDown(end_after=30, font_size="big", align="center")
-        
+
         Countdown running until a certain datetime is reached::
 
             import alfred3 as al
@@ -1099,41 +1119,90 @@ class CountDown(CountUp):
             class Demo(al.Page):
                 def on_exp_access(self):
                     self += al.CounDown.tilldate(
-                        year=2031, 
-                        month=1, 
-                        day=31, 
-                        hour=12, 
-                        minute=30, 
-                        second=12, 
-                        font_size="big", 
+                        year=2031,
+                        month=1,
+                        day=31,
+                        hour=12,
+                        minute=30,
+                        second=12,
+                        font_size="big",
                         align="center"
                         )
     """
+
     counter_js = jinja_env.get_template("js/countdown.js.j2")
     element_template = jinja_env.get_template("html/TextElement.html.j2")
 
-    def __init__(self, end_after: int, end_msg: str = "expired", **kwargs):
+    def __init__(self, end_after: int, end_msg: str = "expired", reset: bool = False, **kwargs):
         super().__init__(**kwargs)
 
-        self.end_after = end_after
+        self.end_after_original = end_after
+        self.end_after = None
         self.end_msg = end_msg
-    
+
+        self.start_time = None
+        self.reset = reset
 
     @classmethod
-    def tilldate(cls, year: int = None, month: int = None, day: int = None, hour: int = None, minute: int = None, second: int = None, **kwargs):
+    def tilltime(cls, t: Union[int, float], **kwargs):
+        """
+        Alternative constructor for a countdown targeted at a specific
+        unix timestamp.
+
+        Args:
+            t (int, float): Target-time in seconds since EPOCH.
+            **kwargs: Further keyword arguments are passed on to the
+                ordinary constructor, see :class:`.CountDown`.
+        
+        Examples:
+            Countdown running until July 18th 2036, 13:20:00 is reached::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class Demo(al.Page):
+                    def on_exp_access(self):
+                        self += al.CounDown.tilltime(
+                            t=2_100_000_000,
+                            font_size="big",
+                            align="center"
+                            )
+
+        """
+        if "end_after" in kwargs:
+            raise TypeError(
+                "'end_after' is an invalid keyword argument for the 'tilltime' constructor."
+            )
+
+        now = time.time()
+        diff = t - now
+        return cls(end_after=diff, **kwargs)
+
+    @classmethod
+    def tilldate(
+        cls,
+        year: int = None,
+        month: int = None,
+        day: int = None,
+        hour: int = None,
+        minute: int = None,
+        second: int = None,
+        **kwargs,
+    ):
         """
         Alternative constructor for a countdown targeted at a specific date.
 
         Args:
-            year, month, day, hour, minute, second: Time units, all 
-                integers. Cannot have leading zeroes. It is fine to 
+            year, month, day, hour, minute, second: Time units, all
+                integers. Cannot have leading zeroes. It is fine to
                 specific only, for example, the year and the month. The
                 arguments will be passed on to :class:`datetime.datetime`
                 to construct a time object.
-            
+
             **kwargs: Further keyword arguments are passed on to the
                 ordinary constructor, see :class:`.CountDown`.
-        
+
         Examples:
 
             Countdown running until a certain datetime is reached::
@@ -1145,19 +1214,21 @@ class CountDown(CountUp):
                 class Demo(al.Page):
                     def on_exp_access(self):
                         self += al.CounDown.tilldate(
-                            year=2031, 
-                            month=1, 
-                            day=31, 
-                            hour=12, 
-                            minute=30, 
-                            second=12, 
-                            font_size="big", 
+                            year=2031,
+                            month=1,
+                            day=31,
+                            hour=12,
+                            minute=30,
+                            second=12,
+                            font_size="big",
                             align="center"
                             )
         """
         if "end_after" in kwargs:
-            raise TypeError("'end_after' is an invalid keyword argument for the 'fromdate' constructor.")
-        
+            raise TypeError(
+                "'end_after' is an invalid keyword argument for the 'tilldate' constructor."
+            )
+
         dargs = {}
         if year:
             dargs["year"] = year
@@ -1171,10 +1242,21 @@ class CountDown(CountUp):
             dargs["minute"] = minute
         if second:
             dargs["second"] = second
-        
+
         date = datetime(**dargs)
         now = datetime.now()
         diff = date - now
 
         return cls(end_after=diff.total_seconds(), **kwargs)
 
+    def prepare_web_widget(self):
+        if not self.start_time:
+            self.start_time = time.time()
+            self.end_after = self.end_after_original
+
+        elif not self.reset:
+            now = time.time()
+            already_passed = now - self.start_time
+            self.end_after = self.end_after_original - already_passed
+
+        super().prepare_web_widget()
