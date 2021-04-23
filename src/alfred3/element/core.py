@@ -2003,7 +2003,6 @@ class InputElement(LabelledElement):
                 fix.should_be_shown = False
                 self.page += fix
             except AttributeError as e:
-                self.log.debug(f"Exception passed silently: {e}")
                 pass
 
 
