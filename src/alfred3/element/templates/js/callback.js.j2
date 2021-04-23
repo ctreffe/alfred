@@ -1,5 +1,9 @@
 $(document).ready(function(){
-setTimeout(function () {
+
+if ({{ timeout }} >= 0) {
+    setTimeout(function () {
+
+    console.log("function call")
 
 {% if submit_first %}
     var data = $("#form").serializeArray();
@@ -18,4 +22,7 @@ $.get( "{{ url }}", function(data) {
 });
 
 }, {{ timeout }}*1000);
+}
+
+
 })
