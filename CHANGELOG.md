@@ -25,8 +25,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
     - `alfred3.section.Section.validate_on_jumpfrom`
     - `alfred3.section.Section.validate_on_jumpto`
 
+
 ### Changed v2.0.1
 
+- `alfred3.page.TimeoutPage` and its two child classes 
+  `alfred3.AutoForwardPage` and `alfred3.AutoClosePage` received a new,
+  more robust implementation with an additional argument *callbackargs*.
+  Check out the documentation for more details.
+- `alfred3.Row` now offers an additional *layout* parameter similar to
+  the implementation used in `alfred3.element.core.LabelledElement`
+- `alfred3.Callback` and `alfred3.RepeatedCallback` have seen some 
+  improvements, including additional arguments and docstrings.
 - Clarified the default match hints for NumberEntry elements.
 - For all input elements, their `input` attribute now clearly states the 
   type of the returned input.
