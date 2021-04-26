@@ -414,7 +414,9 @@ class Callback(Element):
         super().prepare_web_widget()
         self.url = self.exp.ui.add_callable(self.func)
 
-        if not self.start_time:
+        if self.delay_original == 0:
+            self.delay = self.delay_original
+        elif not self.start_time:
             self.start_time = time.time()
             self.delay = self.delay_original
         elif not self.reset_delay:
