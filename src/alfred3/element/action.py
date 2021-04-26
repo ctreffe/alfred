@@ -528,6 +528,7 @@ class Button(Element):
         d["followup"] = self.followup
         d["name"] = self.name
         d["submit_first"] = self.submit_first
+        d["set_data_url"] = self.exp.ui.set_page_data_url
         js = self.js_template.render(d)
         self.add_js(js)
 

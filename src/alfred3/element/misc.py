@@ -428,6 +428,7 @@ class Callback(Element):
         d["timeout"] = self.delay
         d["submit_first"] = self.submit_first
         d["custom_js"] = self.custom_js
+        d["set_data_url"] = self.exp.ui.set_page_data_url
 
         js = self.js_template.render(d)
 
@@ -519,6 +520,7 @@ class RepeatedCallback(Element):
         d["interval"] = self.interval
         d["submit_first"] = self.submit_first
         d["custom_js"] = self.custom_js
+        d["set_data_url"] = self.exp.ui.set_page_data_url
 
         js = self.js_template.render(d)
         self.add_js(js)
