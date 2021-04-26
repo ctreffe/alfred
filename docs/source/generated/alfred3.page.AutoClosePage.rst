@@ -96,6 +96,7 @@
          ~AutoClosePage.all_elements
          ~AutoClosePage.all_input_elements
          ~AutoClosePage.background_color
+         ~AutoClosePage.callbackargs
          ~AutoClosePage.data
          ~AutoClosePage.elements
          ~AutoClosePage.exp

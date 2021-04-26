@@ -96,6 +96,7 @@
          ~TimeoutPage.all_elements
          ~TimeoutPage.all_input_elements
          ~TimeoutPage.background_color
+         ~TimeoutPage.callbackargs
          ~TimeoutPage.data
          ~TimeoutPage.elements
          ~TimeoutPage.exp

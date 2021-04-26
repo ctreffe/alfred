@@ -96,6 +96,7 @@
          ~AutoForwardPage.all_elements
          ~AutoForwardPage.all_input_elements
          ~AutoForwardPage.background_color
+         ~AutoForwardPage.callbackargs
          ~AutoForwardPage.data
          ~AutoForwardPage.elements
          ~AutoForwardPage.exp

@@ -1,4 +1,4 @@
-CountDown
+﻿CountDown
 =================================
 
 .. currentmodule:: alfred3.element.display
@@ -37,6 +37,9 @@ CountDown
    
    
       ~CountDown.tilldate
+   
+   
+      ~CountDown.tilltime
    
 
    

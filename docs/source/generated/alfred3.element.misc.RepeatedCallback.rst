@@ -1,4 +1,4 @@
-RepeatedCallback
+﻿RepeatedCallback
 =====================================
 
 .. currentmodule:: alfred3.element.misc
@@ -61,6 +61,7 @@ RepeatedCallback
          ~RepeatedCallback.experiment
          ~RepeatedCallback.font_size
          ~RepeatedCallback.js_code
+         ~RepeatedCallback.js_template
          ~RepeatedCallback.js_urls
          ~RepeatedCallback.name
          ~RepeatedCallback.page
