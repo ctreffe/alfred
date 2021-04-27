@@ -424,11 +424,11 @@ class NumberEntry(TextEntry):
 
         validate = True
         decimals = self.input.split(".")[-1] if "." in self.input else ""
-        if self.min and in_number < self.min:
+        if self.min is not None and in_number < self.min:
             self.hint_manager.post_message(self.match_hint)
             validate = False
 
-        elif self.max and in_number > self.max:
+        elif self.max is not None and in_number > self.max:
             self.hint_manager.post_message(self.match_hint)
             validate = False
 
