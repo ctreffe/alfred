@@ -324,6 +324,17 @@ class Experiment:
         Returns:
             page.Page: The experiment's final page.
 
+        Notes:
+            You do not need to define a name for the final page. The name
+            will be set automatically to '_final_page'.
+
+        See Also:
+
+            - :meth:`.as_final_page`: Class decorator for adding custom
+              final pages to the experiment.
+            - :attr:`.ExperimentSession.final_page` the final page
+              property of the experiment session object.
+
         Examples:
 
             This property will return *None*, if the final page was not
@@ -337,25 +348,16 @@ class Experiment:
             Setting a class instance as final page:
 
             >>> exp = al.Experiment()
-            >>> exp.final_page = al.Page(name="final_page")
+            >>> exp.final_page = al.Page()
             >>> exp.final_page
-            Page(class='Page', name='final_page')
-
-        See Also:
-
-            - :meth:`.as_final_page`: Class decorator for adding custom
-              final pages to the experiment.
-            - :attr:`.ExperimentSession.final_page` the final page
-              property of the experiment session object.
-
+            Page(class='Page', name='_final_page')
         """
 
         return self._final_page
 
     @final_page.setter
     def final_page(self, page: Page):
-        if not page.name:
-            raise AlfredError("Final page must have a valid name.")
+        page._set_name("_final_page", via="argument")
         self._final_page = page
 
     def as_final_page(self, page):
@@ -364,6 +366,10 @@ class Experiment:
 
         Use this decorator, if you want to define a new final page with
         full access to all experiment hooks.
+
+        Notes:
+            You do not need to define a name for the final page. The name
+            will be set automatically to '_final_page'.
 
         See Also:
             :attr:`.final_page`: The final page as a property.
@@ -375,7 +381,6 @@ class Experiment:
 
                 @exp.as_final_page
                 class Final(al.Page):
-                    name = "final_page"
 
                     def on_exp_access(self):
                         self += al.Text("This is the final page.")
@@ -384,7 +389,7 @@ class Experiment:
 
         @functools.wraps(page)
         def wrapper():
-            self._final_page = page
+            self._final_page = page(name="_final_page")
             return page
 
         return wrapper()
@@ -422,10 +427,10 @@ class Experiment:
             exp_session += member
 
         if self.final_page is not None:
-            if isclass(self.final_page):
-                exp_session.final_page = self.final_page
-            elif isinstance(self.final_page, page._PageCore):
-                exp_session.final_page = self.final_page
+            exp_session.final_page = self.final_page
+            # if isclass(self.final_page):
+            #     exp_session.final_page = self.final_page()
+            # elif isinstance(self.final_page, page._PageCore):
 
         return exp_session
 
@@ -1037,6 +1042,10 @@ class ExperimentSession:
         use this property to change the final page by assigning a page
         of your design.
 
+        Notes:
+            You do not need to define a name for the final page. The name
+            will be set automatically to '_final_page'.
+
         See Also:
 
             * You can change the final page in a similar way using
@@ -1051,9 +1060,9 @@ class ExperimentSession:
 
             >>> import alfred3 as al
             >>> exp = al.ExperimentSession()
-            >>> exp.final_page = al.Page(name="my_final_page")
+            >>> exp.final_page = al.Page()
             >>> exp.final_page
-            Page(class="Page", name="my_final_page")
+            Page(class="Page", name="_final_page")
 
         """
 
@@ -1063,8 +1072,12 @@ class ExperimentSession:
     def final_page(self, value: Page):
         if not isinstance(value, page._PageCore):
             raise ValueError("Not a valid page.")
-
-        self.root_section.final_page = value
+        
+        if value.name != "_final_page":
+            value._set_name("_final_page", via="argument")
+        value += elm.misc.HideNavigation()
+        self.root_section.finished_section.members.clear()
+        self.root_section.finished_section += value
 
     def subpath(self, path: Union[str, Path]) -> Path:
         """

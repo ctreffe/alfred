@@ -826,9 +826,4 @@ class _RootSection(Section):
     @property
     def final_page(self):
         return self.finished_section._final_page
-
-    @final_page.setter
-    def final_page(self, page):
-        page += elm.misc.HideNavigation()
-        self.finished_section.members = {}
-        self.finished_section._final_page = page
+    

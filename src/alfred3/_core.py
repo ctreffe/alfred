@@ -112,12 +112,10 @@ class ExpMember:
 
         self._name_set_via = {}
 
-        if self.name is not None:
-            self._set_name(self.name, via="class")
-        elif name is None:
-            self._set_name(type(self).__name__, via="class-auto")
-        else:
+        if name is not None:
             self._set_name(name, via="argument")
+        elif self.name is not None:
+            self._set_name(self.name, via="class")
     
     @property
     def vargs(self) -> dict:
@@ -318,8 +316,8 @@ class ExpMember:
         if self.name in exp.root_section.all_updated_members:
             raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
-        if self.name != list(self._name_set_via.values())[-1]:
-            raise AlfredError(f"{self}: Name must not be changed after assignment.")
+        # if self.name != list(self._name_set_via.values())[-1]:
+        #     raise AlfredError(f"{self}: Name must not be changed after assignment.")
 
         if self.name in dir(exp):
             raise ValueError(
