@@ -116,6 +116,9 @@ class ExpMember:
             self._set_name(name, via="argument")
         elif self.name is not None:
             self._set_name(self.name, via="class")
+        
+        if self.name is None:
+            raise ValueError(f"{type(self).__name__} must be named!")
     
     @property
     def vargs(self) -> dict:
