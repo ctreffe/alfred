@@ -72,6 +72,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 - Some problems with input handling in choice elements
 - A small visual hickup with a verbose message displayed upon using the debug jump mode
 - Fixed a problem in `ExperimentSession.all_exp_data` and `ExperimentSession.all_unlinked_data`.
+- Fixed a hole in the input validation of `alfred3.NumberEntry` elements.
+  If the minimum or maximum was excatly zero, user input did not get
+  validated correctly.
+- Fixed a problem that prevent the final page from being set correctly.
 
 
 ## alfred3 v2.0.0 (Released 2021-04-20)
