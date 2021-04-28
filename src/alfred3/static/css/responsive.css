@@ -152,6 +152,11 @@ div.input-group-append>div>label {
     margin-bottom: 1rem;
 }
 
+.brand-link, .brand-link:hover {
+    color: #585858;
+    text-decoration: none;
+}
+
 .form-rounded {
     border-radius: 1rem;
 }
