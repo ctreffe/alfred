@@ -1143,7 +1143,7 @@ class SingleChoiceButtons(SingleChoice):
             elif self.align == "right":
                 return "align-self-end"
         else:
-            return None
+            return ""
 
     def prepare_web_widget(self):
         
