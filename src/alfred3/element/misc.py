@@ -229,10 +229,10 @@ class JavaScript(Element):
 
     @property
     def js_code(self):
-        if not self.code:
+        if not self.code and not self.path:
             return []
 
-        if self.path:
+        elif self.path:
             p = self.experiment.subpath(self.path)
 
             code = p.read_text()
