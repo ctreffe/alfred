@@ -83,6 +83,13 @@ Page Hooks
    ~alfred3.page.Page.on_each_hide
    ~alfred3.page.Page.on_close
 
+You can also use a hook to define custom page-specific validation:
+
+.. autosummary::
+   :nosignatures:
+
+   ~alfred3.page.Page.validate_page
+
 There is also an additional hook that is defined by 
 :class:`.alfred3.page.TimeoutPage`:
 

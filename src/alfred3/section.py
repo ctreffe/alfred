@@ -613,13 +613,18 @@ class Section(ExpMember):
             and :meth:`.validate_on_jumpto` if you want even more fine-
             grained control over validation behavior.
 
-        """
+        .. versionchanged:: 2.1.0
+           Switched the default order of validation. Now, elements are
+           validated first, then the page itself is validated.
 
-        if not self.exp.current_page._validate_page():
-            raise ValidationError()
+        """
 
         if not self.exp.current_page._validate_elements():
             raise ValidationError()
+        
+        if not self.exp.current_page._validate():
+            raise ValidationError()
+
     
     def validate_on_forward(self):
         """

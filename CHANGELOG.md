@@ -24,6 +24,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
     - `alfred3.section.Section.validate_on_backward`
     - `alfred3.section.Section.validate_on_jumpfrom`
     - `alfred3.section.Section.validate_on_jumpto`
+- Pages can now have a customized validation method: Simply overload
+  (redefine) `alfred3.Page.validate` when writing a page in class style.
+  The method must return *True* if validation was successful and *False*
+  otherwise. You can and should use `alfred3.experiment.ExperimentSession.post_message`
+  (available in a page instance via `self.exp.post_message`) to inform
+  participants about the reason for validation failures. This custom page
+  validation will be executed *after* all standard validation checks for the
+  page and its elements.
 
 
 ### Changed v2.0.1

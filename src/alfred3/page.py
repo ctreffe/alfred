@@ -382,19 +382,6 @@ class _PageCore(ExpMember):
         self.on_close()
         self._is_closed = True
 
-    def validate_page(self) -> bool:
-        """
-        Returns *True*, if the validation checks pass, *False* otherwise.
-        """
-        return True
-
-    def validate_elements(self) -> bool:
-        """
-        Returns *True*, if validation of all input elements passes,
-        *False* otherwise.
-        """
-        return True
-
     def save_data(self, level: int = 1, sync: bool = False):
         """
         Saves current experiment data.
@@ -732,7 +719,51 @@ class _CoreCompositePage(_PageCore):
         first_duration, *_ = self.durations()
         return first_duration
 
-    def _validate_page(self):
+    def validate(self) -> bool:
+        """
+        Returns *True*, if the validation checks pass, *False* otherwise.
+        
+        Can be overloaded for custom validation behavior.
+
+        Returns:
+            bool: A boolean, indicating whether validation was successful.
+
+        Notes:
+            The method *must* return *True* if validation is OK and 
+            *False* if validation fails.
+
+        Examples:
+            ::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class Demo(al.Page):
+
+                    def on_exp_access(self):
+                        self += al.NumberEntry(name="e1", force_input=True)
+                        self += al.NumberEntry(name="e2", force_input=True)
+                    
+                    def validate_page(self):
+                        e1 = int(self.exp.values.get("e1"))
+                        e2 = int(self.exp.values.get("e2"))
+                        
+                        if not (e1 + e2) > 10:
+                            self.exp.post_message(
+                                msg="The sum of your input values must be >10",
+                                level="danger"
+                                )
+                            return False
+                        
+                        return True
+
+
+        """
+        return True
+
+    def _validate(self):
+
 
         if not self.has_been_shown:
             if self.must_be_shown:
@@ -749,9 +780,13 @@ class _CoreCompositePage(_PageCore):
             self.exp.message_manager.post_message(msg)
             return False
 
+        if not self.validate_page():
+            return False
+
         return True
 
     def _validate_elements(self):
+
         return all([el.validate_data() for el in self.input_elements.values()])
 
 
