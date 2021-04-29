@@ -76,6 +76,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
   If the minimum or maximum was excatly zero, user input did not get
   validated correctly.
 - Fixed a problem that prevent the final page from being set correctly.
+- Fixed the *path* argument of `alfred3.JavaScript`
+- Fixed the *custom_js* argument of `alfred3.Button`
 
 
 ## alfred3 v2.0.0 (Released 2021-04-20)
