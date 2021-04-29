@@ -526,6 +526,7 @@ class Button(Element):
         d["url"] = self.url
         d["expurl"] = f"{self.exp.ui.basepath}/experiment"
         d["followup"] = self.followup
+        d["custom_js"] = self.custom_js
         d["name"] = self.name
         d["submit_first"] = self.submit_first
         d["set_data_url"] = self.exp.ui.set_page_data_url
