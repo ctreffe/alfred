@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## alfred3 v2.0.1 [unreleased]
+## alfred3 v2.1.0 [unreleased]
 
-### Added v2.0.1
+### Added v2.1.0
 
 - `alfred3.multiple_choice_names`: A new utility function that you can 
   use to find the indexes of selected choices in multiple choice elements. 
@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
   page and its elements.
 
 
-### Changed v2.0.1
+### Changed v2.1.0
 
 - `alfred3.page.TimeoutPage` and its two child classes 
   `alfred3.AutoForwardPage` and `alfred3.AutoClosePage` received a new,
@@ -75,7 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
       in the list of choice labels. *Be aware though, that in this case, 
       python will start counting at 0!*
 
-### Fixed v2.0.1
+### Fixed v2.1.0
 
 - Some problems with input handling in choice elements
 - A small visual hickup with a verbose message displayed upon using the debug jump mode
