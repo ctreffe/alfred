@@ -1936,10 +1936,7 @@ class InputElement(LabelledElement):
 
     @input.setter
     def input(self, value):
-        if not value:
-            self._input = None
-        else:
-            self._input = value
+        self._input = value
 
     @property
     def data(self) -> dict:
