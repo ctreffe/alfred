@@ -3,8 +3,6 @@ $(document).ready(function(){
 if ({{ timeout }} >= 0) {
     setTimeout(function () {
 
-    console.log("function call")
-
 {% if submit_first %}
     var data = $("#form").serializeArray();
     $.post("{{ set_data_url }}", data);
