@@ -807,14 +807,23 @@ class Page(_CoreCompositePage):
             the page in percent of the screen width. Only takes
             effect, if the option *responsive* in section *layout* is
             "true" (which is the default). Must be a single string with
-            1 to 5 relative widths separated by commas, e.g. "60%, 50%".
-            The first value refers to extra small ('xs') screens, the
-            following values to the next bigger ones. If the string
-            contains less than five values, the last value will be used
+            1 to 4 relative widths separated by commas, e.g. "60%, 50%".
+            The first value refers to small ('sm') screens, the
+            following values to the next bigger ones. Extra small screens
+            like mobile phones will always get 100% width. If the string
+            contains less than four values, the last value will be used
             for all screens from that size on upward.
 
             The sizes are taken from Bootstrap and correspond to the
             five width attributes of a :class:`.RowLayout`.
+
+            By default, responsive widths are 
+            
+            - 100% on extra small screens (below 576px, not modifiable)
+            - 85% on small screens (576-767px, think of tablets)
+            - 75% on medium screens (768-991px, think of small laptops)
+            - 65% on large screens (992-1199px)
+            - 55% on extra large screens (1200px and larger)
 
             Can be defined as a class attribute.
 
