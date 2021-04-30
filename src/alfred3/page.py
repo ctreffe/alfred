@@ -780,7 +780,7 @@ class _CoreCompositePage(_PageCore):
             self.exp.message_manager.post_message(msg)
             return False
 
-        if not self.validate_page():
+        if not self.validate():
             return False
 
         return True
