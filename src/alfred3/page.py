@@ -233,7 +233,9 @@ class _PageCore(ExpMember):
             show_time = time.time()
         self.show_times.append(show_time)
 
-        if not self._has_been_shown:
+        has_been_shown, self._has_been_shown = self._has_been_shown, True
+
+        if not has_been_shown:
             self.on_first_show()
 
             if self.exp.config.getboolean("general", "debug") and self is not self.exp.final_page:
@@ -250,7 +252,6 @@ class _PageCore(ExpMember):
 
         self.on_each_show()
 
-        self._has_been_shown = True
         if self.exp.aborted:
             raise AbortMove
 
