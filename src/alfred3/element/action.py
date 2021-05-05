@@ -51,17 +51,18 @@ class SubmittingButtons(SingleChoiceButtons):
 
     """
 
+    js_template = jinja_env.get_template("js/submittingbuttons.js.j2")
+
     def __init__(self, *choice_labels, **kwargs):
         super().__init__(*choice_labels, **kwargs)
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
 
-    def added_to_page(self, page):
-        
-        super().added_to_page(page)
+        self._js_code = []
+        js = self.js_template.render(choices=self.choices)
+        self.add_js(js)
 
-        t = jinja_env.get_template("js/submittingbuttons.js.j2")
-        js = t.render(name=self.name)
-
-        page += JavaScript(code=js)
 
 @inherit_kwargs
 class JumpButtons(SingleChoiceButtons):
