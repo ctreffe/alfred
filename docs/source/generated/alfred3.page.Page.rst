@@ -69,10 +69,7 @@
       ~Page.uptree
    
    
-      ~Page.validate_elements
-   
-   
-      ~Page.validate_page
+      ~Page.validate
    
    
       ~Page.visible

@@ -69,10 +69,7 @@
       ~NoDataPage.uptree
    
    
-      ~NoDataPage.validate_elements
-   
-   
-      ~NoDataPage.validate_page
+      ~NoDataPage.validate
    
    
       ~NoDataPage.visible

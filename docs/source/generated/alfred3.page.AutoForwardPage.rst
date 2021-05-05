@@ -72,10 +72,7 @@
       ~AutoForwardPage.uptree
    
    
-      ~AutoForwardPage.validate_elements
-   
-   
-      ~AutoForwardPage.validate_page
+      ~AutoForwardPage.validate
    
    
       ~AutoForwardPage.visible

@@ -69,10 +69,7 @@
       ~NoSavingPage.uptree
    
    
-      ~NoSavingPage.validate_elements
-   
-   
-      ~NoSavingPage.validate_page
+      ~NoSavingPage.validate
    
    
       ~NoSavingPage.visible

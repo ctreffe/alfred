@@ -72,10 +72,7 @@
       ~TimeoutPage.uptree
    
    
-      ~TimeoutPage.validate_elements
-   
-   
-      ~TimeoutPage.validate_page
+      ~TimeoutPage.validate
    
    
       ~TimeoutPage.visible

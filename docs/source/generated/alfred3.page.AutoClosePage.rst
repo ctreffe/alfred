@@ -72,10 +72,7 @@
       ~AutoClosePage.uptree
    
    
-      ~AutoClosePage.validate_elements
-   
-   
-      ~AutoClosePage.validate_page
+      ~AutoClosePage.validate
    
    
       ~AutoClosePage.visible

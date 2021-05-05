@@ -69,10 +69,7 @@
       ~UnlinkedDataPage.uptree
    
    
-      ~UnlinkedDataPage.validate_elements
-   
-   
-      ~UnlinkedDataPage.validate_page
+      ~UnlinkedDataPage.validate
    
    
       ~UnlinkedDataPage.visible

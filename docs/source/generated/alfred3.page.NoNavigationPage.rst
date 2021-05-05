@@ -69,10 +69,7 @@
       ~NoNavigationPage.uptree
    
    
-      ~NoNavigationPage.validate_elements
-   
-   
-      ~NoNavigationPage.validate_page
+      ~NoNavigationPage.validate
    
    
       ~NoNavigationPage.visible

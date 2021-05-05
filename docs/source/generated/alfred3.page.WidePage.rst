@@ -69,10 +69,7 @@
       ~WidePage.uptree
    
    
-      ~WidePage.validate_elements
-   
-   
-      ~WidePage.validate_page
+      ~WidePage.validate
    
    
       ~WidePage.visible
