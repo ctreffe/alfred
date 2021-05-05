@@ -586,7 +586,7 @@ class Section(ExpMember):
         """
         for page in self.pages.values():
 
-            if not page._validate_page():
+            if not page._validate():
                 raise ValidationError()
 
             if not page._validate_elements():
