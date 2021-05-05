@@ -73,20 +73,18 @@ id="page-container">
 
                     <!-- backward button -->
                     {% if backward_text %}
-                    <button type="submit" class="btn btn-dark" id="back_button" name="move" value="backward"
-                        submit="backward">{{ backward_text }}</button>
+                    <button type="button" class="btn btn-dark" id="back_button" name="move" value="backward">{{ backward_text }}</button>
                     {% endif %}
 
                     <!-- forward button -->
                     {% if forward_text %}
-                    <button type="submit" class="btn btn-dark" id="forward_button" name="move" value="forward"
+                    <button type="button" class="btn btn-dark" id="forward_button" name="move" value="forward"
                         submit="forward">{{ forward_text }}</button>
                     {% endif %}
 
                     <!-- finish button -->
                     {% if finish_text %}
-                    <button type="submit" class="btn btn-dark" id="finish_button" name="move" value="forward"
-                        submit="forward">{{ finish_text }}</button>
+                    <button type="button" class="btn btn-dark" id="finish_button" name="move" value="forward">{{ finish_text }}</button>
                     {% endif %}
 
                 </div>
