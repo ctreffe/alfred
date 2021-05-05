@@ -1919,6 +1919,20 @@ class InputElement(LabelledElement):
             return self._suffix._inner_html
         except AttributeError:
             return self._render_input_group_text(self._suffix)
+    
+    @property
+    def _codebook_suffix(self):
+        try:
+            return self._suffix._inner_html
+        except AttributeError:
+            return self._suffix
+    
+    @property
+    def _codebook_prefix(self):
+        try:
+            return self._prefix._inner_html
+        except AttributeError:
+            return self._prefix
 
     def _render_input_group_text(self, text: str) -> str:
         if text is not None:
@@ -1987,8 +2001,8 @@ class InputElement(LabelledElement):
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
         data["force_input"] = self.force_input
-        data["prefix"] = self.prefix
-        data["suffix"] = self.suffix
+        data["prefix"] = self._codebook_prefix
+        data["suffix"] = self._codebook_suffix
         data["default"] = self.default
         data["description"] = self.description
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
