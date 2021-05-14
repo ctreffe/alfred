@@ -218,6 +218,7 @@ class DynamicJumpButtons(JumpButtons):
         # cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
         # return cond1 and cond2
 
+
 @inherit_kwargs
 class JumpList(Row):
     """
@@ -248,7 +249,9 @@ class JumpList(Row):
         button_round_corners: Boolean, determining whether the button
             should have rounded corners.
         debugmode: Boolean switch, telling the JumpList whether it
-            should operate in debug mode.
+            should operate in debug mode. In debugmode, *save_data* 
+            defaults to *False*, i.e. the JumpList will not save any
+            data.
         
         {kwargs}
 
@@ -294,6 +297,7 @@ class JumpList(Row):
         name = kwargs.get("name", random_name)
         select_name = name + "_select"
         btn_name = name + "_btn"
+        save_data = kwargs.pop("save_data", not debugmode)
         select = SelectPageList(
             scope=scope,
             include_self=include_self,
@@ -301,13 +305,15 @@ class JumpList(Row):
             check_jumpto=check_jumpto,
             check_jumpfrom=check_jumpfrom,
             show_all_in_scope=show_all_in_scope,
-            display_page_name=display_page_name
+            display_page_name=display_page_name,
+            save_data=save_data
         )
         btn = DynamicJumpButtons(
             (label, select_name),
             name=btn_name,
             button_style=button_style,
             button_round_corners=button_round_corners,
+            save_data=save_data
         )
         super().__init__(select, btn, **kwargs)
 
