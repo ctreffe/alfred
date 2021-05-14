@@ -27,11 +27,11 @@ def _write(filename: str, out_filename: str = None, path: Path = None):
 
 @click.command()
 @click.option(
-    "-big/-small", "big",
+    "-b", "big",
     default=False,
-    help="If '-big' is given, a more extensive template will be loaded, \
-        including, for instance, a secrets.conf and a .gitignore file. \
-        Defaults to '-small'."
+    is_flag=True,
+    help="If '-b' is given, a more extensive template will be loaded, \
+        including, for instance, a secrets.conf and a .gitignore file."
 )
 @click.option(
     "--path",
@@ -41,8 +41,8 @@ def _write(filename: str, out_filename: str = None, path: Path = None):
     show_default=True
 )
 def template(big, path):
-    path = Path(path)
-    
+    path = Path(path) if path is not None else None
+
     _write(filename="script.py", path=path)
     _write(filename="alfred.conf", out_filename="config.conf", path=path)
     if big:
