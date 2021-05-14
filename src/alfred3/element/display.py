@@ -262,7 +262,7 @@ class Text(Element):
 
 
 @inherit_kwargs
-class Image(Element):
+class Image(LabelledElement):
     """
     Displays an image.
 
