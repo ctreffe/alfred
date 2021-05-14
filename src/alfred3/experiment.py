@@ -324,6 +324,17 @@ class Experiment:
         Returns:
             page.Page: The experiment's final page.
 
+        Notes:
+            You do not need to define a name for the final page. The name
+            will be set automatically to '_final_page'.
+
+        See Also:
+
+            - :meth:`.as_final_page`: Class decorator for adding custom
+              final pages to the experiment.
+            - :attr:`.ExperimentSession.final_page` the final page
+              property of the experiment session object.
+
         Examples:
 
             This property will return *None*, if the final page was not
@@ -337,25 +348,16 @@ class Experiment:
             Setting a class instance as final page:
 
             >>> exp = al.Experiment()
-            >>> exp.final_page = al.Page(name="final_page")
+            >>> exp.final_page = al.Page()
             >>> exp.final_page
-            Page(class='Page', name='final_page')
-
-        See Also:
-
-            - :meth:`.as_final_page`: Class decorator for adding custom
-              final pages to the experiment.
-            - :attr:`.ExperimentSession.final_page` the final page
-              property of the experiment session object.
-
+            Page(class='Page', name='_final_page')
         """
 
         return self._final_page
 
     @final_page.setter
     def final_page(self, page: Page):
-        if not page.name:
-            raise AlfredError("Final page must have a valid name.")
+        page._set_name("_final_page", via="argument")
         self._final_page = page
 
     def as_final_page(self, page):
@@ -364,6 +366,10 @@ class Experiment:
 
         Use this decorator, if you want to define a new final page with
         full access to all experiment hooks.
+
+        Notes:
+            You do not need to define a name for the final page. The name
+            will be set automatically to '_final_page'.
 
         See Also:
             :attr:`.final_page`: The final page as a property.
@@ -375,7 +381,6 @@ class Experiment:
 
                 @exp.as_final_page
                 class Final(al.Page):
-                    name = "final_page"
 
                     def on_exp_access(self):
                         self += al.Text("This is the final page.")
@@ -384,7 +389,7 @@ class Experiment:
 
         @functools.wraps(page)
         def wrapper():
-            self._final_page = page
+            self._final_page = page(name="_final_page")
             return page
 
         return wrapper()
@@ -422,10 +427,10 @@ class Experiment:
             exp_session += member
 
         if self.final_page is not None:
-            if isclass(self.final_page):
-                exp_session.final_page = self.final_page
-            elif isinstance(self.final_page, page._PageCore):
-                exp_session.final_page = self.final_page
+            exp_session.final_page = self.final_page
+            # if isclass(self.final_page):
+            #     exp_session.final_page = self.final_page()
+            # elif isinstance(self.final_page, page._PageCore):
 
         return exp_session
 
@@ -888,14 +893,17 @@ class ExperimentSession:
             if not isinstance(page, Page):
                 raise TypeError("Abort page must be a page.")
             abort_page = page
+            abort_page._set_name(pg_name, via="abort")
         else:
             abort_page = Page(title=title, name=pg_name)
-            if msg:
+            if icon:
                 ic = util.icon(icon, size="80pt")
                 abort_page += elm.display.VerticalSpace("50px")
                 abort_page += elm.display.Html(ic, align="center")
+            if msg:
                 abort_page += elm.display.VerticalSpace("100px")
                 abort_page += elm.display.Text(msg, align="center")
+        
             abort_page += elm.misc.HideNavigation()
             abort_page += elm.misc.WebExitEnabler()
 
@@ -910,12 +918,38 @@ class ExperimentSession:
         self.aborted = True
         self._aborted_because = reason
 
-    def _finish(self):
+    def finish(self):
         """
-        Closes all pages and saves data.
+        Closes all previous pages and saves data.
 
-        Usually, this method does not need to be called manually. It
-        will be called automatically upon entering the finished section.
+        This method gets called automatically with the last click in an
+        experiment. You can manually call it earlier to mark a dataset
+        as complete. This may be useful if you want to append some 
+        purely informational or optional pages at the end of your 
+        experiment.
+
+        Examples:
+
+            The experiment is finished on hiding the first page::
+                import alfred3 as al
+                exp = al.Experiment()
+
+
+                @exp.member
+                class First(al.Page):
+
+                    def on_exp_access(self):
+                        self += al.TextEntry(name="el1")
+                    
+                    def on_first_hide(self):
+                        self.exp.finish()
+
+
+                @exp.member
+                class Second(al.Page):
+
+                    def on_exp_access(self):
+                        self += al.TextEntry(name="el2")
 
         """
 
@@ -923,22 +957,22 @@ class ExperimentSession:
             func(self)
 
         if self.finished:
-            msg = "ExperimentSession._finish() called. Experiment was already finished. Leaving method."
-            self.log.warning(msg)
-            return
-        self.log.info("ExperimentSession._finish() called. Session is finishing.")
+            msg = "ExperimentSession._finish() called. Experiment was already finished. Finishing again."
+        else:
+            msg = "ExperimentSession._finish() called. Session is finishing."
+
+        self.log.info(msg)
         self.finished = True
-
-        for page in self.root_section.all_pages.values():
-            if not page.is_closed:
-                page.close()
-
-        if self.config.getboolean("general", "debug"):
-            if self.config.getboolean("debug", "disable_saving"):
-                return
-
+        self._close_previous_pages()
         self._save_data(sync=True)
         self._export_data()
+    
+    def _close_previous_pages(self):
+        for i, page in enumerate(self.root_section.all_pages.values()):
+            if i > self.movement_manager.current_index:
+                break
+            if not page.is_closed:
+                page.close()
 
     def _export_data(self):
 
@@ -980,6 +1014,10 @@ class ExperimentSession:
            You need to call those manually.
 
         """
+        if self.config.getboolean("general", "debug"):
+            if self.config.getboolean("debug", "disable_saving"):
+                self.log.debug("Saving is disabled.")
+                return
 
         data = self.data_manager.session_data
         self.data_saver.main.save_with_all_agents(data=data, level=99, sync=sync)
@@ -1037,6 +1075,10 @@ class ExperimentSession:
         use this property to change the final page by assigning a page
         of your design.
 
+        Notes:
+            You do not need to define a name for the final page. The name
+            will be set automatically to '_final_page'.
+
         See Also:
 
             * You can change the final page in a similar way using
@@ -1051,9 +1093,9 @@ class ExperimentSession:
 
             >>> import alfred3 as al
             >>> exp = al.ExperimentSession()
-            >>> exp.final_page = al.Page(name="my_final_page")
+            >>> exp.final_page = al.Page()
             >>> exp.final_page
-            Page(class="Page", name="my_final_page")
+            Page(class="Page", name="_final_page")
 
         """
 
@@ -1063,8 +1105,12 @@ class ExperimentSession:
     def final_page(self, value: Page):
         if not isinstance(value, page._PageCore):
             raise ValueError("Not a valid page.")
-
-        self.root_section.final_page = value
+        
+        if value.name != "_final_page":
+            value._set_name("_final_page", via="argument")
+        value += elm.misc.HideNavigation()
+        self.root_section.finished_section.members.clear()
+        self.root_section.finished_section += value
 
     def subpath(self, path: Union[str, Path]) -> Path:
         """
@@ -1678,9 +1724,12 @@ class ExperimentSession:
                         df = pd.DataFrame(self.exp.all_exp_data)
 
         """
-        mongodata = self.data_manager.iter_flat_mongo_data()
+        if self.secrets.getboolean("mongo_saving_agent", "use"):
+            mongodata = self.data_manager.iter_flat_mongo_data()
+        else:
+            mongodata = []
         localdata = self.data_manager.iter_flat_local_data()
-        if self.config.getboolean("general", "runs_on_mortimer"):
+        if self.config.getboolean("mortimer_specific", "runs_on_mortimer"):
             return list(mongodata)
         else:
             return list(mongodata) + list(localdata)
@@ -1714,9 +1763,12 @@ class ExperimentSession:
                         df = pd.DataFrame(self.exp.all_unlinked_data)
 
         """
-        mongodata = self.data_manager.iter_flat_mongo_data(data_type="unlinked")
+        if self.secrets.getboolean("mongo_saving_agent_unlinked", "use"):
+            mongodata = self.data_manager.iter_flat_mongo_data(data_type="unlinked")
+        else:
+            mongodata = []
         localdata = self.data_manager.iter_flat_local_data(data_type="unlinked")
-        if self.config.getboolean("general", "runs_on_mortimer"):
+        if self.config.getboolean("mortimer_specific", "runs_on_mortimer"):
             return list(mongodata)
         else:
             return list(mongodata) + list(localdata)

@@ -1,4 +1,4 @@
-Section
+﻿Section
 =======================
 
 .. currentmodule:: alfred3.section
@@ -43,6 +43,18 @@ Section
    
    
       ~Section.uptree
+   
+   
+      ~Section.validate_on_backward
+   
+   
+      ~Section.validate_on_forward
+   
+   
+      ~Section.validate_on_jumpfrom
+   
+   
+      ~Section.validate_on_jumpto
    
    
       ~Section.validate_on_leave

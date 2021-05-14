@@ -1,4 +1,4 @@
-TimeoutPage
+﻿TimeoutPage
 ========================
 
 .. currentmodule:: alfred3.page
@@ -72,10 +72,7 @@ TimeoutPage
       ~TimeoutPage.uptree
    
    
-      ~TimeoutPage.validate_elements
-   
-   
-      ~TimeoutPage.validate_page
+      ~TimeoutPage.validate
    
    
       ~TimeoutPage.visible
@@ -96,6 +93,7 @@ TimeoutPage
          ~TimeoutPage.all_elements
          ~TimeoutPage.all_input_elements
          ~TimeoutPage.background_color
+         ~TimeoutPage.callbackargs
          ~TimeoutPage.data
          ~TimeoutPage.elements
          ~TimeoutPage.exp
@@ -114,6 +112,7 @@ TimeoutPage
          ~TimeoutPage.parent
          ~TimeoutPage.parent_name
          ~TimeoutPage.prefix_element_names
+         ~TimeoutPage.progress
          ~TimeoutPage.responsive_width
          ~TimeoutPage.section
          ~TimeoutPage.short_tree

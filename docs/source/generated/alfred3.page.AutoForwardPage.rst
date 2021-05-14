@@ -1,4 +1,4 @@
-AutoForwardPage
+﻿AutoForwardPage
 ============================
 
 .. currentmodule:: alfred3.page
@@ -72,10 +72,7 @@ AutoForwardPage
       ~AutoForwardPage.uptree
    
    
-      ~AutoForwardPage.validate_elements
-   
-   
-      ~AutoForwardPage.validate_page
+      ~AutoForwardPage.validate
    
    
       ~AutoForwardPage.visible
@@ -96,6 +93,7 @@ AutoForwardPage
          ~AutoForwardPage.all_elements
          ~AutoForwardPage.all_input_elements
          ~AutoForwardPage.background_color
+         ~AutoForwardPage.callbackargs
          ~AutoForwardPage.data
          ~AutoForwardPage.elements
          ~AutoForwardPage.exp
@@ -114,6 +112,7 @@ AutoForwardPage
          ~AutoForwardPage.parent
          ~AutoForwardPage.parent_name
          ~AutoForwardPage.prefix_element_names
+         ~AutoForwardPage.progress
          ~AutoForwardPage.responsive_width
          ~AutoForwardPage.section
          ~AutoForwardPage.short_tree

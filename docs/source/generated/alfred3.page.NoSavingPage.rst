@@ -1,4 +1,4 @@
-NoSavingPage
+﻿NoSavingPage
 =========================
 
 .. currentmodule:: alfred3.page
@@ -69,10 +69,7 @@ NoSavingPage
       ~NoSavingPage.uptree
    
    
-      ~NoSavingPage.validate_elements
-   
-   
-      ~NoSavingPage.validate_page
+      ~NoSavingPage.validate
    
    
       ~NoSavingPage.visible
@@ -111,6 +108,7 @@ NoSavingPage
          ~NoSavingPage.parent
          ~NoSavingPage.parent_name
          ~NoSavingPage.prefix_element_names
+         ~NoSavingPage.progress
          ~NoSavingPage.responsive_width
          ~NoSavingPage.section
          ~NoSavingPage.short_tree

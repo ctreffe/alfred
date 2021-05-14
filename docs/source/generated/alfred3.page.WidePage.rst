@@ -1,4 +1,4 @@
-WidePage
+﻿WidePage
 =====================
 
 .. currentmodule:: alfred3.page
@@ -69,10 +69,7 @@ WidePage
       ~WidePage.uptree
    
    
-      ~WidePage.validate_elements
-   
-   
-      ~WidePage.validate_page
+      ~WidePage.validate
    
    
       ~WidePage.visible
@@ -111,6 +108,7 @@ WidePage
          ~WidePage.parent
          ~WidePage.parent_name
          ~WidePage.prefix_element_names
+         ~WidePage.progress
          ~WidePage.responsive_width
          ~WidePage.section
          ~WidePage.short_tree

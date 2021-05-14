@@ -277,11 +277,11 @@ class MovementManager:
             except ValidationError:
                 raise AbortMove()
         
-        else:
+        else: # sections are equal
             try:
                 if direction == "jump":
                     current_page.section._move("jumpfrom")
-                    current_page.section._move("jumpto")
+                    to_page.section._move("jumpto")
                 else:
                     current_page.section._move(direction)
             except ValidationError:
@@ -332,7 +332,7 @@ class MovementManager:
     def _check_jump_permission(self, next_page):
         if self.experiment.config.getboolean("general", "debug"):
             self.log.debug("Debug mode enabled. Jump permission not checked.")
-            self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="debug")
+            self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="info")
             return True
 
         elif not self.current_page is next_page and not self.current_page.section.allow_jumpfrom:
@@ -404,11 +404,6 @@ class MovementManager:
                 )
         
         proceed = self.current_page.custom_move()
-        now = time.time()
-        try:
-            self.current_page._on_hiding_widget(hide_time=now)
-        except AbortMove:
-            return
         
         if not proceed:
             self.log.debug(f"Page defined its own move method. Alfred's move system stands by.")
@@ -487,9 +482,8 @@ class UserInterface:
         
         self._determine_style()
 
-
-        self._callables["clientinfo"] = self.save_client_info
-        self._callables["set_page_data"] = self._set_page_data
+        self.client_info_url = self.add_callable(self.save_client_info)
+        self.set_page_data_url = self.add_callable(self._set_page_data)
 
         self.forward_enabled = True
         self.backward_enabled = True
@@ -637,7 +631,8 @@ class UserInterface:
         # This is necessary in order to also save the screen resolution
         first_page = self.exp.movement_manager.first_visible_page
         if page is first_page and self.experiment.config.getboolean("data", "save_client_info"):
-            code["js_code"] += [(7, importlib.resources.read_text(js, "clientinfo.js"))]
+            js = jinja_env.get_template("clientinfo.js.j2").render(url=self.client_info_url)
+            code["js_code"] += [(7, js)]
         
         try:
             code["css_code"] += self.exp.progress_bar.css_code

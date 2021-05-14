@@ -1,4 +1,4 @@
-NoDataPage
+﻿NoDataPage
 =======================
 
 .. currentmodule:: alfred3.page
@@ -69,10 +69,7 @@ NoDataPage
       ~NoDataPage.uptree
    
    
-      ~NoDataPage.validate_elements
-   
-   
-      ~NoDataPage.validate_page
+      ~NoDataPage.validate
    
    
       ~NoDataPage.visible
@@ -111,6 +108,7 @@ NoDataPage
          ~NoDataPage.parent
          ~NoDataPage.parent_name
          ~NoDataPage.prefix_element_names
+         ~NoDataPage.progress
          ~NoDataPage.responsive_width
          ~NoDataPage.section
          ~NoDataPage.short_tree

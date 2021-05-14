@@ -150,10 +150,10 @@ Usage can be illustrated by looking at how *validate_on_move* is implemented::
 
     def validate_on_move(self):
         
-        if not self.exp.current_page.validate_page():
+        if not self.exp.current_page._validate_elements():
             raise ValidationError()
         
-        if not self.exp.current_page.validate_elements():
+        if not self.exp.current_page._validate():
             raise ValidationError()
 
 Basically, whenever validation fails, any of these methods raise a
@@ -168,3 +168,9 @@ would be to just remove validation on normal moves::
 
         def validate_on_move(self):
             pass
+
+
+.. seealso::
+   
+   Page validation can be customized aswell:
+   :ref:`How to customize a page's validation behavior`

@@ -22,6 +22,7 @@
       is_label
       is_page
       is_section
+      multiple_choice_numbers
       prefix_keys
       prefix_keys_safely
       to_dict

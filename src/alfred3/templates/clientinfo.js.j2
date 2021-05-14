@@ -17,5 +17,5 @@ $(document).ready(function () {
         client_os_version: ua.os.version,
     }
 
-    $.post('/callable/clientinfo', info)
+    $.post("{{ url }}", info)
 });

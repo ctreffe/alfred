@@ -144,3 +144,4 @@ tests/manual/
 alfred_venv/
 .alfred.venv/
 .alenv/
+tests/exp/

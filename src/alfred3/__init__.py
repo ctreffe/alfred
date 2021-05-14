@@ -79,3 +79,4 @@ from .util import is_input_element
 from .util import is_label
 from .util import is_page
 from .util import is_section
+from .util import multiple_choice_numbers

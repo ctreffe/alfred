@@ -136,3 +136,16 @@ square brackets::
     page = al.Page(name="demo")
     page += al.TextEntry(leftlab="Text entry", name="el1")
     page["el1"].layout.width_sm = [6, 6]
+
+
+How to customize a page's validation behavior
+----------------------------------------------
+
+When you write a page in class style, you can overload the 
+:meth:`.Page.validate` method to implement custom validation. Take a 
+look at the method's documentation to learn more.
+
+.. seealso::
+   
+   Section validation can be customized aswell:
+   :ref:`How to customize validation behavior`

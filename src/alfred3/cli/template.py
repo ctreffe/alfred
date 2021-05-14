@@ -27,14 +27,29 @@ def _write(filename: str, out_filename: str = None, path: Path = None):
 
 @click.command()
 @click.option(
+    "-b", "big",
+    default=False,
+    is_flag=True,
+    help="If '-b' is given, a more extensive template will be loaded, \
+        including, for instance, a secrets.conf and a .gitignore file."
+)
+@click.option(
     "--path",
     default=None,
+    type=click.Path(),
     help="The directory in which to place alfred3 template files.",
     show_default=True
 )
-def template(path: Path):
-    _write(filename="script.py", path=path)
+def template(big, path):
+    path = Path(path) if path is not None else None
+
     _write(filename="alfred.conf", out_filename="config.conf", path=path)
+    if big:
+        _write(filename="secrets.conf", path=path)
+        _write(filename=".gitignore")
+        _write(filename="script_big.py", out_filename="script.py", path=path)
+    else:
+        _write(filename="script.py", path=path)
     click.echo("Template created. Start experiment with 'alfred3 run'.")
 
 

@@ -2,7 +2,7 @@ $( "#{{ name }}" ).click(function() {
 
     {% if submit_first %}
         var data = $("#form").serializeArray();
-        $.post("/callable/set_page_data", data);
+        $.post("{{ set_data_url }}", data);
     {% endif %}
 
     $.get( "{{ url }}", function(data) {

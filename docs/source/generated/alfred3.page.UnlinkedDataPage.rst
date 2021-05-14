@@ -1,4 +1,4 @@
-UnlinkedDataPage
+﻿UnlinkedDataPage
 =============================
 
 .. currentmodule:: alfred3.page
@@ -69,10 +69,7 @@ UnlinkedDataPage
       ~UnlinkedDataPage.uptree
    
    
-      ~UnlinkedDataPage.validate_elements
-   
-   
-      ~UnlinkedDataPage.validate_page
+      ~UnlinkedDataPage.validate
    
    
       ~UnlinkedDataPage.visible
@@ -112,6 +109,7 @@ UnlinkedDataPage
          ~UnlinkedDataPage.parent
          ~UnlinkedDataPage.parent_name
          ~UnlinkedDataPage.prefix_element_names
+         ~UnlinkedDataPage.progress
          ~UnlinkedDataPage.responsive_width
          ~UnlinkedDataPage.section
          ~UnlinkedDataPage.short_tree

@@ -4,6 +4,7 @@ Sections organize movement between pages in an experiment.
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
+import time
 from typing import Union
 
 from . import element as elm
@@ -544,15 +545,25 @@ class Section(ExpMember):
         Raises:
             ValidationError: If validation of the current page fails.
         """
-        self.validate_on_move()
-
         if direction == "forward":
+            self.validate_on_forward()
+            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._forward()
+        
         elif direction == "backward":
+            self.validate_on_backward()
+            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._backward()
+        
         elif direction == "jumpfrom":
+            self.validate_on_jumpfrom()
+            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._jumpfrom()
+
         elif direction == "jumpto":
+            # If a section is the *target* of a jump, it does not validate
+            # input again.
+            self.validate_on_jumpto()
             self._jumpto()
 
         if self.exp.aborted:
@@ -575,7 +586,7 @@ class Section(ExpMember):
         """
         for page in self.pages.values():
 
-            if not page._validate_page():
+            if not page._validate():
                 raise ValidationError()
 
             if not page._validate_elements():
@@ -589,17 +600,65 @@ class Section(ExpMember):
         Validates the current page and its elements.
 
         Can be overloaded to change the validating behavior of a derived
-        section.
+        section. By default, this validation method is called on each
+        foward and backward move, as well as when participants jump 
+        *from* the section, but not when they jump *to* the section.
 
         Raises:
             ValidationError: If validation fails.
-        """
+        
+        See Also:
+            Use the individual methods :meth:`.validate_on_forward`,
+            :meth:`.validate_on_backward`, :meth:`.validate_on_jumpfrom`,
+            and :meth:`.validate_on_jumpto` if you want even more fine-
+            grained control over validation behavior.
 
-        if not self.exp.current_page._validate_page():
-            raise ValidationError()
+        .. versionchanged:: 2.1.0
+           Switched the default order of validation. Now, elements are
+           validated first, then the page itself is validated.
+
+        """
 
         if not self.exp.current_page._validate_elements():
             raise ValidationError()
+        
+        if not self.exp.current_page._validate():
+            raise ValidationError()
+
+    
+    def validate_on_forward(self):
+        """
+        Called for validation on each forward move.
+
+        Overload this method to customize validation behavior.
+        """
+        self.validate_on_move()
+    
+    def validate_on_backward(self):
+        """
+        Called for validation on each forward move.
+
+        Overload this method to customize validation behavior.
+        """
+        self.validate_on_move()
+    
+    def validate_on_jumpfrom(self):
+        """
+        Called for validation on each forward move.
+
+        Overload this method to customize validation behavior.
+        """
+        self.validate_on_move()
+    
+    def validate_on_jumpto(self):
+        """
+        Called for validation on each forward move.
+
+        Overload this method to customize validation behavior.
+        By default, no validation takes place on *jumpto*, because the
+        section is the *target* of the move.
+        """
+        pass
 
 
 @inherit_kwargs
@@ -705,7 +764,7 @@ class _FinishedSection(Section):
 
     def _enter(self):
         super()._enter()
-        self.experiment._finish()
+        self.experiment.finish()
 
 
 class _AbortSection(Section):
@@ -772,9 +831,4 @@ class _RootSection(Section):
     @property
     def final_page(self):
         return self.finished_section._final_page
-
-    @final_page.setter
-    def final_page(self, page):
-        page += elm.misc.HideNavigation()
-        self.finished_section.members = {}
-        self.finished_section._final_page = page
+    

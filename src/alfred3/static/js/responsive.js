@@ -8,6 +8,33 @@ var move = function(direction) {
     $("#form").submit();
 }
 
+
+var move_prep = function() {
+    $("#back_button").prop("disabled", true);
+    $("#forward_button").prop("disabled", true);
+    $("#finish_button").prop("disabled", true);
+
+    $("#back_button").unbind("click");
+    $("#forward_button").unbind("click");
+    $("#finish_button").unbind("click");
+}
+
+$("#back_button").one("click", function(){
+    move_prep();
+    move("backward");
+})
+
+$("#forward_button").one("click", function(){
+    move_prep();
+    move("forward");
+})
+
+$("#finish_button").one("click", function(){
+    move_prep();
+    move("forward");
+})
+
+
 $(document).ready(function () {
 
     // ask user before leaving, but not if he/she uses the form go to the next page.
@@ -40,12 +67,19 @@ const responsive_choices = function () {
 
         $(".choice-button-group.btn-group").addClass("btn-group-vertical changed");
         $(".choice-button-group.btn-group").removeClass("btn-group");
+
+        $(".choice-button-bar.btn-group").addClass("btn-group-vertical changed-bar choice-button-group");
+        $(".choice-button-bar.btn-group").removeClass("btn-group choice-button-bar");
+        
         $(".form-check-inline").addClass("changed");
         $(".form-check-inline").removeClass("form-check-inline");
         
     } else {
         $(".choice-button-group.changed").addClass("btn-group");
         $(".choice-button-group.changed").removeClass("btn-group-vertical changed");
+
+        $(".choice-button-group.changed-bar").addClass("btn-group choice-button-bar");
+        $(".choice-button-group.changed-bar").removeClass("btn-group-vertical changed-bar");
 
         $(".form-check.changed").addClass("form-check-inline");
         $(".form-check.changed").removeClass("changed")

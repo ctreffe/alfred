@@ -11,17 +11,17 @@
             <!-- if there is a toplab, it is rendered here -->
             {% if toplab %}
             {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
-            <label class="{{ input_breaks }} toplab" for="{{ name }}">
+            <div class="{{ input_breaks }} toplab" for="{{ name }}">
                 {{ toplab.web_widget }}
-            </label>
+            </div>
             {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             {% endif %}
             
             <!-- if there is a left label, it is rendered here -->
             {% if leftlab %}
-            <label class="{{ leftlab.col_breaks }} {{ leftlab.vertical_alignment }} leftlab" for="{{ name }}">
+            <div class="{{ leftlab.col_breaks }} {{ leftlab.vertical_alignment }} leftlab" for="{{ name }}">
                 {{ leftlab.web_widget }}
-            </label>
+            </div>
             {% endif %}
 
             <!-- this is where the actual input field gets rendered -->
@@ -47,17 +47,17 @@
 
             <!-- if there is a right label, it is rendered here -->
             {% if rightlab %}
-            <label class="{{ rightlab.col_breaks }} {{ rightlab.vertical_alignment }} rightlab" for="{{ name }}">
+            <div class="{{ rightlab.col_breaks }} {{ rightlab.vertical_alignment }} rightlab" for="{{ name }}">
                 {{ rightlab.web_widget }}
-            </label>
+            </div>
             {% endif %}
 
             <!-- if there is a bottom, it is rendered here -->
             {% if bottomlab %}
             {% if leftlab %} <div class="{{ leftlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
-            <label class="{{ input_breaks }} bottomlab" for="{{ name }}">
+            <div class="{{ input_breaks }} bottomlab" for="{{ name }}">
                 {{ bottomlab.web_widget }}
-            </label>
+            </div>
             {% if rightlab %} <div class="{{ rightlab.col_breaks }}""></div> {% endif %} <!-- for spacing -->
             {% endif %}
 

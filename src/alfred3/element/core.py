@@ -1162,12 +1162,24 @@ class Row(Element):
         valign_cols: List of vertical column alignments. Valid values
             are 'auto' (default), 'top', 'center', and 'bottom'. The
             elements of the list correspond to the row's columns. See
-            :attr:`.RowLayout.valign_cols`
+            :attr:`.RowLayout.valign_cols`. This argument is overridden
+            if you use a custom :class:`.RowLayout` instance for the 
+            *layout* argument.
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
             This switch exists, because some elements might default to
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
+        layout: Can be one of the following: 1) An instance of
+            :class:`.RowLayout`, or 2) a tuple of integers, specifying 
+            the allocation of horizontal space between the columns
+            on small screens upwards (using bootstraps 12-column grid). 
+
+            Option 1) offers fine-tuned flexibility, 2) uses a default
+            RowLayout and changes the :attr:`.RowLayout.width_sm` 
+            attribute.
+
+            By default, the layout is set automatically.
 
         {kwargs}
 
@@ -1247,15 +1259,24 @@ class Row(Element):
         height: str = "auto",
         name: str = None,
         showif: dict = None,
+        layout: Union[RowLayout, Tuple[int]] = None,
         **kwargs,
     ):
         """Constructor method."""
         super().__init__(name=name, showif=showif, height=height, **kwargs)
 
         self.elements: list = elements  # documented in getter
-        self.layout = RowLayout(
-            ncols=len(self.elements), valign_cols=valign_cols
-        )  # documented in getter
+        if isinstance(layout, RowLayout):
+            self.layout = layout
+        elif layout is not None:
+            self.layout = RowLayout(
+                ncols=len(self.elements), valign_cols=valign_cols
+            )  # documented in getter
+            self.layout.width_sm = layout
+        else:
+            self.layout = RowLayout(
+                ncols=len(self.elements), valign_cols=valign_cols
+            )  # documented in getter
         self.elements_full_width: bool = elements_full_width  # documented in getter
 
     @property
@@ -1638,6 +1659,9 @@ class InputElement(LabelledElement):
             *force_input* set to True and no user input registered.
             Defaults to the experiment-wide default value
             specified in config.conf.
+        save_data (bool): If *False*, this element will not save any
+            data to the experiment data and will not appear in the
+            codebook.
 
         {kwargs}
 
@@ -1657,12 +1681,13 @@ class InputElement(LabelledElement):
         description: str = None,
         disabled: bool = False,
         no_input_hint: str = None,
+        save_data: bool = True,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
 
         self.description = description  # documented in getter
-        self.input = ""  # documented in getter
+        self.input = None  # documented in getter
         self._force_input = force_input  # documented in getter property
         self._no_input_hint = no_input_hint
         self._default = default  # documented in getter property
@@ -1671,6 +1696,7 @@ class InputElement(LabelledElement):
         self.show_hints: bool = True
         self._hint_manager = MessageManager(default_level="danger")  # documented in getter
         self.disabled: bool = disabled  # documented in getter
+        self.save_data = save_data
 
         if default is not None:
             self.input = default
@@ -1898,6 +1924,20 @@ class InputElement(LabelledElement):
             return self._suffix._inner_html
         except AttributeError:
             return self._render_input_group_text(self._suffix)
+    
+    @property
+    def _codebook_suffix(self):
+        try:
+            return self._suffix._inner_html
+        except AttributeError:
+            return self._suffix
+    
+    @property
+    def _codebook_prefix(self):
+        try:
+            return self._prefix._inner_html
+        except AttributeError:
+            return self._prefix
 
     def _render_input_group_text(self, text: str) -> str:
         if text is not None:
@@ -1908,7 +1948,8 @@ class InputElement(LabelledElement):
     @property
     def input(self) -> str:
         """
-        str: Subject input to this element.
+        str: Subject input to this element. Returns *None*, if there
+        is no input.
         """
         return self._input
 
@@ -1924,6 +1965,9 @@ class InputElement(LabelledElement):
         Includes the subject :attr:`.input` and the element's
         :attr:`.codebook_data`.
         """
+        if not self.save_data:
+            return {}
+        
         data = {}
         data["value"] = self.input
         data.update(self.codebook_data)
@@ -1964,9 +2008,9 @@ class InputElement(LabelledElement):
         data["tree"] = self.short_tree
         data["page_title"] = self.page.title
         data["element_type"] = type(self).__name__
-        data["force_input"] = self._force_input
-        data["prefix"] = self.prefix
-        data["suffix"] = self.suffix
+        data["force_input"] = self.force_input
+        data["prefix"] = self._codebook_prefix
+        data["suffix"] = self._codebook_suffix
         data["default"] = self.default
         data["description"] = self.description
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
@@ -1999,7 +2043,6 @@ class InputElement(LabelledElement):
                 fix.should_be_shown = False
                 self.page += fix
             except AttributeError as e:
-                self.log.debug(f"Exception passed silently: {e}")
                 pass
 
 
@@ -2057,8 +2100,6 @@ class ChoiceElement(InputElement, ABC):
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
-
-        self._input = {}
 
         self.choice_labels = choice_labels  # documented in getter
         self.vertical = vertical  # documented in getter
@@ -2139,17 +2180,3 @@ class ChoiceElement(InputElement, ABC):
                 d.update({f"choice{i}": str(lab)})  # otherwise __str__
 
         return d
-
-    @property
-    def input(self) -> dict:
-        """
-        Dict[str, bool]: Dictionary of subject inputs.
-
-        Contains the choice labels as keys and their selection status
-        (*True* for selected choices, *False* otherwise) as values.
-        """
-        return self._input
-
-    @input.setter
-    def input(self, value):
-        self._input = value

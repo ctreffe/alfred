@@ -1,4 +1,4 @@
-Callback
+﻿Callback
 =============================
 
 .. currentmodule:: alfred3.element.misc
@@ -59,8 +59,10 @@ Callback
          ~Callback.element_width
          ~Callback.exp
          ~Callback.experiment
+         ~Callback.followup
          ~Callback.font_size
          ~Callback.js_code
+         ~Callback.js_template
          ~Callback.js_urls
          ~Callback.name
          ~Callback.page

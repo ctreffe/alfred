@@ -51,17 +51,18 @@ class SubmittingButtons(SingleChoiceButtons):
 
     """
 
+    js_template = jinja_env.get_template("js/submittingbuttons.js.j2")
+
     def __init__(self, *choice_labels, **kwargs):
         super().__init__(*choice_labels, **kwargs)
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
 
-    def added_to_page(self, page):
-        
-        super().added_to_page(page)
+        self._js_code = []
+        js = self.js_template.render(choices=self.choices)
+        self.add_js(js)
 
-        t = jinja_env.get_template("js/submittingbuttons.js.j2")
-        js = t.render(name=self.name)
-
-        page += JavaScript(code=js)
 
 @inherit_kwargs
 class JumpButtons(SingleChoiceButtons):
@@ -217,6 +218,7 @@ class DynamicJumpButtons(JumpButtons):
         # cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
         # return cond1 and cond2
 
+
 @inherit_kwargs
 class JumpList(Row):
     """
@@ -247,7 +249,9 @@ class JumpList(Row):
         button_round_corners: Boolean, determining whether the button
             should have rounded corners.
         debugmode: Boolean switch, telling the JumpList whether it
-            should operate in debug mode.
+            should operate in debug mode. In debugmode, *save_data* 
+            defaults to *False*, i.e. the JumpList will not save any
+            data.
         
         {kwargs}
 
@@ -293,6 +297,7 @@ class JumpList(Row):
         name = kwargs.get("name", random_name)
         select_name = name + "_select"
         btn_name = name + "_btn"
+        save_data = kwargs.pop("save_data", not debugmode)
         select = SelectPageList(
             scope=scope,
             include_self=include_self,
@@ -300,13 +305,15 @@ class JumpList(Row):
             check_jumpto=check_jumpto,
             check_jumpfrom=check_jumpfrom,
             show_all_in_scope=show_all_in_scope,
-            display_page_name=display_page_name
+            display_page_name=display_page_name,
+            save_data=save_data
         )
         btn = DynamicJumpButtons(
             (label, select_name),
             name=btn_name,
             button_style=button_style,
             button_round_corners=button_round_corners,
+            save_data=save_data
         )
         super().__init__(select, btn, **kwargs)
 
@@ -526,8 +533,10 @@ class Button(Element):
         d["url"] = self.url
         d["expurl"] = f"{self.exp.ui.basepath}/experiment"
         d["followup"] = self.followup
+        d["custom_js"] = self.custom_js
         d["name"] = self.name
         d["submit_first"] = self.submit_first
+        d["set_data_url"] = self.exp.ui.set_page_data_url
         js = self.js_template.render(d)
         self.add_js(js)
 

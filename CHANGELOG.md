@@ -5,6 +5,117 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## alfred3 v2.1.0 (Released 2021-05-14)
+
+### Added v2.1.0
+
+- `alfred3.multiple_choice_names`: A new utility function that you can 
+  use to find the indexes of selected choices in multiple choice elements. 
+  You can apply it to the data dictionary corresponding to the element of 
+  interest in `alfred3.experiment.ExperimentSession.values`, or to the 
+  `input` attribute of the element directly.
+- Four new hooks for finetuning a section's validation behavior. All 
+  except `validate_on_jumpto` default to calling `validate_on_move`. Their 
+  intended use is to allow for specialized behavior by being overloaded. 
+  For example, you can implement a section that does not validate input on 
+  backwards movements by overriding the `validate_on_backward` method with 
+  an empty method. These are the locations:
+    - `alfred3.section.Section.validate_on_forward`
+    - `alfred3.section.Section.validate_on_backward`
+    - `alfred3.section.Section.validate_on_jumpfrom`
+    - `alfred3.section.Section.validate_on_jumpto`
+- Pages can now have a customized validation method: Simply overload
+  (redefine) `alfred3.Page.validate` when writing a page in class style.
+  The method must return *True* if validation was successful and *False*
+  otherwise. You can and should use `alfred3.experiment.ExperimentSession.post_message`
+  (available in a page instance via `self.exp.post_message`) to inform
+  participants about the reason for validation failures. This custom page
+  validation will be executed *after* all standard validation checks for the
+  page and its elements.
+- The command line interface for getting an experiment template now offers 
+  a `-b` option, which you can use to get a slightly more extensive template. 
+  This template will include a `secrets.conf`, a `.gitignore`, and a more 
+  extensive `script.py` next to the usual `config.conf`. Use it by calling 
+  `alfred3 template -b` in from a terminal session.
+- Data saving can be turned off for individual elements via the argument 
+  `save_data`, which of course defaults to `True`.
+- We added a public `ExperimentSession.finish` method. This method can be 
+  used to finish an experiment session earlier than usual, which may be 
+  useful if you want to mark a session as complete but still show some 
+  optional information to participants. Previously, if participants left 
+  the experiment during such an optional part before clicking all the way 
+  through to the end, the session could not be marked as finished, even 
+  though all data was available and correct. (#78)
+
+
+### Changed v2.1.0
+
+- **On last notice, we decided to change the input representation of single
+  choice elements**:
+    - SingleChoice type elements use an integer to represent participant
+      input, which starts counting at 1. Previously, they used the same
+      representation as MultipleChoice type elements, which lead to
+      unnecessarily overcrowded output data. Now, each SingleChoice 
+      element will by represented by only one variable in the final dataset.
+    - MultipleChoice type elements remain the same: For each choice, they 
+      have a dummy variable, which indicates whether that specific choice
+      was selected (True/False). Within alfred3, this takes the form of
+      a dictionary with an entry for each choice. In the final dataset,
+      there is a dummy variable for each choice.
+    - SingleChoice**List** type elements use a string to represent 
+      participant input. The string is the exact choice label that was
+      selected. This representation reflects the fact that SingleChoiceLists
+      are intended to be comfortable with really long lists of possible
+      choices. In such lists, it is hard to keep track of the meaning
+      of integers. Also, the SingleChoiceList does not accept any other
+      form of labels than strings. That is a difference from ordinary
+      SingleChoice type elements, which can accept other elements (e.g.
+      ImageElements). This fact makes it unproblematic to use the string
+      representation. You can still access the index of a selected choice
+      label: The list of labels is saved in the element's attribute
+      `choice_labels`, which has a method `index`. Supply this method
+      with the selected choice string, and you get the index of that string
+      in the list of choice labels. *Be aware though, that in this case, 
+      python will start counting at 0!*
+- `alfred3.page.TimeoutPage` and its two child classes 
+  `alfred3.AutoForwardPage` and `alfred3.AutoClosePage` received a new,
+  more robust implementation with an additional argument *callbackargs*.
+  Check out the documentation for more details. Also, they now accept an 
+  integer as in the `timeout` argument in addition to string. The integer 
+  version gives the timeout in seconds.
+- `alfred3.Row` now offers an additional *layout* parameter similar to
+  the implementation used in `alfred3.element.core.LabelledElement`
+- `alfred3.Callback` and `alfred3.RepeatedCallback` have seen some 
+  improvements, including additional arguments and docstrings.
+- Clarified the default match hints for NumberEntry elements.
+- For all input elements, their `input` attribute now clearly states the 
+  type of the returned input.
+- Image, Audio, and Video elements now support labels like input elements 
+  do: You can use the arguments `leftlab`, `rightlab`, `toplab`, and 
+  `bottomlab`.
+
+
+### Fixed v2.1.0
+
+- Some problems with input handling in choice elements
+- A small visual hickup with a verbose message displayed upon using the 
+  debug jump mode
+- Fixed a problem in `ExperimentSession.all_exp_data` and 
+  `ExperimentSession.all_unlinked_data`.
+- Fixed a hole in the input validation of `alfred3.NumberEntry` elements.
+  If the minimum or maximum was excatly zero, user input did not get
+  validated correctly.
+- Fixed a problem that prevent the final page from being set correctly.
+- Fixed the *path* argument of `alfred3.JavaScript`
+- Fixed the *custom_js* argument of `alfred3.Button`
+- Fixed some alignment issues 
+- JumpLists do not save any data in debug mode anymore (#79)
+- Fixed suboptimal saving of suffixes and prefixes in the codebook (#77)
+- Errors trough multiple accidental (or impatient) clicks on the 
+  navigation buttons are prevented (#75)
+- SubmittingButtons now work as expected in Firefox (#76)
+
+
 ## alfred3 v2.0.0 (Released 2021-04-20)
 
 We are excited to announce the release of alfred3 v2.0! 

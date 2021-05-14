@@ -1,0 +1,26 @@
+$(document).ready(function(){
+
+if ({{ timeout }} >= 0) {
+    setTimeout(function () {
+
+{% if submit_first %}
+    var data = $("#form").serializeArray();
+    $.post("{{ set_data_url }}", data);
+{% endif %}
+
+$.get( "{{ url }}", function(data) {
+    
+    if ("{{ followup }}" == "refresh") {
+        move(direction="stay");
+    } else if ("{{ followup }}" == "custom") {
+        {{ custom_js }}
+    } else if ("{{ followup }}" != "none") {
+        move(direction="{{ followup }}");
+    }
+});
+
+}, {{ timeout }}*1000);
+}
+
+
+})

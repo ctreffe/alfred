@@ -1,4 +1,4 @@
-AutoClosePage
+﻿AutoClosePage
 ==========================
 
 .. currentmodule:: alfred3.page
@@ -72,10 +72,7 @@ AutoClosePage
       ~AutoClosePage.uptree
    
    
-      ~AutoClosePage.validate_elements
-   
-   
-      ~AutoClosePage.validate_page
+      ~AutoClosePage.validate
    
    
       ~AutoClosePage.visible
@@ -96,6 +93,7 @@ AutoClosePage
          ~AutoClosePage.all_elements
          ~AutoClosePage.all_input_elements
          ~AutoClosePage.background_color
+         ~AutoClosePage.callbackargs
          ~AutoClosePage.data
          ~AutoClosePage.elements
          ~AutoClosePage.exp
@@ -114,6 +112,7 @@ AutoClosePage
          ~AutoClosePage.parent
          ~AutoClosePage.parent_name
          ~AutoClosePage.prefix_element_names
+         ~AutoClosePage.progress
          ~AutoClosePage.responsive_width
          ~AutoClosePage.section
          ~AutoClosePage.short_tree

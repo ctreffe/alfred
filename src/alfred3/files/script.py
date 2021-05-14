@@ -1,6 +1,4 @@
 """
-This is a minimal, 'Hello, world!' alfred experiment.
-
 You can run the experiment by executing the following command in a 
 terminal from inside the experiment directory::
 

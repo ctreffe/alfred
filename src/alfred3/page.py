@@ -36,7 +36,9 @@ class _PageCore(ExpMember):
             Defaults to None. Can be defined as a class attribute.
         minimum_display_time (str): The minimal amount of time that the page
             must be displayed, before participants can move to the next
-            page. Defaults to None. Can be defined as a class attribute.
+            page. Must be specified as a string with a unit of 's' 
+            (for seconds), or 'm' (for minutes), for instance '30s'. 
+            Defaults to None. Can be defined as a class attribute.
         minimum_display_time_msg (str): A page-specific message to be displayed,
             if participants try to move forward before the minimum
             display time has expired. Defaults to None, which means that
@@ -231,7 +233,9 @@ class _PageCore(ExpMember):
             show_time = time.time()
         self.show_times.append(show_time)
 
-        if not self._has_been_shown:
+        has_been_shown, self._has_been_shown = self._has_been_shown, True
+
+        if not has_been_shown:
             self.on_first_show()
 
             if self.exp.config.getboolean("general", "debug") and self is not self.exp.final_page:
@@ -248,7 +252,6 @@ class _PageCore(ExpMember):
 
         self.on_each_show()
 
-        self._has_been_shown = True
         if self.exp.aborted:
             raise AbortMove
 
@@ -379,19 +382,6 @@ class _PageCore(ExpMember):
         """
         self.on_close()
         self._is_closed = True
-
-    def validate_page(self) -> bool:
-        """
-        Returns *True*, if the validation checks pass, *False* otherwise.
-        """
-        return True
-
-    def validate_elements(self) -> bool:
-        """
-        Returns *True*, if validation of all input elements passes,
-        *False* otherwise.
-        """
-        return True
 
     def save_data(self, level: int = 1, sync: bool = False):
         """
@@ -730,7 +720,51 @@ class _CoreCompositePage(_PageCore):
         first_duration, *_ = self.durations()
         return first_duration
 
-    def _validate_page(self):
+    def validate(self) -> bool:
+        """
+        Returns *True*, if the validation checks pass, *False* otherwise.
+        
+        Can be overloaded for custom validation behavior.
+
+        Returns:
+            bool: A boolean, indicating whether validation was successful.
+
+        Notes:
+            The method *must* return *True* if validation is OK and 
+            *False* if validation fails.
+
+        Examples:
+            ::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.member
+                class Demo(al.Page):
+
+                    def on_exp_access(self):
+                        self += al.NumberEntry(name="e1", force_input=True)
+                        self += al.NumberEntry(name="e2", force_input=True)
+                    
+                    def validate_page(self):
+                        e1 = int(self.exp.values.get("e1"))
+                        e2 = int(self.exp.values.get("e2"))
+                        
+                        if not (e1 + e2) > 10:
+                            self.exp.post_message(
+                                msg="The sum of your input values must be >10",
+                                level="danger"
+                                )
+                            return False
+                        
+                        return True
+
+
+        """
+        return True
+
+    def _validate(self):
+
 
         if not self.has_been_shown:
             if self.must_be_shown:
@@ -747,9 +781,13 @@ class _CoreCompositePage(_PageCore):
             self.exp.message_manager.post_message(msg)
             return False
 
+        if not self.validate():
+            return False
+
         return True
 
     def _validate_elements(self):
+
         return all([el.validate_data() for el in self.input_elements.values()])
 
 
@@ -770,14 +808,23 @@ class Page(_CoreCompositePage):
             the page in percent of the screen width. Only takes
             effect, if the option *responsive* in section *layout* is
             "true" (which is the default). Must be a single string with
-            1 to 5 relative widths separated by commas, e.g. "60%, 50%".
-            The first value refers to extra small ('xs') screens, the
-            following values to the next bigger ones. If the string
-            contains less than five values, the last value will be used
+            1 to 4 relative widths separated by commas, e.g. "60%, 50%".
+            The first value refers to small ('sm') screens, the
+            following values to the next bigger ones. Extra small screens
+            like mobile phones will always get 100% width. If the string
+            contains less than four values, the last value will be used
             for all screens from that size on upward.
 
             The sizes are taken from Bootstrap and correspond to the
             five width attributes of a :class:`.RowLayout`.
+
+            By default, responsive widths are 
+            
+            - 100% on extra small screens (below 576px, not modifiable)
+            - 85% on small screens (576-767px, think of tablets)
+            - 75% on medium screens (768-991px, think of small laptops)
+            - 65% on large screens (992-1199px)
+            - 55% on extra large screens (1200px and larger)
 
             Can be defined as a class attribute.
 
@@ -1081,9 +1128,23 @@ class TimeoutPage(Page):
     page is shown for a second time, the timeout will not run again.
 
     Args:
-        timeout (str): Length of the timeout. Specify it as a string 
+        timeout (str, int): Length of the timeout. Specify it as an integer,
+            indicating the number of seconds to wait, or as a string 
             with a unit of "s" for seconds, and "m" for minutes, 
             for example "10s". Can be specified as a class attribute.
+        callbackargs (dict): Dictionary of keyword arguments to be 
+            passed on to the :class:`.Callback` element that internally
+            handles the call to the *on_timeout* method. You can specifiy
+            things like *followup* behavior and determine whether data
+            on the page should be submitted before calling *on_timeout*.
+            Refer to the :class:`.Callback` documentation for a full
+            view of the possibilities. You cannot specify the *func*
+            argument in *callbackargs*, since this is fixed to 
+            :meth:`.on_timeout`. You can also not specify the *delay*
+            argument, since this is fixed to the page's own argument
+            *timeout*. Defaults to *None*. Can be specified
+            as a class attribute.
+        
         {kwargs}
     
     See Also:
@@ -1115,81 +1176,39 @@ class TimeoutPage(Page):
     """
 
     timeout = None
+    callbackargs = None
 
-    def __init__(self, timeout: str = None, **kwargs):
+    def __init__(self, timeout: Union[str, int] = None, callbackargs: dict = None, **kwargs):
         super().__init__(**kwargs)
 
-        self._end_link = "unset"
-        self._run_timeout = True
+        if callbackargs is not None:
+            self.callbackargs = callbackargs
+        elif self.callbackargs is None:
+            self.callbackargs = {}
+
         if timeout is not None:
             self.timeout = timeout
 
         if self.timeout is None:
             raise AlfredError("A TimeoutPage must have a 'timeout' attribute.")
 
+        if not isinstance(self.timeout, int):
+            self.timeout = self._format_timeout()
+        
+        self += elm.misc.Callback(func=self.on_timeout, delay=self.timeout, **self.callbackargs)
+    
+    def _format_timeout(self) -> int:
         unit = self.timeout[-1]
         if unit == "s":
-            self.timeout = int(self.timeout[:-1])
+            timeout = int(self.timeout[:-1])
         elif unit == "m":
-            self.timeout = int(self.timeout[:-1]) * 60
+            timeout = int(self.timeout[:-1]) * 60
         else:
             raise ValueError(
                 "You must specify the unit of your timeout ('s' - seconds, or 'm' - minutes)"
             )
-
-    def added_to_experiment(self, experiment):
-        # docstring inherited
-        super().added_to_experiment(experiment)
-        self._end_link = self._experiment.user_interface_controller.add_callable(self._callback)
-
-        if self._experiment.config.getboolean("general", "debug"):
-            if self._experiment.config.getboolean("debug", "reduce_countdown"):
-                self.timeout = self._experiment.config.getint("debug", "reduced_countdown_time")
-
-    @property
-    def _js_code(self):
-        code = (
-            5,
-            """
-            $(document).ready(function(){
-                var start_time = new Date();
-                var timeout = %s;
-                var action_url = '%s';
-
-                var update_counter = function() {
-                    var now = new Date();
-                    var time_left = timeout - Math.floor((now - start_time) / 1000);
-                    if (time_left < 0) {
-                        time_left = 0;
-                    }
-                    $(".timeout-label").html(time_left);
-                    if (time_left > 0) {
-                        setTimeout(update_counter, 200);
-                    }
-                };
-                update_counter();
-
-                var timeout_function = function() {
-                    $("#form").attr("action", action_url);
-                    $("#form").submit();
-                };
-                setTimeout(timeout_function, timeout*1000);
-            });
-        """
-            % (self.timeout, self._end_link),
-        )
-        js_code = super()._js_code
-        if self._run_timeout:
-            js_code.append(code)
-        else:
-            js_code.append((5, """$(document).ready(function(){$(".timeout-label").html(0);});"""))
-        return js_code
-
-    def _callback(self, **kwargs):
-        self._run_timeout = False
-        self._experiment.movement_manager.current_page._set_data(kwargs)
-        self.on_timeout()
-
+        return timeout
+    
     def on_timeout(self):
         """
         Executed *once*, after the timeout of the page runs out.
@@ -1231,8 +1250,7 @@ class AutoForwardPage(TimeoutPage):
 
     """
 
-    def on_timeout(self):
-        self.experiment.movement_manager.move(direction="forward")
+    callbackargs = {"followup": "forward"}
 
 
 @inherit_kwargs

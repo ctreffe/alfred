@@ -15,6 +15,7 @@ from emoji import emojize
 from typing import Any
 from typing import Union
 from typing import Iterator
+from typing import Tuple
 from .page import Page
 from .section import Section
 from .element.core import Element
@@ -256,3 +257,18 @@ def prefix_keys_safely(data: dict, base: dict, prefix: str ="", sep: str = "_") 
         prefix += sep
     
     return prefix_keys(d=data, prefix=prefix, sep=sep)
+
+
+def multiple_choice_numbers(choice_dict: dict) -> Union[int, Tuple[int]]:
+    """
+    Finds the indexes of the choices saved for a multiple choice element.
+
+    Returns:
+        tuple: A tuple of integers. The length depends on the number of
+            selected choices.
+    """
+    t = {k: v for k, v in choice_dict.items() if v}
+    choice_keys = list(t)
+    choice_numbers = [int(key[-1]) for key in choice_keys]
+
+    return tuple(choice_numbers)
