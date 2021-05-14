@@ -918,12 +918,38 @@ class ExperimentSession:
         self.aborted = True
         self._aborted_because = reason
 
-    def _finish(self):
+    def finish(self):
         """
-        Closes all pages and saves data.
+        Closes all previous pages and saves data.
 
-        Usually, this method does not need to be called manually. It
-        will be called automatically upon entering the finished section.
+        This method gets called automatically with the last click in an
+        experiment. You can manually call it earlier to mark a dataset
+        as complete. This may be useful if you want to append some 
+        purely informational or optional pages at the end of your 
+        experiment.
+
+        Examples:
+
+            The experiment is finished on hiding the first page::
+                import alfred3 as al
+                exp = al.Experiment()
+
+
+                @exp.member
+                class First(al.Page):
+
+                    def on_exp_access(self):
+                        self += al.TextEntry(name="el1")
+                    
+                    def on_first_hide(self):
+                        self.exp.finish()
+
+
+                @exp.member
+                class Second(al.Page):
+
+                    def on_exp_access(self):
+                        self += al.TextEntry(name="el2")
 
         """
 
@@ -931,23 +957,22 @@ class ExperimentSession:
             func(self)
 
         if self.finished:
-            msg = "ExperimentSession._finish() called. Experiment was already finished. Leaving method."
-            self.log.info(msg)
-            return
-            
-        self.log.info("ExperimentSession._finish() called. Session is finishing.")
+            msg = "ExperimentSession._finish() called. Experiment was already finished. Finishing again."
+        else:
+            msg = "ExperimentSession._finish() called. Session is finishing."
+
+        self.log.info(msg)
         self.finished = True
-
-        for page in self.root_section.all_pages.values():
-            if not page.is_closed:
-                page.close()
-
-        if self.config.getboolean("general", "debug"):
-            if self.config.getboolean("debug", "disable_saving"):
-                return
-
+        self._close_previous_pages()
         self._save_data(sync=True)
         self._export_data()
+    
+    def _close_previous_pages(self):
+        for i, page in enumerate(self.root_section.all_pages.values()):
+            if i > self.movement_manager.current_index:
+                break
+            if not page.is_closed:
+                page.close()
 
     def _export_data(self):
 
@@ -989,6 +1014,10 @@ class ExperimentSession:
            You need to call those manually.
 
         """
+        if self.config.getboolean("general", "debug"):
+            if self.config.getboolean("debug", "disable_saving"):
+                self.log.debug("Saving is disabled.")
+                return
 
         data = self.data_manager.session_data
         self.data_saver.main.save_with_all_agents(data=data, level=99, sync=sync)

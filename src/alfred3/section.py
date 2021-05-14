@@ -764,7 +764,7 @@ class _FinishedSection(Section):
 
     def _enter(self):
         super()._enter()
-        self.experiment._finish()
+        self.experiment.finish()
 
 
 class _AbortSection(Section):
