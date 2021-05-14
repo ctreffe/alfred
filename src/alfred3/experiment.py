@@ -893,14 +893,17 @@ class ExperimentSession:
             if not isinstance(page, Page):
                 raise TypeError("Abort page must be a page.")
             abort_page = page
+            abort_page._set_name(pg_name, via="abort")
         else:
             abort_page = Page(title=title, name=pg_name)
-            if msg:
+            if icon:
                 ic = util.icon(icon, size="80pt")
                 abort_page += elm.display.VerticalSpace("50px")
                 abort_page += elm.display.Html(ic, align="center")
+            if msg:
                 abort_page += elm.display.VerticalSpace("100px")
                 abort_page += elm.display.Text(msg, align="center")
+        
             abort_page += elm.misc.HideNavigation()
             abort_page += elm.misc.WebExitEnabler()
 
@@ -929,8 +932,9 @@ class ExperimentSession:
 
         if self.finished:
             msg = "ExperimentSession._finish() called. Experiment was already finished. Leaving method."
-            self.log.warning(msg)
+            self.log.info(msg)
             return
+            
         self.log.info("ExperimentSession._finish() called. Session is finishing.")
         self.finished = True
 
