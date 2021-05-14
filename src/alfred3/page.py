@@ -1128,7 +1128,8 @@ class TimeoutPage(Page):
     page is shown for a second time, the timeout will not run again.
 
     Args:
-        timeout (str): Length of the timeout. Specify it as a string 
+        timeout (str, int): Length of the timeout. Specify it as an integer,
+            indicating the number of seconds to wait, or as a string 
             with a unit of "s" for seconds, and "m" for minutes, 
             for example "10s". Can be specified as a class attribute.
         callbackargs (dict): Dictionary of keyword arguments to be 
@@ -1177,7 +1178,7 @@ class TimeoutPage(Page):
     timeout = None
     callbackargs = None
 
-    def __init__(self, timeout: str = None, callbackargs: dict = None, **kwargs):
+    def __init__(self, timeout: Union[str, int] = None, callbackargs: dict = None, **kwargs):
         super().__init__(**kwargs)
 
         if callbackargs is not None:
@@ -1191,17 +1192,22 @@ class TimeoutPage(Page):
         if self.timeout is None:
             raise AlfredError("A TimeoutPage must have a 'timeout' attribute.")
 
+        if not isinstance(self.timeout, int):
+            self.timeout = self._format_timeout()
+        
+        self += elm.misc.Callback(func=self.on_timeout, delay=self.timeout, **self.callbackargs)
+    
+    def _format_timeout(self) -> int:
         unit = self.timeout[-1]
         if unit == "s":
-            self.timeout = int(self.timeout[:-1])
+            timeout = int(self.timeout[:-1])
         elif unit == "m":
-            self.timeout = int(self.timeout[:-1]) * 60
+            timeout = int(self.timeout[:-1]) * 60
         else:
             raise ValueError(
                 "You must specify the unit of your timeout ('s' - seconds, or 'm' - minutes)"
             )
-        
-        self += elm.misc.Callback(func=self.on_timeout, delay=self.timeout, **self.callbackargs)
+        return timeout
     
     def on_timeout(self):
         """
