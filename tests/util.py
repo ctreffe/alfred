@@ -6,13 +6,11 @@ import os
 import json
 from pathlib import Path
 
-import pytest
 from alfred3.run import ExperimentRunner
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from pymongo import MongoClient
-from flask import request
 
 
 def prepare_script(tmp_path, script_path: str):
@@ -130,7 +128,6 @@ def get_app(
     app = runner.create_experiment_app()
     app.config["TESTING"] = True
     return app
-
 
 
 def move(client, direction: str, **kwargs):
