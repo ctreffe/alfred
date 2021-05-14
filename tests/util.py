@@ -5,12 +5,15 @@ Provides utility functionality for testing.
 import os
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from alfred3.run import ExperimentRunner
+from alfred3.config import ExperimentConfig, ExperimentSecrets
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from thesmuggler import smuggle
 
 
 def prepare_script(tmp_path, script_path: str):
@@ -23,7 +26,7 @@ def prepare_script(tmp_path, script_path: str):
     tmp_script.write_text(script)
 
 
-def prepare_config(tmp_path, config_path: str):
+def prepare_config(tmp_path, config_path: str) -> str:
     """
     Reads a config.conf and writes it into the directory *tmp_path*.
     This is intended for use with the tmp_path fixture.
@@ -36,8 +39,10 @@ def prepare_config(tmp_path, config_path: str):
     tmp_config = Path(tmp_path) / "config.conf"
     tmp_config.write_text(config)
 
+    return ExperimentConfig(expir=tmp_path, config_objects=[config])
 
-def prepare_secrets(tmp_path, secrets_path: str):
+
+def prepare_secrets(tmp_path, secrets_path: str) -> str:
     """
     Writes a secrets.conf for a mongo saving agent into the *tmp_path*.
     This is intended for use with the tmp_path fixture.
@@ -59,6 +64,7 @@ def prepare_secrets(tmp_path, secrets_path: str):
     tmp_secrets = Path(tmp_path) / "secrets.conf"
     tmp_secrets.write_text(secrets)
 
+    return ExperimentSecrets(expdir=tmp_path, config_objects=[secrets])
 
 def get_db():
     """
@@ -106,6 +112,33 @@ def clear_db():
         f"and {delete_count_misc} in collection '{misc_col}' during"
         "cleanup."
     )
+
+
+def get_exp_session(
+    tmp_path,
+    script_path: str,
+    config_path: str = "",
+    secrets_path: str = "tests/res/secrets-default.conf",
+    **urlargs
+):
+    """
+    Returns an alfred3.experiment.ExperimentSession object based on the
+    given script.py.
+    """
+    prepare_script(tmp_path, script_path)
+    config = prepare_config(tmp_path, config_path)
+    secrets = prepare_secrets(tmp_path, secrets_path)
+
+    script = smuggle(tmp_path / "script.py")
+    exp = script.exp
+    sid = uuid4().hex
+
+    session = exp.create_session(session_id=sid, config=config, secrets=secrets, **urlargs)
+    return session
+
+
+
+
 
 def get_app(
     tmp_path,
