@@ -67,7 +67,7 @@ div.input-group-append>div>label {
     border-radius: 0.25rem;
 }
 
-.SingleChoiceButtons-element, .MultipleChoiceButtons-element, .ButtonChoiceLabels-element {
+.SingleChoiceButtons-element, .MultipleChoiceButtons-element, .ButtonLabels-element {
     /* balancing the margins */
     margin-bottom: -0.5rem;
 }
