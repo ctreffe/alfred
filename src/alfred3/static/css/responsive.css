@@ -67,7 +67,7 @@ div.input-group-append>div>label {
     border-radius: 0.25rem;
 }
 
-.SingleChoiceButtons-element, .MultipleChoiceButtons-element, .SingleChoiceBar-element, .MultipleChoiceBar-element, .ButtonChoiceLabels-element, .BarChoiceLabels-element {
+.SingleChoiceButtons-element, .MultipleChoiceButtons-element, .ButtonChoiceLabels-element {
     /* balancing the margins */
     margin-bottom: -0.5rem;
 }
@@ -104,18 +104,40 @@ div.input-group-append>div>label {
     padding-right: 0;
 }
 
-.input-element>label.Leftlab-element, .input-element>label.Rightlab-element {
+.input-element>div.leftlab p:last-child, .input-element>div.rightlab p:last-child {
     margin-bottom: 0;
     /* align-self: center; */
 }
 
-.input-element>label.Leftlab-element>.label-element, .input-element>label.Leftlab-element>.label-element>div {
+.leftlab {
     padding-right: 0;
 }
 
-.input-element>label.Rightlab-element>.label-element, .input-element>label.Rightlab-element>.label-element>div {
+.rightlab {
     padding-left: 0;
 }
+
+.toplab {
+    margin-bottom: 0.25rem;
+}
+
+.bottomlab {
+    margin-top: 0.25rem;
+}
+
+.toplab p:last-child, .bottomlab p:last-child {
+    margin-bottom: 0;
+}
+
+
+
+/* .input-element>div.leftlab .label-element, .input-element>div.leftlab .label-element>div {
+    padding-right: 0;
+}
+
+.input-element>div.rightlab .label-element, .input-element>div.rightlab .label-element>div {
+    padding-left: 0;
+} */
 
 .input-element {
     margin-bottom: 1rem;
