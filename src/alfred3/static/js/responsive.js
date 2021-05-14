@@ -67,12 +67,19 @@ const responsive_choices = function () {
 
         $(".choice-button-group.btn-group").addClass("btn-group-vertical changed");
         $(".choice-button-group.btn-group").removeClass("btn-group");
+
+        $(".choice-button-bar.btn-group").addClass("btn-group-vertical changed-bar choice-button-group");
+        $(".choice-button-bar.btn-group").removeClass("btn-group choice-button-bar");
+        
         $(".form-check-inline").addClass("changed");
         $(".form-check-inline").removeClass("form-check-inline");
         
     } else {
         $(".choice-button-group.changed").addClass("btn-group");
         $(".choice-button-group.changed").removeClass("btn-group-vertical changed");
+
+        $(".choice-button-group.changed-bar").addClass("btn-group choice-button-bar");
+        $(".choice-button-group.changed-bar").removeClass("btn-group-vertical changed-bar");
 
         $(".form-check.changed").addClass("form-check-inline");
         $(".form-check.changed").removeClass("changed")
