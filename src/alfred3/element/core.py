@@ -1659,6 +1659,9 @@ class InputElement(LabelledElement):
             *force_input* set to True and no user input registered.
             Defaults to the experiment-wide default value
             specified in config.conf.
+        save_data (bool): If *False*, this element will not save any
+            data to the experiment data and will not appear in the
+            codebook.
 
         {kwargs}
 
@@ -1678,6 +1681,7 @@ class InputElement(LabelledElement):
         description: str = None,
         disabled: bool = False,
         no_input_hint: str = None,
+        save_data: bool = True,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
@@ -1692,6 +1696,7 @@ class InputElement(LabelledElement):
         self.show_hints: bool = True
         self._hint_manager = MessageManager(default_level="danger")  # documented in getter
         self.disabled: bool = disabled  # documented in getter
+        self.save_data = save_data
 
         if default is not None:
             self.input = default
@@ -1960,6 +1965,9 @@ class InputElement(LabelledElement):
         Includes the subject :attr:`.input` and the element's
         :attr:`.codebook_data`.
         """
+        if not self.save_data:
+            return {}
+        
         data = {}
         data["value"] = self.input
         data.update(self.codebook_data)
