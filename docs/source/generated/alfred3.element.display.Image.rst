@@ -1,4 +1,4 @@
-Image
+﻿Image
 =============================
 
 .. currentmodule:: alfred3.element.display
@@ -49,6 +49,7 @@ Image
 
       
          ~Image.base_template
+         ~Image.bottomlab
          ~Image.converted_width
          ~Image.css_class_container
          ~Image.css_class_element
@@ -62,14 +63,19 @@ Image
          ~Image.font_size
          ~Image.js_code
          ~Image.js_urls
+         ~Image.labels
+         ~Image.layout
+         ~Image.leftlab
          ~Image.name
          ~Image.page
          ~Image.position
+         ~Image.rightlab
          ~Image.section
          ~Image.short_tree
          ~Image.should_be_shown
          ~Image.showif
          ~Image.template_data
+         ~Image.toplab
          ~Image.tree
          ~Image.web_widget
          ~Image.width

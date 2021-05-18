@@ -1,4 +1,4 @@
-ExperimentSession
+﻿ExperimentSession
 ====================================
 
 .. currentmodule:: alfred3.experiment
@@ -34,6 +34,9 @@ ExperimentSession
    
    
       ~ExperimentSession.encrypt
+   
+   
+      ~ExperimentSession.finish
    
    
       ~ExperimentSession.forward

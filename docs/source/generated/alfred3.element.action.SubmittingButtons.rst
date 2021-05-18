@@ -1,4 +1,4 @@
-SubmittingButtons
+﻿SubmittingButtons
 ========================================
 
 .. currentmodule:: alfred3.element.action
@@ -88,6 +88,7 @@ SubmittingButtons
          ~SubmittingButtons.hint_manager
          ~SubmittingButtons.input
          ~SubmittingButtons.js_code
+         ~SubmittingButtons.js_template
          ~SubmittingButtons.js_urls
          ~SubmittingButtons.labels
          ~SubmittingButtons.layout

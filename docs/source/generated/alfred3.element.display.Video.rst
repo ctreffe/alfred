@@ -1,4 +1,4 @@
-Video
+﻿Video
 =============================
 
 .. currentmodule:: alfred3.element.display
@@ -49,6 +49,7 @@ Video
 
       
          ~Video.base_template
+         ~Video.bottomlab
          ~Video.converted_width
          ~Video.css_class_container
          ~Video.css_class_element
@@ -62,14 +63,19 @@ Video
          ~Video.font_size
          ~Video.js_code
          ~Video.js_urls
+         ~Video.labels
+         ~Video.layout
+         ~Video.leftlab
          ~Video.name
          ~Video.page
          ~Video.position
+         ~Video.rightlab
          ~Video.section
          ~Video.short_tree
          ~Video.should_be_shown
          ~Video.showif
          ~Video.template_data
+         ~Video.toplab
          ~Video.tree
          ~Video.web_widget
          ~Video.width
