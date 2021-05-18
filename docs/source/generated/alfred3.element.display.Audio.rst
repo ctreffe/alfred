@@ -1,4 +1,4 @@
-Audio
+﻿Audio
 =============================
 
 .. currentmodule:: alfred3.element.display
@@ -49,6 +49,7 @@ Audio
 
       
          ~Audio.base_template
+         ~Audio.bottomlab
          ~Audio.converted_width
          ~Audio.css_class_container
          ~Audio.css_class_element
@@ -62,14 +63,19 @@ Audio
          ~Audio.font_size
          ~Audio.js_code
          ~Audio.js_urls
+         ~Audio.labels
+         ~Audio.layout
+         ~Audio.leftlab
          ~Audio.name
          ~Audio.page
          ~Audio.position
+         ~Audio.rightlab
          ~Audio.section
          ~Audio.short_tree
          ~Audio.should_be_shown
          ~Audio.showif
          ~Audio.template_data
+         ~Audio.toplab
          ~Audio.tree
          ~Audio.web_widget
          ~Audio.width
