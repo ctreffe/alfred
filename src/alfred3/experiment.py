@@ -657,6 +657,7 @@ class ExperimentSession:
                 f"Experiment version: {self.version}"
             )
         )
+        self._save_data(sync=True)
 
     def append_plugin_data_query(self, query: dict):
         """
