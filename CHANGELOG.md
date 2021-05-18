@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## alfred3 v2.1.1 (Released 2021-05-18)
+
+### Changed v2.1.1
+
+- We now save a basic skeleton of an experiment's data directly on 
+  initializing a session. While this introduces a short delay (max 1s)
+  upon starting an experiment, this makes it easier for plugins such
+  as `alfred3_interact` to rely on certain data being available during 
+  setup.
+
 ## alfred3 v2.1.0 (Released 2021-05-14)
 
 ### Added v2.1.0
