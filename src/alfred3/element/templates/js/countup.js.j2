@@ -1,7 +1,10 @@
-function countup( elementName, maxSecs, msg)
+function countup( elementName, maxSecs, msg, startTime)
 {
     var element, hours, mins, msCount, time, maxSecs, msg, delta;
-    var startTime = Date.now();
+
+    if (startTime == 0) {
+        startTime = Date.now()
+    }
 
     function twoDigits( n )
     {
@@ -33,5 +36,5 @@ function countup( elementName, maxSecs, msg)
     updateTimer();
 }
 $(document).ready(
-    countup( '{{ name }}', {{ end_after }}, '{{ end_msg }}')
+    countup( '{{ name }}', {{ end_after }}, '{{ end_msg }}', {{ start_time }} * 1000)
 )
