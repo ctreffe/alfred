@@ -34,32 +34,30 @@ $("#finish_button").one("click", function(){
     move("forward");
 })
 
+// ask user before leaving, but not if he/she uses the form go to the next page.
 
-$(document).ready(function () {
+var ask_before_leaving = function (e) {
+    // Cancel the event
+    e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+    // Chrome requires returnValue to be set
+    e.returnValue = '';
+  };
 
-    // ask user before leaving, but not if he/she uses the form go to the next page.
-    var beforeunload = function (event) {
-        return "Möchten Sie wirklich die Seite verlassen?\n"
-            + "Dadurch wird das Ausfüllen des Fragebogens abgebrochen.";
-    };
+var allow_leaving = function() {
+    window.removeEventListener("beforeunload", ask_before_leaving)
+}
 
-    glob_unbind_leaving = function () {
-        $(window).unbind('beforeunload', beforeunload);
-    };
+window.addEventListener('beforeunload', ask_before_leaving);
+$("#form").submit(allow_leaving);
 
 
-
-    $(window).bind('beforeunload', beforeunload);
-    $('#form').submit(glob_unbind_leaving);
-
-    // prevent users from submitting form via enter
-    $(document).on("keydown", ":input:not(textarea):not(:submit)", function(event) {
-        if (event.key == "Enter") {
-            event.preventDefault();
-        }
-    });
-      
+// prevent users from submitting form via enter
+$(document).on("keydown", ":input:not(textarea):not(:submit)", function(event) {
+    if (event.key == "Enter") {
+        event.preventDefault();
+    }
 });
+  
 
 // Responsive support for choice elements (switch to vertical layout on XS screens)
 const responsive_choices = function () {

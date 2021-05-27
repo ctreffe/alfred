@@ -1045,6 +1045,13 @@ class CountUp(Element):
             will let the counter run indefinitely.
         end_msg (str): Text to be displayed in the counter's place upon
             expiration.
+        start_time (float): You can (optionally) specify a start time
+            to make the CountUp robust against page refreshing on the
+            client side. Usually, if the client refreshes the page, the
+            counter will start from 00:00 again. By specifying a start
+            time, you can fix this issue. You can also change the start
+            time after initialization by updating the attribute of the
+            same name. Defaults to None.
         {kwargs}
 
     Examples:
@@ -1064,15 +1071,16 @@ class CountUp(Element):
     counter_js = jinja_env.get_template("js/countup.js.j2")
     element_template = jinja_env.get_template("html/TextElement.html.j2")
 
-    def __init__(self, end_after: int = -1, end_msg: str = "expired", **kwargs):
+    def __init__(self, end_after: int = -1, end_msg: str = "expired", start_time: float = 0, **kwargs):
         super().__init__(**kwargs)
 
         self.end_after = end_after
         self.end_msg = end_msg
+        self.start_time = start_time
 
     def prepare_web_widget(self):
         self._js_code = []
-        js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg)
+        js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg, start_time=self.start_time)
         self.add_js(js)
 
 
