@@ -275,8 +275,7 @@ class WebExitEnabler(JavaScript):
 
     def __init__(self):
         """Constructor method"""
-        code = "$(document).ready(function(){glob_unbind_leaving();});"
-        super().__init__(code=code, priority=10)
+        super().__init__(code="allow_leaving();", priority=10)
 
 
 class Value(InputElement):
