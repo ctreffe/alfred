@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## alfred3 v2.1.2 [unreleased]
+
+### Added v2.1.2
+
+- New parameter *start_time* for `CountUp` element.
+
 ## alfred3 v2.1.1 (Released 2021-05-18)
 
 ### Changed v2.1.1
