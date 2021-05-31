@@ -593,7 +593,7 @@ class ListRandomizer:
         elif data and data["assignment_ongoing"]:
             data = self.io.load() # load data again, this time respecting assignment_ongoing
         
-        self._check_consistency(data)
+        self._validate(data)
         self.slotlist = _SlotList(*data["slots"])
 
         if self.full:
