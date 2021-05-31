@@ -310,7 +310,9 @@ class MovementManager:
         """
         to_page = self.find_page(query=to)
         self.log.debug(f"Direct jump to {to_page}. Skipping all normal move function.")
-        if self.exp.config.getboolean("data", "record_move_history"):
+        if not self.exp.start_time:
+            pass
+        elif self.exp.config.getboolean("data", "record_move_history"):
                 self.record_move(self.current_page.is_closed, direction="jump", to_page=to_page)
          
         self.current_index = self.index_of(to_page)
