@@ -212,15 +212,6 @@ class ListRandomizer:
 
             Defaults to 'strict'.
         
-        timeout (int): Timeout in seconds. After timeout expiration,
-            sessions are regarded as expired. Their condition slots will
-            be marked as open again. If None (default), the Randomizer 
-            will use the :attr:`.ExperimentSession.session_timeout`, which
-            is highly recommended. Using a shorter timeout than the 
-            session timeout might result in a situation where a session
-            that the Randomizer regarded as expired ends up still finishing
-            the experiment.
-        
         random_seed: The random seed used for reproducible pseudo-random
             behavior. This seed will be used for shuffling the condition
             list. Defaults to the current system time. Valid seeds are
@@ -341,7 +332,6 @@ class ListRandomizer:
         id: str = None,
         respect_version: bool = True,
         mode: str = "strict",
-        timeout: int = None,
         random_seed=None,
         abort_page=None,
     ):
@@ -350,7 +340,7 @@ class ListRandomizer:
         self.exp.finish_functions.append(self._mark_slot_finished)
         self.respect_version = respect_version
         self.mode = mode
-        self.timeout = timeout if timeout is not None else self.exp.session_timeout
+        self.timeout = self.exp.session_timeout
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
