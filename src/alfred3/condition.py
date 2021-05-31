@@ -3,6 +3,7 @@ Provides functionality for assigning participants to experiment conditions.
 """
 
 from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Tuple, List, Iterator
 from pathlib import Path
 from uuid import uuid4
@@ -23,6 +24,7 @@ class ConditionInconsistency(AssertionError):
 class _Session:
     id: str
     timestamp: float = time.time()
+    timestamp: float = field(default_factory=time.time)
 
 
 @dataclass
