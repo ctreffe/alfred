@@ -10,20 +10,37 @@ import time
 import random
 import json
 
+from .data_manager import get_data_of_session
 
 class AllConditionsFull(Exception):
     pass
 
 
-class ConditionInconsistency(AssertionError):
+class ConditionInconsistency(Exception):
     pass
 
 
 @dataclass
 class _Session:
     id: str
-    timestamp: float = time.time()
     timestamp: float = field(default_factory=time.time)
+
+    def active(self, exp) -> bool:
+        d = get_data_of_session(exp, self.id)
+
+        if not d: # if we do not find data, we assume that exp has not been started
+            return False
+        
+        aborted = d["exp_aborted"]
+        finished = d["exp_finished"]
+        if d.get("exp_start_time", None):
+            expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
+        else:
+            expired = False
+        
+        active = not aborted and not finished and not expired
+        
+        return active
 
 
 @dataclass
@@ -40,25 +57,22 @@ class _Slot:
         self.sessions = [_Session(**s) for s in sessions]
         self.finished = finished
 
-    @property
-    def status(self):
+    def status(self, exp):
 
-        if not self.finished and not self.active_sessions:
+        if self.finished:
+            return "finished"
+
+        elif not self.active_sessions(exp):
             return "free"
 
         elif not self.finished:
             return "pending"
 
-        else:
-            return "finished"
-
-    @property
-    def active_sessions(self):
-        if self.timeout:
-            now = time.time()
-            return [s for s in self.sessions if (now - s.timestamp) < self.timeout]
-        else:
-            return self.sessions
+    def active_sessions(self, exp):
+        """
+        Returns the active sessions belonging to this slot.
+        """
+        return [s for s in self.sessions if s.active(exp)]
 
     @property
     def ids(self):
@@ -75,11 +89,11 @@ class _SlotList:
     def __init__(self, *slots):
         self.slots = [_Slot(*s.pop("sessions", []), **s) for s in slots]
 
-    def open_slots(self) -> Iterator[_Slot]:
-        return (slot for slot in self.slots if slot.status == "free")
+    def open_slots(self, exp) -> Iterator[_Slot]:
+        return (slot for slot in self.slots if slot.status(exp) == "free")
     
-    def pending_slots(self) -> Iterator[_Slot]:
-        return (slot for slot in self.slots if slot.status == "pending")
+    def pending_slots(self, exp) -> Iterator[_Slot]:
+        return (slot for slot in self.slots if slot.status(exp) == "pending")
 
     def id_assigned_to(self, id) -> _Slot:
         for slot in self.slots:
@@ -353,10 +367,10 @@ class ListRandomizer:
         """
         bool: Boolean, indicating whether there are any open slots left.
         """
-        slot = next(self.slotlist.open_slots(), None)
+        slot = next(self.slotlist.open_slots(self.exp), None)
 
         if slot is None and self.mode == "inclusive":
-            slot = next(self.slotlist.pending_slots(), None)
+            slot = next(self.slotlist.pending_slots(self.exp), None)
         
         if slot is not None:
             return False
@@ -539,10 +553,10 @@ class ListRandomizer:
             self.io.write(self._data)
             return assigned_slot.condition
 
-        slot = next(self.slotlist.open_slots(), None)
+        slot = next(self.slotlist.open_slots(self.exp), None)
 
         if slot is None and self.mode == "inclusive":
-            slot = next(self.slotlist.pending_slots(), None)
+            slot = next(self.slotlist.pending_slots(self.exp), None)
 
         if slot is None:
             if raise_exception:
@@ -550,7 +564,7 @@ class ListRandomizer:
             else:
                 return self.abort()
             
-        slot.sessions.append(_Session(self.id))
+        slot.sessions.append(_Session(self.id, self.exp.start_time))
         self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
         return slot.condition
     
