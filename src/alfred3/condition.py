@@ -1,8 +1,7 @@
 """
 Provides functionality for assigning participants to experiment conditions.
 """
-
-from dataclasses import dataclass, asdict
+from collections import Counter
 from dataclasses import dataclass, asdict, field
 from typing import Tuple, List, Iterator
 from pathlib import Path
@@ -565,27 +564,21 @@ class ListRandomizer:
         self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
         return slot.condition
     
-    def _check_consistency(self, data):
+    def _validate(self, data):
         if self.respect_version:
-            assert self.exp.version == data["exp_version"]
+            if not self.exp.version == data["exp_version"]:
+                raise ConditionInconsistency("Experiment version and condition slots version do not match.")
 
         data_conditions = [slot["condition"] for slot in data["slots"]]
-        self_conditions = [c for c, _ in self.conditions]
+        counted = Counter(data_conditions)
 
-        what_to_do = "You might try to set 'respect_version' to True and increase the experiment version."
+        instance = dict(self.conditions)
+
+        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
         msg = "Condition data is inconsistent with randomizer specification. " + what_to_do
-
-        # all condition that appear in the data are represented in self
-        if not all([condition in self_conditions for condition in data_conditions]):
+        if not counted == instance:
             raise ConditionInconsistency(msg)
 
-        # all conditions in self are represented in the data
-        if not all([condition in data_conditions for condition in self_conditions]):
-            raise ConditionInconsistency(msg)
-
-        # number of slots is consistent
-        if not len(self._generate_slots()) == len(data["slots"]):
-            raise ConditionInconsistency(msg)
 
     def _load_or_insert_data(self):
 
