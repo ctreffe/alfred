@@ -1,8 +1,8 @@
 """
 Provides functionality for assigning participants to experiment conditions.
 """
-
-from dataclasses import dataclass, asdict
+from collections import Counter
+from dataclasses import dataclass, asdict, field
 from typing import Tuple, List, Iterator
 from pathlib import Path
 from uuid import uuid4
@@ -10,19 +10,37 @@ import time
 import random
 import json
 
+from .data_manager import get_data_of_session
 
 class AllConditionsFull(Exception):
     pass
 
 
-class ConditionInconsistency(AssertionError):
+class ConditionInconsistency(Exception):
     pass
 
 
 @dataclass
 class _Session:
     id: str
-    timestamp: float = time.time()
+    timestamp: float = field(default_factory=time.time)
+
+    def active(self, exp) -> bool:
+        d = get_data_of_session(exp, self.id)
+
+        if not d: # if we do not find data, we assume that exp has not been started
+            return False
+        
+        aborted = d["exp_aborted"]
+        finished = d["exp_finished"]
+        if d.get("exp_start_time", None):
+            expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
+        else:
+            expired = False
+        
+        active = not aborted and not finished and not expired
+        
+        return active
 
 
 @dataclass
@@ -39,25 +57,22 @@ class _Slot:
         self.sessions = [_Session(**s) for s in sessions]
         self.finished = finished
 
-    @property
-    def status(self):
+    def status(self, exp):
 
-        if not self.finished and not self.active_sessions:
+        if self.finished:
+            return "finished"
+
+        elif not self.active_sessions(exp):
             return "free"
 
         elif not self.finished:
             return "pending"
 
-        else:
-            return "finished"
-
-    @property
-    def active_sessions(self):
-        if self.timeout:
-            now = time.time()
-            return [s for s in self.sessions if (now - s.timestamp) < self.timeout]
-        else:
-            return self.sessions
+    def active_sessions(self, exp):
+        """
+        Returns the active sessions belonging to this slot.
+        """
+        return [s for s in self.sessions if s.active(exp)]
 
     @property
     def ids(self):
@@ -74,11 +89,11 @@ class _SlotList:
     def __init__(self, *slots):
         self.slots = [_Slot(*s.pop("sessions", []), **s) for s in slots]
 
-    def open_slots(self) -> Iterator[_Slot]:
-        return (slot for slot in self.slots if slot.status == "free")
+    def open_slots(self, exp) -> Iterator[_Slot]:
+        return (slot for slot in self.slots if slot.status(exp) == "free")
     
-    def pending_slots(self) -> Iterator[_Slot]:
-        return (slot for slot in self.slots if slot.status == "pending")
+    def pending_slots(self, exp) -> Iterator[_Slot]:
+        return (slot for slot in self.slots if slot.status(exp) == "pending")
 
     def id_assigned_to(self, id) -> _Slot:
         for slot in self.slots:
@@ -211,15 +226,6 @@ class ListRandomizer:
 
             Defaults to 'strict'.
         
-        timeout (int): Timeout in seconds. After timeout expiration,
-            sessions are regarded as expired. Their condition slots will
-            be marked as open again. If None (default), the Randomizer 
-            will use the :attr:`.ExperimentSession.session_timeout`, which
-            is highly recommended. Using a shorter timeout than the 
-            session timeout might result in a situation where a session
-            that the Randomizer regarded as expired ends up still finishing
-            the experiment.
-        
         random_seed: The random seed used for reproducible pseudo-random
             behavior. This seed will be used for shuffling the condition
             list. Defaults to the current system time. Valid seeds are
@@ -340,7 +346,6 @@ class ListRandomizer:
         id: str = None,
         respect_version: bool = True,
         mode: str = "strict",
-        timeout: int = None,
         random_seed=None,
         abort_page=None,
     ):
@@ -349,7 +354,7 @@ class ListRandomizer:
         self.exp.finish_functions.append(self._mark_slot_finished)
         self.respect_version = respect_version
         self.mode = mode
-        self.timeout = timeout if timeout is not None else self.exp.session_timeout
+        self.timeout = self.exp.session_timeout
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
@@ -362,10 +367,10 @@ class ListRandomizer:
         """
         bool: Boolean, indicating whether there are any open slots left.
         """
-        slot = next(self.slotlist.open_slots(), None)
+        slot = next(self.slotlist.open_slots(self.exp), None)
 
         if slot is None and self.mode == "inclusive":
-            slot = next(self.slotlist.pending_slots(), None)
+            slot = next(self.slotlist.pending_slots(self.exp), None)
         
         if slot is not None:
             return False
@@ -548,10 +553,10 @@ class ListRandomizer:
             self.io.write(self._data)
             return assigned_slot.condition
 
-        slot = next(self.slotlist.open_slots(), None)
+        slot = next(self.slotlist.open_slots(self.exp), None)
 
         if slot is None and self.mode == "inclusive":
-            slot = next(self.slotlist.pending_slots(), None)
+            slot = next(self.slotlist.pending_slots(self.exp), None)
 
         if slot is None:
             if raise_exception:
@@ -559,31 +564,25 @@ class ListRandomizer:
             else:
                 return self.abort()
             
-        slot.sessions.append(_Session(self.id))
+        slot.sessions.append(_Session(self.id, self.exp.start_time))
         self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
         return slot.condition
     
-    def _check_consistency(self, data):
+    def _validate(self, data):
         if self.respect_version:
-            assert self.exp.version == data["exp_version"]
+            if not self.exp.version == data["exp_version"]:
+                raise ConditionInconsistency("Experiment version and condition slots version do not match.")
 
         data_conditions = [slot["condition"] for slot in data["slots"]]
-        self_conditions = [c for c, _ in self.conditions]
+        counted = Counter(data_conditions)
 
-        what_to_do = "You might try to set 'respect_version' to True and increase the experiment version."
+        instance = dict(self.conditions)
+
+        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
         msg = "Condition data is inconsistent with randomizer specification. " + what_to_do
-
-        # all condition that appear in the data are represented in self
-        if not all([condition in self_conditions for condition in data_conditions]):
+        if not counted == instance:
             raise ConditionInconsistency(msg)
 
-        # all conditions in self are represented in the data
-        if not all([condition in data_conditions for condition in self_conditions]):
-            raise ConditionInconsistency(msg)
-
-        # number of slots is consistent
-        if not len(self._generate_slots()) == len(data["slots"]):
-            raise ConditionInconsistency(msg)
 
     def _load_or_insert_data(self):
 
@@ -598,7 +597,7 @@ class ListRandomizer:
         elif data and data["assignment_ongoing"]:
             data = self.io.load() # load data again, this time respecting assignment_ongoing
         
-        self._check_consistency(data)
+        self._validate(data)
         self.slotlist = _SlotList(*data["slots"])
 
         if self.full:

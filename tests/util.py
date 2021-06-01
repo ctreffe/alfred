@@ -34,7 +34,7 @@ def prepare_config(tmp_path, config_path: str) -> str:
     Does nothing if config_path is an empty string.
     """
     if not config_path:
-        return
+        return ExperimentConfig(expdir=tmp_path)
     config = Path(config_path).read_text()
     tmp_config = Path(tmp_path) / "config.conf"
     tmp_config.write_text(config)
@@ -135,9 +135,6 @@ def get_exp_session(
 
     session = exp.create_session(session_id=sid, config=config, secrets=secrets, **urlargs)
     return session
-
-
-
 
 
 def get_app(

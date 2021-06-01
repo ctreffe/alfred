@@ -535,4 +535,29 @@ def decrypt_recursively(data: Union[list, dict, int, float, str, bytes], key: by
         return {k: decrypt_recursively(v, key=key) for k, v in data.items()}
 
 
+def saving_method(exp) -> str:
+    if not exp.secrets.getboolean("mongo_saving_agent", "use"):
+        if exp.config.getboolean("local_saving_agent", "use"):
+            return "local"
+    elif exp.secrets.getboolean("mongo_saving_agent", "use"):
+        return "mongo"
+    else:
+        return None
 
+def get_session_mongo(exp, sid) -> dict:
+    q = {"exp_id": exp.exp_id, "exp_session_id": sid, "type": DataManager.EXP_DATA}
+    return exp.db_main.find_one(q)
+
+
+def get_session_local(exp, sid) -> dict:
+    path = exp.config.get("local_saving_agent", "path")
+    path = exp.subpath(path)
+    data = DataManager.iterate_local_data(DataManager.EXP_DATA, path)
+    return next(s for s in data if s["exp_session_id"] == sid)
+
+
+def get_data_of_session(exp, sid):
+    if saving_method(exp) == "mongo":
+        return get_session_mongo(exp, sid)
+    elif saving_method(exp) == "local":
+        return get_session_local(exp, sid)

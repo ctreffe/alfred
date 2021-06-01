@@ -658,6 +658,7 @@ class ExperimentSession:
             )
         )
         self._save_data(sync=True)
+        
 
     def append_plugin_data_query(self, query: dict):
         """
@@ -2015,7 +2016,10 @@ class ExperimentSession:
         """
         str: A human-readable string, indicating the start time.
         """
-        return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(self._start_time))
+        if self._start_time:
+            return time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime(self._start_time))
+        else:
+            return None
 
     @property
     def start_time(self):

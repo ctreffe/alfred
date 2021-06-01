@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## alfred3 v2.1.3 (Released 2021-06-01)
+
+### Fixed v2.1.3
+
+- Fixed a bug in `ListRandomizer` that impaired the allocation of excat numbers
+  of participants to conditions. With this bug, random allocation to conditions
+  was not affected, but the `ListRandomizer` operated like a true pseudo-random
+  allocator instead of using actual list randomization: If you defined conditions
+  "a" and "b" to get 20 participants each, you may have ended up with 22 
+  participants in condition "a" and 26 in condition "b" instead.
+  This was update fixes this bug and includes 19 automatic unit tests that make
+  sure that the randomizer works as intended.
+
+### Removed v2.1.3
+
+- Removed the parameter `timeout` from `ListRandomizer`. The randomizer will now
+  always use the `ExperimentSession.session_timeout` to determine whether a
+  session is expired.
+
 ## alfred3 v2.1.2 (Released 2021-05-27)
 
 ### Added v2.1.2
