@@ -289,12 +289,16 @@ p.page-subtitle {
         padding-left: 0.5rem;
     }
 
-    .responsive .Rightlab-element > div {
-        text-align: left!important;
+    .responsive .leftlab {
+        padding-right: 15px;
     }
 
-    .responsive .Leftlab-element > div {
-        text-align: left!important;
+    .responsive .rightlab {
+        padding-left: 15px;
+    }
+
+    .Label-element {
+        text-align: center;
     }
 
     .responsive .SingleChoice-element > div {
