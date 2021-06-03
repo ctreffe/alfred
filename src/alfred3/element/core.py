@@ -25,7 +25,7 @@ from .._helper import inherit_kwargs
 
 
 #: jinja Environment giving access to included jinja-templates.
-jinja_env = Environment(loader=PackageLoader(__name__, "templates"))
+jinja_env = Environment(loader=PackageLoader("alfred3", "element/templates"))
 
 
 class Element:
