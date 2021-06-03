@@ -60,9 +60,8 @@ $(document).on("keydown", ":input:not(textarea):not(:submit)", function(event) {
   
 
 // Responsive support for choice elements (switch to vertical layout on XS screens)
-const responsive_choices = function () {
-    if (window.screen.width <= 576) {
-
+const responsive_adjustments = function () {
+    if (innerWidth <= 576) {
         $(".choice-button-group.btn-group").addClass("btn-group-vertical changed");
         $(".choice-button-group.btn-group").removeClass("btn-group");
 
@@ -71,8 +70,9 @@ const responsive_choices = function () {
         
         $(".form-check-inline").addClass("changed");
         $(".form-check-inline").removeClass("form-check-inline");
-        
+
     } else {
+
         $(".choice-button-group.changed").addClass("btn-group");
         $(".choice-button-group.changed").removeClass("btn-group-vertical changed");
 
@@ -84,10 +84,5 @@ const responsive_choices = function () {
     };
 }
 
-$(window).resize(function () {
-    responsive_choices();
-})
-
-$(document).ready(function() {
-    responsive_choices();
-})
+$(window).resize(responsive_adjustments);
+$(document).ready(responsive_adjustments);
