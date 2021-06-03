@@ -77,7 +77,7 @@ const responsive_adjustments = function () {
         $(".choice-button-group.changed").removeClass("btn-group-vertical changed");
 
         $(".choice-button-group.changed-bar").addClass("btn-group choice-button-bar");
-        $(".choice-button-group.changed-bar").removeClass("btn-group-vertical changed-bar");
+        $(".choice-button-group.changed-bar").removeClass("btn-group-vertical changed-bar choice-button-group");
 
         $(".form-check.changed").addClass("form-check-inline");
         $(".form-check.changed").removeClass("changed")
