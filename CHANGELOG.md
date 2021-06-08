@@ -49,6 +49,11 @@ preview_image_small =                       # Full URL to custom preview image f
 ### Changed
 
 - Changed the default footer
+- Changed the default width of `alfred3.Text` element to `with="full"`.
+  Previously, we tried to be smart about the text's default width, making
+  it smaller for optimizing redability. But that was not in line with how
+  users expected and wished the text to behave, because it often caused 
+  misalignment between full-width input elements and the narrower text.
 
 ### Fixed
 
