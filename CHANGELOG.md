@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+
+<!-- 
+Guiding Principles
+
+Changelogs are for humans, not machines.
+There should be an entry for every single version.
+The same types of changes should be grouped.
+Versions and sections should be linkable.
+The latest version comes first.
+The release date of each version is displayed.
+Mention whether you follow Semantic Versioning.
+
+Types of changes
+
+1. Added for new features.
+2. Changed for changes in existing functionality.
+3. Deprecated for soon-to-be removed features.
+4. Removed for now removed features.
+5. Fixed for any bug fixes.
+6. Security in case of vulnerabilities. 
+-->
+
+## [unreleased]
+
+### Added 
+
+- You know how Facebook, Twitter, WhatsApp, etc. all create small 
+  previews for websites, if you post a link? Well, if you host alfred3
+  on a Mortimer v0.8.9 or newer, alfred3 now supports these previews.
+  And in alfred3's `config.conf`, you can now set the following options
+  in the section `[layout]`:
+
+```ini
+[layout]
+# Settings for previews on social media services
+preview_title = Online-Studie               # Title MAX 35 characters
+preview_description = Jetzt mitmachen und Teil der aktuellen Forschung werden. # Description MAX 155 characters
+preview_image =                             # Full URL to custom preview image (2063 + 1080 px) (For Facebook and similar)
+preview_image_small =                       # Full URL to custom preview image for small versions (300 x 200 px) (for WhatsApp an similar)
+```
+
+### Changed
+
+- Changed the default footer
+
+### Fixed
+
+- Fixed an issue with the `DataManager`, causing client information to be
+  unreliable.
+
+
+
 ## alfred3 v2.1.4 (Released 2021-06-03)
 
 ### Fixed v2.1.4
