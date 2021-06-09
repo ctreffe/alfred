@@ -376,3 +376,5 @@ pre[class*="language-"] {
     margin-top: 0;
     margin-bottom: 1rem;
 }
+
+.tooltip-inner { background-color:white; color: black;}
