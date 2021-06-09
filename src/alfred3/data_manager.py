@@ -24,59 +24,55 @@ from dataclasses import asdict
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from . import page
-from .exceptions import AlfredError
 from .config import ExperimentSecrets
 from .saving_agent import AutoMongoClient
 from .alfredlog import QueuedLoggingInterface
 from .util import flatten_dict
 from .util import prefix_keys_safely
+from .exceptions import AlfredError
 
 
-class DataManager(object):
+class DataManager:
     EXP_DATA = "exp_data"
     UNLINKED_DATA = "unlinked"
     CODEBOOK_DATA = "codebook"
     HISTORY = "move_history"
 
     instance_log = False
-    
 
-    # the empty fields are initialized here below to enable name-
-    # checking for all experiment members on these names and ordering
-    # of fieldnames for csv export independent of an ExperimentSession
-    # instance
-    client_data = {}
-    client_data["client_resolution_screen"] = None
-    client_data["client_resolution_inner"] = None
-    client_data["client_referrer"] = None
-    client_data["client_javascript_active"] = None
-    client_data["client_device_type"] = None
-    client_data["client_device_manufacturer"] = None
-    client_data["client_device_family"] = None
-    client_data["client_browser"] = None
-    client_data["client_os_family"] = None
-    client_data["client_os_name"] = None
-    client_data["client_os_version"] = None
+    _client_data_keys = {
+        "client_resolution_screen",
+        "client_resolution_inner",
+        "client_referrer",
+        "client_javascript_active",
+        "client_device_type",
+        "client_device_manufacturer",
+        "client_device_family",
+        "client_browser",
+        "client_os_family",
+        "client_os_name",
+        "client_os_version",
+    }
 
-    _metadata = {}
-    _metadata["exp_author"] = None
-    _metadata["exp_title"] = None
-    _metadata["exp_version"] = None
-    _metadata["exp_start_time"] = None
-    _metadata["exp_start_timestamp"] = None
-    _metadata["exp_save_time"] = None
-    _metadata["exp_finished"] = None
-    _metadata["exp_aborted"] = None
-    _metadata["exp_aborted_because"] = None
-    _metadata["exp_session"] = None
-    _metadata["exp_condition"] = None
-    _metadata["exp_id"] = None
-    _metadata["exp_session_id"] = None
-    _metadata["exp_plugin_queries"] = None
-    _metadata["session_status"] = None
-    _metadata["alfred_version"] = None
-    _metadata["type"] = None
+    _metadata_keys = {
+        "exp_author",
+        "exp_title",
+        "exp_version",
+        "exp_start_time",
+        "exp_start_timestamp",
+        "exp_save_time",
+        "exp_finished",
+        "exp_aborted",
+        "exp_aborted_because",
+        "exp_session",
+        "exp_condition",
+        "exp_id",
+        "exp_session_id",
+        "exp_plugin_queries",
+        "session_status",
+        "alfred_version",
+        "type",
+    }
 
     def __init__(self, experiment):
         self._experiment = experiment
@@ -84,17 +80,17 @@ class DataManager(object):
         self.additional_data = {}
         self.log = QueuedLoggingInterface(base_logger=__name__)
         self.log.add_queue_logger(self, __name__)
-        
-        
+
+        self.client_data = {}
 
     @property
     def experiment(self):
         return self._experiment
 
     @property
-    def metadata(self):
-        data = self._metadata
-        
+    def metadata(self) -> dict:
+        data = {}
+
         data["exp_author"] = self._experiment.author
         data["exp_title"] = self._experiment.title
         data["exp_version"] = self._experiment.version
@@ -112,22 +108,26 @@ class DataManager(object):
         data["session_status"] = self._experiment.session_status
         data["alfred_version"] = self._experiment.alfred_version
         data["type"] = self.EXP_DATA
+
+        if not len(self._metadata_keys) == len(data):
+            diff = self._metadata_keys ^ set(self._metadata)
+            raise AlfredError(f"Length of metadata key set and keys in metadata dict do not match. Differences: {diff}")
         
         return data
     
     @property
     def move_history(self):
         return [asdict(move) for move in self.exp.movement_manager.history]
-    
+
     @property
     def values(self):
         return {el["name"]: el["value"] for el in self.exp.root_section.data.values()}
-    
+
     @property
     def element_data(self):
         eldata = self.experiment.root_section.data
         return {**eldata}
-    
+
     @property
     def session_data(self):
         d = {**self.metadata, **self.client_data}
@@ -135,7 +135,7 @@ class DataManager(object):
         d["exp_move_history"] = self.move_history
         d["additional_data"] = self.additional_data
         return d
-    
+
     @property
     def codebook_data(self) -> Dict[str, dict]:
         """dict: Returns codebook data for the current session."""
@@ -143,10 +143,10 @@ class DataManager(object):
         unlinked = self.extract_codebook_data(self.unlinked_data)
 
         return {**exp, **unlinked}
-    
+
     @staticmethod
     def extract_codebook_data(exp_data: dict) -> Dict[str, dict]:
-        """ 
+        """
         Extracts codebook data from a full experiment data dictionary.
 
         Args:
@@ -154,7 +154,7 @@ class DataManager(object):
                 returned by :attr:`.session_data`
 
         Returns:
-            dict: A dictionary of dictionaries, containing detailed 
+            dict: A dictionary of dictionaries, containing detailed
                 information about the used elements.
         """
         meta = {}
@@ -167,9 +167,9 @@ class DataManager(object):
         for entry in codebook.values():
             entry.pop("value", None)
             entry.update(meta)
-        
+
         return codebook
-    
+
     @staticmethod
     def extract_fieldnames(data: Iterator) -> list:
         """
@@ -179,10 +179,10 @@ class DataManager(object):
         Args:
             data: A list or other iterator, providing the individual
                 datasets
-        
+
         Returns:
             list: List of fieldnames
-        
+
         Note:
             The first scanned document determines the initial order of
             the fieldnames. Subsequently found additional fieldnames
@@ -191,15 +191,15 @@ class DataManager(object):
         fieldnames = {}
         for element in data:
             el = copy.copy(element)
-            el.pop("_id", None) # remove mongoDB doc ID, if there is one
-            fieldnames.update(el) 
-        
+            el.pop("_id", None)  # remove mongoDB doc ID, if there is one
+            fieldnames.update(el)
+
         return list(fieldnames)
-    
+
     @classmethod
     def extract_ordered_fieldnames(cls, data: Iterator) -> list:
-        """ 
-        Finds correct (and correctly ordered) fieldnames for exporting 
+        """
+        Finds correct (and correctly ordered) fieldnames for exporting
         multiple experiment datasets to a single csv file.
 
         Args:
@@ -227,19 +227,19 @@ class DataManager(object):
             d = cls.flatten(copy.copy(dataset))
 
             for entry in list(d.keys()):
-                if entry in cls.client_data:
+                if entry in cls._client_data_keys:
                     d.pop(entry)
                     client_info.append(entry)
-                elif entry in cls._metadata:
+                elif entry in cls._metadata_keys:
                     d.pop(entry)
                     metadata.append(entry)
                 elif entry.startswith("additional_data"):
                     d.pop(entry)
                     adata.append(entry)
             elements.update(d)
-        
+
         metadata = [name for name in metadata if not name.startswith("additional_data")]
-        
+
         element_names = sorted(list(elements))
         metadata = sorted(list(set(metadata)))
         client_info = sorted(list(set(client_info)))
@@ -247,14 +247,14 @@ class DataManager(object):
 
         fieldnames = metadata + client_info + element_names + adata
         return fieldnames
-    
+
     @staticmethod
     def sort_fieldnames(fieldnames: List[str], template: List[str]) -> List[str]:
         """
         Sorts the list fieldnames according to template.
 
         If fieldnames contains more fields than template, the returned
-        list consists of a sorted part (the elements present in 
+        list consists of a sorted part (the elements present in
         *template*) and an appended part (the other elements, appended
         in their order of appearance in *fieldnames*).
 
@@ -262,17 +262,17 @@ class DataManager(object):
             fieldnames: List to sort
             template: Template list, indicating the desired order of
                 the known elements in fieldnames.
-        
+
         Returns:
             list: Sorted list
-        
+
         Raises:
-            ValueError: If either of the provided lists contain 
+            ValueError: If either of the provided lists contain
                 duplicate values.
         """
         if len(set(fieldnames)) != len(fieldnames):
             raise ValueError("Input list must contain only unique elements.")
-        
+
         if len(set(template)) != len(template):
             raise ValueError("Template list must contain only unique elements.")
 
@@ -281,8 +281,9 @@ class DataManager(object):
                 return template.index(name)
             except ValueError:
                 return len(template) + 1
+
         return sorted(fieldnames, key=find_position)
-    
+
     @classmethod
     def sort_codebook_fieldnames(cls, fieldnames: List[str]) -> List[str]:
 
@@ -293,7 +294,6 @@ class DataManager(object):
         template = t1 + t2 + t3
 
         return cls.sort_fieldnames(fieldnames, template)
-
 
     @staticmethod
     def flatten(data: dict) -> dict:
@@ -310,14 +310,14 @@ class DataManager(object):
                     values[f"{name}_{subname}"] = val
             except AttributeError:
                 values[name] = elmnt["value"]
-        
+
         adata = data.pop("additional_data", {})
         adata = flatten_dict(adata)
-        
+
         maindata = {**data, **values}
         adata = prefix_keys_safely(data=adata, base=maindata, prefix="additional_data")
         return {**maindata, **adata}
-    
+
     @staticmethod
     def regularize(data: dict) -> dict:
         pass
@@ -333,45 +333,44 @@ class DataManager(object):
         data["exp_version"] = self._experiment.version
         data["alfred_version"] = self._experiment.alfred_version
         return data
-    
+
     @property
     def unlinked_values(self):
         return {el["name"]: el["value"] for el in self.exp.root_section.unlinked_data.values()}
 
-    
     def unlinked_data_with(self, saving_agent):
         if saving_agent.encrypt:
             return self.exp.data_manager.encrypt_values(self.unlinked_data)
         else:
             return self.unlinked_data
-    
+
     @property
     def flat_session_data(self):
         return self.flatten(self.session_data)
-    
+
     def flat_unlinked_data(self):
         return self.flatten(self.unlinked_data)
-    
+
     def encrypt_values(self, data: dict) -> dict:
         data = copy.copy(data)
         for eldata in data["exp_data"].values():
             eldata["value"] = self.exp.encrypt(eldata["value"])
         return data
-    
+
     def decrypt_values(self, data: dict) -> dict:
         data = copy.copy(data)
         for eldata in data["exp_data"].values():
             eldata["value"] = self.exp.decrypt(eldata["value"])
             return data
-    
+
     def get_page_data(self, name: str) -> dict:
         return self.experiment.root_section.all_pages[name].data
-    
+
     def get_section_data(self, name: str) -> dict:
         return self.experiment.root_section.all_subsections[name].data
 
     def iter_flat_mongo_data(self, data_type: str = "exp_data") -> Iterator[dict]:
-        """ 
+        """
         Iterates over all datasets saved in the mongoDB associated with
         the experiment via its mongo_saving_agent.
 
@@ -382,16 +381,14 @@ class DataManager(object):
             dict: Flattened experiment data.
         """
         cursor = self.iterate_mongo_data(
-            exp_id=self.exp.exp_id, 
-            data_type=data_type, 
-            secrets=self.exp.secrets
-            )
-        
+            exp_id=self.exp.exp_id, data_type=data_type, secrets=self.exp.secrets
+        )
+
         for dataset in cursor:
             yield self.flatten(dataset)
-        
+
     def iter_flat_local_data(self, data_type: str = "exp_data") -> Iterator[dict]:
-        """ 
+        """
         Iterates over all datasets saved via the experiment's
         local_saving_agent.
 
@@ -405,13 +402,13 @@ class DataManager(object):
             path = self.exp.config.get("local_saving_agent", "path")
         elif data_type == "unlinked_data":
             path = self.exp.config.get("local_saving_agent_unlinked", "path")
-        
+
         path = self.exp.subpath(path)
         cursor = self.iterate_local_data(data_type=data_type, directory=path)
 
         for dataset in cursor:
             yield self.flatten(dataset)
-    
+
     @staticmethod
     def iterate_mongo_data(
         exp_id: str, data_type: str, secrets: ExperimentSecrets, exp_version: str = None
@@ -428,7 +425,7 @@ class DataManager(object):
 
         Args:
             exp_id: Experiment id
-            data_type: The type of data to be collected. Can be 
+            data_type: The type of data to be collected. Can be
                 'exp_data', 'codebook', or 'unlinked'.
             secrets: Experiment secrets configuration object. This is
                 used to extract information for database access.
@@ -455,7 +452,10 @@ class DataManager(object):
 
     @classmethod
     def iterate_local_data(
-        cls, data_type: str, directory: Union[str, Path], exp_version: str = None,
+        cls,
+        data_type: str,
+        directory: Union[str, Path],
+        exp_version: str = None,
     ) -> Iterator[dict]:
         """Generator function, iterating over experiment data .json files
         in the specified directory.
@@ -468,7 +468,7 @@ class DataManager(object):
                 ...
 
         Args:
-            data_type: The type of data to be collected. Can be 
+            data_type: The type of data to be collected. Can be
                 'exp_data' or 'unlinked'.
             exp_version: If specified, data will only be queried for
                 this specific version.
@@ -500,7 +500,10 @@ class DataManager(object):
 
             yield doc
 
-def decrypt_recursively(data: Union[list, dict, int, float, str, bytes], key: bytes) -> Union[list, dict, int, float, str, bytes]:
+
+def decrypt_recursively(
+    data: Union[list, dict, int, float, str, bytes], key: bytes
+) -> Union[list, dict, int, float, str, bytes]:
     """
     Used mainly for decrypting encrypted values in a nested dictionary.
     Can also decrypt single values.
@@ -543,6 +546,7 @@ def saving_method(exp) -> str:
         return "mongo"
     else:
         return None
+
 
 def get_session_mongo(exp, sid) -> dict:
     q = {"exp_id": exp.exp_id, "exp_session_id": sid, "type": DataManager.EXP_DATA}

@@ -531,6 +531,9 @@ class UserInterface:
             logo = self.exp.subpath(self.exp.config.get("layout_goe", "logo"))
             if logo.is_file():
                 self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
+            else:
+                with importlib.resources.path(img, "alfred_logo_color.png") as logo:    
+                    self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
 
         elif style == "goe":
 

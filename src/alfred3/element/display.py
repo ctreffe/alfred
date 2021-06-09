@@ -152,10 +152,6 @@ class Text(Element):
         text: Text to be displayed.
         path: Filepath to a textfile (relative to the experiment
             directory).
-        width: Element width. Usage is the same as in
-            :class:`Element`, but the Text element uses its own
-            specific default, which ensures good readability in
-            most cases on different screen sizes.
         emojize: If True (default), emoji shortcodes in the text will
             be converted to unicode (i.e. emojis will be displayed).
         {kwargs}
@@ -185,14 +181,13 @@ class Text(Element):
         self,
         text: str = None,
         path: Union[Path, str] = None,
-        width: str = None,
         emojize: bool = True,
         render_markdown: bool = True,
         **kwargs,
     ):
 
         """Constructor method."""
-        super().__init__(width=width, **kwargs)
+        super().__init__(**kwargs)
 
         self._text = text if text is not None else ""
 
@@ -236,21 +231,6 @@ class Text(Element):
     @text.setter
     def text(self, text):
         self._text = text
-
-    @property
-    def element_width(self) -> str:
-
-        if self.width is not None:
-            return " ".join(self.converted_width)
-
-        responsive = self.experiment.config.getboolean("layout", "responsive", fallback=True)
-        if responsive:
-            if self._element_width is None:
-                return " ".join(["col-12", "col-sm-11", "col-lg-10", "col-xl-9"])
-            else:
-                return " ".join(self._element_width)
-        elif not responsive:
-            return "col-9"
 
     @property
     def template_data(self) -> dict:
