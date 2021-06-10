@@ -16,7 +16,7 @@ $ pip3 install alfred3
 ## Documentation
 
 Documentation and tutorials for alfred3's most important features
-is available here: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
+is available here: [Link to docs](https://alfredo3.psych.bio.uni-goettingen.de/docs/)
 
 ## A "Hello, world" experiment
 
