@@ -5,7 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-
 <!-- 
 Guiding Principles
 
@@ -27,7 +26,7 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
-## [unreleased]
+## alfred3 v2.1.5 (Released 2021-06-09)
 
 ### Added 
 
