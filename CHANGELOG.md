@@ -26,6 +26,13 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.1.6 (Released 2021-06-12)
+
+### Fixed
+
+- Fixed an issue with the upper allocation limits of the 
+  `ListRandomizer`. 
+
 ## alfred3 v2.1.5 (Released 2021-06-09)
 
 ### Added 

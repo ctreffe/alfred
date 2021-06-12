@@ -33,13 +33,13 @@ class _Session:
         
         aborted = d["exp_aborted"]
         finished = d["exp_finished"]
-        if d.get("exp_start_time", None):
-            expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
-        else:
-            expired = False
         
+        if not d.get("exp_start_time", None): # not started
+            return False
+        
+        expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
         active = not aborted and not finished and not expired
-        
+
         return active
 
 
@@ -170,7 +170,7 @@ class _ConditionIO:
         
         elif self.method == "local":
             with open(self.path, "w") as f:
-                json.dump(data, f, indent=4, sort_keys=True)
+                json.dump(data, f, indent=4)
     
     def abort(self):
         if self.method == "mongo":
@@ -564,7 +564,7 @@ class ListRandomizer:
             else:
                 return self.abort()
             
-        slot.sessions.append(_Session(self.id, self.exp.start_time))
+        slot.sessions.append(_Session(self.id))
         self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
         return slot.condition
     
@@ -628,9 +628,11 @@ class ListRandomizer:
         return d
 
     def _mark_slot_finished(self, exp):
+        data = self.io.load(atomic=True)
+        self.slotlist = _SlotList(*data["slots"])
         slot = self.slotlist.id_assigned_to(self.id)
         slot.finished = True
-        self.io.write(self._data, update=True)
+        self.io.write(self._data, update=False)
     
 
 def random_condition(*conditions) -> str:

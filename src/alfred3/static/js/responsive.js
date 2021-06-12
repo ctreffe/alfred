@@ -86,4 +86,4 @@ const responsive_adjustments = function () {
 
 $(window).resize(responsive_adjustments);
 $(document).ready(responsive_adjustments);
-$(function(){$(".brand-link").tooltip();}); // initialize tooltip
+$(function(){$(".brand-link").tooltip({html: true, placement: 'right'});}); // initialize tooltip

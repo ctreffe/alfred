@@ -1,8 +1,10 @@
 import random
 import pytest
+import time
 
 import alfred3 as al
 from alfred3.condition import ConditionInconsistency
+import alfred3.condition as cond
 
 from .util import get_exp_session, clear_db
 
@@ -343,4 +345,83 @@ class TestConditionAllocation:
         slots1 = [s.condition for s in rd1.slotlist.slots]
         slots2 = [s.condition for s in rd2.slotlist.slots]
         assert slots1 == slots2
+    
 
+    def test_session_expired(self, exp_factory):
+        exp1 = exp_factory()
+        exp1.session_timeout = 1
+        rand = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1)
+        
+        exp1.condition = rand.get_condition()
+        exp1._start()
+        time.sleep(1)
+        
+        assert exp1.session_expired
+
+        slot = rand.slotlist.id_assigned_to(exp1.session_id)
+        slot.active_sessions(exp1)
+
+        exp2 = exp_factory()
+
+        assert exp1.exp_id == exp2.exp_id
+
+        rand2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2)
+        exp2.condition = rand2.get_condition()
+
+        assert exp1.condition == exp2.condition
+
+    def test_shifted_finish(self, exp_factory):
+        exp1 = exp_factory()
+        rand = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1)
+        
+        exp1.condition = rand.get_condition()
+        exp1._start()
+        exp1._save_data(sync=True)
+
+        exp2 = exp_factory()
+        rand2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2)
+        exp2.condition = rand2.get_condition()
+        exp2._start()
+        exp2._save_data(sync=True)
+
+        assert exp1.condition != exp2.condition
+
+        exp1.finish()
+
+        rdata = exp1.db_misc.find_one({"type": "condition_data"})
+        slotlist = cond._SlotList(*rdata["slots"])
+
+        assert slotlist.slots[0].finished
+        assert not slotlist.slots[1].finished
+        
+        exp2.finish()
+
+        rdata = exp1.db_misc.find_one({"type": "condition_data"})
+        slotlist = cond._SlotList(*rdata["slots"])
+
+        assert slotlist.slots[0].finished
+        assert slotlist.slots[1].finished
+
+class TestSession:
+
+    def test_init(self):
+        s1 = cond._Session(id="abc")
+        s2 = cond._Session(id="abc")
+        assert s2.timestamp > s1.timestamp
+    
+    def test_active(self, exp):
+        s1 = cond._Session(id=exp.session_id)
+        assert not s1.active(exp)
+
+    
+    def test_mark_finished(self, exp):
+        rand = al.ListRandomizer.balanced("a", "b", n=1, exp=exp)
+        exp.condition = rand.get_condition()
+        rand._mark_slot_finished(exp)
+
+        slot = rand.slotlist.id_assigned_to(exp.session_id)
+        assert slot.finished
+    
+
+    
+    
