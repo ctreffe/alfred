@@ -1,9 +1,51 @@
 # Welcome to alfred3 [![zenodo](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371)
 
+Alfred3 is a package for Python 3 offering an easy way to create
+computer experiments that meet the highest standards of Open Science.
+Specifically, experiments created with alfred3 are transparent,
+accessible, reproducible, and adhere to the [FAIR principles for
+research software](https://www.doi.org/10.3233/DS-190026). In its core
+version, alfred3 comes well-equipped for the creation of dynamic
+content that can be delivered online via a webserver or offline running
+on local machines. In addition, the [alfred3-interact
+plugin](https://github.com/jobrachem/alfred3-interact) enables users to
+create interactive group experiments with features such as automated
+group forming, quick access to members' experiment data, and a
+prepacked chat functionality.
 
-Alfred3 is a package for Python 3 offering experimenters in the social 
-sciences a fast and easy way to create truly dynamic computer experiments 
-for a wide range of applications.
+Further advantages include:
+
+* All alfred3 scripts are written in [Python
+  3](https://www.python.org/), a very popular open source programming
+  language that is easy to learn and fast to develop with, as it
+  focuses on code readability. Thus, even minimal programming skills
+  are sufficient to create experiments with alfred3 (see the
+  requirement section for more details and suggestions on beginner
+  tutorials).
+* Alfred3 uses the principle of Object-oriented programming (OOP) to
+  maximize code reusability. By simply copying and pasting elements
+  between scripts, users can instantly integrate content from previous
+  experiments with their current project.
+* Experimenters can share experiments created with alfred3 the same way
+  they share code from their data analysis. In addition to highly
+  reusable code, transparency and ease of sharing are two key
+  advantages of using script-based experimental software.
+* Using open source software is a core principle of Open Science and
+  both Python 3 and alfred3 are published under permissive open source
+  licenses. Researchers will not face the hurdles associated with
+  closed source software when trying to reproduce an alfred3 experiment
+  (see [The Open Science Training
+  Handbook](https://open-science-training-handbook.gitbook.io/book/open-science-basics/open-research-software-and-open-source)
+  for more information on the importance of using open source research
+  software for your experiments and data analyses).
+* Online experiments written in alfred3 support all types of mobile
+  devices through a responsive interface, making them suitable for a wide range of applications and settings (e.g., laboratory experiments where users are invited to bring their own devices, or surveying passers-py with tablets in public spaces)
+* Alfred3 is optimized for the collection of personal data in full
+  compliance with both the GDPR and official guidelines on data
+  management in psychological science ([English
+  version](https://www.dgps.de/fileadmin/documents/Empfehlungen/Data_Management_eng.pdf)
+  | [German
+  version](https://www.dgps.de/fileadmin/documents/Empfehlungen/Datenmanagement_deu.pdf)).
 
 ## Installation
 
