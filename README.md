@@ -46,6 +46,10 @@ Further advantages include:
   version](https://www.dgps.de/fileadmin/documents/Empfehlungen/Data_Management_eng.pdf)
   | [German
   version](https://www.dgps.de/fileadmin/documents/Empfehlungen/Datenmanagement_deu.pdf)).
+  The core version of alfred3 already includes data encryption and
+  decryption methods as well as unlinked storage options for personal or
+  sensitive data (meaning that you can store personal data separately
+  without the possibility of linking it back to experimental data).
 
 ## Installation
 
