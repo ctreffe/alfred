@@ -41,7 +41,7 @@ Further advantages include:
 * Online experiments written in alfred3 support all types of mobile
   devices through a responsive interface, making them suitable for a wide range of applications and settings (e.g., laboratory experiments where users are invited to bring their own devices, or surveying passers-py with tablets in public spaces)
 * Alfred3 is optimized for the collection of personal data in full
-  compliance with both the GDPR and official guidelines on data
+  compliance with both the GDPR and official German guidelines on data
   management in psychological science ([English
   version](https://www.dgps.de/fileadmin/documents/Empfehlungen/Data_Management_eng.pdf)
   | [German
