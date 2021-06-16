@@ -12,6 +12,7 @@ from pymongo.collection import ReturnDocument
 
 from .exceptions import ConditionInconsistency, AllConditionsFull
 from .data_manager import DataManager, saving_method
+from .compatibility.condition import ListRandomizer as OldListRandomizer
 
 
 @dataclass
@@ -27,31 +28,53 @@ class SessionGroup:
 
         return d
 
-    def finished(self, exp) -> bool:
+    def _load_local(self, exp) -> Iterator[dict]:
+        dt = DataManager.EXP_DATA
+        directory = exp.config.get("local_saving_agent", "path")
+        directory = exp.subpath(directory)
+        cursor = DataManager.iterate_local_data(dt, directory)
+        for data in cursor:
+            if data["exp_session_id"] in self.sessions:
+                yield data
+    
+    def _get_field(self, exp, field: str) -> list:
+        method = saving_method(exp)
+        if method == "mongo":
+            data = self._get_field_mongo(exp, field)
+        elif method == "local":
+            data = self._get_field_local(exp, field)
+        
+        return data
+    
+    def _get_field_mongo(self, exp, field) -> list:
         q = self.query(exp.exp_id)
-        cursor = exp.db_main.find(q, projection=["exp_finished"])
-        finished = [d["exp_finished"] for d in cursor]
-        return all(finished)
+        cursor = exp.db_main.find(q, projection=[field])
+        data = [d.get(field) for d in cursor]
+        return data
+    
+    def _get_field_local(self, exp, field) -> list:
+        cursor = self._load_local(exp)
+        data = [d.get(field) for d in cursor]
+        return data
 
+    def finished(self, exp) -> bool:
+        finished = self._get_field(exp, "exp_finished")
+        return all(finished)
+    
     def aborted(self, exp) -> bool:
-        q = self.query(exp.exp_id)
-        cursor = exp.db_main.find(q, projection=["exp_aborted"])
-        aborted = [d["exp_aborted"] for d in cursor]
-        return any(aborted)
+        aborted = self._get_field(exp, "exp_aborted")
+        return all(aborted)
 
     def expired(self, exp) -> bool:
-        q = self.query(exp.exp_id)
-        cursor = exp.db_main.find(q, projection=["exp_start_time"])
+        start_time = self._get_field(exp, "exp_start_time")
         now = time.time()
-        passed_time = [now - d["exp_start_time"] for d in cursor]
+        passed_time = [now - t for t in start_time]
         return any([t > exp.session_timeout for t in passed_time])
-
+        
     def started(self, exp) -> bool:
-        q = self.query(exp.exp_id)
-        cursor = exp.db_main.find(q, projection=["exp_start_time"])
-        start = [d.get("exp_start_time", None) for d in cursor]
-        return not any([t is None for t in start])
-
+        start_time = self._get_field(exp, "exp_start_time")
+        return not any([t is None for t in start_time])
+        
     def active(self, exp) -> bool:
         if not self.started(exp):
             return False
@@ -353,7 +376,9 @@ class ListRandomizer:
             This argument enables you to assign, for example, a group
             id that connects several sessions, to the randomizer.
             Defaults to None. *Deprecated* in version 2.1.7: Please use
-            parameter *session_ids* instead.
+            parameter *session_ids* instead. If you use the 'id' 
+            parameter, the ListRandomizer will start in compatibility
+            mode.
 
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
@@ -463,6 +488,40 @@ class ListRandomizer:
 
     """
 
+    @staticmethod
+    def _use_comptability(**kwargs) -> bool:
+        """
+        Checks whether there is existing randomizer data. In this case,
+        the randomizer will operate in compatibility mode.
+        """
+        exp = kwargs["exp"]
+        respect_version = kwargs.get("respect_version", True)
+        
+        method = saving_method(exp)
+        version = exp.version if respect_version else ""
+        
+        if method == "mongo":
+            query = {"exp_id": exp.exp_id, "exp_version": version, "type": "condition_data"}
+            data = exp.db_misc.find_one(query)
+        elif method == "local":
+            directory = exp.config.get("exp_condition", "path")
+            path = exp.subpath(directory) / f"randomization{version}.json"
+            
+            if not path.exists():
+                return False
+            
+            with open(path, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+        
+        return bool(data)
+
+
+    def __new__(cls, *args, **kwargs):
+        if kwargs.get("id", False) or cls._use_comptability(**kwargs):
+            return OldListRandomizer(*args, **kwargs)
+        else:
+            return super().__new__(cls)
+
     def __init__(
         self,
         *conditions: Tuple[str, int],
@@ -483,18 +542,14 @@ class ListRandomizer:
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
-        self.session_ids = session_ids if session_ids is not None else [exp.session_id]
         self.randomizer_id = randomizer_id
+        self.session_ids = session_ids if session_ids is not None else [exp.session_id]
+        if isinstance(self.session_ids, str):
+            raise ValueError("Argument 'session_ids' must be a list of strings, not a single string.")
         
         self.io = RandomizerIO(self)
         self._initialize_slots()
         
-        self.id = id if id is not None else exp.session_id
-        if id is not None:
-            warn(
-                "The argument 'id' of ListRandomizer is deprecated. Please switch to using 'session_ids'",
-                FutureWarning)
-    
     @classmethod
     def balanced(cls, *conditions, n: int, **kwargs):
         """
@@ -538,6 +593,9 @@ class ListRandomizer:
                         self += al.TextEntry(leftlab=lab, name="t1")
 
         """
+        if kwargs.get("id", False) or cls._use_comptability(**kwargs):
+            return OldListRandomizer.balanced(*conditions, n=n, **kwargs)
+
         conditions = [(c, n) for c in conditions]
         return cls(*conditions, **kwargs)
     
@@ -560,7 +618,8 @@ class ListRandomizer:
         of different conditions when combining all different possible
         values of your factos. Typing them by hand is tedious. To make
         your life easier, you can now simply input the factors themselves,
-        and alfred3 will construct the combinations for you.
+        and alfred3 will construct the combinations for you. The values
+        of the individual factors will be separated by dots.
 
         .. note:: Note that, in Python, strings are iterables. That means,
             that a call like ``ListRandomizer.factors("ab", "cd", ...)``
@@ -617,46 +676,6 @@ class ListRandomizer:
 
         return cls(*conditions, **kwargs)
 
-    def _initialize_slots(self):
-        self.io.load()
-
-        with self.io as data:
-            if not data.slots:
-                data.slots = self._randomize_slots()
-                self.io.save(data)
-    
-    def _generate_slots(self) -> List[dict]:
-        slots = []
-        for c in self.conditions:
-            slots += [{"condition": c[0]}] * c[1]
-        return slots
-
-    def _randomize_slots(self) -> List[dict]:
-        slots = self._generate_slots()
-        random.seed(self.random_seed)
-        random.shuffle(slots)
-        return slots
-    
-    def _abort(self):
-        full_page_title = "Experiment closed"
-        full_page_text = "Sorry, the experiment currently does not accept any further participants."
-        self.exp.abort(reason="full", title=full_page_title, msg=full_page_text, icon="user-check", page=self.abort_page)
-
-    def _validate(self, data: RandomizerData):
-        if self.respect_version:
-            if not self.exp.version == data.exp_version:
-                raise ConditionInconsistency("Experiment version and randomizer version do not match.")
-
-        data_conditions = [slot["condition"] for slot in data.slots]
-        counted = Counter(data_conditions)
-
-        instance = dict(self.conditions)
-
-        msg = "Condition data is inconsistent with randomizer specification. "
-        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
-        if not counted == instance:
-            raise ConditionInconsistency(msg + what_to_do)
-    
     @property
     def full(self) -> bool:
         """
@@ -667,18 +686,6 @@ class ListRandomizer:
         """
         with self.io as data:
             return self._is_full(data)
-    
-    def _is_full(self, data: RandomizerData) -> bool:
-        slot_manager = SlotManager(data.slots)
-        open_slots = slot_manager.open_slots(self.exp)
-        pending_slots = slot_manager.pending_slots(self.exp)
-        
-        if self.mode == "strict":
-            full = not any(open_slots) 
-        elif self.mode == "inclusive":
-            full = not any(open_slots) and not any(pending_slots)
-        
-        return full
 
     def abort_if_full(self, raise_exception: bool = False, data: RandomizerData = None):
         """
@@ -848,7 +855,58 @@ class ListRandomizer:
             self.io.save(data)
             return slot.condition
     
+    def _initialize_slots(self):
+        self.io.load()
+
+        with self.io as data:
+            if not data.slots:
+                data.slots = self._randomize_slots()
+                self.io.save(data)
     
+    def _generate_slots(self) -> List[dict]:
+        slots = []
+        for c in self.conditions:
+            slots += [{"condition": c[0]}] * c[1]
+        return slots
+
+    def _randomize_slots(self) -> List[dict]:
+        slots = self._generate_slots()
+        random.seed(self.random_seed)
+        random.shuffle(slots)
+        return slots
+    
+    def _abort(self):
+        full_page_title = "Experiment closed"
+        full_page_text = "Sorry, the experiment currently does not accept any further participants."
+        self.exp.abort(reason="full", title=full_page_title, msg=full_page_text, icon="user-check", page=self.abort_page)
+
+    def _validate(self, data: RandomizerData):
+        if self.respect_version:
+            if not self.exp.version == data.exp_version:
+                raise ConditionInconsistency("Experiment version and randomizer version do not match.")
+
+        data_conditions = [slot["condition"] for slot in data.slots]
+        counted = Counter(data_conditions)
+
+        instance = dict(self.conditions)
+
+        msg = "Condition data is inconsistent with randomizer specification. "
+        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
+        if not counted == instance:
+            raise ConditionInconsistency(msg + what_to_do)
+    
+    def _is_full(self, data: RandomizerData) -> bool:
+        slot_manager = SlotManager(data.slots)
+        open_slots = slot_manager.open_slots(self.exp)
+        pending_slots = slot_manager.pending_slots(self.exp)
+        
+        if self.mode == "strict":
+            full = not any(open_slots) 
+        elif self.mode == "inclusive":
+            full = not any(open_slots) and not any(pending_slots)
+        
+        return full
+
 
 def random_condition(*conditions) -> str:
     """
