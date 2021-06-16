@@ -1,182 +1,288 @@
-"""
-Provides functionality for assigning participants to experiment conditions.
-"""
-from collections import Counter
-from dataclasses import dataclass, asdict, field
-from typing import Tuple, List, Iterator
-from pathlib import Path
-from uuid import uuid4
-import time
 import random
 import json
+import time
+from dataclasses import dataclass, asdict, field
+from typing import List, Iterator, Tuple
+from pathlib import Path
+from warnings import warn
+from itertools import product
+from collections import Counter
 
-from .data_manager import get_data_of_session
+from pymongo.collection import ReturnDocument
 
-class AllConditionsFull(Exception):
-    pass
-
-
-class ConditionInconsistency(Exception):
-    pass
+from .exceptions import ConditionInconsistency, AllConditionsFull
+from .data_manager import DataManager, saving_method
 
 
 @dataclass
-class _Session:
-    id: str
-    timestamp: float = field(default_factory=time.time)
+class SessionGroup:
+
+    sessions: List[str]
+
+    def query(self, expid) -> dict:
+        d = {}
+        d["exp_id"] = expid
+        d["exp_session_id"] = {"$in": self.sessions}
+        d["type"] = DataManager.EXP_DATA
+
+        return d
+
+    def finished(self, exp) -> bool:
+        q = self.query(exp.exp_id)
+        cursor = exp.db_main.find(q, projection=["exp_finished"])
+        finished = [d["exp_finished"] for d in cursor]
+        return all(finished)
+
+    def aborted(self, exp) -> bool:
+        q = self.query(exp.exp_id)
+        cursor = exp.db_main.find(q, projection=["exp_aborted"])
+        aborted = [d["exp_aborted"] for d in cursor]
+        return any(aborted)
+
+    def expired(self, exp) -> bool:
+        q = self.query(exp.exp_id)
+        cursor = exp.db_main.find(q, projection=["exp_start_time"])
+        now = time.time()
+        passed_time = [now - d["exp_start_time"] for d in cursor]
+        return any([t > exp.session_timeout for t in passed_time])
+
+    def started(self, exp) -> bool:
+        q = self.query(exp.exp_id)
+        cursor = exp.db_main.find(q, projection=["exp_start_time"])
+        start = [d.get("exp_start_time", None) for d in cursor]
+        return not any([t is None for t in start])
 
     def active(self, exp) -> bool:
-        d = get_data_of_session(exp, self.id)
-
-        if not d: # if we do not find data, we assume that exp has not been started
+        if not self.started(exp):
             return False
-        
-        aborted = d["exp_aborted"]
-        finished = d["exp_finished"]
-        
-        if not d.get("exp_start_time", None): # not started
-            return False
-        
-        expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
-        active = not aborted and not finished and not expired
 
-        return active
+        finished = self.finished(exp)
+        aborted = self.aborted(exp)
+        expired = self.expired(exp)
+
+        return not finished and not aborted and not expired
 
 
 @dataclass
-class _Slot:
+class Slot:
 
     condition: str
-    timeout: int
-    sessions: list
-    finished: bool = False
+    session_groups: List[SessionGroup] = field(default_factory=list)
 
-    def __init__(self, *sessions, condition: str, timeout: int, finished: bool = False):
-        self.condition = condition
-        self.timeout = timeout
-        self.sessions = [_Session(**s) for s in sessions]
-        self.finished = finished
+    def __post_init__(self):
+        self.session_groups = [
+            SessionGroup(**session_data) for session_data in self.session_groups
+        ]
 
-    def status(self, exp):
+    def finished(self, exp) -> bool:
+        finished = [s.finished(exp) for s in self.session_groups]
+        return any(finished)
 
-        if self.finished:
-            return "finished"
+    def pending(self, exp) -> bool:
+        active = [s.active(exp) for s in self.session_groups]
+        return any(active)
 
-        elif not self.active_sessions(exp):
-            return "free"
+    def open(self, exp) -> bool:
+        return not self.finished(exp) and not self.pending(exp)
 
-        elif not self.finished:
-            return "pending"
-
-    def active_sessions(self, exp):
-        """
-        Returns the active sessions belonging to this slot.
-        """
-        return [s for s in self.sessions if s.active(exp)]
-
-    @property
-    def ids(self):
-        return [session.id for session in self.sessions]
-
-    def session(self, id) -> _Session:
-        return [s for s in self.sessions if s.id == id]
+    def __contains__(self, session_ids: List[str]) -> bool:
+        group_contains_session = (session_ids == group.sessions for group in self.session_groups)
+        return any(group_contains_session)
 
 
 @dataclass
-class _SlotList:
-    slots: list
+class SlotManager:
+    slots: List[dict]
 
-    def __init__(self, *slots):
-        self.slots = [_Slot(*s.pop("sessions", []), **s) for s in slots]
+    def __post_init__(self):
+        self.slots = [Slot(**slot_data) for slot_data in self.slots]
 
-    def open_slots(self, exp) -> Iterator[_Slot]:
-        return (slot for slot in self.slots if slot.status(exp) == "free")
+    def open_slots(self, exp) -> Iterator[Slot]:
+        return (slot for slot in self.slots if slot.open(exp))
+
+    def pending_slots(self, exp) -> Iterator[Slot]:
+        return (slot for slot in self.slots if slot.pending(exp))
     
-    def pending_slots(self, exp) -> Iterator[_Slot]:
-        return (slot for slot in self.slots if slot.status(exp) == "pending")
-
-    def id_assigned_to(self, id) -> _Slot:
+    def find_slot(self, session_ids: List[str]) -> Slot:
         for slot in self.slots:
-            if id in slot.ids:
+            if session_ids in slot:
                 return slot
-        return None
 
 
-class _ConditionIO:
-    """
-    Handles data in- and output for condition administration.
-    """
-    def __init__(self, exp, respect_version: bool):
-        self.exp = exp
-        self.version = self.exp.version if respect_version else ""
-        self.path = None
-        self.query = None
-        self.method = None
+@dataclass
+class RandomizerData:
+    randomizer_id: str
+    exp_id: str
+    exp_version: str
+    random_seed: float 
+    mode: str
+    slots: List[dict] = field(default_factory=list)
+    busy: bool = False
+    type: str = "condition_data"
 
-        if self.exp.secrets.getboolean("mongo_saving_agent", "use"):
-            self.method = "mongo"
-            self.query = {"exp_id": self.exp.exp_id, "exp_version": self.version, "type": "condition_data"}
-        
-        elif self.exp.config.get("local_saving_agent", "use"):
-            self.method = "local"
-            self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path")) / f"randomization{self.version}.json"
-            self.path.parent.mkdir(exist_ok=True, parents=True)
+
+class RandomizerIO:
+    def __init__(self, randomizer):
+        self.rand = randomizer
+        self.exp = randomizer.exp
+        self.db = self.exp.db_misc
+
+        if saving_method(self.exp) == "local":
+            self.path.parent.mkdir(exist_ok=True)
+
+    @property
+    def query(self) -> dict:
+        d = {}
+        d["exp_id"] = self.exp.exp_id
+        d["exp_version"] = self.rand.exp_version
+        d["type"] = "condition_data"
+        d["randomizer_id"] = self.rand.randomizer_id
+        return d
     
-    def load(self, atomic: bool = True) -> dict:
-        if self.method == "mongo":
-            if atomic:
-                # this will try a couple of times until if receives a version of the data that
-                # can be safely worked on (with no other assignment ongoing)
-                data = None
-                i = 0
-                while not data:
-                    query = {**self.query, **{"assignment_ongoing": False}}
-                    data = self.exp.db_misc.find_one_and_update(query, {"$set": {"assignment_ongoing": True}})
-                    time.sleep(1)
-                    i += 1
-                    if i > 10:
-                        self.exp.log.error("Could not find a free condition dataset in 10 trys.")
-                        break
-                return data
-            else:
-                
-                # if there is no data, this returns None and places an assignment_ongoing note in the DB
-                # if there is data, this returns the data and places an assignment_ongoing note in the DB
-                data = self.exp.db_misc.find_one_and_update(
-                    self.query, 
-                    {"$set": {"assignment_ongoing": True}}, 
-                    upsert=True
-                    )
-                return data
-        
-        elif self.method == "local":
-            try:
-                with open(self.path, "r") as f:
-                    return json.load(f)
-            except FileNotFoundError:
-                return None
+    @property
+    def path(self) -> Path:
+        name = f"randomization_{self.rand.randomizer_id}{self.rand.exp_version}.json"
+        directory = self.exp.config.get("exp_condition", "path")
+        directory = self.exp.subpath(directory)
+        return  directory / name
     
-    def write(self, data: dict, update: bool = False):
-        if self.method == "mongo":
-            if update:
-                # this will update the slots, without touching the assignment status
-                query = self.query
-                data = {"slots": data["slots"]}
-                self.exp.db_misc.find_one_and_update(query, {"$set": data})
-            else:
-                # this will replace the document, usually leading to releasing the assignment status
-                query = {**self.query, **{"assignment_ongoing": True}}
-                self.exp.db_misc.find_one_and_replace(query, data, upsert=True)
-        
-        elif self.method == "local":
-            with open(self.path, "w") as f:
-                json.dump(data, f, indent=4)
+    def load(self) -> RandomizerData:
+        insert = RandomizerData(
+            randomizer_id=self.rand.randomizer_id,
+            exp_id=self.exp.exp_id,
+            exp_version=self.rand.exp_version,
+            random_seed=self.rand.random_seed,
+            mode=self.rand.mode
+        )
+
+        method = saving_method(self.exp)
+        if method == "mongo":
+            return self.load_mongo(insert)
+        elif method == "local":
+            return self.load_local(insert)
     
-    def abort(self):
-        if self.method == "mongo":
-            query = {**self.query, **{"assignment_ongoing": True}}
-            self.exp.db_misc.find_one_and_update(query, {"$set": {"assignment_ongoing": False}})
+    def load_mongo(self, insert: RandomizerData) -> RandomizerData:
+        q = self.query
+        data = self.db.find_one_and_update(
+            filter=q, 
+            update={"$setOnInsert": asdict(insert)}, 
+            upsert=True,
+            return_document=ReturnDocument.AFTER
+        )
+        data.pop("_id", None)
+        return RandomizerData(**data)
+    
+    def load_local(self, insert: RandomizerData) -> RandomizerData:
+        if not self.path.exists():
+            self.save_local(asdict(insert))
         
+        else:
+            with open(self.path, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+            
+            return RandomizerData(**data)
+
+    def load_markbusy(self) -> RandomizerData:
+        method = saving_method(self.exp)
+        if method == "mongo":
+            return self.load_markbusy_mongo()
+        elif method == "local":
+            return self.load_markbusy_local()
+
+    def load_markbusy_mongo(self) -> RandomizerData:
+        q = self.query
+        q["busy"] = False
+        
+        update = {"$set": {"busy": True}}
+        rd = ReturnDocument.AFTER
+
+        data = self.db.find_one_and_update(filter=q, update=update, return_document=rd)
+        
+        if data is None:
+            return None
+
+        data.pop("_id", None)
+
+        return RandomizerData(**data)
+    
+    def load_markbusy_local(self) -> RandomizerData:
+        if not self.path.exists():
+            data = asdict(self.rand.data)
+
+
+        with open(self.path, "r", encoding="utf-8") as fp:
+            data = json.load(fp)
+        
+        if data["busy"]:
+            return None
+        
+        data["busy"] = True
+        self.save_local(data)
+        return RandomizerData(**data)
+        
+    def save(self, data: RandomizerData):
+        data = asdict(data)
+
+        method = saving_method(self.exp)
+        if method == "mongo":
+            self.save_mongo(data)
+        elif method == "local":
+            self.save_local(data)
+    
+    def save_local(self, data: dict):
+        with open(self.path, "w", encoding="utf-8") as fp:
+            json.dump(data, fp, indent=4)
+
+    def save_mongo(self, data: dict):
+        q = self.query
+        q["busy"] = True
+        self.db.find_one_and_update(filter=q, update={"$set": data})
+
+    def release(self):
+        method = saving_method(self.exp)
+        if method == "mongo":
+            self.release_mongo()
+        elif method == "local":
+            self.release_local()
+    
+    def release_mongo(self):
+        q = self.query
+        q["busy"] = True
+        u = {"$set": {"busy": False}}
+        self.db.find_one_and_update(filter=q, update=u)
+    
+    def release_local(self):
+        with open(self.path, "r", encoding="utf-8") as fp:
+            data = json.load(fp)
+        
+        data["busy"] = False
+        self.save_local(data)
+
+    def __enter__(self):
+        data = self.load_markbusy()
+        start = time.time()
+        while not data:
+            time.sleep(1)
+            data = self.load_markbusy()
+            if time.time() - start > 10:
+                raise IOError("Could not load randomizer data.")
+        return data
+
+    def __exit__(self, exc_type, exc_value, traceback):
+
+        if exc_type:
+            self.release()
+            self.exp.abort(reason="randomizer_error")
+            self.exp.log.error(
+                (
+                    f"There was an error in a locked Randomizer operation: '{exc_value}' "
+                    "I aborted the experiment and released the lock."
+                )
+            )
+        
+        else:
+            self.release()
+
 
 class ListRandomizer:
     """
@@ -189,13 +295,15 @@ class ListRandomizer:
             the target number of observations for this condition.
         
         exp (alfred3.ExperimentSession): The alfred3 experiment session.
-        
-        id (str): A unique identifier for the condition slot assigned
-            by this instance of *ListRandomizer*. If *None*, the current
-            :attr:`.ExperimentSession.session_id` will be used. 
-            This argument enables you to assign, for example, a group
-            id that connects several sessions, to the randomizer.
-            Defaults to None.
+
+        session_ids (list): A list of experiment session ids that should
+            be treated as a group, i.e. share a single condition slot.
+            That means, they will be allocated to the same condition and,
+            as a group, take up only one space in the count of sessions
+            that the randomizer keeps. Most useful for group experiments.
+            Defaults to ``[exp.session_id]``, i.e. a list of length 1 with
+            the session id of the current experiment instance as its only
+            element.
         
         respect_version (bool): If True, randomization will start anew
             for each experiment version. This is especially important,
@@ -226,6 +334,10 @@ class ListRandomizer:
 
             Defaults to 'strict'.
         
+        randomizer_id (str): An identifier for the randomizer. If you
+            give this a custom value, you can use multiple randomizers
+            in the same experiment. Defaults to 'randomizer'.
+        
         random_seed: The random seed used for reproducible pseudo-random
             behavior. This seed will be used for shuffling the condition
             list. Defaults to the current system time. Valid seeds are
@@ -234,6 +346,14 @@ class ListRandomizer:
         abort_page (alfred3.page.Page): You can reference a custom
                 page to be displayed to new participants, if the 
                 experiment is full.
+        
+        id (str): A unique identifier for the condition slot assigned
+            by this instance of *ListRandomizer*. If *None*, the current
+            :attr:`.ExperimentSession.session_id` will be used. 
+            This argument enables you to assign, for example, a group
+            id that connects several sessions, to the randomizer.
+            Defaults to None. *Deprecated* in version 2.1.7: Please use
+            parameter *session_ids* instead.
 
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
@@ -246,6 +366,10 @@ class ListRandomizer:
         default setting (True), randomization starts from scratch for
         every experiment version. If you set it to False, you will
         run into an error, if you change anything about the conditions.
+    
+    .. versionchanged:: 2.1.7
+       New parameters *session_ids* and *randomizer_id*, new alternative 
+       constructor :meth:`.factors`. Deprecated the parameter *id*.
     
     Notes: 
 
@@ -338,49 +462,43 @@ class ListRandomizer:
 
     """
 
-
     def __init__(
         self,
         *conditions: Tuple[str, int],
         exp,
-        id: str = None,
+        session_ids: List[str] = None,
         respect_version: bool = True,
         mode: str = "strict",
         random_seed=None,
         abort_page=None,
+        randomizer_id: str = "randomizer",
+        id: str = None,
     ):
+
         self.exp = exp
-        self.id = id if id is not None else exp.session_id
-        self.exp.finish_functions.append(self._mark_slot_finished)
         self.respect_version = respect_version
+        self.exp_version = self.exp.version if respect_version else ""
         self.mode = mode
-        self.timeout = self.exp.session_timeout
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
+        self.session_ids = session_ids if session_ids is not None else [exp.session_id]
+        self.randomizer_id = randomizer_id
         
-        self.io = _ConditionIO(self.exp, respect_version)
-        self.slotlist = None
+        self.io = RandomizerIO(self)
+        self._initialize_slots()
+        
+        self.id = id if id is not None else exp.session_id
+        if id is not None:
+            warn(
+                "The argument 'id' of ListRandomizer is deprecated. Please switch to using 'session_ids'",
+                FutureWarning)
     
-    @property
-    def full(self) -> bool:
-        """
-        bool: Boolean, indicating whether there are any open slots left.
-        """
-        slot = next(self.slotlist.open_slots(self.exp), None)
-
-        if slot is None and self.mode == "inclusive":
-            slot = next(self.slotlist.pending_slots(self.exp), None)
-        
-        if slot is not None:
-            return False
-        else:
-            return True
-
     @classmethod
     def balanced(cls, *conditions, n: int, **kwargs):
         """
-        Alternative constructor for the ListRandomizer.
+        Alternative constructor, creates a ListRandomizer where all 
+        conditions have the same size.
 
         Args:
             *conditions (str): A variable number of strings, giving the
@@ -421,17 +539,173 @@ class ListRandomizer:
         """
         conditions = [(c, n) for c in conditions]
         return cls(*conditions, **kwargs)
+    
+    @classmethod
+    def factors(cls, *factors, n, **kwargs):
+        """
+        Alternative constructor, creates a *balanced* ListRandomizer
+        where the conditions are combinations of several factors.
 
-    def abort(self):
-        self.io.abort()
+        Args:
+            *factors: A variable number of *iterables*, giving the 
+                factors to be used in forming the conditions.
+
+            n (int): The number of participants **per condition**.
+
+            **kwargs: Keyword arguments, passed on the normal intialization
+                of :class:`.ListRandomizer`.
+
+        In elaborated counter-balanced designs, you may end up with a lot
+        of different conditions when combining all different possible
+        values of your factos. Typing them by hand is tedious. To make
+        your life easier, you can now simply input the factors themselves,
+        and alfred3 will construct the combinations for you.
+
+        .. note:: Note that, in Python, strings are iterables. That means,
+            that a call like ``ListRandomizer.factors("ab", "cd", ...)``
+            will combine the *individual characters* within the strings.
+            The resulting conditions in this case will be 
+            ``["a.c", "a.d", "b.c", "b.d"]``. If you want to include a
+            single string on its own, put in in a list:
+            ``ListRandomizer.factors("ab", ["cd"], ...)`` will create
+            two conditions: ``["a.cd", "b.cd"]``.
+        
+        .. versionadded:: 2.1.7
+        
+        Examples:
+
+            Use the :meth:`.factors` constructor to create conditions::
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    randomizer = l.ListRandomizer.factors(
+                        ["a1", "a2"], ["b1", "b2"], 
+                        n=20, 
+                        exp=exp
+                    )
+
+                    exp.condition = randomizer.get_condition()
+
+                    print(randomizer.conditions)
+                    # (('a1.b1', 20), ('a1.b2', 20), ('a2.b1', 20), ('a2.b2', 20))
+            
+            Use the :meth:`.factors` constructor to create conditions,
+            then do something for all sessions that contain a specific
+            factor value::
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    randomizer = al.ListRandomizer.factors(
+                        ["a1", "a2"], ["b1", "b2"], 
+                        n=20, 
+                        exp=exp
+                    )
+
+                    exp.condition = randomizer.get_condition()
+
+                    if "a1" in exp.condition:
+                        # do something only for conditions with a1
+                        pass
+
+        """
+        conditions = product(*factors)
+        conditions = [".".join(c) for c in conditions]
+        conditions = [(c, n) for c in conditions]
+
+        return cls(*conditions, **kwargs)
+
+    def _initialize_slots(self):
+        self.io.load()
+
+        with self.io as data:
+            if not data.slots:
+                data.slots = self._randomize_slots()
+                self.io.save(data)
+    
+    def _generate_slots(self) -> List[dict]:
+        slots = []
+        for c in self.conditions:
+            slots += [{"condition": c[0]}] * c[1]
+        return slots
+
+    def _randomize_slots(self) -> List[dict]:
+        slots = self._generate_slots()
+        random.seed(self.random_seed)
+        random.shuffle(slots)
+        return slots
+    
+    def _abort(self):
         full_page_title = "Experiment closed"
         full_page_text = "Sorry, the experiment currently does not accept any further participants."
         self.exp.abort(reason="full", title=full_page_title, msg=full_page_text, icon="user-check", page=self.abort_page)
-        return "__aborted__"
 
-    def get_condition(self, 
-        raise_exception: bool = False
-    ) -> str:
+    def _validate(self, data: RandomizerData):
+        if self.respect_version:
+            if not self.exp.version == data.exp_version:
+                raise ConditionInconsistency("Experiment version and randomizer version do not match.")
+
+        data_conditions = [slot["condition"] for slot in data.slots]
+        counted = Counter(data_conditions)
+
+        instance = dict(self.conditions)
+
+        msg = "Condition data is inconsistent with randomizer specification. "
+        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
+        if not counted == instance:
+            raise ConditionInconsistency(msg + what_to_do)
+    
+    @property
+    def full(self) -> bool:
+        """
+        bool: *True*, if all condition slots are full. In 'strict' mode,
+        unfinished but active experiment sessions are counted. In
+        'inclusive' mode, only sessions that are fully finished are 
+        counted.
+        """
+        with self.io as data:
+            return self._is_full(data)
+    
+    def _is_full(self, data: RandomizerData) -> bool:
+        slot_manager = SlotManager(data.slots)
+        open_slots = slot_manager.open_slots(self.exp)
+        pending_slots = slot_manager.pending_slots(self.exp)
+        
+        if self.mode == "strict":
+            full = not any(open_slots) 
+        elif self.mode == "inclusive":
+            full = not any(open_slots) and not any(pending_slots)
+        
+        return full
+
+    def abort_if_full(self, raise_exception: bool = False, data: RandomizerData = None):
+        """
+        Aborts the experiment, if all slots of the randomizer are filled.
+
+        Args:
+            raise_exception (bool): If True, the function raises
+                the :class:`.AllConditionsFull` exception instead of 
+                automatically aborting the experiment if all conditions 
+                are full. This allows you to catch the exception and 
+                customize the experiment's behavior in this case.
+        
+        .. versionadded:: 2.1.7
+        """
+        if data is None:
+            full = self.full
+        else:
+            full = self._is_full(data)
+        
+        if not full:
+            return
+
+        if raise_exception:
+            raise AllConditionsFull
+        else:
+            self._abort()
+
+    def get_condition(self, raise_exception: bool = False) -> str:
         """
         Returns a condition.
 
@@ -545,94 +819,34 @@ class ListRandomizer:
 
 
         """
-        self._load_or_insert_data()
-
-        # TODO atomisieren
-        assigned_slot = self.slotlist.id_assigned_to(self.id)
-        if assigned_slot is not None:
-            self.io.write(self._data)
-            return assigned_slot.condition
-
-        slot = next(self.slotlist.open_slots(self.exp), None)
-
-        if slot is None and self.mode == "inclusive":
-            slot = next(self.slotlist.pending_slots(self.exp), None)
-
-        if slot is None:
-            if raise_exception:
-                raise AllConditionsFull
-            else:
-                return self.abort()
+        with self.io as data:
+            if self._is_full(data):
+                self.abort_if_full(raise_exception=raise_exception, data=data)
+                return "__ABORTED__"
             
-        slot.sessions.append(_Session(self.id))
-        self.io.write(self._data) # releases the assignment, placing the "no assignment ongoing" note
-        return slot.condition
+            self._validate(data)
+            slot_manager = SlotManager(data.slots)
+
+            slot = slot_manager.find_slot(self.session_ids)
+            if slot:
+                return slot.condition
+            
+            slot = next(slot_manager.open_slots(self.exp), None)
+
+            if slot is None and self.mode == "inclusive":
+                slot = next(slot_manager.pending_slots(self.exp), None)
+            
+            if slot is None:
+                msg = "No slot found, even though the randomizer does not appear to be full."
+                raise ConditionInconsistency(msg)
+            
+            group = SessionGroup(self.session_ids)
+            slot.session_groups.append(group)
+            
+            data.slots = asdict(slot_manager)["slots"]
+            self.io.save(data)
+            return slot.condition
     
-    def _validate(self, data):
-        if self.respect_version:
-            if not self.exp.version == data["exp_version"]:
-                raise ConditionInconsistency("Experiment version and condition slots version do not match.")
-
-        data_conditions = [slot["condition"] for slot in data["slots"]]
-        counted = Counter(data_conditions)
-
-        instance = dict(self.conditions)
-
-        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
-        msg = "Condition data is inconsistent with randomizer specification. " + what_to_do
-        if not counted == instance:
-            raise ConditionInconsistency(msg)
-
-
-    def _load_or_insert_data(self):
-
-        # check if there is any data at all, independent of assignment_ongoing status
-        data = self.io.load(atomic=False) 
-        
-        if not data: # if not, create a dataset and mark it as assignment_ongoing
-            self.slotlist = self._randomize()
-            data = self._data
-            data["assignment_ongoing"] = True
-            self.io.write(data)
-        elif data and data["assignment_ongoing"]:
-            data = self.io.load() # load data again, this time respecting assignment_ongoing
-        
-        self._validate(data)
-        self.slotlist = _SlotList(*data["slots"])
-
-        if self.full:
-            self.abort()
-
-    def _generate_slots(self) -> List[_Slot]:
-        slots = []
-        for c in self.conditions:
-            slots += [{"condition": c[0], "timeout": self.timeout}] * c[1]
-        return slots
-
-    def _randomize(self) -> _SlotList:
-        slots = self._generate_slots()
-        random.seed(self.random_seed)
-        random.shuffle(slots)
-        return _SlotList(*slots)
-
-    @property
-    def _data(self):
-        d = {}
-        d["exp_id"] = self.exp.exp_id
-        d["exp_version"] = self.exp.version if self.respect_version else ""
-        d["type"] = "condition_data"
-        d["mode"] = self.mode
-        d["slots"] = asdict(self.slotlist)["slots"]
-        d["random_seed"] = self.random_seed
-        d["assignment_ongoing"] = False
-        return d
-
-    def _mark_slot_finished(self, exp):
-        data = self.io.load(atomic=True)
-        self.slotlist = _SlotList(*data["slots"])
-        slot = self.slotlist.id_assigned_to(self.id)
-        slot.finished = True
-        self.io.write(self._data, update=False)
     
 
 def random_condition(*conditions) -> str:
