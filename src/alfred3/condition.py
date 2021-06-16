@@ -358,7 +358,8 @@ class ListRandomizer:
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
     method :meth:`.get_condition` to receive a condition. By default,
-    the ListRandomizer will automatically abort new sessions and display
+    the ListRandomizer will automatically abort sessions when 
+    *get_condition* is called and display
     an information page for participants, if the experiment is full. This
     behavior can be customized (see :meth:`.get_condition`).
 
