@@ -26,6 +26,29 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.1.7
+
+### Added
+
+- Added the `ListRandomizer.factors` alternative constructor for the
+  ListRandomizer. This constructor allows experimenters to easily create 
+  a set of conditions from combinations of factors. For instance,
+  factor 1 with values "A1" and "A2" can be combined with factor 2, which
+  has values "B1" and "B2". The result will be four conditions:
+  "A1.B1", "A1.B2", "A2.B1", "A2.B2". Take a look at the 
+  [documentation]() for further instructions and examples.
+
+- Added the `ListRandomizer.abort_if_full` method. This method allows
+  experimenters to conveniently abort the experiment if all condition
+  slots are full, independently of condition assignment.
+
+### Deprecated
+
+- Deprecated the `id` argument of `ListRandomizer`. Please use the
+  new parameter `session_ids` in the future. The new parameter is designed
+  to work exclusively with **lists** of session ids, wich can be useful for
+  group studies conducted with *alfred3-interact*.
+
 ## alfred3 v2.1.6 (Released 2021-06-12)
 
 ### Fixed
