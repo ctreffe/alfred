@@ -98,10 +98,10 @@ class ExpMember:
         if showif is not None:
             self.showif = showif
         
-        self._vargs = None
+        self._vargs = _DictObj()
         if vargs is not None:
             self._vargs = _DictObj(vargs)
-        elif self.vargs is not None:
+        elif self.vargs:
             self.vargs = _DictObj(self.vargs)
 
         if title is not None:
