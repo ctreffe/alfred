@@ -828,16 +828,16 @@ class ListRandomizer:
 
         """
         with self.io as data:
-            if self._is_full(data):
-                self.abort_if_full(raise_exception=raise_exception, data=data)
-                return "__ABORTED__"
             
             self._validate(data)
             slot_manager = SlotManager(data.slots)
-
             slot = slot_manager.find_slot(self.session_ids)
             if slot:
                 return slot.condition
+            
+            if self._is_full(data):
+                self.abort_if_full(raise_exception=raise_exception, data=data)
+                return "__ABORTED__"
             
             slot = next(slot_manager.open_slots(self.exp), None)
 
