@@ -79,6 +79,10 @@ class TextEntry(InputElement):
     def placeholder(self) -> str:
         """str: Placeholder text, displayed inside the input field."""
         return self._placeholder
+    
+    @placeholder.setter
+    def placeholder(self, value):
+        self._placeholder = value
 
     @property
     def template_data(self):
