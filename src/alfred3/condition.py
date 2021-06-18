@@ -855,6 +855,13 @@ class ListRandomizer:
             self.io.save(data)
             return slot.condition
     
+    def find_slot(self, session_ids: List[str]) -> Slot:
+        data = self.io.load()
+        slot_manager = SlotManager(data.slots)
+        slot = slot_manager.find_slot(session_ids)
+        return slot
+
+    
     def _initialize_slots(self):
         self.io.load()
 
