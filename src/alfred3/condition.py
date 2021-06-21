@@ -63,7 +63,7 @@ class SessionGroup:
     
     def aborted(self, exp) -> bool:
         aborted = self._get_field(exp, "exp_aborted")
-        return all(aborted)
+        return any(aborted)
 
     def expired(self, exp) -> bool:
         start_time = self._get_field(exp, "exp_start_time")
