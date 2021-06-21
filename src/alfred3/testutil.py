@@ -11,7 +11,6 @@ from alfred3.run import ExperimentRunner
 from alfred3.config import ExperimentConfig, ExperimentSecrets
 
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from pymongo import MongoClient
 from thesmuggler import smuggle
 
@@ -49,7 +48,7 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
     """
     if not secrets_path:
         return
-    load_dotenv()
+    
     SECRETS = Path(secrets_path).read_text()
     secrets = SECRETS.format(
         host=os.getenv("MONGODB_HOST"),
@@ -70,7 +69,6 @@ def get_db():
     """
     Returns the mongoDB database specified via credentials in .env.
     """
-    load_dotenv()
     mc = MongoClient(
         host=os.getenv("MONGODB_HOST"),
         port=int(os.getenv("MONGODB_PORT")),

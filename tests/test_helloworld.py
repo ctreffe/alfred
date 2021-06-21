@@ -6,8 +6,10 @@ data saving work.
 import pytest
 import alfred3 as al
 
-from .util import *
+from alfred3.testutil import *
 
+from dotenv import load_dotenv
+load_dotenv()
 
 @pytest.fixture
 def client(tmp_path):

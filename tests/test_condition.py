@@ -6,7 +6,10 @@ import alfred3 as al
 from alfred3.condition import ConditionInconsistency
 import alfred3.condition as cond
 
-from .util import get_exp_session, clear_db
+from alfred3.testutil import get_exp_session, clear_db
+
+from dotenv import load_dotenv
+load_dotenv()
 
 @pytest.fixture
 def exp(tmp_path):
