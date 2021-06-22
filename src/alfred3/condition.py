@@ -29,15 +29,34 @@ class _Session:
         d = get_data_of_session(exp, self.id)
 
         if not d: # if we do not find data, we assume that exp has not been started
+            d = exp.db_misc.find_one({"type": "match_group", "group_id": self.id})
+            if not d:
+                return False
+            
+            session_active = []
+            for sid in d["roles"].values():
+                if sid:
+                    active = self.session_active(exp, sid)
+                    session_active.append(active)
+            
+            active = all(session_active) and len(session_active) > 0
+
+            return active
+        
+        return self.check_data(exp, d)
+        
+    def session_active(self, exp, sid: str) -> bool:
+        data = get_data_of_session(exp, sid)
+        return self.check_data(exp, data)
+
+    def check_data(self, exp, data: dict) -> bool:
+        aborted = data["exp_aborted"]
+        finished = data["exp_finished"]
+        
+        if not data.get("exp_start_time", None): # not started
             return False
         
-        aborted = d["exp_aborted"]
-        finished = d["exp_finished"]
-        
-        if not d.get("exp_start_time", None): # not started
-            return False
-        
-        expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
+        expired = (time.time() - data["exp_start_time"]) > exp.session_timeout
         active = not aborted and not finished and not expired
 
         return active
