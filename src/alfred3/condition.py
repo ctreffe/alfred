@@ -37,51 +37,75 @@ class SessionGroup:
             if data["exp_session_id"] in self.sessions:
                 yield data
     
-    def _get_field(self, exp, field: str) -> list:
+    def _get_fields(self, exp, fields: List[str]) -> list:
         method = saving_method(exp)
         if method == "mongo":
-            data = self._get_field_mongo(exp, field)
+            data = self._get_fields_mongo(exp, fields)
         elif method == "local":
-            data = self._get_field_local(exp, field)
+            data = self._get_fields_local(exp, fields)
         
         return data
     
-    def _get_field_mongo(self, exp, field) -> list:
+    def _get_fields_mongo(self, exp, fields: List[str]) -> Iterator:
         q = self.query(exp.exp_id)
-        cursor = exp.db_main.find(q, projection=[field])
-        data = [d.get(field) for d in cursor]
-        return data
+        projection_fields = {field: 1 for field in fields} 
+        projection = {**projection_fields, **{"_id": 0}}
+        cursor = exp.db_main.find(q, projection=projection)
+        return cursor 
     
-    def _get_field_local(self, exp, field) -> list:
+    def _get_fields_local(self, exp, fields: List[str]) -> Iterator:
         cursor = self._load_local(exp)
-        data = [d.get(field) for d in cursor]
-        return data
+        for sessiondata in cursor:
+            yield {key: value for key, value in sessiondata.items() if key in fields}
 
-    def finished(self, exp) -> bool:
-        finished = self._get_field(exp, "exp_finished")
+    def finished(self, exp, data: dict = None) -> bool:
+        if not data:
+            data = self._get_fields(exp, ["exp_finished"])
+        finished = [session["exp_finished"] for session in data]
         return all(finished)
     
-    def aborted(self, exp) -> bool:
-        aborted = self._get_field(exp, "exp_aborted")
+    def aborted(self, exp, data: dict = None) -> bool:
+        if not data:
+            data = self._get_fields(exp, ["exp_aborted"])
+        aborted = [session["exp_aborted"] for session in data]
         return any(aborted)
 
-    def expired(self, exp) -> bool:
-        start_time = self._get_field(exp, "exp_start_time")
+    def expired(self, exp, data: dict = None) -> bool:
+        if not data:
+            data = self._get_fields(exp, ["exp_start_time"])
         now = time.time()
+        start_time = [session["exp_start_time"] for session in data]
         passed_time = [now - t for t in start_time]
         return any([t > exp.session_timeout for t in passed_time])
         
-    def started(self, exp) -> bool:
-        start_time = self._get_field(exp, "exp_start_time")
+    def started(self, exp, data: dict = None) -> bool:
+        if not data:
+            data = self._get_fields(exp, ["exp_start_time"])
+        start_time = [session["exp_start_time"] for session in data]
         return not any([t is None for t in start_time])
+    
+    def most_recent_save(self, exp, data: dict = None) -> float:
+        if not data:
+            data = self._get_fields(exp, ["exp_save_time"])
+        
+        save_time = [session["exp_save_time"] for session in data]
+        most_recent = max(save_time)
+        return most_recent
         
     def active(self, exp) -> bool:
-        if not self.started(exp):
-            return False
+        fields = ["exp_start_time", "exp_finished", "exp_aborted", "exp_save_time"]
+        data = self._get_fields(exp, fields)
+        
+        if not self.started(exp, data):
+            # use tolerance of 1 min here to give experiments time to start
+            if time.time() - self.most_recent_save(exp, data) > 60:
+                return False
+            else:
+                return True
 
-        finished = self.finished(exp)
-        aborted = self.aborted(exp)
-        expired = self.expired(exp)
+        finished = self.finished(exp, data)
+        aborted = self.aborted(exp, data)
+        expired = self.expired(exp, data)
 
         return not finished and not aborted and not expired
 
