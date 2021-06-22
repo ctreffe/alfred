@@ -26,6 +26,13 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.1.7 (Released 2021-06-22)
+
+### Fixed
+
+- Fixed another issue with the upper allocation limits that occured when
+  groups were used instead of single-participant sessions.
+
 ## alfred3 v2.1.6 (Released 2021-06-12)
 
 ### Fixed
