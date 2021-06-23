@@ -356,6 +356,7 @@ class TestConditionAllocation:
         
         exp1.condition = rand.get_condition()
         exp1._start()
+        exp1._save_data(sync=True)
         time.sleep(1)
         
         assert exp1.session_expired
@@ -365,6 +366,7 @@ class TestConditionAllocation:
         assert slot.open(exp1)
 
         exp2 = exp_factory()
+        exp2.session_timeout = 1
 
         assert exp1.exp_id == exp2.exp_id
 

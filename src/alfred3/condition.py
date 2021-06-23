@@ -58,19 +58,19 @@ class SessionGroup:
         for sessiondata in cursor:
             yield {key: value for key, value in sessiondata.items() if key in fields}
 
-    def finished(self, exp, data: dict = None) -> bool:
+    def finished(self, exp, data: List[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_finished"])
         finished = [session["exp_finished"] for session in data]
         return all(finished)
     
-    def aborted(self, exp, data: dict = None) -> bool:
+    def aborted(self, exp, data: List[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_aborted"])
         aborted = [session["exp_aborted"] for session in data]
         return any(aborted)
 
-    def expired(self, exp, data: dict = None) -> bool:
+    def expired(self, exp, data: List[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_start_time"])
         now = time.time()
@@ -88,13 +88,13 @@ class SessionGroup:
 
         return any(expired)
         
-    def started(self, exp, data: dict = None) -> bool:
+    def started(self, exp, data: List[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_start_time"])
         start_time = [session["exp_start_time"] for session in data]
         return not any([t is None for t in start_time])
     
-    def most_recent_save(self, exp, data: dict = None) -> float:
+    def most_recent_save(self, exp, data: List[dict] = None) -> float:
         if not data:
             data = self._get_fields(exp, ["exp_save_time"])
         
@@ -104,7 +104,7 @@ class SessionGroup:
         
     def active(self, exp) -> bool:
         fields = ["exp_start_time", "exp_finished", "exp_aborted", "exp_save_time"]
-        data = self._get_fields(exp, fields)
+        data = list(self._get_fields(exp, fields))
         
         if not self.started(exp, data):
             # use tolerance of 1 min here to give experiments time to start
@@ -547,7 +547,11 @@ class ListRandomizer:
             with open(path, "r", encoding="utf-8") as fp:
                 data = json.load(fp)
         
-        return bool(data)
+        if data:
+            old = data["slots"][0].get("sessions", False)
+            return old is not False
+        else:
+            return False
 
 
     def __new__(cls, *args, **kwargs):
