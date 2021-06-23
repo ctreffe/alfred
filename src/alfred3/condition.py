@@ -75,8 +75,18 @@ class SessionGroup:
             data = self._get_fields(exp, ["exp_start_time"])
         now = time.time()
         start_time = [session["exp_start_time"] for session in data]
-        passed_time = [now - t for t in start_time]
-        return any([t > exp.session_timeout for t in passed_time])
+        
+        expired = []
+
+        for t in start_time:
+            if t is None:
+                expired.append(False)
+                continue
+            
+            passed_time = now - t
+            expired.append(passed_time > exp.session_timeout)
+
+        return any(expired)
         
     def started(self, exp, data: dict = None) -> bool:
         if not data:
