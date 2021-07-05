@@ -3,9 +3,9 @@ from ._version import __version__
 
 from .experiment import Experiment
 
-from .condition import ListRandomizer
-from .condition import AllConditionsFull
-from .condition import random_condition
+from .randomizer import ListRandomizer
+from .randomizer import AllConditionsFull
+from .randomizer import random_condition
 
 from .section import Section
 from .section import RevisitSection
