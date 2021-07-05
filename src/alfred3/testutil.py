@@ -130,7 +130,7 @@ def get_exp_session(
     script = smuggle(tmp_path / "script.py")
     exp = script.exp
     sid = uuid4().hex
-
+    
     session = exp.create_session(session_id=sid, config=config, secrets=secrets, **urlargs)
     return session
 
