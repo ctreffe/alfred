@@ -165,7 +165,6 @@ class TestConditionAllocation:
     def test_aborted_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -181,7 +180,6 @@ class TestConditionAllocation:
         assert not exp1_session.active(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
         assert exp2.condition == exp1.condition
@@ -190,7 +188,6 @@ class TestConditionAllocation:
     def test_active_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -201,7 +198,6 @@ class TestConditionAllocation:
         assert exp1_session.active(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
@@ -211,7 +207,6 @@ class TestConditionAllocation:
     def test_finished_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -225,7 +220,6 @@ class TestConditionAllocation:
         assert not exp1_session.active(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
@@ -235,7 +229,6 @@ class TestConditionAllocation:
     def test_expired_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -252,7 +245,6 @@ class TestConditionAllocation:
         assert not exp1_session.active(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
@@ -262,21 +254,18 @@ class TestConditionAllocation:
     def test_slots_full_strict(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
         exp1._start()
         exp1._save_data(sync=True)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
         exp2._start()
         exp2._save_data(sync=True)
 
         exp3 = exp_factory()
-        exp3._session_id = "exp3"
         rd3 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp3, random_seed=seed)
         exp3.condition = rd3.get_condition()
 
@@ -285,14 +274,12 @@ class TestConditionAllocation:
     def test_slots_inclusive(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp1, random_seed=seed, mode = "inclusive")
         exp1.condition = rd1.get_condition()
         exp1._start()
         exp1.finish()
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp2, random_seed=seed, mode = "inclusive")
         exp2.condition = rd2.get_condition()
         exp2._start()
@@ -300,7 +287,6 @@ class TestConditionAllocation:
         assert exp1.condition != exp2.condition
 
         exp3 = exp_factory()
-        exp3._session_id = "exp3"
         rd3 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp3, random_seed=seed, mode = "inclusive")
         exp3.condition = rd3.get_condition()
 
@@ -310,14 +296,12 @@ class TestConditionAllocation:
     def test_slots_full_inclusive(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp1, random_seed=seed, mode = "inclusive")
         exp1.condition = rd1.get_condition()
         exp1._start()
         exp1.finish()
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp2, random_seed=seed, mode = "inclusive")
         exp2.condition = rd2.get_condition()
         exp2._start()
@@ -326,7 +310,6 @@ class TestConditionAllocation:
         assert exp1.condition != exp2.condition
 
         exp3 = exp_factory()
-        exp3._session_id = "exp3"
         rd3 = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp3, random_seed=seed, mode = "inclusive")
         exp3.condition = rd3.get_condition()
 
@@ -335,13 +318,11 @@ class TestConditionAllocation:
     def test_balanced_constructor(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = cond.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = cond.ListRandomizer(("a", 10), ("b", 10), exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 

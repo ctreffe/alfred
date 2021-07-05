@@ -3,20 +3,22 @@ import pytest
 import time
 
 import alfred3 as al
-from alfred3.condition import ConditionInconsistency
-import alfred3.condition as cond
+from alfred3.randomizer import ConditionInconsistency
+import alfred3.randomizer as rdmzr
 
 from alfred3.testutil import get_exp_session, clear_db
 
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 @pytest.fixture
 def exp(tmp_path):
     script = "tests/res/script-hello_world.py"
     secrets = "tests/res/secrets-default.conf"
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
-    
+
     yield exp
 
     clear_db()
@@ -29,7 +31,7 @@ def exp_factory(tmp_path):
         secrets = "tests/res/secrets-default.conf"
         exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
         return exp
-    
+
     yield expf
 
     clear_db()
@@ -40,7 +42,6 @@ def lexp(tmp_path):
     script = "tests/res/script-hello_world.py"
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=None)
     yield exp
-
 
 
 @pytest.fixture
@@ -56,22 +57,22 @@ def test_clear(exp):
     """
     print(exp)
 
-class TestConditionValidation:
 
+class TestConditionValidation:
     def test_pass_validation(self, strict_exp):
         rd = al.ListRandomizer(("a", 10), ("b", 10), exp=strict_exp)
         assert rd.get_condition()
-    
+
     def test_change_mode(self, strict_exp):
-        rd = al.ListRandomizer(("a", 10), ("b", 10), exp=strict_exp, mode="inclusive")
+        rd = al.ListRandomizer(("a", 10), ("b", 10), exp=strict_exp, inclusive=True)
         assert rd.get_condition()
-    
+
     def test_change_of_n(self, strict_exp):
 
         rd = al.ListRandomizer(("a", 10), ("b", 9), exp=strict_exp)
         with pytest.raises(ConditionInconsistency):
             rd.get_condition()
-        
+
     def test_change_of_name(self, strict_exp):
 
         rd = al.ListRandomizer(("a", 10), ("c", 10), exp=strict_exp)
@@ -92,17 +93,17 @@ class TestConditionValidation:
     def test_increase_version(self, strict_exp):
         strict_exp.config.read_dict({"metadata": {"version": "0.2"}})
         assert strict_exp.version == "0.2"
-        
+
         rd = al.ListRandomizer(("a", 10), exp=strict_exp)
         assert rd.get_condition()
-    
+
 
 def rd_slots(*conditions, exp, seed):
     rd = al.ListRandomizer(*conditions, exp=exp, random_seed=seed)
     rd.get_condition()
 
     data = rd.io.load()
-    manager = cond.SlotManager(data.slots)
+    manager = rdmzr.SlotManager(data.slots)
 
     rd_slots = [slot.condition for slot in manager.slots]
     return rd_slots
@@ -110,12 +111,13 @@ def rd_slots(*conditions, exp, seed):
 
 def get_slots(randomizer):
     data = randomizer.io.load()
-    return cond.SlotManager(data.slots).slots
+    return rdmzr.SlotManager(data.slots).slots
 
 
 def get_manager(randomizer):
     data = randomizer.io.load()
-    return cond.SlotManager(data.slots)
+    return rdmzr.SlotManager(data.slots)
+
 
 def slots(*conditions, seed):
     slots = []
@@ -127,7 +129,6 @@ def slots(*conditions, seed):
 
 
 class TestConditionShuffle:
-
     def test_shuffle_mongo(self, exp):
         conditions = [("a", 20), ("b", 20)]
         seed1 = 123
@@ -139,16 +140,14 @@ class TestConditionShuffle:
 
         assert s1 != s2
 
-
     def test_shuffle_seed_mongo(self, exp):
         conditions = [("a", 20), ("b", 20)]
         seed = 12345
-        
+
         s1 = rd_slots(*conditions, exp=exp, seed=seed)
         s2 = slots(*conditions, seed=seed)
 
         assert s1 == s2
-    
 
     def test_shuffle_local(self, lexp):
         conditions = [("a", 20), ("b", 20)]
@@ -161,7 +160,6 @@ class TestConditionShuffle:
 
         assert s1 != s2
 
-
     def test_shuffle_seed_local(self, lexp):
         conditions = [("a", 20), ("b", 20)]
         seed = 12345
@@ -173,11 +171,9 @@ class TestConditionShuffle:
 
 
 class TestConditionAllocation:
-    
     def test_aborted_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -190,19 +186,16 @@ class TestConditionAllocation:
         exp1._save_data(sync=True)
 
         exp1_session_group = slots[0].session_groups[0]
-        assert not exp1_session_group.active(exp1)
+        assert not exp1_session_group.pending(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
         assert exp2.condition == exp1.condition
-    
 
-    def test_active_session(self, exp_factory):
+    def test_pending_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -211,20 +204,17 @@ class TestConditionAllocation:
 
         slots = get_slots(rd1)
         exp1_session_group = slots[0].session_groups[0]
-        assert exp1_session_group.active(exp1)
+        assert exp1_session_group.pending(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
         assert exp2.condition != exp1.condition
-    
 
     def test_finished_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -233,22 +223,19 @@ class TestConditionAllocation:
 
         slots = get_slots(rd1)
         exp1_session_group = slots[0].session_groups[0]
-        
+
         assert slots[0].finished(exp1)
-        assert not exp1_session_group.active(exp1)
+        assert not exp1_session_group.pending(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
         assert exp2.condition != exp1.condition
-    
 
     def test_expired_session(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
@@ -260,53 +247,50 @@ class TestConditionAllocation:
 
         slots = get_slots(rd1)
         exp1_session_group = slots[0].session_groups[0]
-        
+
         assert not slots[0].finished(exp1)
-        assert not exp1_session_group.active(exp1)
+        assert not exp1_session_group.pending(exp1)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
         assert exp2.condition == exp1.condition
-    
 
     def test_slots_full_strict(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
         rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
         exp1._start()
         exp1._save_data(sync=True)
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
         exp2._start()
         exp2._save_data(sync=True)
 
         exp3 = exp_factory()
-        exp3._session_id = "exp3"
         rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, random_seed=seed)
         exp3.condition = rd3.get_condition()
 
         assert exp3.aborted
-    
+
     def test_slots_inclusive(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
-        rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, random_seed=seed, mode = "inclusive")
+        rd1 = al.ListRandomizer.balanced(
+            "a", "b", n=1, exp=exp1, random_seed=seed, inclusive=True
+        )
         exp1.condition = rd1.get_condition()
         exp1._start()
         exp1.finish()
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
-        rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, random_seed=seed, mode = "inclusive")
+        rd2 = al.ListRandomizer.balanced(
+            "a", "b", n=1, exp=exp2, random_seed=seed, inclusive=True
+        )
         exp2.condition = rd2.get_condition()
         exp2._start()
         exp2._save_data(sync=True)
@@ -314,25 +298,48 @@ class TestConditionAllocation:
         assert exp1.condition != exp2.condition
 
         exp3 = exp_factory()
-        exp3._session_id = "exp3"
-        rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, random_seed=seed, mode = "inclusive")
+        rd3 = al.ListRandomizer.balanced(
+            "a", "b", n=1, exp=exp3, random_seed=seed, inclusive=True
+        )
         exp3.condition = rd3.get_condition()
 
         assert exp2.condition == exp3.condition
 
-    
+    def test_multiple_finished_in_same_slot(self, exp_factory):
+        exp1 = exp_factory()
+        exp2 = exp_factory()
+        rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, inclusive=True)
+        rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, inclusive=True)
+
+        c1 = rd1.get_condition()
+        c2 = rd2.get_condition()
+
+        assert c1 == c2
+
+        for exp in (exp1, exp2):
+            exp._save_data()
+            exp.finish()
+        
+        for rd in (rd1, rd2):
+            assert rd.nopen == 1
+            assert rd.nfinished == 1
+            assert rd.npending == 0
+            assert not rd.allfinished 
+
     def test_slots_full_inclusive(self, exp_factory):
         exp1 = exp_factory()
         seed = 12348
-        exp1._session_id = "exp1"
-        rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, random_seed=seed, mode = "inclusive")
+        rd1 = al.ListRandomizer.balanced(
+            "a", "b", n=1, exp=exp1, random_seed=seed, inclusive=True
+        )
         exp1.condition = rd1.get_condition()
         exp1._start()
         exp1.finish()
 
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
-        rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, random_seed=seed, mode = "inclusive")
+        rd2 = al.ListRandomizer.balanced(
+            "a", "b", n=1, exp=exp2, random_seed=seed, inclusive=True
+        )
         exp2.condition = rd2.get_condition()
         exp2._start()
         exp2.finish()
@@ -340,25 +347,23 @@ class TestConditionAllocation:
         assert exp1.condition != exp2.condition
 
         exp3 = exp_factory()
-        exp3._session_id = "exp3"
-        rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, random_seed=seed, mode = "inclusive")
+        rd3 = al.ListRandomizer.balanced(
+            "a", "b", n=1, exp=exp3, random_seed=seed, inclusive=True
+        )
         exp3.condition = rd3.get_condition()
 
         assert exp3.aborted
-
-    
-    
 
     def test_session_expired(self, exp_factory):
         exp1 = exp_factory()
         exp1.session_timeout = 1
         rand = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1)
-        
+
         exp1.condition = rand.get_condition()
         exp1._start()
         exp1._save_data(sync=True)
         time.sleep(1)
-        
+
         assert exp1.session_expired
 
         slot_manager = get_manager(rand)
@@ -378,7 +383,7 @@ class TestConditionAllocation:
     def test_shifted_finish(self, exp_factory):
         exp1 = exp_factory()
         rand = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1)
-        
+
         exp1.condition = rand.get_condition()
         exp1._start()
         exp1._save_data(sync=True)
@@ -394,69 +399,113 @@ class TestConditionAllocation:
         exp1.finish()
 
         rdata = exp1.db_misc.find_one({"type": "condition_data"})
-        slot_manager = cond.SlotManager(rdata["slots"])
+        slot_manager = rdmzr.SlotManager(rdata["slots"])
 
         assert slot_manager.slots[0].finished(exp1)
         assert not slot_manager.slots[1].finished(exp1)
-        
+
         exp2.finish()
 
         rdata = exp1.db_misc.find_one({"type": "condition_data"})
-        slot_manager = cond.SlotManager(rdata["slots"])
+        slot_manager = rdmzr.SlotManager(rdata["slots"])
         assert slot_manager.slots[0].finished(exp1)
         assert slot_manager.slots[1].finished(exp1)
 
+    def test_inclusive_next_pending_sparsest(self, exp_factory):
+        exp1 = exp_factory()
+        exp2 = exp_factory()
+        exp3 = exp_factory()
+        exp4 = exp_factory()
+
+        rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, inclusive=True)
+        rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, inclusive=True)
+        rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, inclusive=True)
+        rd4 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp4, inclusive=True)
+
+        c1 = rd1.get_condition()
+        c2 = rd2.get_condition()
+
+        assert c1 != c2
+
+        c3 = rd3.get_condition()
+        
+        assert c1 == c3
+        assert rd4.npending == 2
+
+        c4 = rd4.get_condition()
+
+        assert c4 == c2
+    
+    def test_inclusive_next_pending_oldest(self, exp_factory):
+        exp1 = exp_factory()
+        exp2 = exp_factory()
+        exp3 = exp_factory()
+
+        rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, inclusive=True)
+        rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, inclusive=True)
+        rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, inclusive=True)
+
+        c1 = rd1.get_condition()
+        c2 = rd2.get_condition()
+
+        assert c1 != c2
+
+        exp1._save_data(sync=True)
+
+        assert rd3.npending == 2
+        c3 = rd3.get_condition()
+        
+        assert c2 == c3
+
 
 class TestConstructors:
-    
     def test_balanced_constructor(self, exp_factory):
         seed = 12348
         exp1 = exp_factory()
-        exp1._session_id = "exp1"
         rd1 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp1, random_seed=seed)
         exp1.condition = rd1.get_condition()
 
-
         exp2 = exp_factory()
-        exp2._session_id = "exp2"
         rd2 = al.ListRandomizer(("a", 10), ("b", 10), exp=exp2, random_seed=seed)
         exp2.condition = rd2.get_condition()
 
         slots1 = [s.condition for s in get_slots(rd1)]
         slots2 = [s.condition for s in get_slots(rd2)]
         assert slots1 == slots2
-    
 
     def test_factors_simple(self, exp_factory):
         exp = exp_factory()
         seed = 12348
-        rd = al.ListRandomizer.factors(["a1", "a2"], "b", n = 10, exp = exp, random_seed=seed)
+        rd = al.ListRandomizer.factors(["a1", "a2"], "b", n=10, exp=exp, random_seed=seed)
         assert rd.conditions == (("a1.b", 10), ("a2.b", 10))
-    
 
     def test_factors_complex(self, exp_factory):
         exp = exp_factory()
         seed = 12348
-        rd = al.ListRandomizer.factors(["a1", "a2"], ["b1", "b2"], ["c1", "c2"], n = 10, exp = exp, random_seed=seed)
+        rd = al.ListRandomizer.factors(
+            ["a1", "a2"], ["b1", "b2"], ["c1", "c2"], n=10, exp=exp, random_seed=seed
+        )
         assert len(rd.conditions) == 8
 
-    
     def test_factors_strings(self, exp_factory):
         exp = exp_factory()
         seed = 12348
-        rd = al.ListRandomizer.factors("abc", "defg", n = 10, exp = exp, random_seed=seed)
+        rd = al.ListRandomizer.factors("abc", "defg", n=10, exp=exp, random_seed=seed)
 
         assert len(rd.conditions) == 12
 
 
 class TestMultipleRandomizers:
-
     def test_multiple(self, exp_factory):
         seed = 12348
         exp = exp_factory()
-        rd1 = al.ListRandomizer.balanced("a", "b", n=10, exp=exp, randomizer_id="rd1", random_seed=seed)
-        rd2 = al.ListRandomizer.balanced("c", "d", n=10, exp=exp, randomizer_id="rd2", random_seed=seed)
-        
+        rd1 = al.ListRandomizer.balanced(
+            "a", "b", n=10, exp=exp, randomizer_id="rd1", random_seed=seed
+        )
+        rd2 = al.ListRandomizer.balanced(
+            "c", "d", n=10, exp=exp, randomizer_id="rd2", random_seed=seed
+        )
+
         c1 = rd1.get_condition()
         c2 = rd2.get_condition()
 
@@ -464,29 +513,24 @@ class TestMultipleRandomizers:
 
 
 class TestSessionGroup:
-
     def test_group_init(self, exp_factory):
         seed = 12348
 
         exp1 = exp_factory()
-        exp1._session_id = "exp1"
-        
-        exp2 = exp_factory()
-        exp2._session_id = "exp2"
 
-        rd = al.ListRandomizer.balanced("a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp1, random_seed=seed)
+        exp2 = exp_factory()
+
+        rd = al.ListRandomizer.balanced(
+            "a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp1, random_seed=seed
+        )
         rd.get_condition()
 
         slot_manager = get_manager(rd)
         assert slot_manager.slots[0].session_groups[0].sessions == ["exp1", "exp2"]
 
-
     def test_group_condition(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
-        
-        exp1._session_id = "exp1"
-        exp2._session_id = "exp2"
 
         exp1._start()
         exp2._start()
@@ -496,7 +540,7 @@ class TestSessionGroup:
 
         rd1 = al.ListRandomizer.balanced("a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp1)
         rd2 = al.ListRandomizer.balanced("a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp2)
-        
+
         c1 = rd1.get_condition()
         c2 = rd2.get_condition()
 
