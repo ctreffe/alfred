@@ -509,10 +509,10 @@ class TestMultipleRandomizers:
         seed = 12348
         exp = exp_factory()
         rd1 = al.ListRandomizer.balanced(
-            "a", "b", n=10, exp=exp, counter_id="rd1", random_seed=seed
+            "a", "b", n=10, exp=exp, randomizer_id="rd1", random_seed=seed
         )
         rd2 = al.ListRandomizer.balanced(
-            "c", "d", n=10, exp=exp, counter_id="rd2", random_seed=seed
+            "c", "d", n=10, exp=exp, randomizer_id="rd2", random_seed=seed
         )
 
         c1 = rd1.get_condition()

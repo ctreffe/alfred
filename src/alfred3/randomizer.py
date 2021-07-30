@@ -13,7 +13,7 @@ from .compatibility.condition import ListRandomizer as OldListRandomizer
 
 class ListRandomizer(SessionCounter):
     """
-    Offers efficient list randomization.
+    Offers list randomization.
 
     Args:
         *conditions: A variable number of tuples, defining the experiment
@@ -36,7 +36,7 @@ class ListRandomizer(SessionCounter):
             for each experiment version. This is especially important,
             if you make changes to the condition setup of an ongoing
             experiment. This might cause the randomizer to fail, causing
-            :class:`.ConditionInconsistency` errors.
+            :class:`.SlotInconsistency` errors.
             Setting *respect_version* to True can fix such issues.
             Defaults to True.
 
@@ -212,7 +212,7 @@ class ListRandomizer(SessionCounter):
             query = {"exp_id": exp.exp_id, "exp_version": version, "type": "condition_data"}
             data = exp.db_misc.find_one(query)
         elif method == "local":
-            directory = exp.config.get("exp_condition", "path")
+            directory = exp.config.get("data", "save_directory")
             path = exp.subpath(directory) / f"randomization{version}.json"
 
             if not path.exists():
@@ -242,7 +242,7 @@ class ListRandomizer(SessionCounter):
         inclusive: bool = False,
         random_seed=None,
         abort_page=None,
-        counter_id: str = "randomizer",
+        randomizer_id: str = "randomizer",
         mode: str = None,
         id: str = None,
     ):
@@ -254,7 +254,7 @@ class ListRandomizer(SessionCounter):
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
-        self.counter_id = counter_id
+        self.counter_id = randomizer_id
         self.session_ids = session_ids if session_ids is not None else [exp.session_id]
         if isinstance(self.session_ids, str):
             raise ValueError(
@@ -407,7 +407,7 @@ class ListRandomizer(SessionCounter):
         return self._nslots
 
     @property
-    def insert(self) -> CounterData:
+    def _insert(self) -> CounterData:
         data = CounterData(
             counter_id=self.counter_id,
             exp_id=self.exp.exp_id,
@@ -425,8 +425,8 @@ class ListRandomizer(SessionCounter):
 
         Args:
             raise_exception (bool): If True, the function raises
-                the :class:`.AllConditionsFull` exception instead of
-                automatically aborting the experiment if all conditions
+                the :class:`.AllSlotsFull` exception instead of
+                automatically aborting the experiment if all slots
                 are full. This allows you to catch the exception and
                 customize the experiment's behavior in this case.
 
@@ -440,8 +440,9 @@ class ListRandomizer(SessionCounter):
             list.
 
         Raises:
-            AllConditionsFull: If raise_exception is True and
+            AllSlotsFull: If raise_exception is True and
             all conditions are full.
+            SlotInconsistency: If slot validation fails.
 
         Examples:
 
@@ -470,10 +471,11 @@ class ListRandomizer(SessionCounter):
 
             This is an example of customizing the 'full' behavior.
             It basically re-implements the default behavior, but showcases how
-            you can customize behavior by catching the "AllConditionsFull"
+            you can customize behavior by catching the "AllSlotsFull"
             exception::
 
                 import alfred3 as al
+                from alfred3 import exceptions as alexcept
                 exp = al.Experiment()
 
                 @exp.setup
@@ -481,7 +483,7 @@ class ListRandomizer(SessionCounter):
                     randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
                     try:
                         exp.condition = randomizer.get_condition(raise_exception=True)
-                    except al.AllConditionsFull:
+                    except alexcept.AllSlotsFull:
                         full_page = al.Page(title="Experiment closed.", name="fullpage")
                         full_page += al.Text("Sorry, the experiment currently does not accept any further participants")
                         exp.abort(reason="full", page=full_page)

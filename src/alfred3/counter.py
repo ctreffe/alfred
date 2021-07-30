@@ -256,9 +256,9 @@ class CounterIO:
     def load(self) -> CounterData:
         method = saving_method(self.exp)
         if method == "mongo":
-            return self.load_mongo(self.counter.insert)
+            return self.load_mongo(self.counter._insert)
         elif method == "local":
-            return self.load_local(self.counter.insert)
+            return self.load_local(self.counter._insert)
 
     def load_mongo(self, insert: CounterData) -> CounterData:
         q = self.query
@@ -384,12 +384,61 @@ class CounterIO:
 
 
 class SessionCounter:
+    """
+    A counter for experiment sessions.
+
+    The counter allows you to enforce an upper limit on the number of participants in your experiment.
+
+    Args:
+        nslots (int): Maximum number of slots.
+        exp (alfred3.ExperimentSession): Experiment session.
+        respect_version (bool):
+        inclusive (bool):
+            If *False* (default), the counter will only assign a
+            slot, if there are no pending sessions for that slot. It will
+            not assign a slot, if a session in that slot
+            is finished, or if there is an ongoing session in that slot
+            that has not yet timed out. You will end up with exactly
+            as many participants, as specified in *nslots*.
+
+            If *True*, the counter will assign a slot,
+            if there is no finished session in that slot. That means,
+            there may be two ongoing sessions for the same slot, and
+            both might end up to finish.
+
+            While inclusive=*False* may lead to participants being turned
+            away before the experiment is really complete, inclusive=True
+            may lead to more data being collected than necessary.
+
+            Defaults to *False*.
+        counter_id (str): 
+            An identifier for the counter. If you
+            give this a custom value, you can use multiple counters
+            in the same experiment. Defaults to 'counter'.
+        abort_page (alfred3.Page): You can reference a custom
+                page to be displayed to new participants, if the
+                counter is full.
+    
+    Examples:
+        A simple example on how to use the counter::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.setup
+            def setup(exp):
+                counter = al.SessionCounter(10, exp)
+                counter.count()
+            
+            exp += al.Page(title = "Hello, World!", name="hello_world")
+
+    """
 
     DATA_TYPE = "counter_data"
 
-    def __init__(self, nslots: int, exp, slot_label: str = "slot", respect_version: bool = True, inclusive: bool = False, counter_id: str = "counter", abort_page=None):
+    def __init__(self, nslots: int, exp, respect_version: bool = True, inclusive: bool = False, counter_id: str = "counter", abort_page=None):
         self.nslots = nslots
-        self.slot_label = slot_label
+        self.slot_label = "slot"
         self.exp = exp
         self.respect_version = respect_version
         self.exp_version = self.exp.version if respect_version else ""
@@ -402,7 +451,7 @@ class SessionCounter:
         self._initialize_slots()
     
     @property
-    def insert(self) -> CounterData:
+    def _insert(self) -> CounterData:
         data = CounterData(
             counter_id=self.counter_id,
             exp_id=self.exp.exp_id,
@@ -427,26 +476,35 @@ class SessionCounter:
     
     @property
     def nopen(self) -> int:
+        """
+        int: Number of open slots
+        """
         with self.io as data:
             return self._nopen(data)
     
     def _nopen(self, data) -> int:
-        slot_manager = self.slot_manager(data)
+        slot_manager = self._slot_manager(data)
         open_slots = list(slot_manager.open_slots(self.exp))
         return len(open_slots)
     
     @property
     def npending(self) -> int:
+        """
+        int: Number of slots in which a session is still ongoing.
+        """
         with self.io as data:
             return self._npending(data)
     
     def _npending(self, data) -> int:
-        slot_manager = self.slot_manager(data)
+        slot_manager = self._slot_manager(data)
         pending_slots = list(slot_manager.pending_slots(self.exp))
         return len(pending_slots)
     
     @property
     def nfinished(self) -> int:
+        """
+        int: Number of finished slots
+        """
         with self.io as data:
             nopen = self._nopen(data)
             npending = self._npending(data)
@@ -454,6 +512,9 @@ class SessionCounter:
         
     @property
     def allfinished(self) -> bool:
+        """
+        bool: Indicates, whether all slots in the counter are finished.
+        """
         return self.nfinished == self.nslots
     
     def _accepts_sessions(self, data) -> bool:
@@ -473,10 +534,41 @@ class SessionCounter:
             return self._nopen(data) > 0
     
     def count(self, raise_exception: bool = False) -> str:
+        """
+        Counts the experiment session associated with the counter.
+
+        Args:
+            raise_exception (bool): If True, the function raises
+                the :class:`.AllSlotsFull` exception instead of
+                automatically aborting the experiment if all slots
+                are full. This allows you to catch the exception and
+                customize the experiment's behavior in this case.
+        
+        Returns:
+            str: The slot label.
+
+        Raises:
+            AllSlotsFull: If raise_exception is True and
+            all slots are full.
+            SlotInconsistency: If slot validation fails.
+        
+        Examples:
+            A simple example on how to use the counter::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+                @exp.setup
+                def setup(exp):
+                    counter = al.SessionCounter(10, exp)
+                    counter.count()
+                
+                exp += al.Page(title = "Hello, World!", name="hello_world")
+        """
         with self.io as data:
             self._validate(data)
 
-            slot_manager = self.slot_manager(data)
+            slot_manager = self._slot_manager(data)
             slot = self._own_slot(data)
             
             if slot:
@@ -486,7 +578,7 @@ class SessionCounter:
             if full and raise_exception:
                 raise AllSlotsFull
             elif full:
-                self.abort_exp()
+                self._abort_exp()
                 return "__ABORTED__"
             
             slot = next(slot_manager.open_slots(self.exp), None)
@@ -508,17 +600,20 @@ class SessionCounter:
         group = SessionGroup(self.session_ids)
         slot.session_groups.append(group)
     
-    def slot_manager(self, data: CounterData) -> SlotManager:
+    def _slot_manager(self, data: CounterData) -> SlotManager:
         return SlotManager(data.slots)
     
     def next(self) -> Slot:
+        """
+        Returns the next open slot.
+        """
         with self.io as data:
-            open_slots = self.slot_manager(data).open_slots(self.exp)
+            open_slots = self._slot_manager(data).open_slots(self.exp)
         
         return next(open_slots)
     
     def _own_slot(self, data: CounterData) -> Slot:
-        slot_manager = self.slot_manager(data)
+        slot_manager = self._slot_manager(data)
         slot = slot_manager.find_slot(self.session_ids)
         return slot
 
@@ -529,7 +624,7 @@ class SessionCounter:
                     "Experiment version and randomizer version do not match."
                 )
 
-    def abort_exp(self):
+    def _abort_exp(self):
         full_page_title = "Experiment closed"
         full_page_text = (
             "Sorry, the experiment currently does not accept any further participants."

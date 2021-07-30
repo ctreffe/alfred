@@ -36,7 +36,7 @@ class TestCounter:
 
         assert counter
 
-        assert counter.nopen == 0
+        assert counter.nopen == 3
         assert counter.nfinished == 0
         assert counter.npending == 0
     
