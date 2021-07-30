@@ -121,7 +121,7 @@ class _ConditionIO:
         
         elif self.exp.config.get("local_saving_agent", "use"):
             self.method = "local"
-            self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path")) / f"randomization{self.version}.json"
+            self.path = self.exp.subpath(self.exp.config.get("exp_condition", "path", fallback="save")) / f"randomization{self.version}.json"
             self.path.parent.mkdir(exist_ok=True, parents=True)
     
     def load(self, atomic: bool = True) -> dict:
