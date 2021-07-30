@@ -217,8 +217,8 @@ class SlotManager:
 
 
 @dataclass
-class CounterData:
-    counter_id: str
+class QuotaData:
+    quota_id: str
     exp_id: str
     exp_version: str
     inclusive: bool
@@ -228,10 +228,10 @@ class CounterData:
     additional_info: dict = field(default_factory=dict)
 
 
-class CounterIO:
-    def __init__(self, counter):
-        self.counter = counter
-        self.exp = counter.exp
+class QuotaIO:
+    def __init__(self, quota):
+        self.quota = quota
+        self.exp = quota.exp
         self.db = self.exp.db_misc
 
         if saving_method(self.exp) == "local":
@@ -241,26 +241,26 @@ class CounterIO:
     def query(self) -> dict:
         d = {}
         d["exp_id"] = self.exp.exp_id
-        d["exp_version"] = self.counter.exp_version
-        d["type"] = self.counter.DATA_TYPE
-        d["counter_id"] = self.counter.counter_id
+        d["exp_version"] = self.quota.exp_version
+        d["type"] = self.quota.DATA_TYPE
+        d["quota_id"] = self.quota.quota_id
         return d
 
     @property
     def path(self) -> Path:
-        name = f"{self.counter.DATA_TYPE}_{self.counter.counter_id}{self.counter.exp_version}.json"
+        name = f"{self.quota.DATA_TYPE}_{self.quota.quota_id}{self.quota.exp_version}.json"
         directory = self.exp.config.get("data", "save_directory")
         directory = self.exp.subpath(directory)
         return directory / name
 
-    def load(self) -> CounterData:
+    def load(self) -> QuotaData:
         method = saving_method(self.exp)
         if method == "mongo":
-            return self.load_mongo(self.counter._insert)
+            return self.load_mongo(self.quota._insert)
         elif method == "local":
-            return self.load_local(self.counter._insert)
+            return self.load_local(self.quota._insert)
 
-    def load_mongo(self, insert: CounterData) -> CounterData:
+    def load_mongo(self, insert: QuotaData) -> QuotaData:
         q = self.query
         data = self.db.find_one_and_update(
             filter=q,
@@ -269,9 +269,9 @@ class CounterIO:
             return_document=ReturnDocument.AFTER,
         )
         data.pop("_id", None)
-        return CounterData(**data)
+        return QuotaData(**data)
 
-    def load_local(self, insert: CounterData) -> CounterData:
+    def load_local(self, insert: QuotaData) -> QuotaData:
         if not self.path.exists():
             self.save_local(asdict(insert))
 
@@ -279,16 +279,16 @@ class CounterIO:
             with open(self.path, "r", encoding="utf-8") as fp:
                 data = json.load(fp)
 
-            return CounterData(**data)
+            return QuotaData(**data)
 
-    def load_markbusy(self) -> CounterData:
+    def load_markbusy(self) -> QuotaData:
         method = saving_method(self.exp)
         if method == "mongo":
             return self.load_markbusy_mongo()
         elif method == "local":
             return self.load_markbusy_local()
 
-    def load_markbusy_mongo(self) -> CounterData:
+    def load_markbusy_mongo(self) -> QuotaData:
         q = self.query
         q["busy"] = False
 
@@ -302,9 +302,9 @@ class CounterIO:
 
         data.pop("_id", None)
 
-        return CounterData(**data)
+        return QuotaData(**data)
 
-    def load_markbusy_local(self) -> CounterData:
+    def load_markbusy_local(self) -> QuotaData:
         if not self.path.exists():
             data = asdict(self.rand.data)
 
@@ -316,9 +316,9 @@ class CounterIO:
 
         data["busy"] = True
         self.save_local(data)
-        return CounterData(**data)
+        return QuotaData(**data)
 
-    def save(self, data: CounterData):
+    def save(self, data: QuotaData):
         data = asdict(data)
 
         method = saving_method(self.exp)
@@ -370,7 +370,7 @@ class CounterIO:
 
         if exc_type:
             self.release()
-            self.exp.abort(reason="counter_error")
+            self.exp.abort(reason="quota_error")
             self.exp.log.error(
                 (
                     f"There was an error in a locked operation: '{exc_value}' "
@@ -383,25 +383,25 @@ class CounterIO:
 
 
 
-class SessionCounter:
+class SessionQuota:
     """
-    A counter for experiment sessions.
+    A quota for experiment sessions.
 
-    The counter allows you to enforce an upper limit on the number of participants in your experiment.
+    The quota allows you to enforce an upper limit on the number of participants in your experiment.
 
     Args:
         nslots (int): Maximum number of slots.
         exp (alfred3.ExperimentSession): Experiment session.
         respect_version (bool):
         inclusive (bool):
-            If *False* (default), the counter will only assign a
+            If *False* (default), the quota will only assign a
             slot, if there are no pending sessions for that slot. It will
             not assign a slot, if a session in that slot
             is finished, or if there is an ongoing session in that slot
             that has not yet timed out. You will end up with exactly
             as many participants, as specified in *nslots*.
 
-            If *True*, the counter will assign a slot,
+            If *True*, the quota will assign a slot,
             if there is no finished session in that slot. That means,
             there may be two ongoing sessions for the same slot, and
             both might end up to finish.
@@ -411,49 +411,49 @@ class SessionCounter:
             may lead to more data being collected than necessary.
 
             Defaults to *False*.
-        counter_id (str): 
-            An identifier for the counter. If you
-            give this a custom value, you can use multiple counters
-            in the same experiment. Defaults to 'counter'.
+        quota_id (str): 
+            An identifier for the quota. If you
+            give this a custom value, you can use multiple quotas
+            in the same experiment. Defaults to 'quota'.
         abort_page (alfred3.Page): You can reference a custom
                 page to be displayed to new participants, if the
-                counter is full.
+                quota is full.
     
     Examples:
-        A simple example on how to use the counter::
+        A simple example on how to use the quota::
 
             import alfred3 as al
             exp = al.Experiment()
 
             @exp.setup
             def setup(exp):
-                counter = al.SessionCounter(10, exp)
-                counter.count()
+                quota = al.SessionQuota(10, exp)
+                quota.count()
             
             exp += al.Page(title = "Hello, World!", name="hello_world")
 
     """
 
-    DATA_TYPE = "counter_data"
+    DATA_TYPE = "quota_data"
 
-    def __init__(self, nslots: int, exp, respect_version: bool = True, inclusive: bool = False, counter_id: str = "counter", abort_page=None):
+    def __init__(self, nslots: int, exp, respect_version: bool = True, inclusive: bool = False, quota_id: str = "quota", abort_page=None):
         self.nslots = nslots
         self.slot_label = "slot"
         self.exp = exp
         self.respect_version = respect_version
         self.exp_version = self.exp.version if respect_version else ""
         self.inclusive = inclusive
-        self.counter_id = counter_id
+        self.quota_id = quota_id
         self.session_ids = [exp.session_id]
-        self.io = CounterIO(self)
+        self.io = QuotaIO(self)
         self.abort_page = abort_page
 
         self._initialize_slots()
     
     @property
-    def _insert(self) -> CounterData:
-        data = CounterData(
-            counter_id=self.counter_id,
+    def _insert(self) -> QuotaData:
+        data = QuotaData(
+            quota_id=self.quota_id,
             exp_id=self.exp.exp_id,
             exp_version=self.exp_version,
             inclusive=self.inclusive,
@@ -513,7 +513,7 @@ class SessionCounter:
     @property
     def allfinished(self) -> bool:
         """
-        bool: Indicates, whether all slots in the counter are finished.
+        bool: Indicates, whether all slots in the quota are finished.
         """
         return self.nfinished == self.nslots
     
@@ -535,7 +535,7 @@ class SessionCounter:
     
     def count(self, raise_exception: bool = False) -> str:
         """
-        Counts the experiment session associated with the counter.
+        Counts the experiment session associated with the quota.
 
         Args:
             raise_exception (bool): If True, the function raises
@@ -553,15 +553,15 @@ class SessionCounter:
             SlotInconsistency: If slot validation fails.
         
         Examples:
-            A simple example on how to use the counter::
+            A simple example on how to use the quota::
 
                 import alfred3 as al
                 exp = al.Experiment()
 
                 @exp.setup
                 def setup(exp):
-                    counter = al.SessionCounter(10, exp)
-                    counter.count()
+                    quota = al.SessionQuota(10, exp)
+                    quota.count()
                 
                 exp += al.Page(title = "Hello, World!", name="hello_world")
         """
@@ -587,7 +587,7 @@ class SessionCounter:
                 slot = slot_manager.next_pending(self.exp)
 
             if slot is None:
-                msg = "No slot found, even though the counter does not appear to be full."
+                msg = "No slot found, even though the quota does not appear to be full."
                 raise SlotInconsistency(msg)
 
             self._update_slot(slot)
@@ -600,7 +600,7 @@ class SessionCounter:
         group = SessionGroup(self.session_ids)
         slot.session_groups.append(group)
     
-    def _slot_manager(self, data: CounterData) -> SlotManager:
+    def _slot_manager(self, data: QuotaData) -> SlotManager:
         return SlotManager(data.slots)
     
     def next(self) -> Slot:
@@ -612,12 +612,12 @@ class SessionCounter:
         
         return next(open_slots)
     
-    def _own_slot(self, data: CounterData) -> Slot:
+    def _own_slot(self, data: QuotaData) -> Slot:
         slot_manager = self._slot_manager(data)
         slot = slot_manager.find_slot(self.session_ids)
         return slot
 
-    def _validate(self, data: CounterData):
+    def _validate(self, data: QuotaData):
         if self.respect_version:
             if not self.exp.version == data.exp_version:
                 raise SlotInconsistency(

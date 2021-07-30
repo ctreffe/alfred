@@ -4,10 +4,10 @@ import pytest
 import time
 
 import alfred3 as al
-from alfred3.counter import SlotManager
+from alfred3.quota import SlotManager
 from alfred3.randomizer import ConditionInconsistency
 import alfred3.randomizer as rdmzr
-from alfred3.randomizer import SessionCounter
+from alfred3.quota import SessionQuota
 
 from alfred3.testutil import get_exp_session, clear_db
 

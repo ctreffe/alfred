@@ -5,13 +5,13 @@ from typing import List, Tuple
 from itertools import product
 from collections import Counter
 
-from .counter import SessionCounter, CounterData, CounterIO
+from .quota import SessionQuota, QuotaData, QuotaIO
 from .exceptions import ConditionInconsistency
 from .data_manager import saving_method
 from .compatibility.condition import ListRandomizer as OldListRandomizer
 
 
-class ListRandomizer(SessionCounter):
+class ListRandomizer(SessionQuota):
     """
     Offers list randomization.
 
@@ -254,14 +254,14 @@ class ListRandomizer(SessionCounter):
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
-        self.counter_id = randomizer_id
+        self.quota_id = randomizer_id
         self.session_ids = session_ids if session_ids is not None else [exp.session_id]
         if isinstance(self.session_ids, str):
             raise ValueError(
                 "Argument 'session_ids' must be a list of strings, not a single string."
             )
 
-        self.io = CounterIO(self)
+        self.io = QuotaIO(self)
         self._initialize_slots()
         self._nslots = None
         
@@ -333,7 +333,7 @@ class ListRandomizer(SessionCounter):
             **kwargs: Keyword arguments, passed on the normal intialization
                 of :class:`.ListRandomizer`.
 
-        In elaborated counter-balanced designs, you may end up with a lot
+        In elaborated quota-balanced designs, you may end up with a lot
         of different conditions when combining all different possible
         values of your factos. Typing them by hand is tedious. To make
         your life easier, you can now simply input the factors themselves,
@@ -407,9 +407,9 @@ class ListRandomizer(SessionCounter):
         return self._nslots
 
     @property
-    def _insert(self) -> CounterData:
-        data = CounterData(
-            counter_id=self.counter_id,
+    def _insert(self) -> QuotaData:
+        data = QuotaData(
+            quota_id=self.quota_id,
             exp_id=self.exp.exp_id,
             exp_version=self.exp_version,
             inclusive=self.inclusive,
@@ -557,7 +557,7 @@ class ListRandomizer(SessionCounter):
         random.shuffle(slots)
         return slots
 
-    def _validate(self, data: CounterData):
+    def _validate(self, data: QuotaData):
         if self.respect_version:
             if not self.exp.version == data.exp_version:
                 raise ConditionInconsistency(

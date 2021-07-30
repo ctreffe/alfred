@@ -3,7 +3,7 @@ from ._version import __version__
 
 from .experiment import Experiment
 
-from .counter import SessionCounter
+from .quota import SessionQuota
 from .randomizer import ListRandomizer
 from .randomizer import random_condition
 
