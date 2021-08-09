@@ -390,7 +390,8 @@ class SessionQuota:
     """
     A quota for experiment sessions.
 
-    The quota allows you to enforce an upper limit on the number of participants in your experiment.
+    The quota allows you to enforce an upper limit on the number of 
+    participants in your experiment.
 
     Args:
         nslots (int): Maximum number of slots.
