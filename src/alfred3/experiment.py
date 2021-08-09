@@ -589,6 +589,7 @@ class ExperimentSession:
         **urlargs,
     ):
 
+        self.admin_mode = urlargs.get("admin", None) in ["true", "True"]
         self._plugins = _DictObj()  # docs in getter
         
         # list of dictionaries, each containing a query specification
