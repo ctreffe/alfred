@@ -401,6 +401,45 @@ class TestConditionAllocation:
 
         assert slotlist.slots[0].finished
         assert slotlist.slots[1].finished
+    
+    def test_group_finish(self, exp_factory):
+        #TODO Remove this test once the randomizer hotfix gets removed
+        
+        from alfred3_interact import MatchMaker, NoMatch
+
+        exp1 = exp_factory()
+        exp2 = exp_factory()
+
+        mm1 = MatchMaker("a", "b", exp=exp1)
+        mm2 = MatchMaker("a", "b", exp=exp2)
+
+        try:
+            mm1.match_groupwise()
+        except NoMatch:
+            pass
+
+        group2 = mm2.match_groupwise()
+        group1 = mm1.match_groupwise()
+
+        assert group1 == group2
+
+        rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, id=group1.group_id)
+        rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, id=group2.group_id)
+
+        exp1.condition = rd1.get_condition()
+        exp2.condition = rd2.get_condition()
+
+        exp1._start()
+        exp1.finish()
+
+        rdata = exp1.db_misc.find_one({"type": "condition_data"})
+        slotlist = cond._SlotList(*rdata["slots"])
+
+        assert not slotlist.slots[0].finished
+
+
+
+
 
 class TestSession:
 
@@ -418,7 +457,7 @@ class TestSession:
         rand = al.ListRandomizer.balanced("a", "b", n=1, exp=exp)
         exp.condition = rand.get_condition()
         rand._mark_slot_finished(exp)
-
+        
         slot = rand.slotlist.id_assigned_to(exp.session_id)
         assert slot.finished
     
