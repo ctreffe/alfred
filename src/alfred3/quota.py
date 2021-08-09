@@ -3,6 +3,7 @@ import time
 from dataclasses import dataclass, asdict, field
 from typing import List, Iterator
 from pathlib import Path
+from traceback import format_exception
 
 from pymongo.collection import ReturnDocument
 
@@ -218,7 +219,7 @@ class SlotManager:
 
 @dataclass
 class QuotaData:
-    quota_id: str
+    name: str
     exp_id: str
     exp_version: str
     inclusive: bool
@@ -243,12 +244,12 @@ class QuotaIO:
         d["exp_id"] = self.exp.exp_id
         d["exp_version"] = self.quota.exp_version
         d["type"] = self.quota.DATA_TYPE
-        d["quota_id"] = self.quota.quota_id
+        d["name"] = self.quota.name
         return d
 
     @property
     def path(self) -> Path:
-        name = f"{self.quota.DATA_TYPE}_{self.quota.quota_id}{self.quota.exp_version}.json"
+        name = f"{self.quota.DATA_TYPE}_{self.quota.name}{self.quota.exp_version}.json"
         directory = self.exp.config.get("data", "save_directory")
         directory = self.exp.subpath(directory)
         return directory / name
@@ -368,13 +369,15 @@ class QuotaIO:
 
     def __exit__(self, exc_type, exc_value, traceback):
 
-        if exc_type:
+        if exc_type and exc_type != AllSlotsFull:
             self.release()
             self.exp.abort(reason="quota_error")
+            tb = "".join(format_exception(exc_type, exc_value, traceback))
             self.exp.log.error(
                 (
-                    f"There was an error in a locked operation: '{exc_value}' "
+                    f"There was an error in a locked operation."
                     "I aborted the experiment and released the lock."
+                    f"{tb}"
                 )
             )
 
@@ -411,7 +414,7 @@ class SessionQuota:
             may lead to more data being collected than necessary.
 
             Defaults to *False*.
-        quota_id (str): 
+        name (str): 
             An identifier for the quota. If you
             give this a custom value, you can use multiple quotas
             in the same experiment. Defaults to 'quota'.
@@ -436,14 +439,14 @@ class SessionQuota:
 
     DATA_TYPE = "quota_data"
 
-    def __init__(self, nslots: int, exp, respect_version: bool = True, inclusive: bool = False, quota_id: str = "quota", abort_page=None):
+    def __init__(self, nslots: int, exp, respect_version: bool = True, inclusive: bool = False, name: str = "quota", abort_page=None):
         self.nslots = nslots
         self.slot_label = "slot"
         self.exp = exp
         self.respect_version = respect_version
         self.exp_version = self.exp.version if respect_version else ""
         self.inclusive = inclusive
-        self.quota_id = quota_id
+        self.name = name
         self.session_ids = [exp.session_id]
         self.io = QuotaIO(self)
         self.abort_page = abort_page
@@ -453,7 +456,7 @@ class SessionQuota:
     @property
     def _insert(self) -> QuotaData:
         data = QuotaData(
-            quota_id=self.quota_id,
+            name=self.name,
             exp_id=self.exp.exp_id,
             exp_version=self.exp_version,
             inclusive=self.inclusive,

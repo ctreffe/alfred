@@ -60,7 +60,7 @@ class ListRandomizer(SessionQuota):
 
             Defaults to *False*.
 
-        randomizer_id (str): An identifier for the randomizer. If you
+        name (str): An identifier for the randomizer. If you
             give this a custom value, you can use multiple randomizers
             in the same experiment. Defaults to 'randomizer'.
 
@@ -100,7 +100,7 @@ class ListRandomizer(SessionQuota):
         run into an error, if you change anything about the conditions.
 
     .. versionchanged:: 2.1.7
-       New parameters *session_ids* and *randomizer_id*, new alternative
+       New parameters *session_ids* and *name*, new alternative
        constructor :meth:`.factors`. Deprecated the parameter *id*.
 
     Notes:
@@ -242,7 +242,7 @@ class ListRandomizer(SessionQuota):
         inclusive: bool = False,
         random_seed=None,
         abort_page=None,
-        randomizer_id: str = "randomizer",
+        name: str = "randomizer",
         mode: str = None,
         id: str = None,
     ):
@@ -254,7 +254,7 @@ class ListRandomizer(SessionQuota):
         self.random_seed = random_seed if random_seed is not None else time.time()
         self.conditions = conditions
         self.abort_page = abort_page
-        self.quota_id = randomizer_id
+        self.name = name
         self.session_ids = session_ids if session_ids is not None else [exp.session_id]
         if isinstance(self.session_ids, str):
             raise ValueError(
@@ -409,7 +409,7 @@ class ListRandomizer(SessionQuota):
     @property
     def _insert(self) -> QuotaData:
         data = QuotaData(
-            quota_id=self.quota_id,
+            name=self.name,
             exp_id=self.exp.exp_id,
             exp_version=self.exp_version,
             inclusive=self.inclusive,
