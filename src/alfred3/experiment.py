@@ -913,7 +913,13 @@ class ExperimentSession:
         abort_section = _AbortSection(name="_abort_section")
         abort_section += abort_page
 
-        self += abort_section
+        if not self._allow_append:
+            self._allow_append = True
+            self += abort_section
+            self._allow_append = False
+        else:
+            self += abort_section
+
         abort_page._on_showing_widget()
         self.movement_manager._direct_jump(to=pg_name)
 
