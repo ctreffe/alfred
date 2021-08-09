@@ -117,6 +117,7 @@ def get_exp_session(
     script_path: str,
     config_path: str = "",
     secrets_path: str = "tests/res/secrets-default.conf",
+    sid: str = None,
     **urlargs
 ):
     """
@@ -129,7 +130,7 @@ def get_exp_session(
 
     script = smuggle(tmp_path / "script.py")
     exp = script.exp
-    sid = uuid4().hex
+    sid = uuid4().hex if sid is None else sid
     
     session = exp.create_session(session_id=sid, config=config, secrets=secrets, **urlargs)
     return session
