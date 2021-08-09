@@ -504,6 +504,13 @@ class SessionQuota:
         return len(pending_slots)
     
     @property
+    def full(self):
+        if self.inclusive:
+            return (self.nopen + self.npending) == 0
+        else:
+            return self.nopen == 0
+
+    @property
     def nfinished(self) -> int:
         """
         int: Number of finished slots
