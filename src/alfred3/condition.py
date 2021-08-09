@@ -648,11 +648,32 @@ class ListRandomizer:
 
     def _mark_slot_finished(self, exp):
         data = self.io.load(atomic=True)
+
+        interact_data = self.exp.adata.get("interact", {})
+        groupid = interact_data.get("groupid", None)
+        if groupid is None:
+            all_finished = True
+        else:
+            group_data = exp.db_misc.find_one({"type": "match_group", "group_id": groupid})
+            sessions_finished = []
+            for sid in group_data["roles"].values():
+                if sid == self.exp.session_id:
+                    continue
+                session_data = exp.db_main.find_one({"session_id": sid}, projection=["exp_finished"])
+                finished = session_data["exp_finished"]
+                sessions_finished.append(finished)
+            
+            all_finished = all(sessions_finished)
+        
+        if not all_finished:
+            return
+
         self.slotlist = _SlotList(*data["slots"])
         slot = self.slotlist.id_assigned_to(self.id)
         slot.finished = True
         self.io.write(self._data, update=False)
     
+
 
 def random_condition(*conditions) -> str:
     """

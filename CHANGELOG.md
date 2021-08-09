@@ -26,6 +26,12 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred v2.1.8 [unreleased]
+
+### Fixed
+
+- Fixed an issue that lead to premature closing of slots in the randomizer.
+
 ## alfred3 v2.1.7 (Released 2021-06-22)
 
 ### Fixed
