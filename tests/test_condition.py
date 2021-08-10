@@ -437,6 +437,13 @@ class TestConditionAllocation:
 
         assert not slotlist.slots[0].finished
 
+        exp2._start()
+        exp2.finish()
+
+        rdata = exp2.db_misc.find_one({"type": "condition_data"})
+        slotlist = cond._SlotList(*rdata["slots"])
+        assert slotlist.slots[0].finished
+
 
 
 
