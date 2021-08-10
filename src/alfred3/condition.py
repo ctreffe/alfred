@@ -647,7 +647,7 @@ class ListRandomizer:
         return d
 
     def _mark_slot_finished(self, exp):
-        data = self.io.load(atomic=True)
+        
 
         interact_data = self.exp.adata.get("interact", {})
         groupid = interact_data.get("groupid", None)
@@ -668,6 +668,7 @@ class ListRandomizer:
         if not all_finished:
             return
 
+        data = self.io.load(atomic=True)
         self.slotlist = _SlotList(*data["slots"])
         slot = self.slotlist.id_assigned_to(self.id)
         slot.finished = True
