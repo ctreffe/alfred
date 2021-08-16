@@ -10,7 +10,7 @@ from typing import Union
 from . import element as elm
 from ._core import ExpMember
 from ._helper import inherit_kwargs
-from .page import _PageCore, UnlinkedDataPage, _DefaultFinalPage
+from .page import PasswordPage, _PageCore, UnlinkedDataPage, _DefaultFinalPage
 from .exceptions import AlfredError, ValidationError, AbortMove
 from . import alfredlog
 from random import shuffle
@@ -774,6 +774,18 @@ class _AbortSection(Section):
     allow_jumpto: bool = True
 
 
+class _AdminSection(Section):
+
+    
+    def added_to_experiment(self, exp):
+
+        pw_section = ForwardOnlySection(name="admin_pw_sec")
+
+        pw = exp.secrets.get("general", "admin_pw")
+        pw_section += PasswordPage(password=pw, name="__admin_pw_page", title="alfred3 Admin Mode")
+        self += pw_section
+        super().added_to_experiment(exp)
+
 @inherit_kwargs
 class _RootSection(Section):
     """
@@ -794,6 +806,7 @@ class _RootSection(Section):
         self._experiment = experiment
         self.log.add_queue_logger(self, __name__)
         self.content = Section(name="_content")
+        self.admin_section = _AdminSection(name="_content")
         self.finished_section = _FinishedSection(name="__finished_section")
         self.finished_section += _DefaultFinalPage(name="_final_page")
 
@@ -801,8 +814,12 @@ class _RootSection(Section):
         self._all_page_names = None
 
     def append_root_sections(self):
-        self += self.content
-        self += self.finished_section
+        if self.exp.admin_mode:
+            self += self.admin_section
+            self += self.finished_section
+        else:
+            self += self.content
+            self += self.finished_section
 
     @property
     def all_page_names(self):

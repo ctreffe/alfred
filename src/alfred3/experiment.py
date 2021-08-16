@@ -114,6 +114,8 @@ class Experiment:
         #: of the main _content section
         self._root_members: dict = {}
 
+        self._admin = None
+
         #: A list of function that will be called upon creation of an
         #: experiment session. They are added with the :meth:`.setup`
         #: decorator
@@ -313,6 +315,16 @@ class Experiment:
             return add_member(_member)
 
     @property
+    def admin(self):
+        if not self._admin:
+            self._admin = ExperimentAdmin()
+        return self._admin
+    
+    @admin.setter
+    def admin(self, value):
+        self._admin = value
+
+    @property
     def final_page(self):
         """
         page.Page: The experiment's final page.
@@ -408,10 +420,18 @@ class Experiment:
             :class:`.ExperimentSession` contains documentation on how
             to interact with an experiment session object.
 
-        TODO:
-            * Take care of how the condition gets set.
-
         """
+        
+        if urlargs.get("admin") in ["true", "True"]:
+            if not secrets.get("general", "admin_pw"):
+                raise AlfredError("Admin mode must be activated by setting option 'admin_pw' in section 'general' of secrets.conf.")
+            
+            self.admin.setup_functions += self.setup_functions
+            exp_session = self.admin.create_session(
+                session_id=session_id, config=config, secrets=secrets, **urlargs
+            )
+            return exp_session
+        
         exp_session = ExperimentSession(
             session_id=session_id, config=config, secrets=secrets, **urlargs
         )
@@ -471,7 +491,7 @@ class Experiment:
             name = member.name
             if name in self.members or name in ["_content", "_root", "_finished_section"]:
                 raise ValueError(f"A section or page of name '{name}' already exists.")
-
+            
             member.parent_name = to_section
             member_inst = member() if isclass(member) else member
 
@@ -540,6 +560,41 @@ class Experiment:
             raise AttributeError(f"Experiment has no attribute '{name}'.")
 
 
+class ExperimentAdmin(Experiment):
+    
+    def create_session(self, session_id: str, config: ExperimentConfig, secrets: ExperimentSecrets, **urlargs):
+        
+        config.read_dict(self.admin_config)
+
+        exp_session = ExperimentSession(
+            session_id=session_id, config=config, secrets=secrets, **urlargs
+        )
+
+        for fun in self.setup_functions:
+            fun(exp_session)
+
+        exp_session._allow_append = True
+        exp_session.abort_functions.extend(self.abort_functions)
+        exp_session.finish_functions.extend(self.finish_functions)
+
+        for member in self._root_members.values():
+            exp_session += member
+
+        if self.final_page is not None:
+            exp_session.final_page = self.final_page
+
+        return exp_session
+    
+    @property
+    def admin_config(self) -> dict:
+        config = {}
+        config["general"] = {"admin": "true"}
+        config["data"] = {"save_data": "false"}
+        config["navigation"] = {"finish": ""}
+
+        return config
+
+
 class ExperimentSession:
     """
     Coordinates all parts of an experiment session.
@@ -589,7 +644,6 @@ class ExperimentSession:
         **urlargs,
     ):
 
-        self.admin_mode = urlargs.get("admin", None) in ["true", "True"]
         self._plugins = _DictObj()  # docs in getter
         
         # list of dictionaries, each containing a query specification
@@ -658,7 +712,8 @@ class ExperimentSession:
                 f"Experiment version: {self.version}"
             )
         )
-        self._save_data(sync=True)
+        if not self.admin_mode:
+            self._save_data(sync=True)
         
 
     def append_plugin_data_query(self, query: dict):
@@ -1044,7 +1099,7 @@ class ExperimentSession:
         Section: The experiment's main content section, which holds all
         sections and pages added to the experiment.
         """
-        return self.root_section.content
+        return self.root_section._content
 
     @property
     def root_section(self):
@@ -1062,17 +1117,17 @@ class ExperimentSession:
         Excludes the final page.
 
         """
-        return self.root_section.content.all_members
+        return self.root_section._content.all_members
 
     @property
     def all_sections(self) -> dict:
         """dict: Dictionary of all sections in the experiment."""
-        return self.root_section.content.all_subsections
+        return self.root_section._content.all_subsections
 
     @property
     def all_pages(self) -> dict:
         """dict: Dictionary of all pages in the experiment."""
-        return self.root_section.content.all_pages
+        return self.root_section._content.all_pages
 
     @property
     def final_page(self) -> Page:
@@ -1285,6 +1340,12 @@ class ExperimentSession:
     def author(self) -> str:
         """str: Returns the experiment author."""
         return self.config.get("metadata", "author")
+
+
+    @property
+    def admin_mode(self) -> bool:
+        """bool: Indicates whether the experiment runs in admin mode."""
+        return self.config.getboolean("general", "admin")
 
     @property
     def type(self) -> str:

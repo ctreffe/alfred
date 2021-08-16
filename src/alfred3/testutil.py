@@ -159,7 +159,7 @@ def get_app(
     return app
 
 
-def move(client, direction: str, **kwargs):
+def move(client, direction: str, data: dict, **kwargs):
     """
     Conducts a movement on a alfred3 test experiment in the specified 
     direction, i.e. simulates a click on a forward, backward, finish, 
@@ -182,27 +182,29 @@ def move(client, direction: str, **kwargs):
     bs = BeautifulSoup(rv.data.decode(), "html.parser")
     token = bs.find("input", {"name": "page_token"})
     
+    data = data if data is not None else {}
+
     d = {}
     d["move"] = direction
     d["page_token"] = token.get("value")
-    d.update(kwargs.pop("data", {}))
+    d.update(data)
 
     if not "follow_redirects" in kwargs:
         kwargs["follow_redirects"] = True
 
     return client.post("/experiment", data=d, **kwargs)
 
-def forward(client, **kwargs):
+def forward(client, data: dict = None, **kwargs):
     """Shortcut for a forward move"""
-    return move(client, direction="forward", **kwargs)
+    return move(client, direction="forward", data=data, **kwargs)
 
-def backward(client, **kwargs):
+def backward(client, data: dict = None, **kwargs):
     """Shortcut for a backward move"""
-    return move(client, direction="backward", **kwargs)
+    return move(client, direction="backward", data=data, **kwargs)
 
-def jump(client, to: str, **kwargs):
+def jump(client, to: str, data: dict = None, **kwargs):
     """Shortcut for a jump"""
-    return move(client, direction=f"jump>{to}", **kwargs)
+    return move(client, direction=f"jump>{to}", data=data, **kwargs)
 
 def first_subpath(path: str) -> Path:
     """

@@ -17,7 +17,7 @@ from typing import Iterator
 
 from . import alfredlog
 from . import element as elm
-from .element.misc import Style
+from .element.misc import Style, HideNavigation
 from . import saving_agent
 from ._core import ExpMember
 from ._helper import _DictObj
@@ -1625,3 +1625,35 @@ class _DefaultFinalPage(Page):
         self += elm.display.VerticalSpace("20px")
         self += elm.display.Text(text=txt, align="center")
         self += elm.misc.WebExitEnabler()
+
+class PasswordPage(WidePage):
+    password = None
+
+    def __init__(self, password: str, **kwargs):
+        super().__init__(**kwargs)
+        if password is not None:
+            self.password = password
+        if self.password is None:
+            raise ValueError("PasswordPage must have a password attribute.")
+
+    def on_exp_access(self):
+        self += HideNavigation()
+        self += elm.display.Text(":closed_lock_with_key:", font_size=70, align="center")
+        self += elm.display.VerticalSpace("20px")
+        self += elm.input.PasswordEntry(
+            toplab="Please enter the password to continue", password=self.password, width="wide", name="pw", align="center"
+        )
+
+        self += elm.action.SubmittingButtons(
+            "Enter", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
+        )
+
+        # enables submit via enter-press for password field
+        self += elm.misc.JavaScript(
+            code="""$('#pw').on("keydown", function(event) {
+        if (event.key == "Enter") {
+            $("#alt-submit").attr("name", "move");
+            $("#alt-submit").val("forward");
+            $("#form").submit();
+            }});"""
+        )
