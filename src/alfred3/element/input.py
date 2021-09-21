@@ -233,12 +233,44 @@ class PasswordEntry(RegEntry):
             overrule this setting. Defaults to *True*.
 
         {kwargs}
+    
+
+    .. warning:: Note that the password will be included in the 
+        automatically generated codebook.
+
     """
 
     element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
 
     def __init__(self, password: str, force_input: bool = True, **kwargs):
         super().__init__(pattern=password, force_input=force_input, **kwargs)
+        self.password = password
+    
+
+    def validate_data(self):
+        
+        if not self.should_be_shown:
+            return True
+
+        elif not self.force_input and self.input == "":
+            return True
+
+        elif not self.input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+
+        elif not self.input == self.password:
+            self.hint_manager.post_message(self.match_hint)
+            return False
+        
+        else:
+            return True
+
+    @property
+    def codebook_data(self) -> dict:
+        d = super(RegEntry, self).codebook_data
+        d["password"] = self.password
+        return d
 
 
 @inherit_kwargs
