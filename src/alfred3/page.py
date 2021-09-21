@@ -1620,7 +1620,7 @@ class _DefaultFinalPage(Page):
     title = "Experiment beendet"
 
     def on_exp_access(self):
-        txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
+        txt = self.exp.config.get("hints", "final_page_text")
         self += elm.display.Text(":mortar_board:", font_size=70, align="center")
         self += elm.display.VerticalSpace("20px")
         self += elm.display.Text(text=txt, align="center")
