@@ -46,7 +46,7 @@ from cryptography.fernet import Fernet
 
 from . import alfredlog
 from .section import Section, _RootSection, _AbortSection
-from .page import Page
+from .page import Page, _NothingHerePage
 from . import messages, page, section
 from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
@@ -427,6 +427,7 @@ class Experiment:
                 raise AlfredError("Admin mode must be activated by setting option 'admin_pw' in section 'general' of secrets.conf.")
             
             self.admin.setup_functions += self.setup_functions
+            self.admin.final_page = _NothingHerePage(name="__") # name gets changed automatically by setter
             exp_session = self.admin.create_session(
                 session_id=session_id, config=config, secrets=secrets, **urlargs
             )

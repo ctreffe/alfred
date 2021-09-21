@@ -1626,6 +1626,16 @@ class _DefaultFinalPage(Page):
         self += elm.misc.WebExitEnabler()
 
 
+class _NothingHerePage(Page):
+
+    title = "There's nothing here"
+
+    def on_exp_access(self):
+        self += elm.display.VerticalSpace("30px")
+        self += elm.display.Text(":heavy_minus_sign:", font_size=70, align="center")
+        self += elm.misc.WebExitEnabler()
+
+
 class PasswordPage(WidePage):
     password = None
 
