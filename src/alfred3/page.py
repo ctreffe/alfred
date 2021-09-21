@@ -1617,14 +1617,14 @@ class _DefaultFinalPage(Page):
     The default final page.
     """
 
-    title = "Experiment beendet"
-
     def on_exp_access(self):
+        self.title = self.exp.config.get("hints", "final_page_title")
         txt = self.exp.config.get("hints", "final_page_text")
         self += elm.display.Text(":mortar_board:", font_size=70, align="center")
         self += elm.display.VerticalSpace("20px")
         self += elm.display.Text(text=txt, align="center")
         self += elm.misc.WebExitEnabler()
+
 
 class PasswordPage(WidePage):
     password = None
