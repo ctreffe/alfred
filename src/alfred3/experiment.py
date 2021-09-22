@@ -423,8 +423,6 @@ class Experiment:
         """
         
         if urlargs.get("admin") in ["true", "True"]:
-            if not secrets.get("general", "admin_pw"):
-                raise AlfredError("Admin mode must be activated by setting option 'admin_pw' in section 'general' of secrets.conf.")
             
             self.admin.setup_functions += self.setup_functions
             self.admin.final_page = _NothingHerePage(name="__") # name gets changed automatically by setter
@@ -567,9 +565,7 @@ class ExperimentAdmin(Experiment):
         
         config.read_dict(self.admin_config)
 
-        exp_session = ExperimentSession(
-            session_id=session_id, config=config, secrets=secrets, **urlargs
-        )
+        exp_session = ExperimentSession(session_id=session_id, config=config, secrets=secrets, **urlargs)
 
         for fun in self.setup_functions:
             fun(exp_session)

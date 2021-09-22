@@ -5,7 +5,8 @@ Sections organize movement between pages in an experiment.
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
 import time
-from typing import Union
+from typing import List, Union
+import typing as t
 
 from . import element as elm
 from ._core import ExpMember
@@ -142,14 +143,14 @@ class Section(ExpMember):
         members = list(self.members.items())
         shuffle(members)
         self.members = dict(members)
-    
+
     @property
     def members(self) -> dict:
         """
         Dictionary of the section's members.
         """
         return self._members
-    
+
     @members.setter
     def members(self, value):
         self._members = value
@@ -174,7 +175,7 @@ class Section(ExpMember):
     def all_updated_pages(self) -> dict:
         """
         Returns a dict of all pages in the current section that have
-        access to the experiment session. Operates recursively, i.e. 
+        access to the experiment session. Operates recursively, i.e.
         pages in subsections are included.
         """
         pages = {}
@@ -188,7 +189,7 @@ class Section(ExpMember):
     def all_updated_elements(self) -> dict:
         """
         Returns a dict of all elements in the current section that have
-        access to the experiment session. Operates recursively, i.e. 
+        access to the experiment session. Operates recursively, i.e.
         elements on pages in subsections are included.
         """
         elements = {}
@@ -283,7 +284,7 @@ class Section(ExpMember):
     @property
     def all_closed_pages(self) -> dict:
         """
-        Returns a flat dict of all *closed* pages in this section and its 
+        Returns a flat dict of all *closed* pages in this section and its
         subsections.
 
         The order is preserved, i.e. pages are listed in this dict in
@@ -294,7 +295,7 @@ class Section(ExpMember):
     @property
     def all_shown_pages(self) -> dict:
         """
-        Returns a flat dict of all pages in this section and its 
+        Returns a flat dict of all pages in this section and its
         subsections that have already been shown.
 
         The order is preserved, i.e. pages are listed in this dict in
@@ -369,7 +370,7 @@ class Section(ExpMember):
     @property
     def unlinked_data(self) -> dict:
         """
-        Returns a dictionary of user input data for all *unlinked* pages 
+        Returns a dictionary of user input data for all *unlinked* pages
         in this section and its subsections.
         """
         data = {}
@@ -549,12 +550,12 @@ class Section(ExpMember):
             self.validate_on_forward()
             self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._forward()
-        
+
         elif direction == "backward":
             self.validate_on_backward()
             self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._backward()
-        
+
         elif direction == "jumpfrom":
             self.validate_on_jumpfrom()
             self.exp.current_page._on_hiding_widget(hide_time=time.time())
@@ -601,12 +602,12 @@ class Section(ExpMember):
 
         Can be overloaded to change the validating behavior of a derived
         section. By default, this validation method is called on each
-        foward and backward move, as well as when participants jump 
+        foward and backward move, as well as when participants jump
         *from* the section, but not when they jump *to* the section.
 
         Raises:
             ValidationError: If validation fails.
-        
+
         See Also:
             Use the individual methods :meth:`.validate_on_forward`,
             :meth:`.validate_on_backward`, :meth:`.validate_on_jumpfrom`,
@@ -621,11 +622,10 @@ class Section(ExpMember):
 
         if not self.exp.current_page._validate_elements():
             raise ValidationError()
-        
+
         if not self.exp.current_page._validate():
             raise ValidationError()
 
-    
     def validate_on_forward(self):
         """
         Called for validation on each forward move.
@@ -633,7 +633,7 @@ class Section(ExpMember):
         Overload this method to customize validation behavior.
         """
         self.validate_on_move()
-    
+
     def validate_on_backward(self):
         """
         Called for validation on each forward move.
@@ -641,7 +641,7 @@ class Section(ExpMember):
         Overload this method to customize validation behavior.
         """
         self.validate_on_move()
-    
+
     def validate_on_jumpfrom(self):
         """
         Called for validation on each forward move.
@@ -649,7 +649,7 @@ class Section(ExpMember):
         Overload this method to customize validation behavior.
         """
         self.validate_on_move()
-    
+
     def validate_on_jumpto(self):
         """
         Called for validation on each forward move.
@@ -775,16 +775,66 @@ class _AbortSection(Section):
 
 
 class _AdminSection(Section):
-
     
     def added_to_experiment(self, exp):
 
-        pw_section = ForwardOnlySection(name="admin_pw_sec")
+        auth_section = ForwardOnlySection(name="admin_auth")
 
-        pw = exp.secrets.get("general", "admin_pw")
-        pw_section += PasswordPage(password=pw, name="__admin_pw_page", title="alfred3 Admin Mode")
-        self += pw_section
+        self.passwords = self.process_passwords(exp)
+
+        auth_section += PasswordPage(
+            passwords=self.password_list, 
+            name="_admin_pw_page_", 
+            title="alfred3 Admin Mode"
+        )
+        self += auth_section
         super().added_to_experiment(exp)
+
+    def process_passwords(self, exp) -> t.Dict[str, list]:
+        pw1 = exp.secrets.get("general", "adminpass_lvl1")
+        pw2 = exp.secrets.get("general", "adminpass_lvl2")
+        pw3 = exp.secrets.get("general", "adminpass_lvl3")
+
+        pws = {}
+        pws["lvl1"] = pw1.split("|")
+        pws["lvl2"] = pw2.split("|")
+        pws["lvl3"] = pw3.split("|")
+
+        self.validate_passwords(pws)
+        return pws
+    
+    @property
+    def password_list(self) -> t.List[str]:
+        pws = self.passwords
+        return pws["lvl1"] + pws["lvl2"] + pws["lvl3"]
+    
+    @staticmethod
+    def validate_passwords(passwords):
+        missing_passwords = []
+        for lvl in ["lvl1", "lvl2", "lvl3"]:
+            pw = passwords[lvl]
+            if (len(pw) == 1 and pw[0] == "") or not pw:
+                missing_passwords.append(lvl)
+        
+        if missing_passwords:
+            raise AlfredError(f"To activate the admin mode, you must define passwords for all three levels in secrets.conf. Passwords are missing for levels: {', '.join(missing_passwords)}.")
+
+        comparisons = []
+        for pw1 in passwords["lvl1"]:
+            comparisons += [pw1 == pw2 for pw2 in passwords["lvl2"]]
+            comparisons += [pw1 == pw3 for pw3 in passwords["lvl3"]]
+
+        for pw2 in passwords["lvl2"]:
+            comparisons += [pw2 == pw3 for pw3 in passwords["lvl3"]]
+
+        if any(comparisons):
+            raise AlfredError(
+                (
+                    "Two equal passwords for two different admin levels found."
+                    " Passwords must be unique to a level. Please change one of the passwords."
+                )
+            )
+
 
 @inherit_kwargs
 class _RootSection(Section):
@@ -848,4 +898,3 @@ class _RootSection(Section):
     @property
     def final_page(self):
         return self.finished_section._final_page
-    

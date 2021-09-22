@@ -8,6 +8,7 @@ Pages hold and organize elements.
 import time
 import logging
 import string
+import typing as t
 from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
@@ -746,7 +747,7 @@ class _CoreCompositePage(_PageCore):
                         self += al.NumberEntry(name="e1", force_input=True)
                         self += al.NumberEntry(name="e2", force_input=True)
                     
-                    def validate_page(self):
+                    def validate(self):
                         e1 = int(self.exp.values.get("e1"))
                         e2 = int(self.exp.values.get("e2"))
                         
@@ -1637,21 +1638,21 @@ class _NothingHerePage(Page):
 
 
 class PasswordPage(WidePage):
-    password = None
+    passwords = None
 
-    def __init__(self, password: str, **kwargs):
+    def __init__(self, passwords: t.List[str], **kwargs):
         super().__init__(**kwargs)
-        if password is not None:
-            self.password = password
-        if self.password is None:
-            raise ValueError("PasswordPage must have a password attribute.")
+        if passwords is not None:
+            self.passwords = passwords
+        if self.passwords is None or not len(self.passwords):
+            raise ValueError("PasswordPage must have at least one password.")
 
     def on_exp_access(self):
         self += HideNavigation()
         self += elm.display.Text(":closed_lock_with_key:", font_size=70, align="center")
         self += elm.display.VerticalSpace("20px")
-        self += elm.input.PasswordEntry(
-            toplab="Please enter the password to continue", password=self.password, width="wide", name="pw", align="center"
+        self += elm.input.MultiplePasswordEntry(
+            toplab="Please enter the password to continue", passwords=self.passwords, width="wide", name="pw", align="center"
         )
 
         self += elm.action.SubmittingButtons(
@@ -1667,3 +1668,4 @@ class PasswordPage(WidePage):
             $("#form").submit();
             }});"""
         )
+
