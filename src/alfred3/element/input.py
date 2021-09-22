@@ -277,6 +277,67 @@ class PasswordEntry(RegEntry):
         return d
 
 
+@inherit_kwargs(exclude=["force_input", "pattern"])
+class MultiplePasswordEntry(RegEntry):
+    """
+    Password field that accepts multiple different passwords.
+
+    The password field is force-entry by default.
+    
+    Args:
+        passwords (list): List of password strings to match against user 
+            input.
+        
+        force_input (bool): If `True`, users can  only progress to the next page
+            if they enter data into this field. Note that a
+            :class:`.NoValidationSection` or similar sections might
+            overrule this setting. Defaults to *True*.
+
+        {kwargs}
+    
+
+    .. warning:: Note that the password will be included in the 
+        automatically generated codebook.
+
+    """
+
+    element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
+
+    def __init__(self, passwords: List[str], force_input: bool = True, match_hint: str = None, **kwargs):
+        super(RegEntry, self).__init__(force_input=force_input, **kwargs)
+        self.passwords = passwords
+        self._match_hint = match_hint  # documented in getter property
+
+        if not isinstance(passwords, (list, tuple)):
+            raise AlfredError(f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple.")
+    
+
+    def validate_data(self):
+        
+        if not self.should_be_shown:
+            return True
+
+        elif not self.force_input and self.input == "":
+            return True
+
+        elif not self.input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+
+        elif not self.input in self.passwords:
+            self.hint_manager.post_message(self.match_hint)
+            return False
+        
+        else:
+            return True
+
+    @property
+    def codebook_data(self) -> dict:
+        d = super(RegEntry, self).codebook_data
+        d["passwords"] = "; ".join(self.passwords)
+        return d
+
+
 @inherit_kwargs
 class NumberEntry(TextEntry):
     """
