@@ -242,9 +242,13 @@ class PasswordEntry(RegEntry):
 
     element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
 
-    def __init__(self, password: str, force_input: bool = True, **kwargs):
-        super().__init__(pattern=password, force_input=force_input, **kwargs)
+    def __init__(self, password: str, force_input: bool = True, match_hint: str = None, **kwargs):
+        super(RegEntry, self).__init__(force_input=force_input, **kwargs)
         self.password = password
+        self._match_hint = match_hint  # documented in getter property
+
+        if not isinstance(password, str):
+            raise AlfredError(f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string.")
     
 
     def validate_data(self):
