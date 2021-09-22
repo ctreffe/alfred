@@ -21,38 +21,82 @@ def client(tmp_path):
     clear_db()
 
 
-def test_admin_exp(client):
-    rv = client.get("/start?admin=true", follow_redirects=True)
-    assert b"Admin" in rv.data
+class TestValidation:
 
-    rv = forward(client, data={"pw": "test"})
-    assert b"Admin" in rv.data
-    assert not b"Bitte geben Sie etwas ein." in rv.data
+    def test_admin_without_password(self, tmp_path):
+        exp = al.Experiment()
+        exp.admin += al.Page(name="admin_test")
 
-    rv = forward(client)
-    assert b"Admin2" in rv.data
+        config = ExperimentConfig(tmp_path)
+        secrets = ExperimentSecrets(tmp_path)
+        urlargs = {"admin": "true"}
 
-
-def test_admin(tmp_path):
-    exp = al.Experiment()
-    exp.admin += al.Page(name="admin_test")
-
-    config = ExperimentConfig(tmp_path)
-    secrets = ExperimentSecrets(tmp_path)
-    secrets.read_dict({"general": {"admin_pw": "test"}})
-    urlargs = {"admin": "true"}
-
-    session = exp.create_session("sid1", config, secrets, **urlargs)
-    assert session.admin_mode
-
-def test_admin_without_password(tmp_path):
-    exp = al.Experiment()
-    exp.admin += al.Page(name="admin_test")
-
-    config = ExperimentConfig(tmp_path)
-    secrets = ExperimentSecrets(tmp_path)
-    urlargs = {"admin": "true"}
-
-    with pytest.raises(AlfredError):
-        exp.create_session("sid1", config, secrets, **urlargs)
+        with pytest.raises(AlfredError):
+            exp.create_session("sid1", config, secrets, **urlargs)
     
+    def test_admin_missing_password(self, tmp_path):
+        exp = al.Experiment()
+        exp.admin += al.Page(name="admin_test")
+
+        config = ExperimentConfig(tmp_path)
+        secrets = ExperimentSecrets(tmp_path)
+        urlargs = {"admin": "true"}
+
+        secrets.read_dict({"general": {"adminpass_lvl2": "test"}})
+
+        with pytest.raises(AlfredError) as excinfo:
+            exp.create_session("sid1", config, secrets, **urlargs)
+        
+        msg = str(excinfo.value)
+        assert "lvl1" in msg and "lvl3" in msg and not "lvl2" in msg
+    
+    def test_admin_equal_passwords(self, tmp_path):
+        exp = al.Experiment()
+        exp.admin += al.Page(name="admin_test")
+
+        config = ExperimentConfig(tmp_path)
+        secrets = ExperimentSecrets(tmp_path)
+        urlargs = {"admin": "true"}
+
+        secrets.read_dict({"general": {
+            "adminpass_lvl1": "test",
+            "adminpass_lvl2": "test",
+            "adminpass_lvl3": "test1"
+            }})
+
+        with pytest.raises(AlfredError) as excinfo:
+            exp.create_session("sid1", config, secrets, **urlargs)
+        
+        msg = str(excinfo.value)
+        assert "Passwords must be unique to a level" in msg
+    
+
+class TestUsageRaw:
+    def test_admin(self, tmp_path):
+        exp = al.Experiment()
+        exp.admin += al.Page(name="admin_test")
+
+        config = ExperimentConfig(tmp_path)
+        secrets = ExperimentSecrets(tmp_path)
+        secrets.read_dict({"general": {
+            "adminpass_lvl1": "test1",
+            "adminpass_lvl2": "test2",
+            "adminpass_lvl3": "test3"
+            }})
+        urlargs = {"admin": "true"}
+
+        session = exp.create_session("sid1", config, secrets, **urlargs)
+        assert session.admin_mode
+
+
+class TestUsageOnSever:
+    def test_admin_exp(self, client):
+        rv = client.get("/start?admin=true", follow_redirects=True)
+        assert b"Admin" in rv.data
+
+        rv = forward(client, data={"pw": "test1"})
+        assert b"Admin" in rv.data
+        assert not b"Bitte geben Sie etwas ein." in rv.data
+
+        rv = forward(client)
+        assert b"Admin2" in rv.data
