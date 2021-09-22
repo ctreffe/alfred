@@ -225,7 +225,6 @@ class PasswordEntry(RegEntry):
     
     Args:
         password (str): Password string to match against user input.
-            Can be a simple string, or a regular expression.
         
         force_input (bool): If `True`, users can  only progress to the next page
             if they enter data into this field. Note that a
