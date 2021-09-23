@@ -1456,7 +1456,7 @@ class SelectPageList(SingleChoiceList):
             scope = list(self.experiment.root_section.members["_content"].all_pages.values())
         else:
             try:
-                target_section = self.experiment.root_section.all_sections[self.scope]
+                target_section = self.experiment.root_section.all_subsections[self.scope]
                 scope = list(target_section.all_pages.values())
             except AttributeError:
                 raise AlfredError("Parameter 'scope' must be a section name or 'exp'.")
