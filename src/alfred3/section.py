@@ -5,15 +5,12 @@ Sections organize movement between pages in an experiment.
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
 import time
-from typing import List, Union
 import typing as t
 
-from . import element as elm
 from ._core import ExpMember
 from ._helper import inherit_kwargs
-from .page import PasswordPage, _PageCore, UnlinkedDataPage, _DefaultFinalPage
+from .page import _PageCore, _DefaultFinalPage
 from .exceptions import AlfredError, ValidationError, AbortMove
-from . import alfredlog
 from random import shuffle
 
 
@@ -774,68 +771,6 @@ class _AbortSection(Section):
     allow_jumpto: bool = True
 
 
-class _AdminSection(Section):
-    
-    def added_to_experiment(self, exp):
-
-        auth_section = ForwardOnlySection(name="admin_auth")
-
-        self.passwords = self.process_passwords(exp)
-
-        auth_section += PasswordPage(
-            passwords=self.password_list, 
-            name="_admin_pw_page_", 
-            title="alfred3 Admin Mode"
-        )
-        self += auth_section
-        super().added_to_experiment(exp)
-
-    def process_passwords(self, exp) -> t.Dict[str, list]:
-        pw1 = exp.secrets.get("general", "adminpass_lvl1")
-        pw2 = exp.secrets.get("general", "adminpass_lvl2")
-        pw3 = exp.secrets.get("general", "adminpass_lvl3")
-
-        pws = {}
-        pws["lvl1"] = pw1.split("|")
-        pws["lvl2"] = pw2.split("|")
-        pws["lvl3"] = pw3.split("|")
-
-        self.validate_passwords(pws)
-        return pws
-    
-    @property
-    def password_list(self) -> t.List[str]:
-        pws = self.passwords
-        return pws["lvl1"] + pws["lvl2"] + pws["lvl3"]
-    
-    @staticmethod
-    def validate_passwords(passwords):
-        missing_passwords = []
-        for lvl in ["lvl1", "lvl2", "lvl3"]:
-            pw = passwords[lvl]
-            if (len(pw) == 1 and pw[0] == "") or not pw:
-                missing_passwords.append(lvl)
-        
-        if missing_passwords:
-            raise AlfredError(f"To activate the admin mode, you must define passwords for all three levels in secrets.conf. Passwords are missing for levels: {', '.join(missing_passwords)}.")
-
-        comparisons = []
-        for pw1 in passwords["lvl1"]:
-            comparisons += [pw1 == pw2 for pw2 in passwords["lvl2"]]
-            comparisons += [pw1 == pw3 for pw3 in passwords["lvl3"]]
-
-        for pw2 in passwords["lvl2"]:
-            comparisons += [pw2 == pw3 for pw3 in passwords["lvl3"]]
-
-        if any(comparisons):
-            raise AlfredError(
-                (
-                    "Two equal passwords for two different admin levels found."
-                    " Passwords must be unique to a level. Please change one of the passwords."
-                )
-            )
-
-
 @inherit_kwargs
 class _RootSection(Section):
     """
@@ -856,7 +791,7 @@ class _RootSection(Section):
         self._experiment = experiment
         self.log.add_queue_logger(self, __name__)
         self.content = Section(name="_content")
-        self.admin_section = _AdminSection(name="_content")
+        self.admin_section = None
         self.finished_section = _FinishedSection(name="__finished_section")
         self.finished_section += _DefaultFinalPage(name="_final_page")
 
@@ -865,7 +800,8 @@ class _RootSection(Section):
 
     def append_root_sections(self):
         if self.exp.admin_mode:
-            self += self.admin_section
+            from .admin import _AdminSection
+            self += _AdminSection(name="_content")
             self += self.finished_section
         else:
             self += self.content

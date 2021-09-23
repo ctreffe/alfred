@@ -657,6 +657,10 @@ class UserInterface:
             d["debug"] = self.exp.config.getboolean("general", "debug")
             d["jumplist"] = page.elements[page.name + "__debug_jumplist__"]
         
+        if self.exp.admin_mode and page.section.name == "admin_content":
+            d["jumplist"] = page.elements[page.name + "__admin_jumplist__"]
+            d["admin"] = True
+        
         page.prepare_web_widget()
 
         d["code"] = self.code(page=page)

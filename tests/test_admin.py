@@ -2,7 +2,7 @@ import pytest
 
 import alfred3 as al
 from alfred3.config import ExperimentSecrets, ExperimentConfig
-from alfred3.exceptions import AlfredError
+from alfred3.exceptions import AbortMove, AlfredError
 from alfred3.testutil import get_app, clear_db, forward
 
 from dotenv import load_dotenv
@@ -93,10 +93,46 @@ class TestUsageOnSever:
     def test_admin_exp(self, client):
         rv = client.get("/start?admin=true", follow_redirects=True)
         assert b"Admin" in rv.data
-
+    
+    def test_monitoring(self, client):
+        rv = client.get("/start?admin=true", follow_redirects=True)
         rv = forward(client, data={"pw": "test1"})
-        assert b"Admin" in rv.data
+        assert b"Monitoring" in rv.data
         assert not b"Bitte geben Sie etwas ein." in rv.data
+        assert not b"Weiter" in rv.data
 
         rv = forward(client)
-        assert b"Admin2" in rv.data
+        assert b"There's nothing here" in rv.data
+
+    def test_moderator(self, client):
+        rv = client.get("/start?admin=true", follow_redirects=True)
+        
+        rv = forward(client, data={"pw": "test2"})
+        assert b"Monitoring" in rv.data
+        assert b"Weiter" in rv.data
+
+        rv = forward(client)
+        assert b"Moderator" in rv.data
+        assert not b"Weiter" in rv.data
+
+        rv = forward(client)
+        assert b"There's nothing here" in rv.data
+    
+
+    def test_manager(self, client):
+        rv = client.get("/start?admin=true", follow_redirects=True)
+        
+        rv = forward(client, data={"pw": "test3"})
+        assert b"Monitoring" in rv.data
+        assert b"Weiter" in rv.data
+
+        rv = forward(client)
+        assert b"Moderator" in rv.data
+        assert b"Weiter" in rv.data
+
+        rv = forward(client)
+        assert b"Manager" in rv.data
+        assert not b"Weiter" in rv.data
+
+        rv = forward(client)
+        assert b"There's nothing here" in rv.data

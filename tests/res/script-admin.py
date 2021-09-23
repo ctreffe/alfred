@@ -1,9 +1,29 @@
 import alfred3 as al
+from alfred3 import admin
 
 exp = al.Experiment()
 
-exp.admin += al.Page(title="Admin", name="admin_test")
-exp.admin += al.Page(title="Admin2", name="admin_test2")
+
+class MyMonitoringPage(admin.MonitoringPage):
+
+    def on_exp_access(self):
+        self += al.Text("My monitoring page")
+
+
+class MyModeratorPage(admin.ModeratorPage):
+
+    def on_exp_access(self):
+        self += al.Text("My moderator page")
+
+
+class MyManagerPage(admin.ManagerPage):
+
+    def on_exp_access(self):
+        self += al.Text("My manager page")
+
+exp.admin += MyMonitoringPage(title="Monitoring", name="monitoring")
+exp.admin += MyModeratorPage(title="Moderator", name="moderator")
+exp.admin += MyManagerPage(title="Manager", name="manager")
 
 exp += al.Page(title="normal", name="normal")
 

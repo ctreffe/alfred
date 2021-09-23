@@ -574,9 +574,8 @@ class ExperimentAdmin(Experiment):
         exp_session.abort_functions.extend(self.abort_functions)
         exp_session.finish_functions.extend(self.finish_functions)
 
-        for member in self._root_members.values():
-            exp_session += member
-
+        exp_session._admin_auth_page_.admin_members = self._root_members
+        
         if self.final_page is not None:
             exp_session.final_page = self.final_page
 
