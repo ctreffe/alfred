@@ -1638,22 +1638,29 @@ class _NothingHerePage(Page):
 
 
 class PasswordPage(WidePage):
-    passwords = None
+    password = None
 
-    def __init__(self, passwords: t.List[str], **kwargs):
+    def __init__(self, password: t.Union[str, t.List[str]], **kwargs):
         super().__init__(**kwargs)
-        if passwords is not None:
-            self.passwords = passwords
-        if self.passwords is None or not len(self.passwords):
+        if password is not None:
+            self.password = password
+        if self.password is None or not len(self.password):
             raise ValueError("PasswordPage must have at least one password.")
+        
+        if not isinstance(self.password, (str, list, tuple)):
+            raise ValueError(f"Argument 'password' of {type(self).__name__} must be a string, list, or tuple.")
 
     def on_exp_access(self):
         self += HideNavigation()
         self += elm.display.Text(":closed_lock_with_key:", font_size=70, align="center")
         self += elm.display.VerticalSpace("20px")
-        self += elm.input.MultiplePasswordEntry(
-            toplab="Please enter the password to continue", passwords=self.passwords, width="wide", name="pw", align="center"
-        )
+
+        # use single password or multiple password element depending on input
+        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center")
+        if isinstance(self.password, str):
+            self += elm.input.PasswordEntry(password=self.password, **pwargs)
+        else:
+            self += elm.input.MultiplePasswordEntry(passwords=self.password, **pwargs)
 
         self += elm.action.SubmittingButtons(
             "Enter", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
@@ -1668,4 +1675,5 @@ class PasswordPage(WidePage):
             $("#form").submit();
             }});"""
         )
+
 
