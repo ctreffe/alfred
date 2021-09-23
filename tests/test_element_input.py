@@ -33,7 +33,7 @@ class TestPasswordEntry:
         assert exp.testpage.pentry.validate_data()
 
     def test_list_of_passwords(self, exp):
-        with pytest.raises(AlfredError) as excinfo:
+        with pytest.raises(ValueError) as excinfo:
             inp.PasswordEntry(["rightpass1", "rightpass2"], name="pentry")
 
         assert "must be a string" in str(excinfo.value) and "pentry" in str(excinfo.value)
@@ -42,7 +42,7 @@ class TestPasswordEntry:
 class TestMultiplePasswordEntry:
 
     def test_singlepass(self, exp):
-        with pytest.raises(AlfredError) as excinfo:
+        with pytest.raises(ValueError) as excinfo:
             inp.MultiplePasswordEntry("rightpass", name="pentry")
         exp.testpage._set_data({"pentry": "wrongpass"})
 

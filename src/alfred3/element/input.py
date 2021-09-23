@@ -247,7 +247,7 @@ class PasswordEntry(RegEntry):
         self._match_hint = match_hint  # documented in getter property
 
         if not isinstance(password, str):
-            raise AlfredError(f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string.")
+            raise ValueError(f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string.")
     
 
     def validate_data(self):
@@ -308,7 +308,7 @@ class MultiplePasswordEntry(RegEntry):
         self._match_hint = match_hint  # documented in getter property
 
         if not isinstance(passwords, (list, tuple)):
-            raise AlfredError(f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple.")
+            raise ValueError(f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple.")
     
 
     def validate_data(self):
