@@ -309,6 +309,10 @@ class MultiplePasswordEntry(RegEntry):
 
         if not isinstance(passwords, (list, tuple)):
             raise ValueError(f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple.")
+        
+        for pw in passwords:
+            if not isinstance(pw, str):
+                raise ValueError(f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings.")
     
 
     def validate_data(self):
