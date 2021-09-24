@@ -27,6 +27,8 @@ As you can see, we have three access levels. For now, we only note that
 you *have to* define passwords for all levels to activate the admin mode,
 otherwise the experiment will crash if you try to open the admin view.
 
+.. note:: The characters ``|`` and ``#`` cannot be used in admin passwords.
+
 We'll explain the meaning of the three levels later.
 
 How to add admin pages
@@ -116,6 +118,15 @@ The levels are defined by :class:`.AdminAccess`. They are:
   deletion. As a rule of thumb, only one person should have level 3 
   access for an experiment.
 
+By the way: you can specficy multiple passwords for the same level to enable
+a token-like authentication management. To specifiy multiple passwords, 
+simply separate them by ``|``::
+
+    # secrets.conf
+    [general]
+    adminpass_lvl1 = demo|demopass-2
+    adminpass_lvl2 = use-better-passwords
+    adminpass_lvl3 = to-protect-access
 
 How to write your own admin pages
 -----------------------------------
