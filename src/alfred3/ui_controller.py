@@ -688,7 +688,7 @@ class UserInterface:
         # progress bar
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
-        if d["show_progress"]:
+        if d["show_progress"] and self.exp.progress_bar and not self.exp.admin_mode:
             self.exp.progress_bar._prepare_web_widget()
             d["progress"] = self.exp.progress_bar.web_widget
 

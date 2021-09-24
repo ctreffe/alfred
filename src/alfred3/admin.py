@@ -7,6 +7,7 @@ from enum import Enum
 from abc import ABC, abstractproperty
 from functools import total_ordering
 
+from .element.display import Text
 from .element.action import JumpList
 from .element.misc import WebExitEnabler
 from .page import Page
@@ -108,6 +109,12 @@ class AdminPage(Page, ABC):
 
     responsive_width = "85%, 75%, 75%, 70%"
     
+
+    def added_to_experiment(self, experiment):
+        self += Text(f"{experiment.content.access_level}", align="center", font_size="small")
+        super().added_to_experiment(experiment)
+        
+
     @abstractproperty
     def access_level(self):
         """
