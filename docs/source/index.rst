@@ -33,6 +33,7 @@ Documentation content
    howto_sections
    howto_loops
    howto_hooks
+   howto_admin
 
 .. 
    howto_elements_derivation
@@ -55,6 +56,7 @@ This is an overview of the modules, for which documentation is available.
    ~alfred3.element
    ~alfred3.cli
    ~alfred3.util
+   ~alfred3.admin
 
 
 .. toctree::

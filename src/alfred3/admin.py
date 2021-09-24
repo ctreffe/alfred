@@ -1,3 +1,7 @@
+"""
+Functionality associated with alfred3's admin mode.
+"""
+
 import typing as t
 from enum import Enum
 from abc import ABC, abstractproperty
@@ -9,7 +13,9 @@ from .page import Page
 from .page import PasswordPage
 from .section import Section
 from .section import ForwardOnlySection
-from .exceptions import AbortMove, AlfredError
+from .exceptions import AbortMove
+from .exceptions import AlfredError
+from ._helper import inherit_kwargs
 
 @total_ordering
 class AdminAccess(Enum):
@@ -18,10 +24,40 @@ class AdminAccess(Enum):
 
     The levels are:
 
-    - :attr:`.LEVEL1`: Lowest clearance. Access mainly to monitoring pages.
-    - :attr:`.LEVEL2`: Medium clearance. Access to moderation functionality.
-    - :attr:`.LEVEL3`: Highest clearance. Required for access to critical
-      operations like data deletion.
+    - :attr:`.LEVEL1`: Lowest clearance. This level should be granted to 
+      pages that display additional information but do not allow active 
+      intervention. Used by :class:`.MonitoringPage`.
+    - :attr:`.LEVEL2`: Medium clearance. This level should be granted to
+      pages that allow non-critical actions like exporting data or sending
+      emails.
+    - :attr:`.LEVEL3`: Highest clearance. This level should be granted to 
+      pages that allow the most critical actions, e.g. permanent data 
+      deletion. As a rule of thumb, only one person should have level 3 
+      access for an experiment.
+    
+    If you use the admin mode, you always have to specify passwords for
+    all three levels in *secrets.conf*, section *general*::
+        
+        # secrets.conf
+        [general]
+        adminpass_lvl1 = demo
+        adminpass_lvl2 = use-better-passwords
+        adminpass_lvl3 = to-protect-access
+    
+    You can specficy multiple passwords for the same level to enable
+    a token-like authentication management. To specifiy multiple passwords, 
+    simply separate them by ``|``::
+
+        # secrets.conf
+        [general]
+        adminpass_lvl1 = demo|demopass-2
+        adminpass_lvl2 = use-better-passwords
+        adminpass_lvl3 = to-protect-access
+    
+
+    .. note:: Because of its special meaning for the separation of multiple
+        passwords, the character ``|`` cannot be part of a password.
+
     """
     LEVEL1 = 1
     LEVEL2 = 2
@@ -32,17 +68,21 @@ class AdminAccess(Enum):
           return self.value < other.value
         return NotImplemented
 
-
+@inherit_kwargs
 class AdminPage(Page, ABC):
 
     """
     Base class for all pages to use in the admin mode.
 
-    Admin pages must inherit from *AdminPage* and define the attribute
-    :attr:`.access_level`.
+    Args:
+        {kwargs}
 
-    The access level must be set to one of the values defined by
-    :class:`.AdminAccess`.
+    Notes:
+        Admin pages must inherit from *AdminPage* and define the attribute
+        :attr:`.access_level`.
+
+        The access level must be set to one of the values defined by
+        :class:`.AdminAccess`.
 
     See Also:
         It is most convenient to simply use one of the three admin page
@@ -65,6 +105,8 @@ class AdminPage(Page, ABC):
                     self += al.Text("My text")
 
     """
+
+    responsive_width = "85%, 75%, 75%, 70%"
     
     @abstractproperty
     def access_level(self):
@@ -95,15 +137,126 @@ class AdminPage(Page, ABC):
         super()._on_showing_widget(show_time)
         
 
+@inherit_kwargs
 class MonitoringPage(AdminPage):
+    """
+    Base class for admin pages with monitoring access.
+
+    Args:
+        {kwargs}
+    
+    A monitoring page has access level :class:`.AdminAccess.LEVEL1` 
+    This means that it can be accessed with the password defined
+    by the option *adminpass_lvl1* in section *general* of *secrets.conf*
+
+    The base class is intended to be used for the definition of specific
+    admin pages.
+
+    See Also:
+        The individual levels are described in :class:`.AdminAccess`. If
+        you are uncertain about the correct level for your admin page,
+        check this page out.
+    
+    Examples:
+        A basic admin page that shows the number of datasets associated
+        with the experiment. First we define the class, then we add it
+        to the experiment's admin mode. Note that the *admin* module has
+        to be imported individually::
+            
+            import alfred3 as al
+            from alfred3 import admin
+
+            class MyAdminPage(admin.MonitoringPage):
+                def on_exp_access(self):
+                    n = len(self.exp.all_exp_data)
+                    self += al.Text(f"Number of data sets: {{n}}")
+            
+            exp = al.Experiment()
+            exp.admin = MyAdminPage(name="my_admin_page")
+        
+    """
+
     access_level = AdminAccess.LEVEL1
 
-
+@inherit_kwargs
 class ModeratorPage(AdminPage):
+    """
+    Base class for admin pages with moderator access.
+
+    Args:
+        {kwargs}
+    
+    A monitoring page has access level :class:`.AdminAccess.LEVEL1` 
+    This means that it can be accessed with the password defined
+    by the option *adminpass_lvl2* in section *general* of *secrets.conf*
+
+    The base class is intended to be used for the definition of specific
+    admin pages.
+
+    See Also:
+        The individual levels are described in :class:`.AdminAccess`. If
+        you are uncertain about the correct level for your admin page,
+        check this page out.
+    
+    Examples:
+        A basic admin page that shows the number of datasets associated
+        with the experiment. First we define the class, then we add it
+        to the experiment's admin mode. Note that the *admin* module has
+        to be imported individually::
+            
+            import alfred3 as al
+            from alfred3 import admin
+
+            class MyAdminPage(admin.ModeratorPage):
+                def on_exp_access(self):
+                    n = len(self.exp.all_exp_data)
+                    self += al.Text(f"Number of data sets: {{n}}")
+            
+            exp = al.Experiment()
+            exp.admin = MyAdminPage(name="my_admin_page")
+        
+    """
     access_level = AdminAccess.LEVEL2
 
 
+@inherit_kwargs
 class ManagerPage(AdminPage):
+    """
+    Base class for admin pages with manager access.
+
+    Args:
+        {kwargs}
+    
+    A monitoring page has access level :class:`.AdminAccess.LEVEL1` 
+    This means that it can be accessed with the password defined
+    by the option *adminpass_lvl3* in section *general* of *secrets.conf*
+
+    The base class is intended to be used for the definition of specific
+    admin pages.
+
+    See Also:
+        The individual levels are described in :class:`.AdminAccess`. If
+        you are uncertain about the correct level for your admin page,
+        check this page out.
+    
+    Examples:
+        A basic admin page that shows the number of datasets associated
+        with the experiment. First we define the class, then we add it
+        to the experiment's admin mode. Note that the *admin* module has
+        to be imported individually::
+            
+            import alfred3 as al
+            from alfred3 import admin
+
+            class MyAdminPage(admin.ManagerPage):
+                def on_exp_access(self):
+                    n = len(self.exp.all_exp_data)
+                    self += al.Text(f"Number of data sets: {{n}}")
+            
+            exp = al.Experiment()
+            exp.admin = MyAdminPage(name="my_admin_page")
+        
+    """
     access_level = AdminAccess.LEVEL3
 
 
@@ -142,7 +295,6 @@ class _AuthPage(PasswordPage):
 class _AdminSection(Section):
 
     def added_to_experiment(self, exp):
-
         auth_section = ForwardOnlySection(name="admin_auth")
 
         self.passwords = self.process_passwords(exp)
