@@ -4,6 +4,7 @@ from abc import ABC, abstractproperty
 from functools import total_ordering
 
 from .element.action import JumpList
+from .element.misc import WebExitEnabler
 from .page import Page
 from .page import PasswordPage
 from .section import Section
@@ -79,6 +80,7 @@ class AdminPage(Page, ABC):
             raise AbortMove
         
         if not self._has_been_shown:
+            self += WebExitEnabler()
             name = self.name + "__admin_jumplist__"
             jumplist = JumpList(
                 scope="admin_content",
