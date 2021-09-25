@@ -817,6 +817,8 @@ class ExperimentSession:
 
     @progress_bar.setter
     def progress_bar(self, bar: elm.display.ProgressBar):
+        if bar is None:
+            self._progress_bar = None
         if bar.name is not None:
             raise AlfredError(
                 "If you redefine the progress bar, you can't set a custom name. It is fixed to 'progress_bar_'."
