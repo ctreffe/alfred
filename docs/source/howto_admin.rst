@@ -1,5 +1,3 @@
-.. _admin-how-to::
-
 How to use alfred3's admin mode
 ================================
 
