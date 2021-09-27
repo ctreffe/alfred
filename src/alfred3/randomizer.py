@@ -1,3 +1,7 @@
+"""
+Module for randomizing functionality.
+"""
+
 import random
 import json
 import time

@@ -1,3 +1,7 @@
+"""
+Module for quota functionality.
+"""
+
 import json
 import time
 from dataclasses import dataclass, asdict, field

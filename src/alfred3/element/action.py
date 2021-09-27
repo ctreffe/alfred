@@ -31,6 +31,8 @@ class SubmittingButtons(SingleChoiceButtons):
     on click.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     Examples:
@@ -379,7 +381,7 @@ class Button(Element):
         
         button_block (bool): A boolean switch to toggle whether the button
             should take up all horizontal space that is available. Can be
-            quite useful when arranging buttons in :class:`.Row`s. 
+            quite useful when arranging buttons in :class:`.Row`. 
             Defaults to False.
         
         custom_js (str): Custom JavaScript to execute after the python

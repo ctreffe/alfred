@@ -572,8 +572,9 @@ class SingleChoice(ChoiceElement):
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
 
-        The keys are of the form "choice{{i}}", where {{i}} is a placeholer
-        for the number of the choice.
+        The keys are of the form ``choicei``, where ``i`` is a placeholer
+        for the number of the choice. I.e., ``choice1`` for the first 
+        choice.
         
 
     Examples:
@@ -715,8 +716,8 @@ class MultipleChoice(ChoiceElement):
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
 
-        The keys are of the form "choice{{i}}", where {{i}} is a placeholer
-        for the number of the choice.
+        The keys are of the form ``choicei``, where ``i`` is a placeholer
+        for the number of the choice, i.e. ``choice1`` for the first choice.
 
     See Also:
         See :class:`.SingleChoice` for an example that shows how to access
@@ -877,6 +878,8 @@ class SingleChoiceList(SingleChoice):
     A dropdown list, allowing selection of one option.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     Notes:
@@ -1269,6 +1272,8 @@ class SingleChoiceBar(SingleChoiceButtons):
     a toolbar of connected buttons.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     See Also:
@@ -1350,6 +1355,8 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     a toolbar of connected buttons.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     See Also:
@@ -1380,7 +1387,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     # Documented at :class:`.SingleChoiceButtons
     button_round_corners: bool = False
 
-@inherit_kwargs
+@inherit_kwargs(exclude=["*choice_labels"])
 class SelectPageList(SingleChoiceList):
     """
     A :class:`.SingleChoiceList`, automatically filled with page names.

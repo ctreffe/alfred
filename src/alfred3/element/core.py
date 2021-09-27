@@ -38,26 +38,26 @@ class Element:
             final data set.
         font_size: Font size for text in the element. You can use a 
             keyword or an exact specification. The available keywords 
-            are 'tiny', 'small', 'normal', 'big', and 'huge'. The exact
-            specification shoul ideally include a unit, such as '1rem',
-            or '12pt'. If you supply an integer without a unit, a unit
-            of 'pt' will be assumed. Defaults to 'normal'.
+            are *tiny*, *small*, *normal*, *big*, and *huge*. The exact
+            specification shoul ideally include a unit, such as *1rem*,
+            or *12pt*. If you supply an integer without a unit, a unit
+            of *pt* will be assumed. Defaults to *normal*.
         align: Horizontal alignment of text in the element. Does not
             usually apply to labels. Think of it as an alignment that
             applies to the innermost layer of an element (while labels
             are generally located at outer layers). See
             :class:`.LabelledElement` for more on labelled elements.
-            Can be 'left' (default), 'center', 'right', or 'justify'.
+            Can be *left* (default), *center*, *right*, or *justify*.
         position: Horizontal position of the full element on the
-            page. Values can be 'left', 'center' (default), 'end',
+            page. Values can be *left*, *center* (default), *end*,
             or any valid value for the justify-content
             `flexbox utility <https://getbootstrap.com/docs/4.0/utilities/flex/#justify-content>`_.
             Takes effect only, when the element is not
             full-width.
         width: Defines the horizontal width of the element from
             small screens upwards. It is always full-width on extra
-            small screens. Possible values are 'narrow', 'medium',
-            'wide', and 'full'. For more detailed control, you can
+            small screens. Possible values are *narrow*, *medium*,
+            *wide*, and *full*. For more detailed control, you can
             define the :attr:`.element_width` attribute.
         height: Vertical height of the elements display area. Supply a
             string with a unit, e.g. "80px". Usually, the default is
@@ -71,9 +71,6 @@ class Element:
         instance_log: If *True*, the element will use an
             instance-specific logger, thereby allowing detailed fine-
             tuning of its logging behavior.
-
-    See Also:
-        * How to create a custom element
 
     Notes:
         The Element does not have its own display. It is used only
