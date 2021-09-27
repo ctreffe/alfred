@@ -46,7 +46,7 @@ class ExpMember:
             not only via the usual square-bracket notation, but also
             via dot-notation. 
 
-            This argument fulfills a similar function as **kwargs do
+            This argument fulfills a similar function as ``**kwargs`` do
             sometimes, but it makes sure that user-defined additional
             arguments will not collide with inherited keywords arguments.
             
