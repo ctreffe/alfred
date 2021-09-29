@@ -88,7 +88,7 @@ You can also use a hook to define custom page-specific validation:
 .. autosummary::
    :nosignatures:
 
-   ~alfred3.page.Page.validate_page
+   ~alfred3.page.Page.validate
 
 There is also an additional hook that is defined by 
 :class:`.alfred3.page.TimeoutPage`:
