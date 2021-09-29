@@ -2,8 +2,8 @@ ExperimentSession Attributes and Methods
 =============================================
 
 
-Administrative information
-----------------------------------------
+Administrative information (ExperimentSession)
+-----------------------------------------------
 
 .. autosummary::
     ~alfred3.experiment.ExperimentSession.config
@@ -17,7 +17,7 @@ Administrative information
     ~alfred3.experiment.ExperimentSession.condition
 
 
-Participant data
+Participant data (ExperimentSession)
 ----------------------------------------
 
 .. autosummary::
@@ -30,7 +30,7 @@ Participant data
     ~alfred3.experiment.ExperimentSession.client_data
     ~alfred3.experiment.ExperimentSession.move_history
 
-Database access
+Database access (ExperimentSession)
 ----------------------------------------
 
 .. autosummary::
@@ -39,7 +39,7 @@ Database access
     ~alfred3.experiment.ExperimentSession.db_unlinked
     ~alfred3.experiment.ExperimentSession.db_misc
 
-General utility
+General utility (ExperimentSession)
 ----------------------------------------
 
 .. autosummary::
@@ -54,7 +54,7 @@ General utility
     ~alfred3.experiment.ExperimentSession.adata
     ~alfred3.experiment.ExperimentSession.additional_data
 
-Sections and pages
+Sections and pages (ExperimentSession)
 ----------------------------------------
 
 .. autosummary::
@@ -65,7 +65,7 @@ Sections and pages
     ~alfred3.experiment.ExperimentSession.final_page
     ~alfred3.experiment.ExperimentSession.root_section
 
-Movement and events
+Movement and events (ExperimentSession)
 ----------------------------------------
 
 .. autosummary::
@@ -79,8 +79,8 @@ Movement and events
     ~alfred3.experiment.ExperimentSession.backward
     ~alfred3.experiment.ExperimentSession.jump
 
-Information about the experiment
-----------------------------------------
+Information about the experiment (ExperimentSession)
+-------------------------------------------------------
 
 .. autosummary::
     ~alfred3.experiment.ExperimentSession.alfred_version

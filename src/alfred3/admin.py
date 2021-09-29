@@ -95,7 +95,7 @@ class AdminPage(Page, ABC):
 
     Examples:
 
-        ::
+        In this example, we define a new admin page with access level 1::
             import alfred3 as al
             from alfred3.page import AdminPage, AdminAccess
 
@@ -172,15 +172,15 @@ class MonitoringPage(AdminPage):
             
             import alfred3 as al
             from alfred3 import admin
+            
+            exp = al.Experiment()
 
+            @exp.member(admin=True)
             class MyAdminPage(admin.MonitoringPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
             
-            exp = al.Experiment()
-            exp.admin = MyAdminPage(name="my_admin_page")
-        
     """
 
     access_level = AdminAccess.LEVEL1
@@ -214,14 +214,14 @@ class ModeratorPage(AdminPage):
             import alfred3 as al
             from alfred3 import admin
 
+            exp = al.Experiment()
+
+            @exp.member(admin=True)
             class MyAdminPage(admin.ModeratorPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
             
-            exp = al.Experiment()
-            exp.admin = MyAdminPage(name="my_admin_page")
-        
     """
     access_level = AdminAccess.LEVEL2
 
@@ -254,15 +254,15 @@ class ManagerPage(AdminPage):
             
             import alfred3 as al
             from alfred3 import admin
+            
+            exp = al.Experiment()
 
+            @exp.member(admin=True)
             class MyAdminPage(admin.ManagerPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
             
-            exp = al.Experiment()
-            exp.admin = MyAdminPage(name="my_admin_page")
-        
     """
     access_level = AdminAccess.LEVEL3
 

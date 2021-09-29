@@ -1,8 +1,8 @@
 Page Attributes and Methods
 =============================
 
-Experiment, position, and identification
-----------------------------------------------
+Experiment, position, and identification (Page)
+------------------------------------------------
 
 .. autosummary::
     ~alfred3.page.Page.exp
@@ -17,7 +17,7 @@ Experiment, position, and identification
     ~alfred3.page.Page.tag
     ~alfred3.page.Page.uid
 
-Hooks for overloading
+Hooks for overloading (Page)
 ----------------------------------------------
 
 .. autosummary::
@@ -29,7 +29,7 @@ Hooks for overloading
     ~alfred3.page.Page.on_first_hide
     ~alfred3.page.Page.on_first_show
 
-Data and general utilities
+Data and general utilities (Page)
 ----------------------------------------------
 
 .. autosummary::
@@ -48,7 +48,7 @@ Data and general utilities
     ~alfred3.page.Page.showif
     ~alfred3.page.Page.vargs
 
-Access to elements
+Access to elements (Page)
 ----------------------------------------------
 
 .. autosummary::
@@ -57,7 +57,7 @@ Access to elements
     ~alfred3.page.Page.filled_input_elements
     ~alfred3.page.Page.updated_elements
 
-Visual settings
+Visual settings (Page)
 ----------------------------------------------
 
 .. autosummary::
@@ -65,7 +65,7 @@ Visual settings
     ~alfred3.page.Page.fixed_width
     ~alfred3.page.Page.responsive_width
 
-Development utilities
+Development utilities (Page)
 ----------------------------------------------
 
 These methods and attributes are most likely to be of interest to you

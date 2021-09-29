@@ -1,4 +1,4 @@
-How to use alfred3's admin mode
+How to use the admin mode
 ================================
 
 Your alfred3 experiments are not limited to the pages that participants
@@ -67,6 +67,9 @@ Next, we add the page to the experiment's admin attribute::
 
     exp += al.Page("Hello, world!", name="hello_world") 
 
+
+Add pages by decorating classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also use the :meth:`.Experiment.member` decorator to add pages
 to your admin mode. This works just like adding ordinary pages through
@@ -155,7 +158,7 @@ levels. They are:
 
 - :class:`.admin.MonitoringPage` for level 1 access
 - :class:`.admin.ModeratorPage` for level 2 access
-- :class:`.admin.ManagerAccess` for level 3 access
+- :class:`.admin.ManagerPage` for level 3 access
 
 To build your admin page, you first import your desired base class::
 

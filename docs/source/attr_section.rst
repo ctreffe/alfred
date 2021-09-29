@@ -1,7 +1,7 @@
 Section Attributes and Methods
 =================================
 
-Experiment, position, and identification
+Experiment, position, and identification (Section)
 -----------------------------------------------------
 
 .. autosummary::
@@ -17,7 +17,7 @@ Experiment, position, and identification
     ~alfred3.section.Section.tag
     ~alfred3.section.Section.uid
 
-Hooks for overloading
+Hooks for overloading (Section)
 -----------------------------------------------------
 
 .. autosummary::
@@ -27,7 +27,7 @@ Hooks for overloading
     ~alfred3.section.Section.on_leave
     ~alfred3.section.Section.on_resume
 
-Movement permissions
+Movement permissions (Section)
 -----------------------------------------------------
 
 .. autosummary::
@@ -36,7 +36,7 @@ Movement permissions
     ~alfred3.section.Section.allow_jumpfrom
     ~alfred3.section.Section.allow_jumpto
 
-Data and general utilities
+Data and general utilities (Section)
 -----------------------------------------------------
 
 .. autosummary::
@@ -49,7 +49,7 @@ Data and general utilities
     ~alfred3.section.Section.subtitle
     ~alfred3.section.Section.title
 
-Access to members and elements
+Access to members and elements (Section)
 -----------------------------------------------------
 
 .. autosummary::
@@ -69,7 +69,7 @@ Access to members and elements
     ~alfred3.section.Section.pages
     ~alfred3.section.Section.subsections
 
-Development utilities
+Development utilities (Section)
 -----------------------------------------------------
 
 These methods and attributes are most likely to be of interest to you
