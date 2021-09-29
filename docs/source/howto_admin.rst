@@ -68,6 +68,26 @@ Next, we add the page to the experiment's admin attribute::
     exp += al.Page("Hello, world!", name="hello_world") 
 
 
+You can also use the :meth:`.Experiment.member` decorator to add pages
+to your admin mode. This works just like adding ordinary pages through
+the decorator, you just need to add ``admin=True``::
+    
+    import alfred3 as al
+    from alfred3.admin import MonitoringPage
+
+    exp = al.Experiment()
+
+    @exp.member(admin=True)
+    class MyAdminPage(MonitoringPage):
+        title = "Monitoring"
+
+        def on_exp_access(self):
+            self += al.Text("My admin page")
+    
+
+    exp += al.Page("Hello, world!", name="hello_world") 
+
+
 How to access the admin mode
 -------------------------------
 
@@ -153,7 +173,11 @@ associated with the experiment::
             self += al.Text(f"Number of data sets: {{n}}")
 
 You have access to alfred3's full functionality in admin mode. Useful
-attributes may be the access to experiment data through 
+attributes may be the ones that grant access to experiment data through 
 :attr:`.ExperimentSession.all_exp_data`, or the :class:`.Button` element
 for triggering the execution of Python code on the click of a button. But
 always take care! 
+
+
+
+One last thing:
