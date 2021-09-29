@@ -732,7 +732,9 @@ class _CoreCompositePage(_PageCore):
 
         Notes:
             The method *must* return *True* if validation is OK and 
-            *False* if validation fails.
+            *False* if validation fails. You can use 
+            :meth:`.ExperimentSession.post_message` to post a message for
+            participants that will be displayed if validation fails.
 
         Examples:
             ::
