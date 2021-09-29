@@ -28,7 +28,7 @@ Types of changes
 
 ## alfred3 v2.1.7
 
-### Added
+### Added v2.1.7
 
 - Added the `ListRandomizer.factors` alternative constructor for the
   ListRandomizer. This constructor allows experimenters to easily create 
@@ -42,7 +42,7 @@ Types of changes
   experimenters to conveniently abort the experiment if all condition
   slots are full, independently of condition assignment.
 
-### Deprecated
+### Deprecated v2.1.7
 
 - Deprecated the `id` argument of `ListRandomizer`. Please use the
   new parameter `session_ids` in the future. The new parameter is designed
@@ -51,14 +51,14 @@ Types of changes
 
 ## alfred3 v2.1.6 (Released 2021-06-12)
 
-### Fixed
+### Fixed v2.1.6
 
 - Fixed an issue with the upper allocation limits of the 
   `ListRandomizer`. 
 
 ## alfred3 v2.1.5 (Released 2021-06-09)
 
-### Added 
+### Added v2.1.5
 
 - You know how Facebook, Twitter, WhatsApp, etc. all create small 
   previews for websites, if you post a link? Well, if you host alfred3
@@ -75,7 +75,7 @@ preview_image =                             # Full URL to custom preview image (
 preview_image_small =                       # Full URL to custom preview image for small versions (300 x 200 px) (for WhatsApp an similar)
 ```
 
-### Changed
+### Changed v2.1.5
 
 - Changed the default footer
 - Changed the default width of `alfred3.Text` element to `with="full"`.
@@ -84,7 +84,7 @@ preview_image_small =                       # Full URL to custom preview image f
   users expected and wished the text to behave, because it often caused 
   misalignment between full-width input elements and the narrower text.
 
-### Fixed
+### Fixed v2.1.5
 
 - Fixed an issue with the `DataManager`, causing client information to be
   unreliable.
@@ -433,12 +433,6 @@ class Main(Section):
 
 * Fixed a bug in the template donwloading CLI.
 
-## alfred v1.3.1 (Released 2020-08-24)
-
-### Fixed
-
-* Fixed a bug in the template donwloading CLI.
-
 ## alfred v1.3.0 (Released 2020-08-19)
 
 ### Added v1.3.0
@@ -539,7 +533,9 @@ Options:
 
 ### Added v1.2.0
 
-#### Minor changes
+#### Minor changes v1.2.0
+
+* You can now define an encryption key either in `secrets.conf` or in an environment variable named `ALFRED_ENCRYPTION_KEY` .
 
 * We added a new page class `page.NoDataPage` , which does only return the page's tag and uid when queried by the saving agent. This will prevent any data from being saved to the standard saving agents. You can use this page, if you want to save data to an external database, separated from experimental data (e.g., if you need to save personal data).
 
@@ -562,7 +558,7 @@ inst = smuggle("files/instructions.py")
 print(inst.text)
 ```
 
-#### Fullscreen option for Google Chrome
+#### Fullscreen option for Google Chrome v1.2.0
 
 We added an option that allows you to make experiments start in Chrome's fullscreen (or "kiosk") mode with hidden browser controls (forward, backward, refresh). This lowers the probability that subjects in lab experiments will mess with the browser controls. On Windows, it will only work, if Chrome is installed to a default directory and is only tested on Windows 10.
 
@@ -577,7 +573,7 @@ fullscreen = true   # default: false
 
 Old `run.py` files will continue to work, but we strongly recommend to use the new method, because this will ensure that your experiment-running code will be updated together with alfred3.
 
-#### `alfred3.run` module with command line interface
+#### `alfred3.run` module with command line interface v1.2.0
 
 Added a module `alfred3.run` that contains the functionality for locally running alfred experiments. It can be used via the command line like this:
 
@@ -620,7 +616,7 @@ This will allow you to customize logging configuration or to extract the flask a
 * The former can be achieved by configuring a logger of the name `exp.<exp_id>` , where `<exp_id>` is the experiment ID, accessible via `runner.config["exp_config"].get("metadata", "exp_id")`
 * The latter can be achieved by assigning the returned value of `runner.create_experiment_app()` to an object, or by accessing `runner.app` after `create_experiment_app` was run.
 
-#### `alfred3.template` command line interface for experiment template
+#### `alfred3.template` command line interface for experiment template v1.2.0
 
 We have a new convenience feature for accessing the latest experiment template. Just use your terminal to execute the following command:
 
@@ -642,7 +638,7 @@ python3 -m alfred3.template --help
 
 ### Changed v1.2.0
 
-#### Enhanced configuration
+#### Enhanced configuration v1.2.0
 
 * If you don't want to change the default configuration, you don't need a `config.conf` file in your experiment directory anymore.
 
@@ -686,7 +682,7 @@ def generate_experiment(self, config=None):
     return exp
 ```
 
-#### Enhanced logging
+#### Enhanced logging v1.2.0
 
 * All instances and children of `Experiment` ,           `element.Element` ,           `page.Page` , and `section.Section` gain a `log` attribute.
 * The `log` attribute is basically a wrapper around a `logging.Logger` . It behaves like a normal logger in many ways, offering the usual methods `debug` ,           `info` ,           `warning` ,           `error` ,           `critical` ,           `exception` ,  `log` , and `setLevel` .
@@ -718,13 +714,9 @@ def generate_experiment(self, config=None):
     exp.append(welcome)
 ```
 
-#### Minor changes
-
-* You can now define an encryption key either in `secrets.conf` or in an environment variable named `ALFRED_ENCRYPTION_KEY` .
-
 ### Removed v1.2.0
 
-#### Removed qt-webkit support
+#### Removed qt-webkit support v1.2.0
 
 We removed the option to run alfred experiments via qt-webkit. This was a rarely used feature and introduced a dependency on PySide2, which caused issues with  deployment via mortimer and mod_wsgi. Specifically, the following option in config.conf is no longer available:
 
