@@ -258,15 +258,17 @@ class Experiment:
 
         return wrapper
 
-    def member(self, _member=None, *, of_section: str = "_content"):
+    def member(self, _member=None, *, of_section: str = "_content", admin: bool = False):
         """
         Decorator for adding pages and sections to the experiment.
 
         Works both with and without arguments.
 
         Args:
-            of_section: Name of the section to which the new member
+            of_section (str): Name of the section to which the new member
                 belongs.
+            admin (bool): If *True*, the new member will be added to the
+                admin mode instead of the normal experiment.
 
         Examples:
 
@@ -304,7 +306,10 @@ class Experiment:
                 if isclass(member) and not member.name:
                     member.name = member.__name__
 
-                self.append(member, to_section=of_section)
+                if admin:
+                    self.admin.append(member, to_section=of_section)
+                else:
+                    self.append(member, to_section=of_section)
                 return member
 
             return wrapper()
