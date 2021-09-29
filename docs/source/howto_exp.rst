@@ -3,7 +3,7 @@ How to write an experiment
 
 This guide will teach you how to approach the process of writing an 
 alfred experiment. We will not cover each topic in depth, but instead
-touch on many relevant topics and point at how they are connected and 
+touch on many relevant topics to point out, how they are connected and 
 how they can be used together to unleash alfred's power. Basically, 
 these are the steps:
 
