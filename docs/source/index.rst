@@ -48,9 +48,9 @@ This is an overview of the modules, for which documentation is available.
    :caption: API Reference
    :recursive:
    :nosignatures:
-   
+
    ~alfred3.experiment
-   ~alfred3.condition
+   ~alfred3.randomizer
    ~alfred3.section
    ~alfred3.page
    ~alfred3.element
