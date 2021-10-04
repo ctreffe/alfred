@@ -44,14 +44,13 @@ class ListRandomizer(SessionQuota):
             Setting *respect_version* to True can fix such issues.
             Defaults to True.
 
-        inclusive (bool):
-            If *False* (default), the randomizer will only assign a condition
-            slot, if there are no pending sessions for that slot. It will
-            not assign a condition slot, if a session in that slot
-            is finished, or if there is an ongoing session in that slot
-            that has not yet timed out. You will end up with exactly
-            as many participants in each condition, as specified in the
-            target size.
+        inclusive (bool): If *False* (default), the randomizer will only 
+            assign a condition slot, if there are no pending sessions for 
+            that slot. It will not assign a condition slot, if a session 
+            in that slot is finished, or if there is an ongoing session 
+            in that slot that has not yet timed out. You will end up with 
+            exactly as many participants in each condition as specified 
+            in the target size.
 
             If *True*, the randomizer will assign a condition slot,
             if there is no finished session in that slot. That means,
@@ -358,6 +357,9 @@ class ListRandomizer(SessionQuota):
         Examples:
 
             Use the :meth:`.factors` constructor to create conditions::
+                
+                import alfred3 as al
+
                 exp = al.Experiment()
 
                 @exp.setup
@@ -376,6 +378,9 @@ class ListRandomizer(SessionQuota):
             Use the :meth:`.factors` constructor to create conditions,
             then do something for all sessions that contain a specific
             factor value::
+
+                import alfred3 as al
+
                 exp = al.Experiment()
 
                 @exp.setup

@@ -1,4 +1,4 @@
-﻿Page
+Page
 =================
 
 .. currentmodule:: alfred3.page

@@ -1,4 +1,4 @@
-﻿Callback
+Callback
 =============================
 
 .. currentmodule:: alfred3.element.misc

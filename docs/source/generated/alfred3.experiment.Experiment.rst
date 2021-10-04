@@ -54,6 +54,7 @@ Experiment
       :toctree:
 
       
+         ~Experiment.admin
          ~Experiment.final_page
       
    

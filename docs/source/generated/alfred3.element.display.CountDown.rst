@@ -1,4 +1,4 @@
-﻿CountDown
+CountDown
 =================================
 
 .. currentmodule:: alfred3.element.display

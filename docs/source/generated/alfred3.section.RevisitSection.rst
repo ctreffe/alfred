@@ -1,4 +1,4 @@
-﻿RevisitSection
+RevisitSection
 ==============================
 
 .. currentmodule:: alfred3.section

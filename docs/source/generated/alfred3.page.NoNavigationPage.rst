@@ -1,4 +1,4 @@
-﻿NoNavigationPage
+NoNavigationPage
 =============================
 
 .. currentmodule:: alfred3.page

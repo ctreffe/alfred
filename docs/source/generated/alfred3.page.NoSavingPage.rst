@@ -1,4 +1,4 @@
-﻿NoSavingPage
+NoSavingPage
 =========================
 
 .. currentmodule:: alfred3.page

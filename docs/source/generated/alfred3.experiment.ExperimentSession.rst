@@ -1,4 +1,4 @@
-﻿ExperimentSession
+ExperimentSession
 ====================================
 
 .. currentmodule:: alfred3.experiment
@@ -79,6 +79,7 @@
          ~ExperimentSession.aborted
          ~ExperimentSession.adata
          ~ExperimentSession.additional_data
+         ~ExperimentSession.admin_mode
          ~ExperimentSession.alfred_version
          ~ExperimentSession.all_exp_data
          ~ExperimentSession.all_members

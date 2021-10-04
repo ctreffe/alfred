@@ -1,4 +1,4 @@
-﻿Image
+Image
 =============================
 
 .. currentmodule:: alfred3.element.display

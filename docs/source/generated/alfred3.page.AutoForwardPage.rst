@@ -1,4 +1,4 @@
-﻿AutoForwardPage
+AutoForwardPage
 ============================
 
 .. currentmodule:: alfred3.page
