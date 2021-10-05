@@ -173,7 +173,7 @@ associated with the experiment::
     class MyAdminPage(SpectatorPage):
         def on_exp_access(self):
             n = len(self.exp.all_exp_data)
-            self += al.Text(f"Number of data sets: {{n}}")
+            self += al.Text(f"Number of data sets: {n}")
 
 You have access to alfred3's full functionality in admin mode. Useful
 attributes may be the ones that grant access to experiment data through 
