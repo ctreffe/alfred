@@ -1,6 +1,6 @@
-MonitoringPage.on\_close()
+SpectatorPage.on\_close()
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.on_close
+.. automethod:: SpectatorPage.on_close

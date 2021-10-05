@@ -1,6 +1,6 @@
-ModeratorPage.experiment
+OperatorPage.experiment
 ======================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.experiment
+.. autoproperty:: OperatorPage.experiment

@@ -1,6 +1,6 @@
-MonitoringPage.uid
+SpectatorPage.uid
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.uid
+.. autoproperty:: SpectatorPage.uid

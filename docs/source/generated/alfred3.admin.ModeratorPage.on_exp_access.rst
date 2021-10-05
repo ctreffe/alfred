@@ -1,6 +1,6 @@
-ModeratorPage.on\_exp\_access()
+OperatorPage.on\_exp\_access()
 =========================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.on_exp_access
+.. automethod:: OperatorPage.on_exp_access

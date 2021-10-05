@@ -1,6 +1,6 @@
-ModeratorPage.responsive\_width
+OperatorPage.responsive\_width
 ============================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.responsive_width
+.. autoattribute:: OperatorPage.responsive_width

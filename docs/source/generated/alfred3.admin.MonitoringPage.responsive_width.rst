@@ -1,6 +1,6 @@
-MonitoringPage.responsive\_width
+SpectatorPage.responsive\_width
 =============================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: MonitoringPage.responsive_width
+.. autoattribute:: SpectatorPage.responsive_width

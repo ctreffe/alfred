@@ -1,6 +1,6 @@
-MonitoringPage.should\_be\_shown
+SpectatorPage.should\_be\_shown
 ============================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.should_be_shown
+.. autoproperty:: SpectatorPage.should_be_shown

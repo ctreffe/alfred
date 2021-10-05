@@ -1,6 +1,6 @@
-MonitoringPage.subtitle
+SpectatorPage.subtitle
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.subtitle
+.. autoproperty:: SpectatorPage.subtitle

@@ -1,6 +1,6 @@
-ModeratorPage.vargs
+OperatorPage.vargs
 =================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.vargs
+.. autoproperty:: OperatorPage.vargs

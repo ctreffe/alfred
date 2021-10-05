@@ -1,6 +1,6 @@
-ModeratorPage.close()
+OperatorPage.close()
 =================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.close
+.. automethod:: OperatorPage.close

@@ -1,6 +1,6 @@
-ModeratorPage.should\_be\_shown
+OperatorPage.should\_be\_shown
 ===========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.should_be_shown
+.. autoproperty:: OperatorPage.should_be_shown

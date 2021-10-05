@@ -1,6 +1,6 @@
-MonitoringPage.validate()
+SpectatorPage.validate()
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.validate
+.. automethod:: SpectatorPage.validate

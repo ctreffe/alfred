@@ -1,6 +1,6 @@
-ModeratorPage.on\_each\_show()
+OperatorPage.on\_each\_show()
 ========================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.on_each_show
+.. automethod:: OperatorPage.on_each_show

@@ -1,6 +1,6 @@
-ModeratorPage.access\_level
+OperatorPage.access\_level
 ========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.access_level
+.. autoattribute:: OperatorPage.access_level

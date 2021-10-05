@@ -1,6 +1,6 @@
-ModeratorPage.minimum\_display\_time\_msg
+OperatorPage.minimum\_display\_time\_msg
 ====================================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.minimum_display_time_msg
+.. autoproperty:: OperatorPage.minimum_display_time_msg

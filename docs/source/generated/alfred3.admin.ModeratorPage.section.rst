@@ -1,6 +1,6 @@
-ModeratorPage.section
+OperatorPage.section
 ===================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.section
+.. autoproperty:: OperatorPage.section

@@ -1,6 +1,6 @@
-ModeratorPage.uid
+OperatorPage.uid
 ===============================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.uid
+.. autoproperty:: OperatorPage.uid

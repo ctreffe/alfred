@@ -1,6 +1,6 @@
-MonitoringPage.parent
+SpectatorPage.parent
 ===================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.parent
+.. autoproperty:: SpectatorPage.parent

@@ -1,6 +1,6 @@
-ModeratorPage.prefix\_element\_names
+OperatorPage.prefix\_element\_names
 ================================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.prefix_element_names
+.. autoattribute:: OperatorPage.prefix_element_names

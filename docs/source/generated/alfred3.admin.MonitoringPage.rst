@@ -1,9 +1,9 @@
-MonitoringPage
+SpectatorPage
 ============================
 
 .. currentmodule:: alfred3.admin
 
-.. autoclass:: MonitoringPage
+.. autoclass:: SpectatorPage
    :show-inheritance:
 
 
@@ -18,61 +18,61 @@ MonitoringPage
    
    
    
-      ~MonitoringPage.added_to_experiment
+      ~SpectatorPage.added_to_experiment
    
    
-      ~MonitoringPage.added_to_section
+      ~SpectatorPage.added_to_section
    
    
-      ~MonitoringPage.append
+      ~SpectatorPage.append
    
    
-      ~MonitoringPage.close
+      ~SpectatorPage.close
    
    
-      ~MonitoringPage.custom_move
+      ~SpectatorPage.custom_move
    
    
-      ~MonitoringPage.durations
+      ~SpectatorPage.durations
    
    
-      ~MonitoringPage.first_duration
+      ~SpectatorPage.first_duration
    
    
-      ~MonitoringPage.last_duration
+      ~SpectatorPage.last_duration
    
    
-      ~MonitoringPage.on_close
+      ~SpectatorPage.on_close
    
    
-      ~MonitoringPage.on_each_hide
+      ~SpectatorPage.on_each_hide
    
    
-      ~MonitoringPage.on_each_show
+      ~SpectatorPage.on_each_show
    
    
-      ~MonitoringPage.on_exp_access
+      ~SpectatorPage.on_exp_access
    
    
-      ~MonitoringPage.on_first_hide
+      ~SpectatorPage.on_first_hide
    
    
-      ~MonitoringPage.on_first_show
+      ~SpectatorPage.on_first_show
    
    
-      ~MonitoringPage.prepare_web_widget
+      ~SpectatorPage.prepare_web_widget
    
    
-      ~MonitoringPage.save_data
+      ~SpectatorPage.save_data
    
    
-      ~MonitoringPage.uptree
+      ~SpectatorPage.uptree
    
    
-      ~MonitoringPage.validate
+      ~SpectatorPage.validate
    
    
-      ~MonitoringPage.visible
+      ~SpectatorPage.visible
    
 
    
@@ -87,42 +87,42 @@ MonitoringPage
       :toctree:
 
       
-         ~MonitoringPage.access_level
-         ~MonitoringPage.all_elements
-         ~MonitoringPage.all_input_elements
-         ~MonitoringPage.background_color
-         ~MonitoringPage.data
-         ~MonitoringPage.elements
-         ~MonitoringPage.exp
-         ~MonitoringPage.experiment
-         ~MonitoringPage.filled_input_elements
-         ~MonitoringPage.fixed_width
-         ~MonitoringPage.has_been_shown
-         ~MonitoringPage.header_color
-         ~MonitoringPage.input_elements
-         ~MonitoringPage.instance_log
-         ~MonitoringPage.is_closed
-         ~MonitoringPage.minimum_display_time
-         ~MonitoringPage.minimum_display_time_msg
-         ~MonitoringPage.must_be_shown
-         ~MonitoringPage.name
-         ~MonitoringPage.parent
-         ~MonitoringPage.parent_name
-         ~MonitoringPage.prefix_element_names
-         ~MonitoringPage.progress
-         ~MonitoringPage.responsive_width
-         ~MonitoringPage.section
-         ~MonitoringPage.short_tree
-         ~MonitoringPage.should_be_shown
-         ~MonitoringPage.showif
-         ~MonitoringPage.subtitle
-         ~MonitoringPage.tag
-         ~MonitoringPage.title
-         ~MonitoringPage.tree
-         ~MonitoringPage.uid
-         ~MonitoringPage.unlinked_data
-         ~MonitoringPage.updated_elements
-         ~MonitoringPage.vargs
+         ~SpectatorPage.access_level
+         ~SpectatorPage.all_elements
+         ~SpectatorPage.all_input_elements
+         ~SpectatorPage.background_color
+         ~SpectatorPage.data
+         ~SpectatorPage.elements
+         ~SpectatorPage.exp
+         ~SpectatorPage.experiment
+         ~SpectatorPage.filled_input_elements
+         ~SpectatorPage.fixed_width
+         ~SpectatorPage.has_been_shown
+         ~SpectatorPage.header_color
+         ~SpectatorPage.input_elements
+         ~SpectatorPage.instance_log
+         ~SpectatorPage.is_closed
+         ~SpectatorPage.minimum_display_time
+         ~SpectatorPage.minimum_display_time_msg
+         ~SpectatorPage.must_be_shown
+         ~SpectatorPage.name
+         ~SpectatorPage.parent
+         ~SpectatorPage.parent_name
+         ~SpectatorPage.prefix_element_names
+         ~SpectatorPage.progress
+         ~SpectatorPage.responsive_width
+         ~SpectatorPage.section
+         ~SpectatorPage.short_tree
+         ~SpectatorPage.should_be_shown
+         ~SpectatorPage.showif
+         ~SpectatorPage.subtitle
+         ~SpectatorPage.tag
+         ~SpectatorPage.title
+         ~SpectatorPage.tree
+         ~SpectatorPage.uid
+         ~SpectatorPage.unlinked_data
+         ~SpectatorPage.updated_elements
+         ~SpectatorPage.vargs
       
    
    

@@ -1,6 +1,6 @@
-MonitoringPage.name
+SpectatorPage.name
 =================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: MonitoringPage.name
+.. autoattribute:: SpectatorPage.name

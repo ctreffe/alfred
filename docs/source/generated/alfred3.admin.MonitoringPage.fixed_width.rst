@@ -1,6 +1,6 @@
-MonitoringPage.fixed\_width
+SpectatorPage.fixed\_width
 ========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.fixed_width
+.. autoproperty:: SpectatorPage.fixed_width

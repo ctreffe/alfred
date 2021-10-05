@@ -1,6 +1,6 @@
-MonitoringPage.filled\_input\_elements
+SpectatorPage.filled\_input\_elements
 ==================================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.filled_input_elements
+.. autoproperty:: SpectatorPage.filled_input_elements

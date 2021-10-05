@@ -1,6 +1,6 @@
-MonitoringPage.prepare\_web\_widget()
+SpectatorPage.prepare\_web\_widget()
 ===============================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.prepare_web_widget
+.. automethod:: SpectatorPage.prepare_web_widget

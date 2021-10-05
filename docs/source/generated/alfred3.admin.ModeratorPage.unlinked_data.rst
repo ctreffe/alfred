@@ -1,6 +1,6 @@
-ModeratorPage.unlinked\_data
+OperatorPage.unlinked\_data
 =========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.unlinked_data
+.. autoproperty:: OperatorPage.unlinked_data

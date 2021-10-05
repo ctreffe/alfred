@@ -1,6 +1,6 @@
-ModeratorPage.tree
+OperatorPage.tree
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.tree
+.. autoproperty:: OperatorPage.tree

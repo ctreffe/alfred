@@ -1,6 +1,6 @@
-ModeratorPage.custom\_move()
+OperatorPage.custom\_move()
 =======================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.custom_move
+.. automethod:: OperatorPage.custom_move

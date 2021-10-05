@@ -1,6 +1,6 @@
-ModeratorPage.validate()
+OperatorPage.validate()
 ====================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.validate
+.. automethod:: OperatorPage.validate

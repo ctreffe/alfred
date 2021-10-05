@@ -1,6 +1,6 @@
-MonitoringPage.short\_tree
+SpectatorPage.short\_tree
 =======================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.short_tree
+.. autoproperty:: SpectatorPage.short_tree

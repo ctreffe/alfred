@@ -1,6 +1,6 @@
-ModeratorPage.data
+OperatorPage.data
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.data
+.. autoproperty:: OperatorPage.data

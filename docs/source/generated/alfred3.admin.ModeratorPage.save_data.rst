@@ -1,6 +1,6 @@
-ModeratorPage.save\_data()
+OperatorPage.save\_data()
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.save_data
+.. automethod:: OperatorPage.save_data

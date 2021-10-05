@@ -1,6 +1,6 @@
-MonitoringPage.section
+SpectatorPage.section
 ====================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.section
+.. autoproperty:: SpectatorPage.section

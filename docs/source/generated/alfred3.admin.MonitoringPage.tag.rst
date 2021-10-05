@@ -1,6 +1,6 @@
-MonitoringPage.tag
+SpectatorPage.tag
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.tag
+.. autoproperty:: SpectatorPage.tag

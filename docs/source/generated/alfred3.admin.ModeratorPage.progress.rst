@@ -1,6 +1,6 @@
-ModeratorPage.progress
+OperatorPage.progress
 ====================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.progress
+.. autoattribute:: OperatorPage.progress

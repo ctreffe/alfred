@@ -1,6 +1,6 @@
-ModeratorPage.name
+OperatorPage.name
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.name
+.. autoattribute:: OperatorPage.name

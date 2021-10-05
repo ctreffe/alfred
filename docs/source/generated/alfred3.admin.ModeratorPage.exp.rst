@@ -1,6 +1,6 @@
-ModeratorPage.exp
+OperatorPage.exp
 ===============================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.exp
+.. autoproperty:: OperatorPage.exp

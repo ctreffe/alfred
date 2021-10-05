@@ -1,6 +1,6 @@
-ModeratorPage.on\_first\_hide()
+OperatorPage.on\_first\_hide()
 =========================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.on_first_hide
+.. automethod:: OperatorPage.on_first_hide

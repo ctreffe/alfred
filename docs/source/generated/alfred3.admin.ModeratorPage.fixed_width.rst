@@ -1,6 +1,6 @@
-ModeratorPage.fixed\_width
+OperatorPage.fixed\_width
 =======================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.fixed_width
+.. autoproperty:: OperatorPage.fixed_width

@@ -27,7 +27,7 @@ class AdminAccess(Enum):
 
     - :attr:`.LEVEL1`: Lowest clearance. This level should be granted to 
       pages that display additional information but do not allow active 
-      intervention. Used by :class:`.MonitoringPage`.
+      intervention. Used by :class:`.SpectatorPage`.
     - :attr:`.LEVEL2`: Medium clearance. This level should be granted to
       pages that allow non-critical actions like exporting data or sending
       emails.
@@ -89,8 +89,8 @@ class AdminPage(Page, ABC):
         It is most convenient to simply use one of the three admin page
         base classes:
 
-        - :class:`.MonitoringPage` base page for 'level 1' admin pages.
-        - :class:`.ModeratorPage` base page for 'level 2' admin pages.
+        - :class:`.SpectatorPage` base page for 'level 1' admin pages.
+        - :class:`.OperatorPage` base page for 'level 2' admin pages.
         - :class:`.ManagerPage` base page for 'level 3' admin pages.
 
     Examples:
@@ -145,14 +145,14 @@ class AdminPage(Page, ABC):
         
 
 @inherit_kwargs
-class MonitoringPage(AdminPage):
+class SpectatorPage(AdminPage):
     """
-    Base class for admin pages with monitoring access.
+    Base class for admin pages with spectator access.
 
     Args:
         {kwargs}
     
-    A monitoring page has access level :class:`.AdminAccess.LEVEL1` 
+    A SpectatorPage has access level :class:`.AdminAccess.LEVEL1` 
     This means that it can be accessed with the password defined
     by the option *adminpass_lvl1* in section *general* of *secrets.conf*
 
@@ -176,7 +176,7 @@ class MonitoringPage(AdminPage):
             exp = al.Experiment()
 
             @exp.member(admin=True)
-            class MyAdminPage(admin.MonitoringPage):
+            class MyAdminPage(admin.SpectatorPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
@@ -186,9 +186,9 @@ class MonitoringPage(AdminPage):
     access_level = AdminAccess.LEVEL1
 
 @inherit_kwargs
-class ModeratorPage(AdminPage):
+class OperatorPage(AdminPage):
     """
-    Base class for admin pages with moderator access.
+    Base class for admin pages with operator access.
 
     Args:
         {kwargs}
@@ -217,7 +217,7 @@ class ModeratorPage(AdminPage):
             exp = al.Experiment()
 
             @exp.member(admin=True)
-            class MyAdminPage(admin.ModeratorPage):
+            class MyAdminPage(admin.OperatorPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")

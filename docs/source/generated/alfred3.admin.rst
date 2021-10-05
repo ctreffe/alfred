@@ -23,8 +23,8 @@
       AdminAccess
       AdminPage
       ManagerPage
-      ModeratorPage
-      MonitoringPage
+      OperatorPage
+      SpectatorPage
    
    
 

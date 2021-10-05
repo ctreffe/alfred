@@ -1,6 +1,6 @@
-ModeratorPage.updated\_elements
+OperatorPage.updated\_elements
 ============================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.updated_elements
+.. autoproperty:: OperatorPage.updated_elements

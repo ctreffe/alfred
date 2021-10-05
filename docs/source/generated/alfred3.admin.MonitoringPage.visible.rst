@@ -1,6 +1,6 @@
-MonitoringPage.visible()
+SpectatorPage.visible()
 ====================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.visible
+.. automethod:: SpectatorPage.visible

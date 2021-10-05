@@ -1,6 +1,6 @@
-MonitoringPage.durations()
+SpectatorPage.durations()
 ======================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.durations
+.. automethod:: SpectatorPage.durations

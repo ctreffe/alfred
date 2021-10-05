@@ -1,6 +1,6 @@
-MonitoringPage.exp
+SpectatorPage.exp
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.exp
+.. autoproperty:: SpectatorPage.exp

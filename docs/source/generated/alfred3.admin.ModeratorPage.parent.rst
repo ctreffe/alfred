@@ -1,6 +1,6 @@
-ModeratorPage.parent
+OperatorPage.parent
 ==================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.parent
+.. autoproperty:: OperatorPage.parent

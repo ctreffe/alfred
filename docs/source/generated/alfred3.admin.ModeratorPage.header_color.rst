@@ -1,6 +1,6 @@
-ModeratorPage.header\_color
+OperatorPage.header\_color
 ========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.header_color
+.. autoproperty:: OperatorPage.header_color

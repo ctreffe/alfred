@@ -1,6 +1,6 @@
-MonitoringPage.experiment
+SpectatorPage.experiment
 =======================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.experiment
+.. autoproperty:: SpectatorPage.experiment

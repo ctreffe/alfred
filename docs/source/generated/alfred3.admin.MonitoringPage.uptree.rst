@@ -1,6 +1,6 @@
-MonitoringPage.uptree()
+SpectatorPage.uptree()
 ===================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.uptree
+.. automethod:: SpectatorPage.uptree

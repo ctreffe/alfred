@@ -1,6 +1,6 @@
-MonitoringPage.access\_level
+SpectatorPage.access\_level
 =========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: MonitoringPage.access_level
+.. autoattribute:: SpectatorPage.access_level

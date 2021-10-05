@@ -1,6 +1,6 @@
-ModeratorPage.durations()
+OperatorPage.durations()
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.durations
+.. automethod:: OperatorPage.durations

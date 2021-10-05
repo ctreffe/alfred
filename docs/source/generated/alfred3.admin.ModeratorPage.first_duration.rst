@@ -1,6 +1,6 @@
-ModeratorPage.first\_duration()
+OperatorPage.first\_duration()
 ==========================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.first_duration
+.. automethod:: OperatorPage.first_duration

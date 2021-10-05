@@ -1,6 +1,6 @@
-MonitoringPage.instance\_log
+SpectatorPage.instance\_log
 =========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: MonitoringPage.instance_log
+.. autoattribute:: SpectatorPage.instance_log

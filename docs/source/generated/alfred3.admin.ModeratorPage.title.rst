@@ -1,6 +1,6 @@
-ModeratorPage.title
+OperatorPage.title
 =================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.title
+.. autoproperty:: OperatorPage.title

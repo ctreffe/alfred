@@ -1,6 +1,6 @@
-ModeratorPage.uptree()
+OperatorPage.uptree()
 ==================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.uptree
+.. automethod:: OperatorPage.uptree

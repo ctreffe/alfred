@@ -1,6 +1,6 @@
-ModeratorPage.background\_color
+OperatorPage.background\_color
 ============================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.background_color
+.. autoproperty:: OperatorPage.background_color

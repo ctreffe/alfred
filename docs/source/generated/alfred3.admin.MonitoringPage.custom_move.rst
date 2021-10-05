@@ -1,6 +1,6 @@
-MonitoringPage.custom\_move()
+SpectatorPage.custom\_move()
 ========================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.custom_move
+.. automethod:: SpectatorPage.custom_move

@@ -1,6 +1,6 @@
-MonitoringPage.unlinked\_data
+SpectatorPage.unlinked\_data
 ==========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.unlinked_data
+.. autoproperty:: SpectatorPage.unlinked_data

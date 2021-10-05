@@ -1,6 +1,6 @@
-MonitoringPage.vargs
+SpectatorPage.vargs
 ==================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.vargs
+.. autoproperty:: SpectatorPage.vargs

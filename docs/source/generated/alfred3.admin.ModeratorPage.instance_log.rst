@@ -1,6 +1,6 @@
-ModeratorPage.instance\_log
+OperatorPage.instance\_log
 ========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.instance_log
+.. autoattribute:: OperatorPage.instance_log

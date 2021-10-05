@@ -1,6 +1,6 @@
-MonitoringPage.is\_closed
+SpectatorPage.is\_closed
 ======================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.is_closed
+.. autoproperty:: SpectatorPage.is_closed

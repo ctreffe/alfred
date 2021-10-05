@@ -1,6 +1,6 @@
-MonitoringPage.first\_duration()
+SpectatorPage.first\_duration()
 ===========================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.first_duration
+.. automethod:: SpectatorPage.first_duration

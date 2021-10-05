@@ -1,6 +1,6 @@
-MonitoringPage.minimum\_display\_time\_msg
+SpectatorPage.minimum\_display\_time\_msg
 =====================================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.minimum_display_time_msg
+.. autoproperty:: SpectatorPage.minimum_display_time_msg

@@ -1,6 +1,6 @@
-MonitoringPage.progress
+SpectatorPage.progress
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: MonitoringPage.progress
+.. autoattribute:: SpectatorPage.progress

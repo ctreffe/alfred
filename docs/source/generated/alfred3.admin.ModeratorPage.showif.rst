@@ -1,6 +1,6 @@
-ModeratorPage.showif
+OperatorPage.showif
 ==================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ModeratorPage.showif
+.. autoattribute:: OperatorPage.showif

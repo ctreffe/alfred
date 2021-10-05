@@ -1,6 +1,6 @@
-ModeratorPage.is\_closed
+OperatorPage.is\_closed
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.is_closed
+.. autoproperty:: OperatorPage.is_closed

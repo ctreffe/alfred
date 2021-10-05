@@ -48,11 +48,11 @@ experiment. We start with the "hello world" setup::
     exp += al.Page("Hello, world!", name="hello_world") 
 
 To have access to a basic admin page, we now import the base class
-:class:`.MonitoringPage`. This step is not always strictly necessary,
+:class:`.SpectatorPage`. This step is not always strictly necessary,
 because you may possibly get your admin page from elsewhere::
 
     import alfred3 as al
-    from alfred3.admin import MonitoringPage
+    from alfred3.admin import SpectatorPage
 
     exp = al.Experiment()
     exp += al.Page("Hello, world!", name="hello_world") 
@@ -60,10 +60,10 @@ because you may possibly get your admin page from elsewhere::
 Next, we add the page to the experiment's admin attribute::
 
     import alfred3 as al
-    from alfred3.admin import MonitoringPage
+    from alfred3.admin import SpectatorPage
 
     exp = al.Experiment()
-    exp.admin += MonitoringPage(title="My monitoring page", name="monitoring")
+    exp.admin += SpectatorPage(title="My monitoring page", name="monitoring")
 
     exp += al.Page("Hello, world!", name="hello_world") 
 
@@ -76,13 +76,13 @@ to your admin mode. This works just like adding ordinary pages through
 the decorator, you just need to add ``admin=True``::
     
     import alfred3 as al
-    from alfred3.admin import MonitoringPage
+    from alfred3.admin import SpectatorPage
 
     exp = al.Experiment()
 
     @exp.member(admin=True)
-    class MyAdminPage(MonitoringPage):
-        title = "Monitoring"
+    class MyAdminPage(SpectatorPage):
+        title = "Spectator"
 
         def on_exp_access(self):
             self += al.Text("My admin page")
@@ -130,7 +130,7 @@ The levels are defined by :class:`.AdminAccess`. They are:
 
 - Level 1: Lowest clearance. This level should be granted to 
   pages that display additional information but do not allow active 
-  intervention. Used by :class:`.MonitoringPage`.
+  intervention. Used by :class:`.SpectatorPage`.
 - Level 2: Medium clearance. This level should be granted to
   pages that allow non-critical actions like exporting data or sending
   emails.
@@ -156,21 +156,21 @@ To write your own admin pages, you can inherit from three base classes
 that are provided by alfred3. The classes correspond to the three access
 levels. They are:
 
-- :class:`.admin.MonitoringPage` for level 1 access
-- :class:`.admin.ModeratorPage` for level 2 access
+- :class:`.admin.SpectatorPage` for level 1 access
+- :class:`.admin.OperatorPage` for level 2 access
 - :class:`.admin.ManagerPage` for level 3 access
 
 To build your admin page, you first import your desired base class::
 
-    from alfred3.admin import MonitoringPage
+    from alfred3.admin import SpectatorPage
 
 Next, you define a new page class just as you would define an ordinary
 page in an experiment. Here, we simply display the number of datasets
 associated with the experiment::
 
-    from alfred3.admin import MonitoringPage
+    from alfred3.admin import SpectatorPage
 
-    class MyAdminPage(MonitoringPage):
+    class MyAdminPage(SpectatorPage):
         def on_exp_access(self):
             n = len(self.exp.all_exp_data)
             self += al.Text(f"Number of data sets: {{n}}")

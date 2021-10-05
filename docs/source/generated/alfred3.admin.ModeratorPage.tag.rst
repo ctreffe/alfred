@@ -1,6 +1,6 @@
-ModeratorPage.tag
+OperatorPage.tag
 ===============================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.tag
+.. autoproperty:: OperatorPage.tag

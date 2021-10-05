@@ -1,6 +1,6 @@
-MonitoringPage.save\_data()
+SpectatorPage.save\_data()
 ======================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.save_data
+.. automethod:: SpectatorPage.save_data

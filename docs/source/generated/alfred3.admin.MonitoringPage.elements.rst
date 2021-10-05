@@ -1,6 +1,6 @@
-MonitoringPage.elements
+SpectatorPage.elements
 =====================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: MonitoringPage.elements
+.. autoproperty:: SpectatorPage.elements

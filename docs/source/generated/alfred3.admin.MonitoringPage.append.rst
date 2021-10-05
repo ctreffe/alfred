@@ -1,6 +1,6 @@
-MonitoringPage.append()
+SpectatorPage.append()
 ===================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: MonitoringPage.append
+.. automethod:: SpectatorPage.append

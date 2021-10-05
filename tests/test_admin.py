@@ -94,25 +94,25 @@ class TestUsageOnSever:
         rv = client.get("/start?admin=true", follow_redirects=True)
         assert b"Admin" in rv.data
     
-    def test_monitoring(self, client):
+    def test_spectator(self, client):
         rv = client.get("/start?admin=true", follow_redirects=True)
         rv = forward(client, data={"pw": "test1"})
-        assert b"Monitoring" in rv.data
+        assert b"Spectator" in rv.data
         assert not b"Bitte geben Sie etwas ein." in rv.data
         assert not b"Weiter" in rv.data
 
         rv = forward(client)
         assert b"There's nothing here" in rv.data
 
-    def test_moderator(self, client):
+    def test_operator(self, client):
         rv = client.get("/start?admin=true", follow_redirects=True)
         
         rv = forward(client, data={"pw": "test2"})
-        assert b"Monitoring" in rv.data
+        assert b"Spectator" in rv.data
         assert b"Weiter" in rv.data
 
         rv = forward(client)
-        assert b"Moderator" in rv.data
+        assert b"Operator" in rv.data
         assert not b"Weiter" in rv.data
 
         rv = forward(client)
@@ -123,11 +123,11 @@ class TestUsageOnSever:
         rv = client.get("/start?admin=true", follow_redirects=True)
         
         rv = forward(client, data={"pw": "test3"})
-        assert b"Monitoring" in rv.data
+        assert b"Spectator" in rv.data
         assert b"Weiter" in rv.data
 
         rv = forward(client)
-        assert b"Moderator" in rv.data
+        assert b"Operator" in rv.data
         assert b"Weiter" in rv.data
 
         rv = forward(client)

@@ -1,6 +1,6 @@
-ModeratorPage.input\_elements
+OperatorPage.input\_elements
 ==========================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoproperty:: ModeratorPage.input_elements
+.. autoproperty:: OperatorPage.input_elements

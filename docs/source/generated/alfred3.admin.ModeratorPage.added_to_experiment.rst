@@ -1,6 +1,6 @@
-ModeratorPage.added\_to\_experiment()
+OperatorPage.added\_to\_experiment()
 ===============================================
 
 .. currentmodule:: alfred3.admin
 
-.. automethod:: ModeratorPage.added_to_experiment
+.. automethod:: OperatorPage.added_to_experiment

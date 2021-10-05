@@ -1,9 +1,9 @@
-ModeratorPage
+OperatorPage
 ===========================
 
 .. currentmodule:: alfred3.admin
 
-.. autoclass:: ModeratorPage
+.. autoclass:: OperatorPage
    :show-inheritance:
 
 
@@ -18,61 +18,61 @@ ModeratorPage
    
    
    
-      ~ModeratorPage.added_to_experiment
+      ~OperatorPage.added_to_experiment
    
    
-      ~ModeratorPage.added_to_section
+      ~OperatorPage.added_to_section
    
    
-      ~ModeratorPage.append
+      ~OperatorPage.append
    
    
-      ~ModeratorPage.close
+      ~OperatorPage.close
    
    
-      ~ModeratorPage.custom_move
+      ~OperatorPage.custom_move
    
    
-      ~ModeratorPage.durations
+      ~OperatorPage.durations
    
    
-      ~ModeratorPage.first_duration
+      ~OperatorPage.first_duration
    
    
-      ~ModeratorPage.last_duration
+      ~OperatorPage.last_duration
    
    
-      ~ModeratorPage.on_close
+      ~OperatorPage.on_close
    
    
-      ~ModeratorPage.on_each_hide
+      ~OperatorPage.on_each_hide
    
    
-      ~ModeratorPage.on_each_show
+      ~OperatorPage.on_each_show
    
    
-      ~ModeratorPage.on_exp_access
+      ~OperatorPage.on_exp_access
    
    
-      ~ModeratorPage.on_first_hide
+      ~OperatorPage.on_first_hide
    
    
-      ~ModeratorPage.on_first_show
+      ~OperatorPage.on_first_show
    
    
-      ~ModeratorPage.prepare_web_widget
+      ~OperatorPage.prepare_web_widget
    
    
-      ~ModeratorPage.save_data
+      ~OperatorPage.save_data
    
    
-      ~ModeratorPage.uptree
+      ~OperatorPage.uptree
    
    
-      ~ModeratorPage.validate
+      ~OperatorPage.validate
    
    
-      ~ModeratorPage.visible
+      ~OperatorPage.visible
    
 
    
@@ -87,42 +87,42 @@ ModeratorPage
       :toctree:
 
       
-         ~ModeratorPage.access_level
-         ~ModeratorPage.all_elements
-         ~ModeratorPage.all_input_elements
-         ~ModeratorPage.background_color
-         ~ModeratorPage.data
-         ~ModeratorPage.elements
-         ~ModeratorPage.exp
-         ~ModeratorPage.experiment
-         ~ModeratorPage.filled_input_elements
-         ~ModeratorPage.fixed_width
-         ~ModeratorPage.has_been_shown
-         ~ModeratorPage.header_color
-         ~ModeratorPage.input_elements
-         ~ModeratorPage.instance_log
-         ~ModeratorPage.is_closed
-         ~ModeratorPage.minimum_display_time
-         ~ModeratorPage.minimum_display_time_msg
-         ~ModeratorPage.must_be_shown
-         ~ModeratorPage.name
-         ~ModeratorPage.parent
-         ~ModeratorPage.parent_name
-         ~ModeratorPage.prefix_element_names
-         ~ModeratorPage.progress
-         ~ModeratorPage.responsive_width
-         ~ModeratorPage.section
-         ~ModeratorPage.short_tree
-         ~ModeratorPage.should_be_shown
-         ~ModeratorPage.showif
-         ~ModeratorPage.subtitle
-         ~ModeratorPage.tag
-         ~ModeratorPage.title
-         ~ModeratorPage.tree
-         ~ModeratorPage.uid
-         ~ModeratorPage.unlinked_data
-         ~ModeratorPage.updated_elements
-         ~ModeratorPage.vargs
+         ~OperatorPage.access_level
+         ~OperatorPage.all_elements
+         ~OperatorPage.all_input_elements
+         ~OperatorPage.background_color
+         ~OperatorPage.data
+         ~OperatorPage.elements
+         ~OperatorPage.exp
+         ~OperatorPage.experiment
+         ~OperatorPage.filled_input_elements
+         ~OperatorPage.fixed_width
+         ~OperatorPage.has_been_shown
+         ~OperatorPage.header_color
+         ~OperatorPage.input_elements
+         ~OperatorPage.instance_log
+         ~OperatorPage.is_closed
+         ~OperatorPage.minimum_display_time
+         ~OperatorPage.minimum_display_time_msg
+         ~OperatorPage.must_be_shown
+         ~OperatorPage.name
+         ~OperatorPage.parent
+         ~OperatorPage.parent_name
+         ~OperatorPage.prefix_element_names
+         ~OperatorPage.progress
+         ~OperatorPage.responsive_width
+         ~OperatorPage.section
+         ~OperatorPage.short_tree
+         ~OperatorPage.should_be_shown
+         ~OperatorPage.showif
+         ~OperatorPage.subtitle
+         ~OperatorPage.tag
+         ~OperatorPage.title
+         ~OperatorPage.tree
+         ~OperatorPage.uid
+         ~OperatorPage.unlinked_data
+         ~OperatorPage.updated_elements
+         ~OperatorPage.vargs
       
    
    

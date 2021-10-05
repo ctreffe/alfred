@@ -1,6 +1,6 @@
-MonitoringPage.showif
+SpectatorPage.showif
 ===================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: MonitoringPage.showif
+.. autoattribute:: SpectatorPage.showif
