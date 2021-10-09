@@ -1640,7 +1640,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.forward()
+        self.movement_manager._move(direction="forward")
 
     def backward(self):
         """
@@ -1654,7 +1654,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.forward()
+        self.movement_manager._move(direction="backward")
 
     def jump(self, to: Union[str, int]):
         """
@@ -1673,7 +1673,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.jump(to)
+        self.movement_manager._move(direction=f"jump>{to}")
 
     @property
     def values(self) -> dict:

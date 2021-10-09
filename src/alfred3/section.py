@@ -58,8 +58,8 @@ class Section(ExpMember):
     #: this section.
     allow_forward: bool = True
 
-    #: Controls, whether participants can move backward from pages in
-    #: this section.
+    #: Controls, whether participants can move backward from *and to* 
+    #: pages in this section.
     allow_backward: bool = True
 
     #: Controls, whether participants can jump *from* pages in this
@@ -536,7 +536,7 @@ class Section(ExpMember):
     def _jumpto(self):
         pass
 
-    def _move(self, direction):
+    def _move(self, direction, from_page, to_page):
         """
         Conducts a section's part of moving in an alfred experiment.
 
@@ -544,28 +544,40 @@ class Section(ExpMember):
             ValidationError: If validation of the current page fails.
         """
         if direction == "forward":
-            self.validate_on_forward()
-            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._forward()
-
         elif direction == "backward":
-            self.validate_on_backward()
-            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._backward()
-
-        elif direction == "jumpfrom":
-            self.validate_on_jumpfrom()
-            self.exp.current_page._on_hiding_widget(hide_time=time.time())
-            self._jumpfrom()
-
         elif direction == "jumpto":
-            # If a section is the *target* of a jump, it does not validate
-            # input again.
-            self.validate_on_jumpto()
             self._jumpto()
+        elif direction.startswith("jump"):
+            self._jumpfrom()
+        
+        if to_page.section.name in self.all_members:
+            self._hand_over()
+        elif not to_page.section is self:
+            self._leave()
+        
+        if direction.startswith("jump"):
+            to_page.section._jumpto()
+        
+        if self.name in to_page.section.all_members:
+            to_page.section._resume()
+        elif not to_page.section is self:
+            to_page.section._enter()
 
         if self.exp.aborted:
             raise AbortMove
+
+    def _validate(self, direction: str):
+        
+        if direction == "forward":
+            self.validate_on_forward()
+        elif direction == "backward":
+            self.validate_on_backward()
+        elif direction.startswith("jump"):
+            self.validate_on_jump()
+        
+
 
     def validate_on_leave(self):
         """
@@ -628,34 +640,37 @@ class Section(ExpMember):
         Called for validation on each forward move.
 
         Overload this method to customize validation behavior.
+
+        See Also:
+             By default, sections use :meth:`.validate_on_move` for 
+             validation on all kinds of moves.
+             
         """
         self.validate_on_move()
 
     def validate_on_backward(self):
         """
-        Called for validation on each forward move.
+        Called for validation on each backward move.
 
         Overload this method to customize validation behavior.
+
+        See Also:
+             By default, sections use :meth:`.validate_on_move` for 
+             validation on all kinds of moves.
         """
         self.validate_on_move()
 
-    def validate_on_jumpfrom(self):
+    def validate_on_jump(self):
         """
-        Called for validation on each forward move.
+        Called for validation on jumping from this section.
 
         Overload this method to customize validation behavior.
+
+        See Also:
+             By default, sections use :meth:`.validate_on_move` for 
+             validation on all kinds of moves.
         """
         self.validate_on_move()
-
-    def validate_on_jumpto(self):
-        """
-        Called for validation on each forward move.
-
-        Overload this method to customize validation behavior.
-        By default, no validation takes place on *jumpto*, because the
-        section is the *target* of the move.
-        """
-        pass
 
 
 @inherit_kwargs
