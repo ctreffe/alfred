@@ -365,6 +365,13 @@ class ExpMember:
         The member's parent section.
         """
         return self._section
+    
+    @section.setter
+    def section(self, section):
+        if section is self._section:
+            self._section = section
+        else:
+            raise ValueError("Cannot change a member's section.")
 
     @property
     def parent(self):

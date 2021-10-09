@@ -832,7 +832,7 @@ class ExperimentSession:
         bar.added_to_experiment(self)
         self._progress_bar = bar
 
-    def _start(self):
+    def start(self):
         """
         Starts the experiment.
 
@@ -869,6 +869,9 @@ class ExperimentSession:
             In this case, the experiment will immediately jump to page2.
 
         """
+        self._start()
+        
+    def _start(self):
         if self.aborted:
             return
 
@@ -1637,7 +1640,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.forward()
+        self.movement_manager._move(direction="forward")
 
     def backward(self):
         """
@@ -1651,7 +1654,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.forward()
+        self.movement_manager._move(direction="backward")
 
     def jump(self, to: Union[str, int]):
         """
@@ -1670,7 +1673,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.jump(to)
+        self.movement_manager._move(direction=f"jump>{to}")
 
     @property
     def values(self) -> dict:
