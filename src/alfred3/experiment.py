@@ -832,7 +832,7 @@ class ExperimentSession:
         bar.added_to_experiment(self)
         self._progress_bar = bar
 
-    def _start(self):
+    def start(self):
         """
         Starts the experiment.
 
@@ -869,6 +869,9 @@ class ExperimentSession:
             In this case, the experiment will immediately jump to page2.
 
         """
+        self._start()
+        
+    def _start(self):
         if self.aborted:
             return
 
