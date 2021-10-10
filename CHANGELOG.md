@@ -26,6 +26,39 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.2.0 [unreleased]
+
+### Added v2.2.0
+
+- Added `alfred3.SessionQuota`, a class for smart session counting. You
+  can use it to control the maximum number of participants to your 
+  experiment. The SessionQuota is a new parent class to ListRandomizer.
+
+- Added a new admin mode to alfred3 that you can use to access experiment
+  information and manage your experiment (#113). You can also grant access to
+  others on three different levels of authorization. You can add 
+  functionality to your experiment's admin mode by adding pages, just like
+  you add pages to an ordinary experiment. You start it by adding
+  `?admin=true` to the experiment's start url.
+  Please refer to the official documentation for more details.
+
+- Added `alfred3.PasswordPage`, a wide page that can be used to restrict
+  access.
+
+- Added lots of automatic unit tests.
+
+### Changed v2.2.0
+
+- Removed the method *ListRandomizer.abort_if_full*. Instead, you can check 
+  the randomizer's status with the attributes :attr:`.full`,
+  :attr:`.allfinished`, :attr:`.nopen`, :attr:`.npending`, and 
+  :attr:`.nfinished` and call :meth:`.ExperimentSession.abort` 
+  directly.
+
+### Fixed v2.2.0
+
+- Fixed #118
+
 ## alfred3 v2.1.7
 
 ### Added v2.1.7

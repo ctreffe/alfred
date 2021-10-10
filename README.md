@@ -18,6 +18,12 @@ $ pip3 install alfred3
 Documentation and tutorials for alfred3's most important features
 is available here: [Link to docs](https://alfredo3.psych.bio.uni-goettingen.de/docs/)
 
+## Questions and Answers
+
+We use [GitHub Discussions](https://github.com/ctreffe/alfred/discussions/categories/q-a). 
+You can ask questions, share ideas, and showcase your work there. Do not
+hesitate to ask!
+
 ## A "Hello, world" experiment
 
 Creating a hello-world experiment is as easy as writing this *script.py*
