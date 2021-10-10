@@ -64,7 +64,7 @@ class ListRandomizer(SessionQuota):
             Defaults to *False*.
 
         name (str): An identifier for the randomizer. If you
-            give this a custom value, you can use multiple randomizers
+            set this to a custom value, you can use multiple randomizers
             in the same experiment. Defaults to 'randomizer'.
 
         random_seed: The random seed used for reproducible pseudo-random
@@ -92,9 +92,9 @@ class ListRandomizer(SessionQuota):
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
     method :meth:`.get_condition` to receive a condition. By default,
-    the ListRandomizer will automatically abort sessions when
-    *get_condition* is called and display
-    an information page for participants, if the experiment is full. This
+    the ListRandomizer will automatically abort sessions if the 
+    experiment is full when *get_condition* is called and display
+    an information page for participants. This
     behavior can be customized (see :meth:`.get_condition`).
 
     .. warning:: Be mindful of the argument *respect_version*! With the
@@ -102,15 +102,25 @@ class ListRandomizer(SessionQuota):
         every experiment version. If you set it to False, you will
         run into an error, if you change anything about the conditions.
 
+    .. versionchanged:: 2.2.0
+       - Deprecated the parameter *session_ids* without replacement. The 
+         ListRandomizer is now aimed exclusively at allocating one session
+         at a time.
+       - Removed the method *abort_if_full*. Instead, you can check 
+         the randomizer's status with the attributes :attr:`.full`,
+         :attr:`.allfinished`, :attr:`.nopen`, :attr:`.npending`, and 
+         :attr:`.nfinished` and call :meth:`.ExperimentSession.abort` 
+         directly.
+    
     .. versionchanged:: 2.1.7
        New parameters *session_ids* and *name*, new alternative
        constructor :meth:`.factors`. Deprecated the parameter *id*.
 
     Notes:
 
-        **List Randomization**
+        **Why use list randomization?**
 
-        In naive randomization, you might end up with a very unbalanced
+        In "naive" randomization, you might end up with a very unbalanced
         design. For example, if you recruit 300 participants and randomize
         them into two conditions, you might end up with 100 participants in
         the first and 200 in the second condition. If you aim for a balanced

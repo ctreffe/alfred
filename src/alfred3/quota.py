@@ -427,6 +427,8 @@ class SessionQuota:
                 page to be displayed to new participants, if the
                 quota is full.
     
+    .. versionadded:: 2.2.0
+
     Examples:
         A simple example on how to use the quota::
 
@@ -485,7 +487,7 @@ class SessionQuota:
     @property
     def nopen(self) -> int:
         """
-        int: Number of open slots
+        int: Number of open slots.
         """
         with self.io as data:
             return self._nopen(data)
@@ -509,7 +511,10 @@ class SessionQuota:
         return len(pending_slots)
     
     @property
-    def full(self):
+    def full(self) -> bool:
+        """
+        bool: *True*, if the randomizer has allocated all available slots.
+        """
         if self.inclusive:
             return (self.nopen + self.npending) == 0
         else:
@@ -518,7 +523,7 @@ class SessionQuota:
     @property
     def nfinished(self) -> int:
         """
-        int: Number of finished slots
+        int: Number of finished slots.
         """
         with self.io as data:
             nopen = self._nopen(data)
