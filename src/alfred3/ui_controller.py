@@ -242,7 +242,7 @@ class MovementManager:
         if direction == "forward":
             target_page = self.next_page
             i = self.index_of(target_page)
-            while not target_page.should_be_shown: # skip pages that should not be shown
+            while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
                 self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'forward'.")
                 i += 1
                 target_page = self.find_page(i)
@@ -251,7 +251,7 @@ class MovementManager:
         elif direction == "backward":
             target_page = self.page_before(self.current_page)
             i = self.index_of(target_page)
-            while not target_page.should_be_shown: # skip pages that should not be shown
+            while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
                 self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
                 i -= 1
                 target_page = self.find_page(i)
