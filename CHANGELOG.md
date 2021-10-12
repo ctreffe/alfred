@@ -55,6 +55,13 @@ Types of changes
   :attr:`.nfinished` and call :meth:`.ExperimentSession.abort` 
   directly.
 
+- We turned `Page.showif` and `Section.showif` into hooks that you can use
+  to dynamically control whether a page or section is shown or not. You 
+  use it by overloading
+  the method when writing a page or section in class style. If the method
+  returns *True*, the page or section is shown, if it returns *False* it
+  is not shown.
+
 ### Fixed v2.2.0
 
 - Fixed #118
