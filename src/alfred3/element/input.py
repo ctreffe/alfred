@@ -688,8 +688,6 @@ class SingleChoice(ChoiceElement):
             self._input = int(value)
 
 
-
-
 @inherit_kwargs
 class MultipleChoice(ChoiceElement):
     """
