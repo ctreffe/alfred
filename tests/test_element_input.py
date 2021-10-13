@@ -60,3 +60,51 @@ class TestMultiplePasswordEntry:
 
         assert exp.testpage.pentry.validate_data()
 
+class TestSingleChoiceElement:
+
+    def test_data(self, exp):
+
+        exp.testpage += al.SingleChoice("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
+        
+        assert exp.values["test"] == 2
+        assert exp.testpage.test.choice_labels[2-1] == "b"
+
+class TestSignleChoiceButtons:
+
+    def test_data(self, exp):
+        exp.testpage += al.SingleChoiceButtons("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
+        
+        assert exp.values["test"] == 2
+
+class TestMultipleChoiceElement:
+    def test_data(self, exp):
+        exp.testpage += al.MultipleChoice("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({f"test_choice1": "1"})
+        
+        assert exp.values["test"]["choice1"] == True
+
+
+class TestMultipleButtons:
+    def test_data(self, exp):
+        exp.testpage += al.MultipleChoiceButtons("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({f"test_choice1": "1"})
+        
+        assert exp.values["test"]["choice1"] == True
