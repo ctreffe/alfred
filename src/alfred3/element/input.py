@@ -567,14 +567,9 @@ class SingleChoice(ChoiceElement):
         {kwargs}
 
     Notes:
-        This element saves and returns not a single value, but a 
-        dictionary of values. Each choice is represented by a key, and
-        the corresponding value is *True*, if the choice was selected and
-        *False* otherwise.
-
-        The keys are of the form ``choicei``, where ``i`` is a placeholer
-        for the number of the choice. I.e., ``choice1`` for the first 
-        choice.
+        This element saves answers in the form of integers, counting
+        up from 1. Take a look at the examples to see how to work with
+        user input to a SingleChoice element.
         
 
     Examples:
@@ -600,17 +595,15 @@ class SingleChoice(ChoiceElement):
                 name = "demo_page"
 
                 def on_exp_access(self):
-                    self += al.SingleChoice("Yes", "No", name="c1")
+                    self += al.SingleChoice("Yes", "No", toplab="Choose one", name="c1")
+                 
+             
+             @exp.member
+             class Show(al.Page):
                 
-                def on_first_hide(self):
-                    
-                    # access values
-                    c1_yes = self.exp.values["c1"]["choice1"]
-                    c1_no = self.exp.values["c1"]["choice2"]
-
-                    # log values
-                    self.log.info(f"'Yes' selected: {{c1_yes}}")
-                    self.log.info(f"'No' selected: {{c1_no}}")
+                def on_first_show(self):
+                     c1_answer = self.exp.values["c1] # access value
+                     self += al.Text(f"Your answer was: {{c1_answer}}")
         
 
     """
