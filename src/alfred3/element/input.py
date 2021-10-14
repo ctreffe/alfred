@@ -896,9 +896,13 @@ class SingleChoiceList(SingleChoice):
         {kwargs}
 
     Notes:
-        The SingleChoiceList's input always defaults to "1" due to its
-        design. A typical way to remove meaning from this default is
+        The SingleChoiceList's input always defaults to the first option. 
+        A typical way to remove meaning from this default is
         to make the fist choice a no-choice option (see examples).
+
+        Different from pure :class:`.SingleChoice` elements, the 
+        SingleChoiceList saves its input as strings. The examples below
+        illustrate how to work with user input.
 
     Examples:
         A single choice list with a no-choice option as first option::
@@ -930,10 +934,12 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
-                
-                def on_first_hide(self):
+            
+             @exp.member
+             class Show(al.Page):
+                 def on_first_show(self):
                     selection = self.exp.values["sel1"] # accesses selection
-                    self.log.info(selection) # logs selection string
+                    self += al.Text(f"You selected: {{selection}}")
 
     """
 
