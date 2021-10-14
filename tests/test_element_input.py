@@ -163,12 +163,23 @@ class TestMultipleChoiceBar:
 
 
 # class TestMultipleChoiceList:
-#     def test_data(self, exp):
+#     def test_data_select_one(self, exp):
 #         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
         
 #         exp.start()
 #         exp.forward()
 #         exp.testpage.prepare_web_widget()
-#         exp.testpage._set_data({f"test_choice1": "1"})
+#         exp.testpage._set_data({f"test": ["1"]})
         
 #         assert exp.values["test"]["choice1"] == True
+    
+#     def test_data_select_multiple(self, exp):
+#         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
+        
+#         exp.start()
+#         exp.forward()
+#         exp.testpage.prepare_web_widget()
+#         exp.testpage._set_data({f"test": ["1", "2"]})
+        
+#         assert exp.values["test"]["choice1"] == True
+#         assert exp.values["test"]["choice2"] == True

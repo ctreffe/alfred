@@ -1009,66 +1009,115 @@ class SingleChoiceList(SingleChoice):
             self._input = value
 
 
-@inherit_kwargs
-class MultipleChoiceList(MultipleChoice):
-    """
-    A :class:`.MultipleChoice` element, displayed as list.
+# @inherit_kwargs
+# class MultipleChoiceList(MultipleChoice):
+#     """
+#     A :class:`.MultipleChoice` element, displayed as list.
 
-    Args:
-        *choice_labels: Variable numbers of choice labels. See
-            :class:`.ChoiceElement` for details.
-        size: The vertical height of the list. The unit is the number
-            of choices to be displayed without scrolling. Note that some
-            browsers do not adhere to this unit exactly.
-        {kwargs}
+#     Args:
+#         *choice_labels: Variable numbers of choice labels. See
+#             :class:`.ChoiceElement` for details.
+#         size: The vertical height of the list. The unit is the number
+#             of choices to be displayed without scrolling. Note that some
+#             browsers do not adhere to this unit exactly.
+#         {kwargs}
+    
+#     Notes:
+#         This element saves and returns not a single value, but a 
+#         dictionary of values. Each choice is represented by a key, and
+#         the corresponding value is *True*, if the choice was selected and
+#         *False* otherwise.
 
-    Examples:
-        Minimal example::
+#         The keys are of the form ``choicei``, where ``i`` is a placeholer
+#         for the number of the choice, i.e. ``choice1`` for the first choice.
 
-            import alfred3 as al
-            exp = al.Experiment()
+#     See Also:
+#         - See :class:`.MultipleChoice`, :class:`.MultipleChoiceButtons`, 
+#           and :class:`.MultipleChoiceBar`
+#           for nice-looking buttons and a button-bar of multiple choices.
+#         - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+#           :class:`.SingleChoiceBar` for single choice elements.
+#         - See :class:`.SubmittingButtons` for single choice buttons 
+#           that trigger a forward move on click.
 
-            @exp.member
-            class Demo(al.Page):
-                name = "demo"
+    
+#     Examples:
+#         A multiple choice list with three options::
 
-                def on_exp_access(self):
-                    self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
+#             import alfred3 as al
+#             exp = al.Experiment()
 
-    """
+#             @exp.member
+#             class Demo(al.Page):
 
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("html/SelectElement.html.j2")
-
-    # Documented at :class:`.SingleChoice`
-    type = "multiple"
-
-    def __init__(self, *choice_labels, size: int = None, **kwargs):
-        super().__init__(*choice_labels, **kwargs)
-        self.size = size
-
-        raise AlfredError("The MultipleChoiceList is currently disabled.")
-
-    @property
-    def template_data(self):
+#                 def on_exp_access(self):
+#                     self += al.MultipleChoiceList("Yes", "No", "Maybe", name="m1")
         
-        d = super().template_data
-        d["size"] = self.size
-        return d
+#         Accessing the input to a MultipleChoiceList element::
 
-    def set_data(self, d):
+#             import alfred3 as al
+#             exp = al.Experiment()
+
+#             @exp.member
+#             class Demo(al.Page):
+                
+#                 def on_exp_access(self):
+#                     self += al.MultipleChoiceList("a", "b", "c", toplab="Choose one or more", name="c1")
+            
+#             @exp.member
+#             class Show(al.Page):
+
+#                 def on_first_show(self):
+#                     choices = self.exp.values.get("c1")
+#                     self += al.Text(f"Your answer is saved like this: {{choices}}")
+
+#     Examples:
+#         Minimal example::
+
+#             import alfred3 as al
+#             exp = al.Experiment()
+
+#             @exp.member
+#             class Demo(al.Page):
+#                 name = "demo"
+
+#                 def on_exp_access(self):
+#                     self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
+
+#     """
+
+#     # Documented at :class:`.Element`
+#     element_template = jinja_env.get_template("html/SelectElement.html.j2")
+
+#     # Documented at :class:`.SingleChoice`
+#     type = "multiple"
+
+#     def __init__(self, *choice_labels, size: int = None, **kwargs):
+#         super().__init__(*choice_labels, **kwargs)
+#         self.size = size
+
+#     @property
+#     def template_data(self):
         
-        name_map = {str(choice.value): choice.name for choice in self.choices}
-        val = d.get(self.name, None)
-        if not val:
-            return
-        val_name = name_map[val]
+#         d = super().template_data
+#         d["size"] = self.size
+#         return d
 
-        for i, choice in enumerate(self.choices, start=1):
-            if choice.name == val_name:
-                self.input[f"choice{i}"] = True
-            else:
-                self.input[f"choice{i}"] = False
+#     def set_data(self, d):
+        
+#         name_map = {str(choice.value): choice.name for choice in self.choices}
+#         values = d.get(self.name, None)
+#         if not values:
+#             return
+        
+#         selected = [name_map[val] for val in values]
+#         selected_values = [c.]
+
+#         for i, choice in enumerate(self.choices, start=1):
+#             if choice.name in selected:
+#                 self.input[f"choice{i}"] = True
+#             else:
+#                 self.input[f"choice{i}"] = False
 
 @inherit_kwargs
 class SingleChoiceButtons(SingleChoice):
@@ -1424,6 +1473,8 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
     See Also:
         - See :class:`.MultipleChoice` and :class:`.MultipleChoiceBar`
           for nice-looking buttons and a button-bar of multiple choices.
+        - See :class:`.MultipleChoiceList` for a a list that allows
+          multiple selections.
         - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
           :class:`.SingleChoiceBar` for single choice elements.
         - See :class:`.SubmittingButtons` for single choice buttons 
