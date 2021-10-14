@@ -24,6 +24,13 @@ from uuid import uuid4
 from .config import ExperimentConfig, ExperimentSecrets
 from . import alfredlog
 
+# def process_multiple_choice_lists(data: dict) -> dict:
+ #     multiple_choice_lists = [name.replace("__multiple_", "")  for name in data if name.startswith("__multiple_")]
+ #     for name in multiple_choice_lists:
+ #         data[name] = request.form.getlist(name)
+ #         del data[f"__multiple_{name}"]
+ #     return data
+
 
 class Script:
     exp = None
@@ -102,6 +109,8 @@ def experiment():
             data.pop("directjump", None)
             data.pop("par", None)
             data.pop("page_token", None)
+
+            # data = process_multiple_choice_lists(data=data)
 
             script.exp_session.movement_manager.current_page._set_data(data)
 
