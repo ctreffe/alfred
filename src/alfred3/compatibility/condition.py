@@ -31,15 +31,34 @@ class _Session:
         d = get_data_of_session(exp, self.id)
 
         if not d: # if we do not find data, we assume that exp has not been started
+            d = exp.db_misc.find_one({"type": "match_group", "group_id": self.id})
+            if not d:
+                return False
+            
+            session_active = []
+            for sid in d["roles"].values():
+                if sid:
+                    active = self.session_active(exp, sid)
+                    session_active.append(active)
+            
+            active = all(session_active) and len(session_active) > 0
+
+            return active
+        
+        return self.check_data(exp, d)
+        
+    def session_active(self, exp, sid: str) -> bool:
+        data = get_data_of_session(exp, sid)
+        return self.check_data(exp, data)
+
+    def check_data(self, exp, data: dict) -> bool:
+        aborted = data["exp_aborted"]
+        finished = data["exp_finished"]
+        
+        if not data.get("exp_start_time", None): # not started
             return False
         
-        aborted = d["exp_aborted"]
-        finished = d["exp_finished"]
-        
-        if not d.get("exp_start_time", None): # not started
-            return False
-        
-        expired = (time.time() - d["exp_start_time"]) > exp.session_timeout
+        expired = (time.time() - data["exp_start_time"]) > exp.session_timeout
         active = not aborted and not finished and not expired
 
         return active
@@ -603,12 +622,34 @@ class ListRandomizer:
         return d
 
     def _mark_slot_finished(self, exp):
+        
+
+        interact_data = self.exp.adata.get("interact", {})
+        groupid = interact_data.get("groupid", None)
+        if groupid is None:
+            all_finished = True
+        else:
+            group_data = exp.db_misc.find_one({"type": "match_group", "group_id": groupid})
+            sessions_finished = []
+            for sid in group_data["roles"].values():
+                if sid == self.exp.session_id:
+                    continue
+                session_data = exp.db_main.find_one({"session_id": sid}, projection=["exp_finished"])
+                finished = session_data["exp_finished"]
+                sessions_finished.append(finished)
+            
+            all_finished = all(sessions_finished)
+        
+        if not all_finished:
+            return
+
         data = self.io.load(atomic=True)
         self.slotlist = _SlotList(*data["slots"])
         slot = self.slotlist.id_assigned_to(self.id)
         slot.finished = True
         self.io.write(self._data, update=False)
     
+
 
 def random_condition(*conditions) -> str:
     """
