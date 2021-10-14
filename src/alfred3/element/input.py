@@ -567,15 +567,9 @@ class SingleChoice(ChoiceElement):
         {kwargs}
 
     Notes:
-        This element saves and returns not a single value, but a 
-        dictionary of values. Each choice is represented by a key, and
-        the corresponding value is *True*, if the choice was selected and
-        *False* otherwise.
-
-        The keys are of the form ``choicei``, where ``i`` is a placeholer
-        for the number of the choice. I.e., ``choice1`` for the first 
-        choice.
-        
+        This element saves answers in the form of integers, counting
+        up from 1. Take a look at the examples to see how to work with
+        user input to a SingleChoice element.
 
     Examples:
         A simple SingleChoice element::
@@ -600,19 +594,16 @@ class SingleChoice(ChoiceElement):
                 name = "demo_page"
 
                 def on_exp_access(self):
-                    self += al.SingleChoice("Yes", "No", name="c1")
+                    self += al.SingleChoice("Yes", "No", toplab="Choose one", name="c1")
                 
-                def on_first_hide(self):
+            
+            @exp.member
+            class Show(al.Page):
+                
+                def on_first_show(self):
+                    c1_answer = self.exp.values["c1] # access value
+                    self += al.Text(f"Your answer was: {{c1_answer}}")
                     
-                    # access values
-                    c1_yes = self.exp.values["c1"]["choice1"]
-                    c1_no = self.exp.values["c1"]["choice2"]
-
-                    # log values
-                    self.log.info(f"'Yes' selected: {{c1_yes}}")
-                    self.log.info(f"'No' selected: {{c1_no}}")
-        
-
     """
 
     # Documented at :class:`.ChoiceElement`
@@ -718,8 +709,13 @@ class MultipleChoice(ChoiceElement):
         for the number of the choice, i.e. ``choice1`` for the first choice.
 
     See Also:
-        See :class:`.SingleChoice` for an example that shows how to access
-        data from a normal choice-type element within the experiment.
+        - See :class:`.MultipleChoiceButtons` and :class:`.MultipleChoiceBar`
+          for nice-looking buttons and a button-bar of multiple choices.
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+          :class:`.SingleChoiceBar` for single choice elements.
+        - See :class:`.SubmittingButtons` for single choice buttons 
+          that trigger a forward move on click.
+
     
     Examples:
         A multiple choice element with three options::
@@ -729,10 +725,27 @@ class MultipleChoice(ChoiceElement):
 
             @exp.member
             class Demo(al.Page):
-                name = "demo_page"
 
                 def on_exp_access(self):
                     self += al.MultipleChoice("Yes", "No", "Maybe", name="m1")
+        
+        Accessing the input to a MultipleChoice element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                
+                def on_exp_access(self):
+                    self += al.MultipleChoice("a", "b", "c", toplab="Choose one or more", name="c1")
+            
+            @exp.member
+            class Show(al.Page):
+
+                def on_first_show(self):
+                    choices = self.exp.values.get("c1")
+                    self += al.Text(f"Your answer is saved like this: {{choices}}")
 
     """
 
@@ -881,9 +894,13 @@ class SingleChoiceList(SingleChoice):
         {kwargs}
 
     Notes:
-        The SingleChoiceList's input always defaults to "1" due to its
-        design. A typical way to remove meaning from this default is
+        The SingleChoiceList's input always defaults to the first option. 
+        A typical way to remove meaning from this default is
         to make the fist choice a no-choice option (see examples).
+
+        Different from pure :class:`.SingleChoice` elements, the 
+        SingleChoiceList saves its input as strings. The examples below
+        illustrate how to work with user input.
 
     Examples:
         A single choice list with a no-choice option as first option::
@@ -916,9 +933,11 @@ class SingleChoiceList(SingleChoice):
                          name="sel1"
                          )
                 
-                def on_first_hide(self):
+            @exp.member
+            class Show(al.Page):
+                def on_first_show(self):
                     selection = self.exp.values["sel1"] # accesses selection
-                    self.log.info(selection) # logs selection string
+                    self += al.Text(f"You selected: {{selection}}")
 
     """
 
@@ -1086,15 +1105,26 @@ class SingleChoiceButtons(SingleChoice):
 
     Notes:
 
+        - This element saves answers in the form of integers, counting
+          up from 1. Take a look at the examples to see how to work with
+          user input to a SingleChoice element.
+
         - The *align* parameter does not affect the alignment of choice
           labels.
-
+        
     See Also:
-        See :class:`.SingleChoice` for an example that shows how to access
-        data from a normal choice-type element within the experiment.
+
+        - :class:`.SingleChoiceBar` is a version of SingleChoiceButtons
+          that displays the answering options in a connected bar instead
+          of single buttons.
+        - The class :class:`.SubmittingButtons` is a version of 
+          SingleChoiceButtons that automatically moves the experiment
+          to the next page, once the participant clicks on an answer.
+        - :class:`.MultipleChoiceButtons` can be used to allow multiple
+          answers.
 
     Examples:
-        A single choice button element with three choices::
+        A simple SingleChoiceButtons element::
 
             import alfred3 as al
             exp = al.Experiment()
@@ -1104,7 +1134,27 @@ class SingleChoiceButtons(SingleChoice):
                 name = "demo_page"
 
                 def on_exp_access(self):
-                    self += al.SingleChoiceButtons("Yes", "No", "maybe", name="b1")
+                    self += al.SingleChoiceButtons("Yes", "No", name="c1")
+        
+        Accessing the input to a SingleChoiceButtons element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo_page"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceButtons("Yes", "No", toplab="Choose one", name="c1")
+                
+            
+            @exp.member
+            class Show(al.Page):
+                
+                def on_first_show(self):
+                    c1_answer = self.exp.values["c1] # access value
+                    self += al.Text(f"Your answer was: {{c1_answer}}")
 
     """
 
@@ -1274,12 +1324,28 @@ class SingleChoiceBar(SingleChoiceButtons):
             :class:`.ChoiceElement` for details.
         {kwargs}
 
+    Notes:
+
+        - This element saves answers in the form of integers, counting
+          up from 1. Take a look at the examples to see how to work with
+          user input to a SingleChoice element.
+
+        - The *align* parameter does not affect the alignment of choice
+          labels.
+        
     See Also:
-        See :class:`.SingleChoice` for an example that shows how to access
-        data from a normal choice-type element within the experiment.
+
+        - :class:`.SingleChoiceButtons` is a version of a SingleChoiceBar
+          that displays the options in the form of single buttons instead
+          of a connected bar.
+        - The class :class:`.SubmittingButtons` is a version of 
+          SingleChoiceButtons that automatically moves the experiment
+          to the next page, once the participant clicks on an answer.
+        - :class:`.MultipleChoiceButtons` can be used to allow multiple
+          answers.
 
     Examples:
-        A single choice bar with three options::
+        A simple SingleChoiceBar element::
 
             import alfred3 as al
             exp = al.Experiment()
@@ -1289,7 +1355,27 @@ class SingleChoiceBar(SingleChoiceButtons):
                 name = "demo_page"
 
                 def on_exp_access(self):
-                    self += al.SingleChoiceBar("Yes", "No", "Maybe", name="b1")
+                    self += al.SingleChoiceBar("Yes", "No", name="c1")
+        
+        Accessing the input to a SingleChoiceBar element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo_page"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceBar("Yes", "No", toplab="Choose one", name="c1")
+                
+            
+            @exp.member
+            class Show(al.Page):
+                
+                def on_first_show(self):
+                    c1_answer = self.exp.values["c1] # access value
+                    self += al.Text(f"Your answer was: {{c1_answer}}")
     """
 
     # Documented at :class:`.SingleChoiceButtons`
@@ -1324,22 +1410,53 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
         
         {kwargs}
 
-    See Also:
-        See :class:`.SingleChoice` for an example that shows how to access
-        data from a normal choice-type element within the experiment.
+    Notes:
+        This element saves and returns not a single value, but a 
+        dictionary of values. Each choice is represented by a key, and
+        the corresponding value is *True*, if the choice was selected and
+        *False* otherwise.
 
+        The keys are of the form ``choicei``, where ``i`` is a placeholer
+        for the number of the choice, i.e. ``choice1`` for the first choice.
+
+    See Also:
+        - See :class:`.MultipleChoice` and :class:`.MultipleChoiceBar`
+          for nice-looking buttons and a button-bar of multiple choices.
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+          :class:`.SingleChoiceBar` for single choice elements.
+        - See :class:`.SubmittingButtons` for single choice buttons 
+          that trigger a forward move on click.
+
+    
     Examples:
-        Multiple choice buttons with three options::
+        A multiple choice element with three options::
 
             import alfred3 as al
             exp = al.Experiment()
 
             @exp.member
             class Demo(al.Page):
-                name = "demo_page"
 
                 def on_exp_access(self):
                     self += al.MultipleChoiceButtons("Yes", "No", "Maybe", name="m1")
+        
+        Accessing the input to a MultipleChoiceButtons element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                
+                def on_exp_access(self):
+                    self += al.MultipleChoiceButtons("a", "b", "c", toplab="Choose one or more", name="c1")
+            
+            @exp.member
+            class Show(al.Page):
+
+                def on_first_show(self):
+                    choices = self.exp.values.get("c1")
+                    self += al.Text(f"Your answer is saved like this: {{choices}}")
 
     """
 
@@ -1357,22 +1474,53 @@ class MultipleChoiceBar(MultipleChoiceButtons):
             :class:`.ChoiceElement` for details.
         {kwargs}
 
-    See Also:
-        See :class:`.SingleChoice` for an example that shows how to access
-        data from a normal choice-type element within the experiment.
+    Notes:
+        This element saves and returns not a single value, but a 
+        dictionary of values. Each choice is represented by a key, and
+        the corresponding value is *True*, if the choice was selected and
+        *False* otherwise.
 
+        The keys are of the form ``choicei``, where ``i`` is a placeholer
+        for the number of the choice, i.e. ``choice1`` for the first choice.
+
+    See Also:
+        - See :class:`.MultipleChoice` and :class:`.MultipleChoiceButtons`
+          for nice-looking buttons and a button-bar of multiple choices.
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+          :class:`.SingleChoiceBar` for single choice elements.
+        - See :class:`.SubmittingButtons` for single choice buttons 
+          that trigger a forward move on click.
+
+    
     Examples:
-        A multiple choice bar with three options::
+        A multiple choice element with three options::
 
             import alfred3 as al
             exp = al.Experiment()
 
             @exp.member
             class Demo(al.Page):
-                name = "demo_page"
 
                 def on_exp_access(self):
-                    self += al.MultipleChoiceBar("Yes", "No", "Maybe", name="b1")
+                    self += al.MultipleChoiceBar("Yes", "No", "Maybe", name="m1")
+        
+        Accessing the input to a MultipleChoiceBar element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                
+                def on_exp_access(self):
+                    self += al.MultipleChoiceBar("a", "b", "c", toplab="Choose one or more", name="c1")
+            
+            @exp.member
+            class Show(al.Page):
+
+                def on_first_show(self):
+                    choices = self.exp.values.get("c1")
+                    self += al.Text(f"Your answer is saved like this: {{choices}}")
 
     """
 

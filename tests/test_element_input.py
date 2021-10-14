@@ -74,7 +74,7 @@ class TestSingleChoiceElement:
         assert exp.values["test"] == 2
         assert exp.testpage.test.choice_labels[2-1] == "b"
 
-class TestSignleChoiceButtons:
+class TestSingleChoiceButtons:
 
     def test_data(self, exp):
         exp.testpage += al.SingleChoiceButtons("a", "b", name="test")
@@ -85,6 +85,46 @@ class TestSignleChoiceButtons:
         exp.testpage._set_data({"test": 2})
         
         assert exp.values["test"] == 2
+
+
+class TestSubmittingButtons:
+
+    def test_data(self, exp):
+        exp.testpage += al.SubmittingButtons("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
+        
+        assert exp.values["test"] == 2
+
+
+class TestSingleChoiceBar:
+
+    def test_data(self, exp):
+        exp.testpage += al.SingleChoiceBar("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
+        
+        assert exp.values["test"] == 2
+
+
+class TestSingleChoiceList:
+
+    def test_data(self, exp):
+        exp.testpage += al.SingleChoiceList("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": "a"})
+        
+        assert exp.values["test"] == "a"
+
 
 class TestMultipleChoiceElement:
     def test_data(self, exp):
@@ -108,3 +148,27 @@ class TestMultipleButtons:
         exp.testpage._set_data({f"test_choice1": "1"})
         
         assert exp.values["test"]["choice1"] == True
+
+
+class TestMultipleChoiceBar:
+    def test_data(self, exp):
+        exp.testpage += al.MultipleChoiceBar("a", "b", name="test")
+        
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({f"test_choice1": "1"})
+        
+        assert exp.values["test"]["choice1"] == True
+
+
+# class TestMultipleChoiceList:
+#     def test_data(self, exp):
+#         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
+        
+#         exp.start()
+#         exp.forward()
+#         exp.testpage.prepare_web_widget()
+#         exp.testpage._set_data({f"test_choice1": "1"})
+        
+#         assert exp.values["test"]["choice1"] == True
