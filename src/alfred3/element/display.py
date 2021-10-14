@@ -122,7 +122,7 @@ class Html(Element):
     def html_code(self) -> str:
         """str: The element's html code"""
         if self.path:
-            return self.experiment.subpath(self.path).read_text(encoding="utf-8")
+            return self.experiment.subpath(self.path).read_text()
         else:
             return self._html_code
 
@@ -206,7 +206,7 @@ class Text(Element):
     def text(self) -> str:
         """str: The text to be displayed"""
         if self.path:
-            return self.experiment.subpath(self.path).read_text(encoding="utf-8")
+            return self.experiment.subpath(self.path).read_text()
         else:
             return self._text
 
@@ -586,7 +586,7 @@ class CodeBlock(Text):
     def text(self):
 
         if self.path:
-            text = self.experiment.subpath(self.path).read_text(encoding="utf-8")
+            text = self.experiment.subpath(self.path).read_text()
 
             code = f"```{self.lang}\n{text}\n```"
             return code

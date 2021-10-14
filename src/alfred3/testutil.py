@@ -20,7 +20,7 @@ def prepare_script(tmp_path, script_path: str):
     Reads a script.py and writes it into the directory *tmp_path*.
     This is intended for use with the tmp_path fixture.
     """
-    script = Path(script_path).read_text(encoding="utf-8")
+    script = Path(script_path).read_text()
     tmp_script = Path(tmp_path) / "script.py"
     tmp_script.write_text(script)
 
@@ -34,7 +34,7 @@ def prepare_config(tmp_path, config_path: str) -> str:
     """
     if not config_path:
         return ExperimentConfig(expdir=tmp_path)
-    config = Path(config_path).read_text(encoding="utf-8")
+    config = Path(config_path).read_text()
     tmp_config = Path(tmp_path) / "config.conf"
     tmp_config.write_text(config)
 
@@ -49,7 +49,7 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
     if not secrets_path:
         return
     
-    SECRETS = Path(secrets_path).read_text(encoding="utf-8")
+    SECRETS = Path(secrets_path).read_text()
     secrets = SECRETS.format(
         host=os.getenv("MONGODB_HOST"),
         port=os.getenv("MONGODB_PORT"),
