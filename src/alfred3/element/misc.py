@@ -105,7 +105,7 @@ class Style(Element):
         if self.path:
             p = self.experiment.subpath(self.path)
 
-            code = p.read_text()
+            code = p.read_text(encoding="utf-8")
             return [(self.priority, code)]
         else:
             return [(self.priority, self.code)]
@@ -235,7 +235,7 @@ class JavaScript(Element):
         elif self.path:
             p = self.experiment.subpath(self.path)
 
-            code = p.read_text()
+            code = p.read_text(encoding="utf-8")
             return [(self.priority, code)]
         else:
             return [(self.priority, self.code)]
