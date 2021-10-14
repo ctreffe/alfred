@@ -5,14 +5,12 @@ Sections organize movement between pages in an experiment.
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
 import time
-from typing import Union
+import typing as t
 
-from . import element as elm
 from ._core import ExpMember
 from ._helper import inherit_kwargs
-from .page import _PageCore, UnlinkedDataPage, _DefaultFinalPage
+from .page import _PageCore, _DefaultFinalPage
 from .exceptions import AlfredError, ValidationError, AbortMove
-from . import alfredlog
 from random import shuffle
 
 
@@ -60,8 +58,8 @@ class Section(ExpMember):
     #: this section.
     allow_forward: bool = True
 
-    #: Controls, whether participants can move backward from pages in
-    #: this section.
+    #: Controls, whether participants can move backward from *and to* 
+    #: pages in this section.
     allow_backward: bool = True
 
     #: Controls, whether participants can jump *from* pages in this
@@ -142,14 +140,14 @@ class Section(ExpMember):
         members = list(self.members.items())
         shuffle(members)
         self.members = dict(members)
-    
+
     @property
     def members(self) -> dict:
         """
         Dictionary of the section's members.
         """
         return self._members
-    
+
     @members.setter
     def members(self, value):
         self._members = value
@@ -174,7 +172,7 @@ class Section(ExpMember):
     def all_updated_pages(self) -> dict:
         """
         Returns a dict of all pages in the current section that have
-        access to the experiment session. Operates recursively, i.e. 
+        access to the experiment session. Operates recursively, i.e.
         pages in subsections are included.
         """
         pages = {}
@@ -188,7 +186,7 @@ class Section(ExpMember):
     def all_updated_elements(self) -> dict:
         """
         Returns a dict of all elements in the current section that have
-        access to the experiment session. Operates recursively, i.e. 
+        access to the experiment session. Operates recursively, i.e.
         elements on pages in subsections are included.
         """
         elements = {}
@@ -283,7 +281,7 @@ class Section(ExpMember):
     @property
     def all_closed_pages(self) -> dict:
         """
-        Returns a flat dict of all *closed* pages in this section and its 
+        Returns a flat dict of all *closed* pages in this section and its
         subsections.
 
         The order is preserved, i.e. pages are listed in this dict in
@@ -294,7 +292,7 @@ class Section(ExpMember):
     @property
     def all_shown_pages(self) -> dict:
         """
-        Returns a flat dict of all pages in this section and its 
+        Returns a flat dict of all pages in this section and its
         subsections that have already been shown.
 
         The order is preserved, i.e. pages are listed in this dict in
@@ -369,7 +367,7 @@ class Section(ExpMember):
     @property
     def unlinked_data(self) -> dict:
         """
-        Returns a dictionary of user input data for all *unlinked* pages 
+        Returns a dictionary of user input data for all *unlinked* pages
         in this section and its subsections.
         """
         data = {}
@@ -538,7 +536,7 @@ class Section(ExpMember):
     def _jumpto(self):
         pass
 
-    def _move(self, direction):
+    def _move(self, direction, from_page, to_page):
         """
         Conducts a section's part of moving in an alfred experiment.
 
@@ -546,28 +544,40 @@ class Section(ExpMember):
             ValidationError: If validation of the current page fails.
         """
         if direction == "forward":
-            self.validate_on_forward()
-            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._forward()
-        
         elif direction == "backward":
-            self.validate_on_backward()
-            self.exp.current_page._on_hiding_widget(hide_time=time.time())
             self._backward()
-        
-        elif direction == "jumpfrom":
-            self.validate_on_jumpfrom()
-            self.exp.current_page._on_hiding_widget(hide_time=time.time())
-            self._jumpfrom()
-
         elif direction == "jumpto":
-            # If a section is the *target* of a jump, it does not validate
-            # input again.
-            self.validate_on_jumpto()
             self._jumpto()
+        elif direction.startswith("jump"):
+            self._jumpfrom()
+        
+        if to_page.section.name in self.all_members:
+            self._hand_over()
+        elif not to_page.section is self:
+            self._leave()
+        
+        if direction.startswith("jump"):
+            to_page.section._jumpto()
+        
+        if self.name in to_page.section.all_members:
+            to_page.section._resume()
+        elif not to_page.section is self:
+            to_page.section._enter()
 
         if self.exp.aborted:
             raise AbortMove
+
+    def _validate(self, direction: str):
+        
+        if direction == "forward":
+            self.validate_on_forward()
+        elif direction == "backward":
+            self.validate_on_backward()
+        elif direction.startswith("jump"):
+            self.validate_on_jump()
+        
+
 
     def validate_on_leave(self):
         """
@@ -601,12 +611,12 @@ class Section(ExpMember):
 
         Can be overloaded to change the validating behavior of a derived
         section. By default, this validation method is called on each
-        foward and backward move, as well as when participants jump 
+        foward and backward move, as well as when participants jump
         *from* the section, but not when they jump *to* the section.
 
         Raises:
             ValidationError: If validation fails.
-        
+
         See Also:
             Use the individual methods :meth:`.validate_on_forward`,
             :meth:`.validate_on_backward`, :meth:`.validate_on_jumpfrom`,
@@ -621,44 +631,46 @@ class Section(ExpMember):
 
         if not self.exp.current_page._validate_elements():
             raise ValidationError()
-        
+
         if not self.exp.current_page._validate():
             raise ValidationError()
 
-    
     def validate_on_forward(self):
         """
         Called for validation on each forward move.
 
         Overload this method to customize validation behavior.
+
+        See Also:
+             By default, sections use :meth:`.validate_on_move` for 
+             validation on all kinds of moves.
+             
         """
         self.validate_on_move()
-    
+
     def validate_on_backward(self):
         """
-        Called for validation on each forward move.
+        Called for validation on each backward move.
 
         Overload this method to customize validation behavior.
+
+        See Also:
+             By default, sections use :meth:`.validate_on_move` for 
+             validation on all kinds of moves.
         """
         self.validate_on_move()
-    
-    def validate_on_jumpfrom(self):
+
+    def validate_on_jump(self):
         """
-        Called for validation on each forward move.
+        Called for validation on jumping from this section.
 
         Overload this method to customize validation behavior.
+
+        See Also:
+             By default, sections use :meth:`.validate_on_move` for 
+             validation on all kinds of moves.
         """
         self.validate_on_move()
-    
-    def validate_on_jumpto(self):
-        """
-        Called for validation on each forward move.
-
-        Overload this method to customize validation behavior.
-        By default, no validation takes place on *jumpto*, because the
-        section is the *target* of the move.
-        """
-        pass
 
 
 @inherit_kwargs
@@ -794,6 +806,7 @@ class _RootSection(Section):
         self._experiment = experiment
         self.log.add_queue_logger(self, __name__)
         self.content = Section(name="_content")
+        self.admin_section = None
         self.finished_section = _FinishedSection(name="__finished_section")
         self.finished_section += _DefaultFinalPage(name="_final_page")
 
@@ -801,8 +814,13 @@ class _RootSection(Section):
         self._all_page_names = None
 
     def append_root_sections(self):
-        self += self.content
-        self += self.finished_section
+        if self.exp.admin_mode:
+            from .admin import _AdminSection
+            self += _AdminSection(name="_content")
+            self += self.finished_section
+        else:
+            self += self.content
+            self += self.finished_section
 
     @property
     def all_page_names(self):
@@ -831,4 +849,3 @@ class _RootSection(Section):
     @property
     def final_page(self):
         return self.finished_section._final_page
-    

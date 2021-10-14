@@ -20,6 +20,7 @@ from uuid import uuid4
 from configparser import NoSectionError
 
 import pymongo
+from pymongo.collection import ReturnDocument
 import bson
 
 from . import alfredlog
@@ -510,15 +511,12 @@ class MongoSavingAgent(SavingAgent):
         data.update(f)
         data["_id"] = self.doc_id
 
-        self._col.find_one_and_replace(filter=f, replacement=data, upsert=True)
-        data.pop("_id", None)
+        check = self._col.find_one_and_replace(filter=f, replacement=data, upsert=True, return_document=ReturnDocument.AFTER)
 
-        check = self._col.find_one(filter=f)
-        doc_id = check.pop("_id")
-
-        if not check == data:
+        if not check.get("exp_session_id") == data.get("exp_session_id"):
             raise SavingAgentRunException("Failed to validate data saving.")
 
+        doc_id = check.pop("_id")
         return doc_id
 
     @property
@@ -998,7 +996,7 @@ class DataSaver:
         mongodb_filter = {}
         mongodb_filter["exp_id"] = exp.exp_id
         mongodb_filter["type"] = DataManager.EXP_DATA
-        mongodb_filter["session_id"] = exp.session_id
+        mongodb_filter["exp_session_id"] = exp.session_id
 
         # mongo saving agent from secrets.conf
         if exp.secrets.getboolean(self._MSA, "use"):

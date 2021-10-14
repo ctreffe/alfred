@@ -1,4 +1,4 @@
-﻿Audio
+Audio
 =============================
 
 .. currentmodule:: alfred3.element.display

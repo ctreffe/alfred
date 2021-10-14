@@ -1,4 +1,4 @@
-﻿ForwardOnlySection
+ForwardOnlySection
 ==================================
 
 .. currentmodule:: alfred3.section

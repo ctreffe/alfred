@@ -1,4 +1,4 @@
-﻿WidePage
+WidePage
 =====================
 
 .. currentmodule:: alfred3.page

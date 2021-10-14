@@ -46,7 +46,7 @@ from cryptography.fernet import Fernet
 
 from . import alfredlog
 from .section import Section, _RootSection, _AbortSection
-from .page import Page
+from .page import Page, _NothingHerePage
 from . import messages, page, section
 from . import saving_agent
 from .alfredlog import QueuedLoggingInterface
@@ -113,6 +113,8 @@ class Experiment:
         #: A dictionary of all pages and sections that are direct children
         #: of the main _content section
         self._root_members: dict = {}
+
+        self._admin = None
 
         #: A list of function that will be called upon creation of an
         #: experiment session. They are added with the :meth:`.setup`
@@ -256,15 +258,17 @@ class Experiment:
 
         return wrapper
 
-    def member(self, _member=None, *, of_section: str = "_content"):
+    def member(self, _member=None, *, of_section: str = "_content", admin: bool = False):
         """
         Decorator for adding pages and sections to the experiment.
 
         Works both with and without arguments.
 
         Args:
-            of_section: Name of the section to which the new member
+            of_section (str): Name of the section to which the new member
                 belongs.
+            admin (bool): If *True*, the new member will be added to the
+                admin mode instead of the normal experiment.
 
         Examples:
 
@@ -302,7 +306,10 @@ class Experiment:
                 if isclass(member) and not member.name:
                     member.name = member.__name__
 
-                self.append(member, to_section=of_section)
+                if admin:
+                    self.admin.append(member, to_section=of_section)
+                else:
+                    self.append(member, to_section=of_section)
                 return member
 
             return wrapper()
@@ -311,6 +318,16 @@ class Experiment:
             return add_member
         else:
             return add_member(_member)
+
+    @property
+    def admin(self):
+        if not self._admin:
+            self._admin = ExperimentAdmin()
+        return self._admin
+    
+    @admin.setter
+    def admin(self, value):
+        self._admin = value
 
     @property
     def final_page(self):
@@ -408,10 +425,17 @@ class Experiment:
             :class:`.ExperimentSession` contains documentation on how
             to interact with an experiment session object.
 
-        TODO:
-            * Take care of how the condition gets set.
-
         """
+        
+        if urlargs.get("admin") in ["true", "True"]:
+            
+            self.admin.setup_functions += self.setup_functions
+            self.admin.final_page = _NothingHerePage(name="__") # name gets changed automatically by setter
+            exp_session = self.admin.create_session(
+                session_id=session_id, config=config, secrets=secrets, **urlargs
+            )
+            return exp_session
+        
         exp_session = ExperimentSession(
             session_id=session_id, config=config, secrets=secrets, **urlargs
         )
@@ -471,7 +495,7 @@ class Experiment:
             name = member.name
             if name in self.members or name in ["_content", "_root", "_finished_section"]:
                 raise ValueError(f"A section or page of name '{name}' already exists.")
-
+            
             member.parent_name = to_section
             member_inst = member() if isclass(member) else member
 
@@ -538,6 +562,38 @@ class Experiment:
             return self.members[name]
         except KeyError:
             raise AttributeError(f"Experiment has no attribute '{name}'.")
+
+
+class ExperimentAdmin(Experiment):
+    
+    def create_session(self, session_id: str, config: ExperimentConfig, secrets: ExperimentSecrets, **urlargs):
+        
+        config.read_dict(self.admin_config)
+
+        exp_session = ExperimentSession(session_id=session_id, config=config, secrets=secrets, **urlargs)
+
+        for fun in self.setup_functions:
+            fun(exp_session)
+
+        exp_session._allow_append = True
+        exp_session.abort_functions.extend(self.abort_functions)
+        exp_session.finish_functions.extend(self.finish_functions)
+
+        exp_session._admin_auth_page_.admin_members = self._root_members
+        
+        if self.final_page is not None:
+            exp_session.final_page = self.final_page
+
+        return exp_session
+    
+    @property
+    def admin_config(self) -> dict:
+        config = {}
+        config["general"] = {"admin": "true"}
+        config["data"] = {"save_data": "false"}
+        config["navigation"] = {"finish": ""}
+
+        return config
 
 
 class ExperimentSession:
@@ -657,7 +713,8 @@ class ExperimentSession:
                 f"Experiment version: {self.version}"
             )
         )
-        self._save_data(sync=True)
+        if not self.admin_mode:
+            self._save_data(sync=True)
         
 
     def append_plugin_data_query(self, query: dict):
@@ -765,6 +822,8 @@ class ExperimentSession:
 
     @progress_bar.setter
     def progress_bar(self, bar: elm.display.ProgressBar):
+        if bar is None:
+            self._progress_bar = None
         if bar.name is not None:
             raise AlfredError(
                 "If you redefine the progress bar, you can't set a custom name. It is fixed to 'progress_bar_'."
@@ -773,7 +832,7 @@ class ExperimentSession:
         bar.added_to_experiment(self)
         self._progress_bar = bar
 
-    def _start(self):
+    def start(self):
         """
         Starts the experiment.
 
@@ -810,6 +869,9 @@ class ExperimentSession:
             In this case, the experiment will immediately jump to page2.
 
         """
+        self._start()
+        
+    def _start(self):
         if self.aborted:
             return
 
@@ -912,7 +974,13 @@ class ExperimentSession:
         abort_section = _AbortSection(name="_abort_section")
         abort_section += abort_page
 
-        self += abort_section
+        if not self._allow_append:
+            self._allow_append = True
+            self += abort_section
+            self._allow_append = False
+        else:
+            self += abort_section
+
         abort_page._on_showing_widget()
         self.movement_manager._direct_jump(to=pg_name)
 
@@ -1037,7 +1105,7 @@ class ExperimentSession:
         Section: The experiment's main content section, which holds all
         sections and pages added to the experiment.
         """
-        return self.root_section.content
+        return self.root_section._content
 
     @property
     def root_section(self):
@@ -1055,17 +1123,17 @@ class ExperimentSession:
         Excludes the final page.
 
         """
-        return self.root_section.content.all_members
+        return self.root_section._content.all_members
 
     @property
     def all_sections(self) -> dict:
         """dict: Dictionary of all sections in the experiment."""
-        return self.root_section.content.all_subsections
+        return self.root_section._content.all_subsections
 
     @property
     def all_pages(self) -> dict:
         """dict: Dictionary of all pages in the experiment."""
-        return self.root_section.content.all_pages
+        return self.root_section._content.all_pages
 
     @property
     def final_page(self) -> Page:
@@ -1278,6 +1346,12 @@ class ExperimentSession:
     def author(self) -> str:
         """str: Returns the experiment author."""
         return self.config.get("metadata", "author")
+
+
+    @property
+    def admin_mode(self) -> bool:
+        """bool: Indicates whether the experiment runs in admin mode."""
+        return self.config.getboolean("general", "admin")
 
     @property
     def type(self) -> str:
@@ -1566,7 +1640,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.forward()
+        self.movement_manager._move(direction="forward")
 
     def backward(self):
         """
@@ -1580,7 +1654,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.forward()
+        self.movement_manager._move(direction="backward")
 
     def jump(self, to: Union[str, int]):
         """
@@ -1599,7 +1673,7 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager.jump(to)
+        self.movement_manager._move(direction=f"jump>{to}")
 
     @property
     def values(self) -> dict:

@@ -1,4 +1,4 @@
-﻿RepeatedCallback
+RepeatedCallback
 =====================================
 
 .. currentmodule:: alfred3.element.misc

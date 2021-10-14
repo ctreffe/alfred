@@ -1,4 +1,4 @@
-﻿SubmittingButtons
+SubmittingButtons
 ========================================
 
 .. currentmodule:: alfred3.element.action

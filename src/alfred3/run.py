@@ -160,9 +160,9 @@ class ExperimentRunner:
 
     def print_startup_message(self):
 
-        sys.stderr.writelines(
-            [f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"]
-        )
+        msg_startup = f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"
+        msg_admin = f" * Start admin mode using http://127.0.0.1:{self.port}/start?admin=true\n"
+        sys.stderr.writelines([msg_startup, msg_admin])
 
     def _open_browser(self):
 

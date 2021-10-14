@@ -8,6 +8,7 @@ Pages hold and organize elements.
 import time
 import logging
 import string
+import typing as t
 from abc import ABCMeta, abstractproperty, abstractmethod, ABC
 from builtins import object, str
 from functools import reduce
@@ -17,7 +18,7 @@ from typing import Iterator
 
 from . import alfredlog
 from . import element as elm
-from .element.misc import Style
+from .element.misc import Style, HideNavigation
 from . import saving_agent
 from ._core import ExpMember
 from ._helper import _DictObj
@@ -731,7 +732,9 @@ class _CoreCompositePage(_PageCore):
 
         Notes:
             The method *must* return *True* if validation is OK and 
-            *False* if validation fails.
+            *False* if validation fails. You can use 
+            :meth:`.ExperimentSession.post_message` to post a message for
+            participants that will be displayed if validation fails.
 
         Examples:
             ::
@@ -746,7 +749,7 @@ class _CoreCompositePage(_PageCore):
                         self += al.NumberEntry(name="e1", force_input=True)
                         self += al.NumberEntry(name="e2", force_input=True)
                     
-                    def validate_page(self):
+                    def validate(self):
                         e1 = int(self.exp.values.get("e1"))
                         e2 = int(self.exp.values.get("e2"))
                         
@@ -1617,11 +1620,62 @@ class _DefaultFinalPage(Page):
     The default final page.
     """
 
-    title = "Experiment beendet"
-
     def on_exp_access(self):
-        txt = "Das Experiment ist nun beendet.<br>Vielen Dank für die Teilnahme."
+        self.title = self.exp.config.get("hints", "final_page_title")
+        txt = self.exp.config.get("hints", "final_page_text")
         self += elm.display.Text(":mortar_board:", font_size=70, align="center")
         self += elm.display.VerticalSpace("20px")
         self += elm.display.Text(text=txt, align="center")
         self += elm.misc.WebExitEnabler()
+
+
+class _NothingHerePage(Page):
+
+    title = "There's nothing here"
+
+    def on_exp_access(self):
+        self += elm.display.VerticalSpace("30px")
+        self += elm.display.Text(":heavy_minus_sign:", font_size=70, align="center")
+        self += elm.misc.WebExitEnabler()
+
+
+class PasswordPage(WidePage):
+    password = None
+
+    def __init__(self, password: t.Union[str, t.List[str]], **kwargs):
+        super().__init__(**kwargs)
+        if password is not None:
+            self.password = password
+        if self.password is None or not len(self.password):
+            raise ValueError("PasswordPage must have at least one password.")
+        
+        if not isinstance(self.password, (str, list, tuple)):
+            raise ValueError(f"Argument 'password' of {type(self).__name__} must be a string, list, or tuple.")
+
+    def on_exp_access(self):
+        self += HideNavigation()
+        self += elm.display.Text(":closed_lock_with_key:", font_size=70, align="center")
+        self += elm.display.VerticalSpace("20px")
+
+        # use single password or multiple password element depending on input
+        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center")
+        if isinstance(self.password, str):
+            self += elm.input.PasswordEntry(password=self.password, **pwargs)
+        else:
+            self += elm.input.MultiplePasswordEntry(passwords=self.password, **pwargs)
+
+        self += elm.action.SubmittingButtons(
+            "Enter", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
+        )
+
+        # enables submit via enter-press for password field
+        self += elm.misc.JavaScript(
+            code="""$('#pw').on("keydown", function(event) {
+        if (event.key == "Enter") {
+            $("#alt-submit").attr("name", "move");
+            $("#alt-submit").val("forward");
+            $("#form").submit();
+            }});"""
+        )
+
+

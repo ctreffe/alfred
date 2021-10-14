@@ -44,6 +44,14 @@ Of course, this "Hello, world" experiment does not contain much content:
 Only a single page with a heading. To learn how to add content to an 
 experiment, visit our tutorials: (to be filled)
 
+
+Questions and Answers
+----------------------
+
+We use GitHub discussions: https://github.com/ctreffe/alfred/discussions/categories/q-a
+You can ask questions, share ideas, and showcase your work there. Do not
+hesitate to ask!
+
 Citation
 --------
 

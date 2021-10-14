@@ -1,4 +1,4 @@
-﻿AutoClosePage
+AutoClosePage
 ==========================
 
 .. currentmodule:: alfred3.page

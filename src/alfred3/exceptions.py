@@ -27,3 +27,16 @@ class SavingAgentException(AlfredError):
 
 class SessionTimeout(AlfredError): 
     pass
+
+class AllSlotsFull(AlfredError):
+    pass
+
+class AllConditionsFull(AllSlotsFull):
+    pass
+
+class SlotInconsistency(AlfredError):
+    pass
+
+class ConditionInconsistency(SlotInconsistency):
+    pass
+

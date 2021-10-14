@@ -79,6 +79,10 @@ class TextEntry(InputElement):
     def placeholder(self) -> str:
         """str: Placeholder text, displayed inside the input field."""
         return self._placeholder
+    
+    @placeholder.setter
+    def placeholder(self, value):
+        self._placeholder = value
 
     @property
     def template_data(self):
@@ -221,7 +225,6 @@ class PasswordEntry(RegEntry):
     
     Args:
         password (str): Password string to match against user input.
-            Can be a simple string, or a regular expression.
         
         force_input (bool): If `True`, users can  only progress to the next page
             if they enter data into this field. Note that a
@@ -229,12 +232,113 @@ class PasswordEntry(RegEntry):
             overrule this setting. Defaults to *True*.
 
         {kwargs}
+    
+
+    .. warning:: Note that the password will be included in the 
+        automatically generated codebook.
+
     """
 
     element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
 
-    def __init__(self, password: str, force_input: bool = True, **kwargs):
-        super().__init__(pattern=password, force_input=force_input, **kwargs)
+    def __init__(self, password: str, force_input: bool = True, match_hint: str = None, **kwargs):
+        super(RegEntry, self).__init__(force_input=force_input, **kwargs)
+        self.password = password
+        self._match_hint = match_hint  # documented in getter property
+
+        if not isinstance(password, str):
+            raise ValueError(f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string.")
+    
+
+    def validate_data(self):
+        
+        if not self.should_be_shown:
+            return True
+
+        elif not self.force_input and self.input == "":
+            return True
+
+        elif not self.input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+
+        elif not self.input == self.password:
+            self.hint_manager.post_message(self.match_hint)
+            return False
+        
+        else:
+            return True
+
+    @property
+    def codebook_data(self) -> dict:
+        d = super(RegEntry, self).codebook_data
+        d["password"] = self.password
+        return d
+
+
+@inherit_kwargs(exclude=["force_input", "pattern"])
+class MultiplePasswordEntry(RegEntry):
+    """
+    Password field that accepts multiple different passwords.
+
+    The password field is force-entry by default.
+    
+    Args:
+        passwords (list): List of password strings to match against user 
+            input.
+        
+        force_input (bool): If `True`, users can  only progress to the next page
+            if they enter data into this field. Note that a
+            :class:`.NoValidationSection` or similar sections might
+            overrule this setting. Defaults to *True*.
+
+        {kwargs}
+    
+
+    .. warning:: Note that the password will be included in the 
+        automatically generated codebook.
+
+    """
+
+    element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
+
+    def __init__(self, passwords: List[str], force_input: bool = True, match_hint: str = None, **kwargs):
+        super(RegEntry, self).__init__(force_input=force_input, **kwargs)
+        self.passwords = passwords
+        self._match_hint = match_hint  # documented in getter property
+
+        if not isinstance(passwords, (list, tuple)):
+            raise ValueError(f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple.")
+        
+        for pw in passwords:
+            if not isinstance(pw, str):
+                raise ValueError(f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings.")
+    
+
+    def validate_data(self):
+        
+        if not self.should_be_shown:
+            return True
+
+        elif not self.force_input and self.input == "":
+            return True
+
+        elif not self.input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+
+        elif not self.input in self.passwords:
+            self.hint_manager.post_message(self.match_hint)
+            return False
+        
+        else:
+            return True
+
+    @property
+    def codebook_data(self) -> dict:
+        d = super(RegEntry, self).codebook_data
+        d["passwords"] = "; ".join(self.passwords)
+        return d
 
 
 @inherit_kwargs
@@ -468,8 +572,9 @@ class SingleChoice(ChoiceElement):
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
 
-        The keys are of the form "choice{{i}}", where {{i}} is a placeholer
-        for the number of the choice.
+        The keys are of the form ``choicei``, where ``i`` is a placeholer
+        for the number of the choice. I.e., ``choice1`` for the first 
+        choice.
         
 
     Examples:
@@ -611,8 +716,8 @@ class MultipleChoice(ChoiceElement):
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
 
-        The keys are of the form "choice{{i}}", where {{i}} is a placeholer
-        for the number of the choice.
+        The keys are of the form ``choicei``, where ``i`` is a placeholer
+        for the number of the choice, i.e. ``choice1`` for the first choice.
 
     See Also:
         See :class:`.SingleChoice` for an example that shows how to access
@@ -773,6 +878,8 @@ class SingleChoiceList(SingleChoice):
     A dropdown list, allowing selection of one option.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     Notes:
@@ -1165,6 +1272,8 @@ class SingleChoiceBar(SingleChoiceButtons):
     a toolbar of connected buttons.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     See Also:
@@ -1246,6 +1355,8 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     a toolbar of connected buttons.
 
     Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
         {kwargs}
 
     See Also:
@@ -1276,7 +1387,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     # Documented at :class:`.SingleChoiceButtons
     button_round_corners: bool = False
 
-@inherit_kwargs
+@inherit_kwargs(exclude=["*choice_labels"])
 class SelectPageList(SingleChoiceList):
     """
     A :class:`.SingleChoiceList`, automatically filled with page names.
@@ -1356,7 +1467,7 @@ class SelectPageList(SingleChoiceList):
             scope = list(self.experiment.root_section.members["_content"].all_pages.values())
         else:
             try:
-                target_section = self.experiment.root_section.all_sections[self.scope]
+                target_section = self.experiment.root_section.all_subsections[self.scope]
                 scope = list(target_section.all_pages.values())
             except AttributeError:
                 raise AlfredError("Parameter 'scope' must be a section name or 'exp'.")

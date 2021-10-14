@@ -8,7 +8,6 @@ Provides miscellaneous utilities for alfred experiments.
 """
 
 import csv
-import random
 from pathlib import Path
 
 from emoji import emojize
@@ -17,7 +16,6 @@ from typing import Union
 from typing import Iterator
 from typing import Tuple
 from .page import Page
-from .section import Section
 from .element.core import Element
 from .element.core import InputElement
 from .element.display import Label
@@ -57,6 +55,7 @@ def is_section(obj: Any) -> bool:
     Returns True, if the given object is a :class:`.Section`, or a
     subclass of Section.
     """
+    from .section import Section
     return isinstance(obj, Section)
 
 def is_page(obj: Any) -> bool: 

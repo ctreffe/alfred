@@ -1,4 +1,4 @@
-﻿TimeoutPage
+TimeoutPage
 ========================
 
 .. currentmodule:: alfred3.page

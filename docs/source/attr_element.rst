@@ -4,8 +4,8 @@ Element
 Element base class
 ---------------------
 
-Experiment, position, and identification
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Experiment, position, and identification (Element)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
     ~alfred3.element.core.Element.exp
@@ -17,7 +17,7 @@ Experiment, position, and identification
     ~alfred3.element.core.Element.short_tree
 
 
-General utilities
+General utilities (Element)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
@@ -32,7 +32,7 @@ General utilities
     ~alfred3.element.core.Element.showif
 
 
-Development utilities
+Development utilities (Element)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These methods and attributes are most likely to be of interest to you
@@ -54,8 +54,8 @@ only if you derive your own sections.
     ~alfred3.element.core.Element.template_data
     ~alfred3.element.core.Element.web_widget
 
-LabelledElement Attributes and Methods
-----------------------------------------------
+LabelledElement Attributes and Methods (Element)
+--------------------------------------------------
 
 .. autosummary::
     ~alfred3.element.core.LabelledElement.rightlab
@@ -64,11 +64,11 @@ LabelledElement Attributes and Methods
     ~alfred3.element.core.LabelledElement.bottomlab
     ~alfred3.element.core.LabelledElement.labels
 
-InputElement Attributes and Methods
-------------------------------------------
+InputElement Attributes and Methods (Element)
+-----------------------------------------------
 
 
-Data
+Data (InputElement)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::    
@@ -77,7 +77,7 @@ Data
     ~alfred3.element.core.InputElement.input
 
 
-General utilities
+General utilities (InputElement)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
@@ -95,7 +95,7 @@ General utilities
     ~alfred3.element.core.InputElement.description
 
 
-Development utilities
+Development utilities (InputElement)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These methods and attributes are most likely to be of interest to you

@@ -21,6 +21,7 @@
       :nosignatures:
    
       Experiment
+      ExperimentAdmin
       ExperimentSession
    
    

@@ -1,4 +1,4 @@
-﻿Section
+Section
 =======================
 
 .. currentmodule:: alfred3.section

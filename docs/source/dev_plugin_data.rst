@@ -16,6 +16,7 @@ Follow the instructions below to
 2. Append the query dictionary to the ExperimentSession object.
 
 .. automethod:: alfred3.experiment.ExperimentSession.append_plugin_data_query
+    :noindex:
 
 
 Example

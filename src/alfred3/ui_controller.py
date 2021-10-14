@@ -24,7 +24,7 @@ from .static import js
 from .static import css
 from .static import img
 from . import element as elm
-from .exceptions import AlfredError, ValidationError, AbortMove
+from .exceptions import AlfredError, MoveError, ValidationError, AbortMove
 from .util import icon
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
@@ -113,11 +113,21 @@ class MovementManager:
         self.current_index: int = 0
         self.previous_index: int = 0
         self.history: list = []
+
+        self._current_page = None
     
     @property
     def current_page(self):
-        i = self.current_index
-        return self.exp.root_section.all_pages_list[i]
+        if self._current_page is not None:
+            return self._current_page
+        else:
+            return self.exp.root_section.all_pages_list[self.current_index]
+    
+    @current_page.setter
+    def current_page(self, page):
+        if not self.index_of(page) == self.current_index:
+            raise MoveError("Index of new 'current page' and 'current index' are not equal.")
+        self._current_page = page
     
     @property
     def previous_page(self):
@@ -184,10 +194,7 @@ class MovementManager:
     def last_page(self):
         return self.exp.root_section.all_pages_list[-2]
     
-    def _abort_move(self):
-        return self.current_index, self.current_index
-    
-    def _skip_page(self, to_page, direction: str) -> Tuple[int, int]:
+    def _skip_page(self, target_page, direction: str) -> Tuple[int, int]:
         """
         Returns:
             Tuple[int, int]: A tuple of the current page and the target 
@@ -195,26 +202,26 @@ class MovementManager:
 
         Raises:
             AbortMove: If the movement is a jump and the target page
-                (*to_page*) should not be shown.
+                (*target_page*) should not be shown.
         """
         if direction == "forward":
-            self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'forward'.")
-            return self._move(to_page=self.page_after(to_page), direction="forward")
+            self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'forward'.")
+            return self._move(target_page=self.page_after(target_page), direction="forward")
     
         elif direction == "backward":
-            self.log.debug(f"{to_page} should not be shown. Skipping page in direction 'backward'.")
-            return self._move(to_page=self.page_before(to_page), direction="backward")
+            self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
+            return self._move(target_page=self.page_before(target_page), direction="backward")
     
         elif direction == "jump":
-            self.log.debug(f"{to_page} should not be shown. Aborting move.")
+            self.log.debug(f"{target_page} should not be shown. Aborting move.")
             if self.exp.config.getboolean("general", "debug"):
-                self.exp.message_manager.post_message(f"{to_page} should not be shown. Jump was aborted.", level="debug")
+                self.exp.message_manager.post_message(f"{target_page} should not be shown. Jump was aborted.", level="debug")
             raise AbortMove()
     
-    def _check_permissions(self, to_page, direction: str):
+    def _check_permissions(self, target_page, direction: str):
         # check section permissions for jumps
-        if direction == "jump":
-            jump_allowed = self._check_jump_permission(next_page=to_page)
+        if direction.startswith("jump"):
+            jump_allowed = self._check_jump_permission(next_page=target_page)
             if not jump_allowed:
                 raise AbortMove()
         
@@ -224,114 +231,118 @@ class MovementManager:
             raise AbortMove()
         
         # check section permission for target section
-        elif direction == "backward" and not to_page.section.allow_backward:
-            self.log.debug(f"Section of page {to_page} does not allow movement in direction '{direction}'")
+        elif direction == "backward" and not target_page.section.allow_backward:
+            self.log.debug(f"Section of page {target_page} does not allow movement in direction '{direction}'")
             raise AbortMove()
     
-    def _switch_sections(self, from_page, to_page, direction: str):
-        page_status_before = from_page.is_closed
-        
-        if direction == "jump":
-            from_page.section._move("jumpfrom")
-        else:
-            from_page.section._move(direction)
+    def _abort_move(self):
+        return self.previous_index, self.current_index
+    
+    def target_page(self, direction: str):
+        if direction == "forward":
+            target_page = self.next_page
+            i = self.index_of(target_page)
+            while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
+                self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'forward'.")
+                i += 1
+                target_page = self.find_page(i)
+            return target_page
 
-        if to_page.section.name in from_page.section.all_members:
-            from_page.section._hand_over()
-        else:
-            from_page.section._leave()
+        elif direction == "backward":
+            target_page = self.page_before(self.current_page)
+            i = self.index_of(target_page)
+            while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
+                self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
+                i -= 1
+                target_page = self.find_page(i)
+            return target_page
 
-        if self.exp.config.getboolean("data", "record_move_history"):
-            self.record_move(page_status_before, direction=direction, to_page=to_page)
-        
-        if direction == "jump":
-            to_page.section._move("jumpto")
-
-        if from_page.section.name in to_page.section.all_members:
-            to_page.section._resume()
-        else:
-            to_page.section._enter()
+        elif direction.startswith("jump"):
+            target_page_name = direction[5:]
+            target_page =  self.find_page(target_page_name)
             
-    def _conduct_movement(self, to_page, direction: str) -> Tuple[int, int]:
-        """
-        Raises:
-            AbortMove: If section validation does not succeed.
-        """
-        current_page = self.current_page
-        
-        if not to_page.should_be_shown:
-            # Executed here first for possibility of early cancellation
-            return self._skip_page(to_page=to_page, direction=direction)
-        
-        # check section permissions for jumps
-        self._check_permissions(to_page=to_page, direction=direction)
-
-        self.log.debug(f"Moving from {self.current_page} to {to_page}, direction: '{direction}'.")
-
-        # management of section entering and leaving behavior
-        # and recording the move
-        page_status_before = current_page.is_closed
-        if current_page.section is not to_page.section:
-            try:
-                self._switch_sections(from_page=current_page, to_page=to_page, direction=direction)
-            except ValidationError:
+            if not target_page:
+                msg = self.experiment.config.get("hints", "jump_page_not_found")
+                self.experiment.message_manager.post_message(msg, level="warning")
                 raise AbortMove()
-        
-        else: # sections are equal
-            try:
-                if direction == "jump":
-                    current_page.section._move("jumpfrom")
-                    to_page.section._move("jumpto")
-                else:
-                    current_page.section._move(direction)
-            except ValidationError:
+            
+            if not target_page.should_be_shown:
+                self.log.debug(f"{target_page} should not be shown. Aborting move.")
+                if self.exp.config.getboolean("general", "debug"):
+                    self.exp.message_manager.post_message(f"{target_page} should not be shown. Jump was aborted.", level="debug")
                 raise AbortMove()
 
-            if self.exp.config.getboolean("data", "record_move_history"):
-                self.record_move(page_status_before, direction=direction, to_page=to_page)
-
-        now = time.time()
-        to_page._on_showing_widget(show_time=now)
-
-        if not to_page.should_be_shown:
-        # executed here a second time, in case the to_page's 
-        # should_be_shown attribute was changed during any of the move
-        # functions
-
-            return self._skip_page(to_page=to_page, direction=direction)
-        
-        return self.current_index, self.index_of(to_page)
-
+            return target_page
+    
     def _direct_jump(self, to):
         """
         Bypasses the normal movement system and permissions for a
         direct jump to the given page. Used, e.g. when an experiment is
         aborted.
         """
-        to_page = self.find_page(query=to)
-        self.log.debug(f"Direct jump to {to_page}. Skipping all normal move function.")
+        target_page = self.find_page(query=to)
+        self.log.debug(f"Direct jump to {target_page}. Skipping all normal move function.")
         if not self.exp.start_time:
             pass
         elif self.exp.config.getboolean("data", "record_move_history"):
-                self.record_move(self.current_page.is_closed, direction="jump", to_page=to_page)
+                self.record_move(self.current_page.is_closed, direction="jump", target_page=target_page)
          
-        self.current_index = self.index_of(to_page)
+        self.current_index = self.index_of(target_page)
+        self.current_page = self.exp.root_section.all_pages_list[self.current_index]
 
-    def _move(self, to_page, direction: str) -> Tuple[int, int]:
+    def _move(self, direction: str) -> Tuple[int, int]:
+        cpage = self.current_page
+        initial_target_page = self.target_page(direction=direction)
+        self._check_permissions(target_page=initial_target_page, direction=direction)
+
         try:
-            return self._conduct_movement(to_page=to_page, direction=direction)
-        except AbortMove:
-            return self._abort_move()
+            self.current_page.section._validate(direction=direction)
+        except ValidationError:
+            raise AbortMove()
+
+        self.current_page._on_hiding_widget(hide_time=time.time())
+
+        target_page = self.target_page(direction=direction)
+        if not target_page is initial_target_page:
+            self._check_permissions(target_page=target_page, direction=direction)
+        
+        page_was_closed = cpage.is_closed
+        cpage.section._move(direction=direction, from_page=cpage, to_page=target_page)
+
+        self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
+
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
+        target_page._on_showing_widget(show_time=time.time())
+
+        target_page = self._update_target_page(previous_target=target_page, direction=direction)
+
+        self.previous_index = self.current_index
+        self.current_index = self.index_of(target_page)
+        self.current_page = self.find_page(self.current_index)
     
-    def forward(self):
-        to_page = self.next_page
-        self.previous_index, self.current_index = self._move(to_page, "forward")
-    
-    def backward(self):
-        to_page = self.page_before(self.current_page)
-        self.previous_index, self.current_index = self._move(to_page, "backward")
-    
-    def _check_jump_permission(self, next_page):
+    def _update_target_page(self, previous_target, direction: str):
+        """
+        In case something about the target page changes in the last steps of a movement.
+        """
+        target_page = self.target_page(direction=direction)
+        if target_page is previous_target:
+            return target_page
+        
+        self._check_permissions(target_page=target_page, direction=direction)
+        
+        cpage = self.current_page
+        page_was_closed = cpage.is_closed
+        cpage.section._move(direction=direction, from_page=cpage, to_page=target_page)
+
+        self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
+
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
+        target_page._on_showing_widget(show_time=time.time())
+
+        return self._update_target_page(previous_target=target_page, direction=direction)
+
+        
+    def _check_jump_permission(self, next_page) -> bool:
         if self.experiment.config.getboolean("general", "debug"):
             self.log.debug("Debug mode enabled. Jump permission not checked.")
             self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="info")
@@ -351,18 +362,8 @@ class MovementManager:
 
         else:
             return True
-    
-    def jump(self, to: Union[str, int]):
-        to_page = self.find_page(query=to)
-        
-        if not to_page:
-            msg = self.experiment.config.get("hints", "jump_page_not_found")
-            self.experiment.message_manager.post_message(msg, level="warning")
-            return False
-        
-        self.previous_index, self.current_index = self._move(to_page=to_page, direction="jump")
 
-    def record_move(self, page_was_closed: bool, direction: str, to_page):
+    def record_move(self, page_was_closed: bool, direction: str, target_page):
         current_page = self.current_page
         
         move = Move()
@@ -392,10 +393,10 @@ class MovementManager:
         move.section_allows_jumpfrom = current_page.section.allow_jumpfrom
         move.section_allows_jumpto = current_page.section.allow_jumpto
         move.leave_in_direction = direction
-        move.target_page = to_page.name
+        move.target_page = target_page.name
         self.history.append(move)
 
-    def move(self, direction, to: Union[str, int] = None):
+    def move(self, direction):
 
         if self.exp.session_expired:
             return self.exp.abort(
@@ -418,14 +419,11 @@ class MovementManager:
         if direction == "stay":
             self.log.debug("Movement direction was 'stay' - no move conducted.")
             return
-        elif direction == "forward":
-            self.forward()
-        elif direction == "backward":
-            self.backward()
-        elif direction == "jump":
-            self.jump(to=to)
-        elif direction.startswith("jump"):
-            self.jump(to=direction[5:]) # jump string has the form 'jump>pagename'
+        
+        try:
+            self._move(direction=direction)
+        except AbortMove:
+            self.log.debug(f"Movement from {self.current_page} in direction'{direction}' was aborted.")
     
     def start(self):
 
@@ -657,6 +655,10 @@ class UserInterface:
             d["debug"] = self.exp.config.getboolean("general", "debug")
             d["jumplist"] = page.elements[page.name + "__debug_jumplist__"]
         
+        if self.exp.admin_mode and page.section.name == "admin_content":
+            d["jumplist"] = page.elements[page.name + "__admin_jumplist__"]
+            d["admin"] = True
+        
         page.prepare_web_widget()
 
         d["code"] = self.code(page=page)
@@ -684,7 +686,7 @@ class UserInterface:
         # progress bar
         d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
         d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
-        if d["show_progress"]:
+        if d["show_progress"] and self.exp.progress_bar and not self.exp.admin_mode:
             self.exp.progress_bar._prepare_web_widget()
             d["progress"] = self.exp.progress_bar.web_widget
 

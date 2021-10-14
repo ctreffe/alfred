@@ -81,7 +81,7 @@ class DataManager:
         self.log = QueuedLoggingInterface(base_logger=__name__)
         self.log.add_queue_logger(self, __name__)
 
-        self.client_data = {}
+        self.client_data = {key: None for key in self._client_data_keys}
 
     @property
     def experiment(self):

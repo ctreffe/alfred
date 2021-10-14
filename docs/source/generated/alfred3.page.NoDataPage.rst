@@ -1,4 +1,4 @@
-﻿NoDataPage
+NoDataPage
 =======================
 
 .. currentmodule:: alfred3.page

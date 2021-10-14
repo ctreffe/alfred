@@ -1,4 +1,4 @@
-﻿Video
+Video
 =============================
 
 .. currentmodule:: alfred3.element.display

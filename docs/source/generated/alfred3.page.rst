@@ -26,6 +26,7 @@
       NoNavigationPage
       NoSavingPage
       Page
+      PasswordPage
       TimeoutPage
       UnlinkedDataPage
       WidePage

@@ -1,4 +1,4 @@
-﻿ProgressBar
+ProgressBar
 ===================================
 
 .. currentmodule:: alfred3.element.display

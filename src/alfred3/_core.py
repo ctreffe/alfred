@@ -33,12 +33,6 @@ class ExpMember:
             attribute.
         subtitle (str): Subtitle of the member. Can be defined as a 
             class attribute.
-        showif (dict): A dictionary, which can be used to define a 
-            simple set of conditions under which the member will be
-            shown. The conditions take the form of
-            key-value pairs, where each key is the name of an input 
-            element in the experiment and the value is the required 
-            input. Can be defined as a class attribute.
         vargs (dict): A dictionary that can be used to pass additional
             arguments to the page. The arguments are then available as
             an instance attribute. As a special feature, the instance
@@ -46,7 +40,7 @@ class ExpMember:
             not only via the usual square-bracket notation, but also
             via dot-notation. 
 
-            This argument fulfills a similar function as **kwargs do
+            This argument fulfills a similar function as ``**kwargs`` do
             sometimes, but it makes sure that user-defined additional
             arguments will not collide with inherited keywords arguments.
             
@@ -61,10 +55,6 @@ class ExpMember:
     #: individually for each instance
     instance_log: bool = False
 
-    #: Dictionary of conditions that must be fulfilled for the member
-    #: to be shown. Works similar to :attr:`.Element.showif`
-    showif: dict = None
-    
     #: Name of the parent section. Used when a member is appended to 
     #: the :class:`.Experiment`. If *None*, a member will be appended
     #: to the "_content" section.
@@ -75,7 +65,6 @@ class ExpMember:
         name: str = None,
         title: str = None,
         subtitle: str = None,
-        showif: dict = None,
         vargs: dict = None,
     ):
 
@@ -95,13 +84,10 @@ class ExpMember:
         # the following assignments allow for assignment via class variables
         # during subclasses, but override the attributes, if given as
         # init parameters
-        if showif is not None:
-            self.showif = showif
-        
-        self._vargs = None
+        self._vargs = _DictObj()
         if vargs is not None:
             self._vargs = _DictObj(vargs)
-        elif self.vargs is not None:
+        elif self.vargs:
             self.vargs = _DictObj(self.vargs)
 
         if title is not None:
@@ -186,29 +172,61 @@ class ExpMember:
         if len(self._name_set_via) > 1:
             msg = f"Name of {self} was set via multiple methods. Current winner: '{self.name}', set via {via}."
             self.log.debug(msg)
-        
-    def _evaluate_showif(self) -> List[bool]:
-        """Checks the showif conditions that refer to previous pages.
-        
-        Returns:
-            A list of booleans, indicating for each condition whether
-            it is met or not.
+    
+    def showif(self) -> bool:
         """
+        Hook for controlling whether a page or section should be shown.
 
-        if self.showif:
-            conditions = []
-            for name, condition in self.showif.items():
+        The showif hook is used by overloading. Inside the hook, you
+        have access to the current experiment session via ``self.exp``.
+
+        Examples:
+            In this examples, the second page is shown only if "yes"
+            was entered on the first page::
+
+                import alfred3 as al
+                exp = al.Experiment()
+
+
+                @exp.member
+                class Hello(al.Page):
+                    def on_exp_access(self):
+                        self += al.TextEntry(leftlab="Show second page?", name="el1")
+
+
+                @exp.member
+                class ShowPage(al.Page):
+                    title = "Showif Page"
+                    
+                    def showif(self):
+                        return self.exp.values.get("el1") == "yes"
                 
-                # raise error if showif evaluates current page
-                if name in self.all_input_elements:
-                    raise AlfredError(f"Incorrent showif definition for {self}, using '{name}' (can't use a member's own elements).")
+            In this example, the "Main" section is shown only if "yes"
+            was entered on the first page::
 
-                val = self.exp.data_manager.flat_session_data[name]
-                conditions.append(condition == val)
+                import alfred3 as al
+                exp = al.Experiment()
 
-            return conditions
-        else:
-            return [True]
+
+                @exp.member
+                class Hello(al.Page):
+                    def on_exp_access(self):
+                        self += al.TextEntry(leftlab="Show second page?", name="el1")
+
+
+                @exp.member
+                class Main(al.Section):
+
+                    def showif(self):
+                        return self.exp.values.get("el1") == "yes"
+                    
+                    def on_exp_access(self):
+                        self += al.Page(title="Showif Section Page 1", name="showif_page1")
+                        self += al.Page(title="Showif Section Page 2", name="showif_page2")
+
+        """
+        return True
+        
     
     @property
     def all_input_elements(self) -> dict:
@@ -263,7 +281,7 @@ class ExpMember:
         showif conditions return True.
         """
         cond1 = self._should_be_shown
-        cond2 = all(self._evaluate_showif())
+        cond2 = self.showif()
         return cond1 and cond2
 
     @should_be_shown.setter
@@ -365,6 +383,13 @@ class ExpMember:
         The member's parent section.
         """
         return self._section
+    
+    @section.setter
+    def section(self, section):
+        if section is self._section:
+            self._section = section
+        else:
+            raise ValueError("Cannot change a member's section.")
 
     @property
     def parent(self):

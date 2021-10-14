@@ -1,4 +1,4 @@
-﻿UnlinkedDataPage
+UnlinkedDataPage
 =============================
 
 .. currentmodule:: alfred3.page

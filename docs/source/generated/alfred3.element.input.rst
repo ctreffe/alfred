@@ -24,6 +24,7 @@ alfred3.element.input
       MultipleChoiceBar
       MultipleChoiceButtons
       MultipleChoiceList
+      MultiplePasswordEntry
       NumberEntry
       PasswordEntry
       RegEntry

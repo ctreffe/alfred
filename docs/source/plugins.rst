@@ -1,5 +1,8 @@
-List of known plugins
+List of plugins
 ======================
+
+If you would like to see your own alfred-plugin here, please contact
+us!
 
 - **alfred3-interact** offers functionality for interactive experiments.
   
