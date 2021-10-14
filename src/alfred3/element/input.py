@@ -1047,6 +1047,8 @@ class MultipleChoiceList(MultipleChoice):
         super().__init__(*choice_labels, **kwargs)
         self.size = size
 
+        raise AlfredError("The MultipleChoiceList is currently disabled.")
+
     @property
     def template_data(self):
         
