@@ -136,7 +136,7 @@ class Exporter:
         csv_name = "exp_data.csv"
         path = self.csv_dir / csv_name
 
-        if path.exists() and path.read_text():
+        if path.exists() and path.read_text(encoding="utf-8"):
             alldata = self._load(path)
             sessiondata = self.exp.data_manager.flat_session_data
             alldata.append(sessiondata)
@@ -164,7 +164,7 @@ class Exporter:
         fieldnames = DataManager.extract_fieldnames(data)
         path = self.csv_dir / csv_name
 
-        if path.exists() and path.read_text():
+        if path.exists() and path.read_text(encoding="utf-8"):
             history = self._load(path)
             history += data
             fieldnames = DataManager.extract_fieldnames(history)
@@ -187,7 +187,7 @@ class Exporter:
 
         path = self.csv_dir / csv_name
 
-        if path.exists() and path.read_text():
+        if path.exists() and path.read_text(encoding="utf-8"):
             ul_data = self._load(path)
             ul_data += data
             random.shuffle(ul_data)
@@ -215,7 +215,7 @@ class Exporter:
 
         path = self.csv_dir / csv_name
 
-        if path.exists() and path.read_text():
+        if path.exists() and path.read_text(encoding="utf-8"):
             with open(path, "r", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=self.delimiter)
                 existing_codebook = {dict(row)["name"]: dict(row) for row in reader}
