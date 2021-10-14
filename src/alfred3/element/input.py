@@ -681,8 +681,6 @@ class SingleChoice(ChoiceElement):
             self._input = int(value)
 
 
-
-
 @inherit_kwargs
 class MultipleChoice(ChoiceElement):
     """
@@ -713,8 +711,12 @@ class MultipleChoice(ChoiceElement):
         for the number of the choice, i.e. ``choice1`` for the first choice.
 
     See Also:
-        See :class:`.SingleChoice` for an example that shows how to access
-        data from a normal choice-type element within the experiment.
+        - See :class:`.MultipleChoiceButtons` and :class:`.MultipleChoiceBar`
+          for nice-looking buttons and a button-bar of multiple choices.
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+          :class:`.SingleChoiceBar` for single choice elements.
+        - See :class:`.SubmittingButtons` for single choice buttons 
+          that trigger a forward move on click.
     
     Examples:
         A multiple choice element with three options::
@@ -728,6 +730,24 @@ class MultipleChoice(ChoiceElement):
 
                 def on_exp_access(self):
                     self += al.MultipleChoice("Yes", "No", "Maybe", name="m1")
+        
+        Accessing the input to a MultipleChoice element::
+
+             import alfred3 as al
+             exp = al.Experiment()
+
+             @exp.member
+             class Demo(al.Page):
+                 
+                 def on_exp_access(self):
+                     self += al.MultipleChoice("a", "b", "c", toplab="Choose one or more", name="c1")
+             
+             @exp.member
+             class Show(al.Page):
+
+                 def on_first_show(self):
+                     choices = self.exp.values.get("c1")
+                     self += al.Text(f"Your answer is saved like this: {{choices}}")
 
     """
 
