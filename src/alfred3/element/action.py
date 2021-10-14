@@ -35,6 +35,15 @@ class SubmittingButtons(SingleChoiceButtons):
             :class:`.ChoiceElement` for details.
         {kwargs}
 
+    Notes:
+
+        - This element saves answers in the form of integers, counting
+          up from 1. Take a look at the examples to see how to work with
+          user input to a SingleChoice element.
+
+        - The *align* parameter does not affect the alignment of choice
+          labels.
+
     Examples:
         Using submitting buttons together with the
         :class:`.HideNavigation` element::
@@ -50,6 +59,27 @@ class SubmittingButtons(SingleChoiceButtons):
 
                     self += al.HideNavigation()
                     self += al.SubmittingButtons("choice1", "choice2", name="b1")
+        
+
+        Accessing the input to a SubmittingButtons element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo_page"
+
+                def on_exp_access(self):
+                    self += al.SubmittingButtons("Yes", "No", toplab="Choose one", name="c1")
+                
+            
+            @exp.member
+            class Show(al.Page):
+                
+                def on_first_show(self):
+                    c1_answer = self.exp.values["c1] # access value
+                    self += al.Text(f"Your answer was: {{c1_answer}}")
 
     """
 

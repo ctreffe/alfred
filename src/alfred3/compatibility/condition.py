@@ -153,7 +153,7 @@ class _ConditionIO:
         
         elif self.method == "local":
             try:
-                with open(self.path, "r") as f:
+                with open(self.path, "r", encoding="utf-8") as f:
                     return json.load(f)
             except FileNotFoundError:
                 return None
@@ -171,7 +171,7 @@ class _ConditionIO:
                 self.exp.db_misc.find_one_and_replace(query, data, upsert=True)
         
         elif self.method == "local":
-            with open(self.path, "w") as f:
+            with open(self.path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
     
     def abort(self):
