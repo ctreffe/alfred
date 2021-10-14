@@ -26,6 +26,23 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.2.2 (Released 2021-10-14)
+
+The last update (v2.2.1) did not contain the intended changes. This update
+fixes this issue.
+
+### Changed v2.2.2
+
+- We temporarily deactivated the `MultipleChoiceList` element, because
+  we have to sort out some issues with it. It has seen no use so far, so
+  the deactivation should not be a problem.
+
+### Fixed v2.2.2
+
+- We fixed some encoding issues on Windows machines.
+- We fixed some issues in the documentation.
+
+
 ## alfred3 v2.2.1 (Released 2021-10-14)
 
 ### Changed v2.2.1
