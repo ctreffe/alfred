@@ -75,112 +75,112 @@ class TestSingleChoiceElement:
          assert exp.values["test"] == 2
          assert exp.testpage.test.choice_labels[2-1] == "b"
 
- class TestSingleChoiceButtons:
+class TestSingleChoiceButtons:
 
-     def test_data(self, exp):
-         exp.testpage += al.SingleChoiceButtons("a", "b", name="test")
+    def test_data(self, exp):
+        exp.testpage += al.SingleChoiceButtons("a", "b", name="test")
 
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({"test": 2})
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
 
-         assert exp.values["test"] == 2
-
-
- class TestSubmittingButtons:
-
-     def test_data(self, exp):
-         exp.testpage += al.SubmittingButtons("a", "b", name="test")
-
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({"test": 2})
-
-         assert exp.values["test"] == 2
+        assert exp.values["test"] == 2
 
 
- class TestSingleChoiceBar:
+class TestSubmittingButtons:
 
-     def test_data(self, exp):
-         exp.testpage += al.SingleChoiceBar("a", "b", name="test")
+    def test_data(self, exp):
+        exp.testpage += al.SubmittingButtons("a", "b", name="test")
 
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({"test": 2})
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
 
-         assert exp.values["test"] == 2
-
-
- class TestSingleChoiceList:
-
-     def test_data(self, exp):
-         exp.testpage += al.SingleChoiceList("a", "b", name="test")
-
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({"test": "a"})
-
-         assert exp.values["test"] == "a"
+        assert exp.values["test"] == 2
 
 
- class TestMultipleChoiceElement:
-     def test_data(self, exp):
-         exp.testpage += al.MultipleChoice("a", "b", name="test")
+class TestSingleChoiceBar:
 
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({f"test_choice1": "1"})
+    def test_data(self, exp):
+        exp.testpage += al.SingleChoiceBar("a", "b", name="test")
 
-         assert exp.values["test"]["choice1"] == True
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": 2})
 
-
- class TestMultipleButtons:
-     def test_data(self, exp):
-         exp.testpage += al.MultipleChoiceButtons("a", "b", name="test")
-
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({f"test_choice1": "1"})
-
-         assert exp.values["test"]["choice1"] == True
+        assert exp.values["test"] == 2
 
 
- class TestMultipleChoiceBar:
-     def test_data(self, exp):
-         exp.testpage += al.MultipleChoiceBar("a", "b", name="test")
+class TestSingleChoiceList:
 
-         exp.start()
-         exp.forward()
-         exp.testpage.prepare_web_widget()
-         exp.testpage._set_data({f"test_choice1": "1"})
+    def test_data(self, exp):
+        exp.testpage += al.SingleChoiceList("a", "b", name="test")
 
-         assert exp.values["test"]["choice1"] == True
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test": "a"})
+
+        assert exp.values["test"] == "a"
 
 
- # class TestMultipleChoiceList:
- #     def test_data_select_one(self, exp):
- #         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
+class TestMultipleChoiceElement:
+    def test_data(self, exp):
+        exp.testpage += al.MultipleChoice("a", "b", name="test")
 
- #         exp.start()
- #         exp.forward()
- #         exp.testpage.prepare_web_widget()
- #         exp.testpage._set_data({f"test": ["1"]})
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({f"test_choice1": "1"})
 
- #         assert exp.values["test"]["choice1"] == True
+        assert exp.values["test"]["choice1"] == True
 
- #     def test_data_select_multiple(self, exp):
- #         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
 
- #         exp.start()
- #         exp.forward()
- #         exp.testpage.prepare_web_widget()
- #         exp.testpage._set_data({f"test": ["1", "2"]})
+class TestMultipleButtons:
+    def test_data(self, exp):
+        exp.testpage += al.MultipleChoiceButtons("a", "b", name="test")
 
- #         assert exp.values["test"]["choice1"] == True
- #         assert exp.values["test"]["choice2"] == True 
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({f"test_choice1": "1"})
+
+        assert exp.values["test"]["choice1"] == True
+
+
+class TestMultipleChoiceBar:
+    def test_data(self, exp):
+        exp.testpage += al.MultipleChoiceBar("a", "b", name="test")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({f"test_choice1": "1"})
+
+        assert exp.values["test"]["choice1"] == True
+
+
+# class TestMultipleChoiceList:
+#     def test_data_select_one(self, exp):
+#         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
+
+#         exp.start()
+#         exp.forward()
+#         exp.testpage.prepare_web_widget()
+#         exp.testpage._set_data({f"test": ["1"]})
+
+#         assert exp.values["test"]["choice1"] == True
+
+#     def test_data_select_multiple(self, exp):
+#         exp.testpage += al.MultipleChoiceList("a", "b", name="test")
+
+#         exp.start()
+#         exp.forward()
+#         exp.testpage.prepare_web_widget()
+#         exp.testpage._set_data({f"test": ["1", "2"]})
+
+#         assert exp.values["test"]["choice1"] == True
+#         assert exp.values["test"]["choice2"] == True 
