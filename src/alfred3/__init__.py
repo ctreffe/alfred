@@ -50,7 +50,7 @@ from .element.input import NumberEntry
 from .element.input import SingleChoice
 from .element.input import MultipleChoice
 from .element.input import SingleChoiceList
-from .element.input import MultipleChoiceList
+# from .element.input import MultipleChoiceList
 from .element.input import SingleChoiceButtons
 from .element.input import SingleChoiceBar
 from .element.input import MultipleChoiceButtons
