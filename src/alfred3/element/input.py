@@ -992,64 +992,64 @@ class SingleChoiceList(SingleChoice):
             self._input = value
 
 
-@inherit_kwargs
-class MultipleChoiceList(MultipleChoice):
-    """
-    A :class:`.MultipleChoice` element, displayed as list.
+# @inherit_kwargs
+# class MultipleChoiceList(MultipleChoice):
+#     """
+#     A :class:`.MultipleChoice` element, displayed as list.
 
-    Args:
-        *choice_labels: Variable numbers of choice labels. See
-            :class:`.ChoiceElement` for details.
-        size: The vertical height of the list. The unit is the number
-            of choices to be displayed without scrolling. Note that some
-            browsers do not adhere to this unit exactly.
-        {kwargs}
+#     Args:
+#         *choice_labels: Variable numbers of choice labels. See
+#             :class:`.ChoiceElement` for details.
+#         size: The vertical height of the list. The unit is the number
+#             of choices to be displayed without scrolling. Note that some
+#             browsers do not adhere to this unit exactly.
+#         {kwargs}
 
-    Examples:
-        Minimal example::
+#     Examples:
+#         Minimal example::
 
-            import alfred3 as al
-            exp = al.Experiment()
+#             import alfred3 as al
+#             exp = al.Experiment()
 
-            @exp.member
-            class Demo(al.Page):
-                name = "demo"
+#             @exp.member
+#             class Demo(al.Page):
+#                 name = "demo"
 
-                def on_exp_access(self):
-                    self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
+#                 def on_exp_access(self):
+#                     self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
 
-    """
+#     """
 
-    # Documented at :class:`.Element`
-    element_template = jinja_env.get_template("html/SelectElement.html.j2")
+#     # Documented at :class:`.Element`
+#     element_template = jinja_env.get_template("html/SelectElement.html.j2")
 
-    # Documented at :class:`.SingleChoice`
-    type = "multiple"
+#     # Documented at :class:`.SingleChoice`
+#     type = "multiple"
 
-    def __init__(self, *choice_labels, size: int = None, **kwargs):
-        super().__init__(*choice_labels, **kwargs)
-        self.size = size
+#     def __init__(self, *choice_labels, size: int = None, **kwargs):
+#         super().__init__(*choice_labels, **kwargs)
+#         self.size = size
 
-    @property
-    def template_data(self):
+#     @property
+#     def template_data(self):
         
-        d = super().template_data
-        d["size"] = self.size
-        return d
+#         d = super().template_data
+#         d["size"] = self.size
+#         return d
 
-    def set_data(self, d):
+#     def set_data(self, d):
         
-        name_map = {str(choice.value): choice.name for choice in self.choices}
-        val = d.get(self.name, None)
-        if not val:
-            return
-        val_name = name_map[val]
+#         name_map = {str(choice.value): choice.name for choice in self.choices}
+#         val = d.get(self.name, None)
+#         if not val:
+#             return
+#         val_name = name_map[val]
 
-        for i, choice in enumerate(self.choices, start=1):
-            if choice.name == val_name:
-                self.input[f"choice{i}"] = True
-            else:
-                self.input[f"choice{i}"] = False
+#         for i, choice in enumerate(self.choices, start=1):
+#             if choice.name == val_name:
+#                 self.input[f"choice{i}"] = True
+#             else:
+#                 self.input[f"choice{i}"] = False
 
 @inherit_kwargs
 class SingleChoiceButtons(SingleChoice):
