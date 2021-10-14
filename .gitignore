@@ -131,7 +131,6 @@ venv.bak/
 src/encode.py
 .DS_Store
 src/.DS_Store
-*.json
 alfred_log.md
 src/files/
 src/test.py

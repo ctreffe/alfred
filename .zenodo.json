@@ -1,0 +1,23 @@
+{
+    "creators": [
+        {   
+            "orcid": "0000-0001-5394-0379",
+            "affiliation": "Georg-August-University Göttingen",
+            "name": "Treffenstädt, Christian"
+        },
+        {   
+            "affiliation": "Georg-August-University Göttingen",
+            "name": "Brachem, Johannes"
+        },
+        {   
+            "affiliation": "Georg-August-University Göttingen",
+            "name": "Wiemann, Paul"
+        }
+    ],    
+
+    "license": "MIT",
+
+    "title": "alfred3 - A Library for Rapid Experiment Development",
+
+    "keywords": ["psychology", "social science", "interaction", "software", "experiment"]
+}

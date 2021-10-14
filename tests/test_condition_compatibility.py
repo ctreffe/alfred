@@ -385,6 +385,7 @@ class TestConditionAllocation:
 
         assert slotlist.slots[0].finished
         assert slotlist.slots[1].finished
+    
 
 class TestSession:
 
@@ -402,6 +403,6 @@ class TestSession:
         rand = cond.ListRandomizer.balanced("a", "b", n=1, exp=exp)
         exp.condition = rand.get_condition()
         rand._mark_slot_finished(exp)
-
+        
         slot = rand.slotlist.id_assigned_to(exp.session_id)
         assert slot.finished
