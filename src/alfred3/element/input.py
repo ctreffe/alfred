@@ -579,6 +579,7 @@ class NumberEntry(TextEntry):
     def codebook_data(self):
         
         data = super().codebook_data
+        data["value"] = float(self.input) if self.input is not None else None
 
         data["ndecimals"] = self.ndecimals
         data["decimal_signs"] = " ".join(self.decimal_signs)
