@@ -90,7 +90,7 @@ class ExperimentRunner:
 
     def generate_session_id(self):
         session_id = uuid4().hex
-        self.config.read_dict({"metadata": {"session_id": session_id}})
+        self.config.read_dict({"metadata": {"session_id": "sid-" + session_id}})
 
     def configure_logging(self):
         """Sets some sensible logging configuration for local 
