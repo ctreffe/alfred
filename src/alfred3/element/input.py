@@ -734,7 +734,7 @@ class SingleChoice(ChoiceElement):
             if self.input:
                 choice.checked = i == self.input
             elif self.default is not None:
-                choice.checked = True if self.default == i else False
+                choice.checked = True if self.default == str(i) else False
 
             choice.css_class = f"choice-button choice-button-{self.name}"
 
