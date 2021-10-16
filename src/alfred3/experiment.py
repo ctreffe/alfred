@@ -1392,7 +1392,12 @@ class ExperimentSession:
 
             http://127.0.0.1:5000/start?test=true
 
-        Note:
+        .. warning:: **Keep in mind** that a test session will take up a 
+            slot in list randomization via :class:`.ListRandomizer` just 
+            as any other session. You have to use experiment 
+            version numbers to manage randomization slots. 
+        
+        Notes:
             The test mode will **also be activated in debug mode**.
 
         """
