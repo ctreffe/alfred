@@ -43,8 +43,9 @@ Types of changes
 - Sections will now immediately raise an error, if you mistakenly define
   a page-only hook like `on_first_show` or `on_first_hide` on a section,
   which can be a common but very hard-to-debug programming error.
-- The `NumberEntry` element now returns its value as a `float`. Previous,
-  the value was returned as a string.
+- The `NumberEntry` element now returns its value as a `float`. Previously,
+  the value was returned as a string, which was unexpected behavior in 
+  most cases.
 
 ### Fixed v2.2.3
 
