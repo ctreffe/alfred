@@ -515,7 +515,13 @@ class Experiment:
             path: Path to the experiment directory, containing script.py.
                 If None, alfred looks for a script.py in the directory
                 from which this method is executed.
-            **kwargs: Keyword arguments passed on to :class:`alfred3.run.ExperimentRunner.auto_run`
+            open_browser: Indicates, whether alfred should try to open
+                a new browser window automatically.
+            debug: Indicates, whether the underlying flask app should be
+                run in debug mode. Defaults to None, which leads to
+                taking the value from option 'open_browser' in section
+                'general' of config.conf.
+            test: If true, the experiment is started in test mode.
 
         Notes:
             .. warning::
@@ -1352,6 +1358,23 @@ class ExperimentSession:
     def admin_mode(self) -> bool:
         """bool: Indicates whether the experiment runs in admin mode."""
         return self.config.getboolean("general", "admin")
+    
+    @property
+    def test_mode(self) -> bool:
+        """
+        bool: Indicates whether the experiment runs in test mode.
+
+        In test mode, alfred3 prefixes all session IDs with ``test``
+        for easy and save separation of test and production sessions.
+
+        You can start the test mode by appending ``test=true`` to
+        alfred3's start url. In a local experiment, this would mean
+        using::
+
+            http://127.0.0.1:5000/start?test=true
+
+        """
+        return self.urlargs.get("test", False) in ["true", "True", "TRUE"]
 
     @property
     def type(self) -> str:
@@ -2114,7 +2137,9 @@ class ExperimentSession:
         """
         str: Unique session identifier
         """
-        return self._session_id
+        sid = "test-" + self._session_id if self.test_mode else self._session_id
+        return sid
+        # return self._session_id
 
     @property
     def config(self):

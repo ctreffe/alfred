@@ -64,6 +64,8 @@ class ExperimentRunner:
         self.app = None
         self.expurl = None
 
+        self.test_mode = None
+
     def find_path(self, path):
         if path:
             p = Path(path).resolve()
@@ -162,12 +164,14 @@ class ExperimentRunner:
 
         msg_startup = f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"
         msg_admin = f" * Start admin mode using http://127.0.0.1:{self.port}/start?admin=true\n"
-        sys.stderr.writelines([msg_startup, msg_admin])
+        msg_test = f" * Start test mode using http://127.0.0.1:{self.port}/start?test=true\n"
+        sys.stderr.writelines([msg_startup, msg_admin, msg_test])
 
     def _open_browser(self):
 
         # generate url
         expurl = "http://127.0.0.1:{port}/start".format(port=self.port)
+        expurl = expurl + "?test=true" if self.test else expurl
 
         if self.config.getboolean("general", "fullscreen"):
             ChromeKiosk.open(url=expurl)
@@ -179,7 +183,7 @@ class ExperimentRunner:
         browser = threading.Thread(target=self._open_browser, name="browser")
         browser.start()
 
-    def auto_run(self, open_browser: bool = None, debug=False):
+    def auto_run(self, open_browser: bool = None, debug=False, test: bool = False):
         """
         Automatically runs an alfred experiment.
 
@@ -190,9 +194,10 @@ class ExperimentRunner:
                 run in debug mode. Defaults to None, which leads to
                 taking the value from option 'open_browser' in section
                 'general' of config.conf.
+            test: If true, the experiment is started in test mode.
 
         """
-
+        self.test_mode = test
         self.generate_session_id()
         self.configure_logging()
         self.create_experiment_app()
