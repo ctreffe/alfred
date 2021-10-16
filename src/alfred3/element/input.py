@@ -571,9 +571,9 @@ class NumberEntry(TextEntry):
         return " ".join(hints)
 
     @property
-    def input(self) -> str:
+    def input(self) -> float:
         # docstring inherited
-        return self._input
+        return float(self._input) if self._input is not None else None
 
     @input.setter
     def input(self, value: str):
@@ -590,21 +590,21 @@ class NumberEntry(TextEntry):
         if not self.should_be_shown:
             return True
 
-        if not self.force_input and not self.input:
+        if not self.force_input and not self._input:
             return True
 
-        elif not self.input:
+        elif not self._input:
             self.hint_manager.post_message(self.no_input_hint)
             return False
 
         try:
-            in_number = float(self.input)
+            in_number = float(self._input)
         except ValueError:
             self.hint_manager.post_message(self.match_hint)
             return False
 
         validate = True
-        decimals = self.input.split(".")[-1] if "." in self.input else ""
+        decimals = self._input.split(".")[-1] if "." in self._input else ""
         if self.min is not None and in_number < self.min:
             self.hint_manager.post_message(self.match_hint)
             validate = False
@@ -622,7 +622,7 @@ class NumberEntry(TextEntry):
     def codebook_data(self):
         
         data = super().codebook_data
-        data["value"] = float(self.input) if self.input is not None else None
+        data["value"] = self.input
 
         data["ndecimals"] = self.ndecimals
         data["decimal_signs"] = " ".join(self.decimal_signs)
