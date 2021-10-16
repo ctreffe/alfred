@@ -97,6 +97,11 @@ class ListRandomizer(SessionQuota):
     an information page for participants. This
     behavior can be customized (see :meth:`.get_condition`).
 
+    The ListRandomizer will not count experiment sessions that have
+    expired due to being inactive for a long time. You can control
+    this timeout via :attr:`.ExperimentSession.session_timeout`.
+
+
     .. warning:: Be mindful of the argument *respect_version*! With the
         default setting (True), randomization starts from scratch for
         every experiment version. If you set it to False, you will
