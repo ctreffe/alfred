@@ -1392,8 +1392,13 @@ class ExperimentSession:
 
             http://127.0.0.1:5000/start?test=true
 
+        Note:
+            The test mode will **also be activated in debug mode**.
+
         """
-        return self.urlargs.get("test", False) in ["true", "True", "TRUE"]
+        test_mode = self.urlargs.get("test", False) in ["true", "True", "TRUE"]
+        debug_mode = self.config.getboolean("general", "debug")
+        return test_mode or debug_mode
 
     @property
     def type(self) -> str:
