@@ -1639,10 +1639,31 @@ class _NothingHerePage(Page):
         self += elm.misc.WebExitEnabler()
 
 
+@inherit_kwargs
 class PasswordPage(WidePage):
+    """
+    A wide page that requires the input of a password for continuation.
+    
+    Args:
+        password: A string, or a tuple of strings. Those are the accepted
+            passwords.
+        {kwargs}
+    
+    Examples:
+
+        A minimal experiment with a password page::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.PasswordPage):
+                password = "test"
+
+    """
     password = None
 
-    def __init__(self, password: t.Union[str, t.List[str]], **kwargs):
+    def __init__(self, password: t.Union[str, t.Tuple[str]] = None, **kwargs):
         super().__init__(**kwargs)
         if password is not None:
             self.password = password
@@ -1658,14 +1679,14 @@ class PasswordPage(WidePage):
         self += elm.display.VerticalSpace("20px")
 
         # use single password or multiple password element depending on input
-        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center")
+        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center", force_input=True)
         if isinstance(self.password, str):
             self += elm.input.PasswordEntry(password=self.password, **pwargs)
         else:
             self += elm.input.MultiplePasswordEntry(passwords=self.password, **pwargs)
 
         self += elm.action.SubmittingButtons(
-            "Enter", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
+            "Submit", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
         )
 
         # enables submit via enter-press for password field
