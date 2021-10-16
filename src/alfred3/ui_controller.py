@@ -311,8 +311,8 @@ class MovementManager:
 
         self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
 
-        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
         target_page._on_showing_widget(show_time=time.time())
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
 
         target_page = self._update_target_page(previous_target=target_page, direction=direction)
 
@@ -336,8 +336,8 @@ class MovementManager:
 
         self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
 
-        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
         target_page._on_showing_widget(show_time=time.time())
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
 
         return self._update_target_page(previous_target=target_page, direction=direction)
 
