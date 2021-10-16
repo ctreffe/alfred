@@ -38,9 +38,18 @@ Types of changes
   its parent section, which can be useful if you create section or pages
   in loops.
 - Added the prefix "sid-" to session IDs.
-- Added a test mode. If you start an experiment with the url parameter
+- Added the possibility to download the randomizer's data in Mortimer (#112).
+- alfred3 now saves the length of the session timeout to the experiment 
+  data (#113)
+- The codebook now includes the number of choices for all choice elements
+  (#114)
+- Added a test mode (#90). If you start an experiment with the url parameter
   `?test=true`, the experiment starts in test mode. The test mode's only
   effect is that it prefixes session IDs of test sessions with "test-".
+  Test mode is active in debug mode aswell.
+    + **Keep in mind** that a test session will take up a slot in list
+      randomization just as any other session. You have to use experiment 
+      version numbers to manage randomization slots. 
 - Added the parameter `test` to `ExperimentRunner.auto_run` and, subsequently,
   to `Experiment.run`
 
@@ -74,6 +83,8 @@ if __name__ == "__main__":
   section. It affects only first-level subsections, i.e. the order of 
   subsections is randomized, but the order of pages inside those 
   subsections is not affected.
+- Fixed the defaults for SingleChoice element and its children that are
+  used in debug mode (#125).
 
 ## alfred3 v2.2.2 (Released 2021-10-14)
 
