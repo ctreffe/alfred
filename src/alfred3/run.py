@@ -171,7 +171,7 @@ class ExperimentRunner:
 
         # generate url
         expurl = "http://127.0.0.1:{port}/start".format(port=self.port)
-        expurl = expurl + "?test=true" if self.test else expurl
+        expurl = expurl + "?test=true" if self.test_mode else expurl
 
         if self.config.getboolean("general", "fullscreen"):
             ChromeKiosk.open(url=expurl)
