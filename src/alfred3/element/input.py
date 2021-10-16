@@ -220,7 +220,6 @@ class MatchEntry(TextEntry):
         return d
 
 
-
 @inherit_kwargs
 class RegEntry(MatchEntry):
     """
@@ -393,13 +392,22 @@ class NumberEntry(TextEntry):
             all NumberEntry elements, change the respective setting
             in the config.conf.
         {kwargs}
+    
+    .. warning::
+        Note that, internally, the input to a numberentry
+
 
     Examples:
 
-        >>> import alfred3 as al
-        >>> numentry = al.NumberEntry("enter here", name="num1")
-        >>> numentry
-        NumberEntry(name='num1')
+        Using a NumberEntry element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.NumberEntry(placeholder="Enter a number", name="num1")
 
     """
 
