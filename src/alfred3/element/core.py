@@ -2170,6 +2170,8 @@ class ChoiceElement(InputElement, ABC):
 
         d = super().codebook_data
 
+        d["n_choices"] = len(self.choice_labels)
+
         for i, lab in enumerate(self.choice_labels, start=1):
             try:
                 d.update({f"choice{i}": lab.text})  # if there is a text attribute, we use it.
