@@ -36,6 +36,8 @@ Types of changes
 
 - Some updates to the documentation
 - We fixed to option "logo_text" in the section "layout" in `config.conf`
+- Fixed the "shuffle" argument of Sections. Previously, it did not
+  successfully lead to randomization of the pages and subsections in a section.
 
 ## alfred3 v2.2.2 (Released 2021-10-14)
 

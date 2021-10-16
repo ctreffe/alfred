@@ -136,7 +136,7 @@ class Section(ExpMember):
 
         members = list(self.members.items())
         shuffle(members)
-        self.members = dict(members)
+        self._members = dict(members)
 
     @property
     def members(self) -> dict:
@@ -821,27 +821,47 @@ class _RootSection(Section):
 
     @property
     def all_page_names(self):
-        """Improvised caching mechanism for the list of all page names."""
+        """
+        Improvised caching mechanism for the list of all page names.
+        
+        Danger: The caching is not compatible with sections that shuffle their members.
+        The shuffling does not affect this list, which is unexpected
+        behavior in most cases.
 
-        if not self._all_page_names:
-            self._all_page_names = list(self.all_pages.keys())
+        For this reason, the caching is currently deactivated.
+        """
 
-        elif not len(self._all_page_names) == len(self.all_pages):
-            self._all_page_names = list(self.all_pages.keys())
+        return list(self.all_pages.keys())
 
-        return self._all_page_names
+        # if not self._all_page_names:
+        #     self._all_page_names = list(self.all_pages.keys())
+
+        # elif not len(self._all_page_names) == len(self.all_pages):
+        #     self._all_page_names = list(self.all_pages.keys())
+
+        # return self._all_page_names
 
     @property
     def all_pages_list(self):
-        """Improvised caching mechanism for the list of all pages."""
+        """
+        Improvised caching mechanism for the list of all pages.
 
-        if not self._all_pages_list:
-            self._all_pages_list = list(self.all_pages.values())
+        Danger: The caching is not compatible with sections that shuffle their members.
+        The shuffling does not affect this list, which is unexpected
+        behavior in most cases.
 
-        elif not len(self._all_pages_list) == len(self.all_pages):
-            self._all_pages_list = list(self.all_pages.values())
+        For this reason, the caching is currently deactivated.
+        """
 
-        return self._all_pages_list
+        return list(self.all_pages.values())
+        
+        # if not self._all_pages_list:
+        #     self._all_pages_list = list(self.all_pages.values())
+
+        # elif not len(self._all_pages_list) == len(self.all_pages):
+        #     self._all_pages_list = list(self.all_pages.values())
+
+        # return self._all_pages_list
 
     @property
     def final_page(self):
