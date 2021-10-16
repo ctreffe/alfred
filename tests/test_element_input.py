@@ -146,7 +146,7 @@ class TestMultipleButtons:
         exp.start()
         exp.forward()
         exp.testpage.prepare_web_widget()
-        exp.testpage._set_data({f"test_choice1": "1"})
+        exp.testpage._set_data({"test_choice1": "1"})
 
         assert exp.values["test"]["choice1"] == True
 
@@ -162,6 +162,51 @@ class TestMultipleChoiceBar:
 
         assert exp.values["test"]["choice1"] == True
 
+
+class TestEmailEntry:
+
+    def test_correct_email(self, exp):
+        exp.testpage += al.EmailEntry(name="email")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"email": "abc@test.de"})
+
+        assert exp.testpage.email.validate_data()
+    
+    def test_incorrect_email(self, exp):
+        exp.testpage += al.EmailEntry(name="email")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"email": "abctest.de"})
+
+        assert not exp.testpage.email.validate_data()
+
+
+class TestMatchEntry:
+
+    def test_match(self, exp):
+        exp.testpage += al.MatchEntry(pattern="this", name="match")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"match": "this"})
+
+        assert exp.testpage.match.validate_data()
+    
+    def test_no_match(self, exp):
+        exp.testpage += al.MatchEntry(pattern="this", name="match")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"match": "not this"})
+
+        assert not exp.testpage.match.validate_data()
 
 # class TestMultipleChoiceList:
 #     def test_data_select_one(self, exp):
