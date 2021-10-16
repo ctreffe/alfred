@@ -293,8 +293,8 @@ class Experiment:
 
                 @exp.member(of_section="main")
                 class HelloWorld(al.Page):
-                    name = "hello_world"
                     title = "Hello, World!"
+
                     def on_exp_access(self):
                         self += al.Text("This is a 'hello, world!' Page.")
 
