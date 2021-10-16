@@ -28,9 +28,13 @@ Types of changes
 
 ## alfred3 v2.2.3 [unreleased]
 
+### Added v2.2.3
+
+- Added `MatchEntry` as alias for `RegEntry` element
+
 ### Fixed v2.2.3
 
-- We brought the documentation for the `Alert` element up to date.
+- Some updates to the documentation
 - We fixed to option "logo_text" in the section "layout" in `config.conf`
 
 ## alfred3 v2.2.2 (Released 2021-10-14)
