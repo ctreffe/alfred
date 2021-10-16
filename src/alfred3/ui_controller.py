@@ -573,7 +573,13 @@ class UserInterface:
                 content_type = "image/jpeg"
             logo_url = self.add_static_file(logo, content_type=content_type)
             self.config["logo_url"] = logo_url
+        
 
+        # read custom logo text
+        logo_text = self.exp.config.get("layout", "logo_text")
+        if logo_text:
+            self.config["logo_text"] = logo_text
+        
     def _add_resource_links(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
         
