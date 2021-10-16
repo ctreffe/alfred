@@ -93,9 +93,6 @@ class Section(ExpMember):
         except AttributeError:
             return member in self.all_members or member in self.all_elements
 
-    def __repr__(self):
-        return f"Section(class='{type(self).__name__}', name='{self.name}')"
-
     def __iadd__(self, other):
         self.append(other)
         return self

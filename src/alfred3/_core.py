@@ -432,4 +432,11 @@ class ExpMember:
         part that is the same for all members.
         """
         return self.tree.replace("_root._content.", "")
+    
+
+    def __str__(self):
+        return f"{type(self).__name__}(name='{self.name}')"
+
+    def __repr__(self):
+        return self.__str__()
 

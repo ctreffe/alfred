@@ -413,9 +413,6 @@ class _PageCore(ExpMember):
         data = self.experiment.data_manager.session_data
         self.exp.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
-    def __repr__(self):
-        return f"Page(class='{type(self).__name__}', name='{self.name}')"
-
     def prepare_web_widget(self):
         """
         Hook for computations for preparing a page for display.
