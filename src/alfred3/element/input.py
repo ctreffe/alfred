@@ -153,12 +153,16 @@ class RegEntry(TextEntry):
 
     Examples:
 
-        Example for a RegEntry element that will match any input:
+        Example for a RegEntry element that will match any input::
 
-            >>> import alfred3 as al
-            >>> regentry = al.RegEntry("Enter text here", pattern=r".*", name="reg1")
-            >>> regentry
-            RegEntry(name='reg1')
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+
+                def on_exp_access(self):
+                    self += al.RegEntry("Enter text here", pattern=r".*", name="reg1")
 
     """
 
