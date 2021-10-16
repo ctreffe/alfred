@@ -255,7 +255,7 @@ class PasswordEntry(RegEntry):
     """
     Displays a password field.
 
-    The password field is force-entry by default.
+    The password field is **force-input by default**.
     
     Args:
         password (str): Password string to match against user input.
@@ -604,7 +604,22 @@ class SingleChoice(ChoiceElement):
         This element saves answers in the form of integers, counting
         up from 1. Take a look at the examples to see how to work with
         user input to a SingleChoice element.
-        
+    
+    See Also:
+
+        - :class:`.SingleChoiceButtons` and :class:`.SingleChoiceBar` are
+          nicer displays of SingleChoice elements. Those are also
+          more suitable for responsive displays.
+        - The class :class:`.SubmittingButtons` is a version of 
+          SingleChoiceButtons that automatically moves the experiment
+          to the next page, once the participant clicks on an answer.
+        - :class:`.SingleChoiceList` is a dropdown list of single
+          choices. The SingleChoiceList saves its data as strings 
+          (instead of integers) and is a good option if you have ten
+          or more choices.
+        - :class:`.MultipleChoiceButtons` can be used to allow multiple
+          answers.
+
 
     Examples:
         A simple SingleChoice element::
@@ -937,6 +952,17 @@ class SingleChoiceList(SingleChoice):
         Different from pure :class:`.SingleChoice` elements, the 
         SingleChoiceList saves its input as strings. The examples below
         illustrate how to work with user input.
+    
+    See Also:
+
+        - :class:`.SingleChoiceButtons`, :class:`.SingleChoiceBar`,
+          and class:`.SingleChoice` for alternatives for selecting
+          a single option.
+        - The class :class:`.SubmittingButtons` is a version of 
+          SingleChoiceButtons that automatically moves the experiment
+          to the next page, once the participant clicks on an answer.
+        - :class:`.MultipleChoiceButtons` can be used to allow multiple
+          answers.
 
     Examples:
         A single choice list with a no-choice option as first option::
@@ -1148,7 +1174,7 @@ class SingleChoiceButtons(SingleChoice):
         - The *align* parameter does not affect the alignment of choice
           labels.
          
-     See Also:
+    See Also:
 
         - :class:`.SingleChoiceBar` is a version of SingleChoiceButtons
           that displays the answering options in a connected bar instead
