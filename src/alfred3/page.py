@@ -1371,7 +1371,7 @@ class NoSavingPage(Page):
 
                 def on_first_show(self):
                     user_input = self.exp.values.get("el1")
-                    self += al.Text(text=f"You input on the previous page: {user_input}")
+                    self += al.Text(text=f"You input on the previous page: {{user_input}}")
 
                     self += al.Text(text="Note that a 'NoSavingPage' does not trigger a saving event, but it does collect data! If a later page triggers a saving event, data from the 'NoSavingPage' will be saved to the experiment data! To prevent this behavior, use a 'NoDataPage' instead of 'NoSavingPage'.")
 
@@ -1674,6 +1674,7 @@ class PasswordPage(WidePage):
 
     """
     password = None
+    title = "Password required"
 
     def __init__(self, password: t.Union[str, t.Tuple[str]] = None, **kwargs):
         super().__init__(**kwargs)
