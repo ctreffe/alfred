@@ -37,6 +37,24 @@ Types of changes
   These are used to get the position of the current page or section inside
   its parent section, which can be useful if you create section or pages
   in loops.
+- Added the prefix "sid-" to session IDs.
+- Added a test mode. If you start an experiment with the url parameter
+  `?test=true`, the experiment starts in test mode. The test mode's only
+  effect is that it prefixes session IDs of test sessions with "test-".
+- Added the parameter `test` to `ExperimentRunner.auto_run` and, subsequently,
+  to `Experiment.run`
+
+To start an experiment in test mode locally, you can use this parameter 
+in the ``if __name__ == "__main__"`` block:
+
+```python
+import alfred3 as al
+exp = al.Experiment()
+exp += al.Page(name="demo")
+
+if __name__ == "__main__":
+    exp.run(test=True)
+```
 
 ### Changed v2.2.3
 
