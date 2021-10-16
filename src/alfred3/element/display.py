@@ -888,6 +888,7 @@ class ProgressBar(LabelledElement):
         return d
 
 
+@inherit_kwargs
 class Alert(Text):
     """
     Allows the display of customized alerts.
@@ -895,31 +896,35 @@ class Alert(Text):
     Args:
         text: Alert text
         category: Affects the appearance of alerts.
-            Values can be: "info", "success", "warning", "primary",
-            "secondory", "dark", "light", "danger".
-        dismiss: Boolean parameter. If "True", AlertElement can be
-            dismissed by a click. If "False", AlertElement is not
-            dismissible. Default = "False"
-        **element_args: Keyword arguments passed to the parent class
-            :class:`TextElement`. Accepted keyword arguments are: name,
-            font_size, align, width, position, showif,
-            instance_log.
+            Values can be: *info* (default), *success*, *warning*, *primary*,
+            *secondary*, *dark*, *light*, *danger*.
+        dismiss: If *True*, AlertElement can be
+            closed by a click. If *False*, AlertElement cannot be closed. 
+            Defaults to *False*
+        {kwargs}
 
     Examples:
 
-        >>> import alfred3 as al
-        >>> alert = al.AlertElement(text="Alert text", dismiss=True, name="al1")
-        >>> alert
-        Alert(name='al1')
+        A simple alert::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                title = "Alert Demo"
+
+                def on_exp_access(self):
+                    self += al.Alert(text="Alert text", category="warning")
 
     """
 
     element_template = jinja_env.get_template("html/AlertElement.html.j2")
 
     def __init__(
-        self, text: str = "", category: str = "info", dismiss: bool = False, **element_args
+        self, text: str = "", category: str = "info", dismiss: bool = False, **kwargs
     ):
-        super().__init__(text=text, **element_args)
+        super().__init__(text=text, **kwargs)
         self.category = category
         self.dismiss = dismiss
 
