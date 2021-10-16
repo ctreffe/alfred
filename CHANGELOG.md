@@ -49,7 +49,7 @@ Types of changes
 ### Fixed v2.2.3
 
 - Some updates to the documentation
-- We fixed to option "logo_text" in the section "layout" in `config.conf`
+- Fixed the option "logo_text" in the section "layout" in `config.conf`
 - Fixed the "shuffle" argument of Sections. Previously, it did not
   successfully lead to randomization of the pages and subsections in a 
   section. It affects only first-level subsections, i.e. the order of 
