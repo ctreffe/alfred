@@ -136,7 +136,7 @@ class TextArea(TextEntry):
         return d
 
 @inherit_kwargs
-class RegEntry(TextEntry):
+class MatchEntry(TextEntry):
     """
     Displays an input field, which only accepts inputs, matching a
     predefined regular expression.
@@ -153,7 +153,7 @@ class RegEntry(TextEntry):
 
     Examples:
 
-        Example for a RegEntry element that will match any input::
+        Example for a MatchEntry element that will match any input::
 
             import alfred3 as al
             exp = al.Experiment()
@@ -162,7 +162,7 @@ class RegEntry(TextEntry):
             class Demo(al.Page):
 
                 def on_exp_access(self):
-                    self += al.RegEntry("Enter text here", pattern=r".*", name="reg1")
+                    self += al.MatchEntry("Enter text here", pattern=r".*", name="reg1")
 
     """
 
@@ -218,6 +218,36 @@ class RegEntry(TextEntry):
         d = super().codebook_data
         d["regex_pattern"] = self.pattern.pattern
         return d
+
+
+
+@inherit_kwargs
+class RegEntry(MatchEntry):
+    """
+    Displays an input field, which only accepts inputs, matching a
+    predefined regular expression.
+
+    Args:
+        {kwargs}
+
+    Notes:
+        Alias for :class:`.MatchEntry`
+
+    Examples:
+
+        Example for a RegEntry element that will match any input::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+
+                def on_exp_access(self):
+                    self += al.RegEntry("Enter text here", pattern=r".*", name="reg1")
+
+    """
+    pass
 
 
 @inherit_kwargs(exclude=["force_input", "pattern"])
