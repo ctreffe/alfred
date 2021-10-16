@@ -1286,7 +1286,7 @@ class AutoClosePage(TimeoutPage):
 @inherit_kwargs
 class NoDataPage(Page):
     """
-    A page that does not save any data.
+    A page that does not collect any data.
 
     Args:
         {kwargs}
@@ -1299,7 +1299,23 @@ class NoDataPage(Page):
     
     See Also:
         See :class:`.NoSavingPage` for a page that does not trigger a
-        saving event.
+        saving event, but still collects data.
+    
+    Examples:
+    
+        A simple NoDataPage::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.meber
+            class DemoPage1(al.NoDataPage):
+                title = "My demo page"
+
+                def on_exp_access(self):
+                    self += al.TextEntry(placeholder="Enter something", name="el1")
+                    self += al.Alert(text="Note: input to this element WILL NOT BE SAVED!", category="danger")
+
     """
 
     data = {}
@@ -1324,6 +1340,12 @@ class NoSavingPage(Page):
         experiment. To prevent this, you can switch the option 
         'save_data' in section 'data' of config.conf to 'false'.
 
+    .. warning:: Note that a NoSavingPage does not trigger a saving 
+        event, but it does collect data! If a later page triggers a 
+        saving event, data from the NoSavingPage will be saved to the 
+        experiment data! To prevent this behavior, use a :class:`.NoDataPage`
+        instead of NoSavingPage.
+
     See Also:
         See :class:`.NoDataPage` for a page that does not collect any
         data.
@@ -1334,46 +1356,36 @@ class NoSavingPage(Page):
 
             import alfred3 as al
             exp = al.Experiment()
-            exp += al.NoSavingPage(name="demo")
+
+            @exp.meber
+            class DemoPage1(al.NoSavingPage):
+                title = "My demo page"
+
+                def on_exp_access(self):
+                    self += al.TextEntry(placeholder="Enter something", name="el1")
+            
+
+            @exp.member
+            class DemoPage2(al.Page):
+                title = "My second demo page"
+
+                def on_first_show(self):
+                    user_input = self.exp.values.get("el1")
+                    self += al.Text(text=f"You input on the previous page: {user_input}")
+
+                    self += al.Text(text="Note that a 'NoSavingPage' does not trigger a saving event, but it does collect data! If a later page triggers a saving event, data from the 'NoSavingPage' will be saved to the experiment data! To prevent this behavior, use a 'NoDataPage' instead of 'NoSavingPage'.")
+
 
         Example 2, a NoSavingPage that also does not collect any data::
 
             import alfred3 as al
             exp = al.Experiment()
 
+            @exp.member
             class NoDataNoSavingPage(al.NoSavingPage):
 
                 data = {{}}
             
-            exp += NoDataNoSavingPage(name="demo")
-        
-        Example 3, a more elaborate example. Here, we create an 
-        experiment with an "admin" mode, triggered by an url parameter,
-        in which no data will be saved.
-        Note that, if we use this method, we do not even need to use
-        a NoSavingPage::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.setup
-            def setup(exp):
-                admin = exp.urlargs.get("admin", False)
-                if admin == "true":
-                    exp.config.read_dict({{"data": {{"save_data": "false"}}}})
-                    exp.log.info("Admin mode triggered. No data will be saved")
-
-            exp += al.Page(name="demo")
-        
-        If this experiment is started with the suffix ``?admin=true`` to
-        the starting url, no data will be saved. In case of a locally 
-        running experiment, the url would be 
-        http://localhost:5000/start?admin=true
-
-        .. note:: Note that the experiment will most likely crash, if
-            the /start route gets called twice for any reason in a local
-            experiment.
-
     """
 
     def save_data(self, *args, **kwargs):
