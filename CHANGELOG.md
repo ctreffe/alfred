@@ -31,13 +31,29 @@ Types of changes
 ### Added v2.2.3
 
 - Added `MatchEntry` as alias for `RegEntry` element
+- Added the methods `Page.position_in_section` and `Section.position_in_section`.
+  These are used to get the position of the current page or section inside
+  its parent section, which can be useful if you create section or pages
+  in loops.
+
+
+### Changed v2.2.3
+
+- Sections will now immediately raise an error, if you mistakenly define
+  a page-only hook like `on_first_show` or `on_first_hide` on a section,
+  which can be a common but very hard-to-debug programming error.
+- The `NumberEntry` element now returns its value as a `float`. Previous,
+  the value was returned as a string.
 
 ### Fixed v2.2.3
 
 - Some updates to the documentation
 - We fixed to option "logo_text" in the section "layout" in `config.conf`
 - Fixed the "shuffle" argument of Sections. Previously, it did not
-  successfully lead to randomization of the pages and subsections in a section.
+  successfully lead to randomization of the pages and subsections in a 
+  section. It affects only first-level subsections, i.e. the order of 
+  subsections is randomized, but the order of pages inside those 
+  subsections is not affected.
 
 ## alfred3 v2.2.2 (Released 2021-10-14)
 
@@ -49,6 +65,7 @@ fixes this issue.
 - We temporarily deactivated the `MultipleChoiceList` element, because
   we have to sort out some issues with it. It has seen no use so far, so
   the deactivation should not be a problem.
+
 
 ### Fixed v2.2.2
 
