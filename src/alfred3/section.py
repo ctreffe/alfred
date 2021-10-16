@@ -86,6 +86,8 @@ class Section(ExpMember):
 
         if shuffle is not None:
             self.shuffle = shuffle
+        
+        self._catch_page_hooks()
 
     def __contains__(self, member):
         try:
@@ -574,8 +576,6 @@ class Section(ExpMember):
         elif direction.startswith("jump"):
             self.validate_on_jump()
         
-
-
     def validate_on_leave(self):
         """
         Validates pages and their input elements within the section.
@@ -668,6 +668,41 @@ class Section(ExpMember):
              validation on all kinds of moves.
         """
         self.validate_on_move()
+
+    def _catch_page_hooks(self):
+        """
+        Raises errors, if users define page hooks on a section.
+        """
+        
+        explanation = " This does not work. Remove the method to continue."
+
+        try:
+            self.on_first_show()
+            msg = f"You tried to use the page-only hook method 'on_first_show' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
+        try:
+            self.on_each_show()
+            msg = f"You tried to use the page-only hook method 'on_each_show' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
+        try:
+            self.on_each_hide()
+            msg = f"You tried to use the page-only hook method 'on_each_hide' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
+        try:
+            self.on_first_hide()
+            msg = f"You tried to use the page-only hook method 'on_first_hide' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
 
 
 @inherit_kwargs
