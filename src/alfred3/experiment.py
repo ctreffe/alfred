@@ -548,6 +548,25 @@ class Experiment:
 
                 if __name__ == "__main__":
                     exp.run()
+            
+            To start an experiment in test mode::
+
+                import alfred3 as al
+                exp = al.Experiment()
+                exp += al.Page(name="demo")
+
+                if __name__ == "__main__":
+                    exp.run(test=True)
+            
+            To start an experiment without trying to open a browser
+            window automatically::
+
+                import alfred3 as al
+                exp = al.Experiment()
+                exp += al.Page(name="demo")
+
+                if __name__ == "__main__":
+                    exp.run(open_browser=False)
 
 
         """
@@ -2139,7 +2158,6 @@ class ExperimentSession:
         """
         sid = "test-" + self._session_id if self.test_mode else self._session_id
         return sid
-        # return self._session_id
 
     @property
     def config(self):
