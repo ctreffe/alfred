@@ -23,8 +23,16 @@ class TestSection:
         random.seed(1)
         exp.start()
         
-        pages = [p.name for p in exp.Main.members.values()]
-        assert pages == ["p02", "p03", "p01"]
+        page_names = [p.name for p in exp.Main.members.values()]
+        assert page_names == ["p02", "p03", "p01"]
+
+        exp.forward()
+        exp.forward()
+        
+        pages = list(exp.Main.members.values())
+        assert pages[0].input_elements["task_01"]
+        assert pages[1].input_elements["task_02"]
+        assert pages[2].input_elements["task_03"]
     
 
     def test_shuffle2(self, exp_shuffle):
@@ -34,5 +42,13 @@ class TestSection:
         random.seed(123123)
         exp.start()
         
-        pages = [p.name for p in exp.Main.members.values()]
-        assert pages == ["p03", "p02", "p01"]
+        page_names = [p.name for p in exp.Main.members.values()]
+        assert page_names == ["p03", "p02", "p01"]
+
+        exp.forward()
+        exp.forward()
+        
+        pages = list(exp.Main.members.values())
+        assert pages[0].input_elements["task_01"]
+        assert pages[1].input_elements["task_02"]
+        assert pages[2].input_elements["task_03"]
