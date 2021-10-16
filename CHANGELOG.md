@@ -26,6 +26,13 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.2.3 [unreleased]
+
+### Fixed v2.2.3
+
+- We brought the documentation for the `Alert` element up to date.
+- We fixed to option "logo_text" in the section "layout" in `config.conf`
+
 ## alfred3 v2.2.2 (Released 2021-10-14)
 
 The last update (v2.2.1) did not contain the intended changes. This update
