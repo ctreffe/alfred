@@ -46,6 +46,7 @@ from .element.input import TextEntry
 from .element.input import TextArea
 from .element.input import MatchEntry
 from .element.input import RegEntry
+from .element.input import EmailEntry
 from .element.input import PasswordEntry
 from .element.input import NumberEntry
 from .element.input import SingleChoice

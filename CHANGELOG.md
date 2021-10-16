@@ -31,11 +31,12 @@ Types of changes
 ### Added v2.2.3
 
 - Added `MatchEntry` as alias for `RegEntry` element
+- Added `EmailEntry` element. This is a `MatchEntry` element that offers
+  a good default validation for email inputs.
 - Added the methods `Page.position_in_section` and `Section.position_in_section`.
   These are used to get the position of the current page or section inside
   its parent section, which can be useful if you create section or pages
   in loops.
-
 
 ### Changed v2.2.3
 

@@ -249,6 +249,41 @@ class RegEntry(MatchEntry):
     pass
 
 
+@inherit_kwargs
+class EmailEntry(MatchEntry):
+    """
+    An input field for email adresses.
+
+    Args:
+        {kwargs}
+
+    Notes:
+        This element is a direct descendant of :class:`.MatchEntry`, 
+        simply adding a default regular expression for matching email
+        adresses. Note that there may be different preferences about
+        which expression to use and feel free to use your own.
+
+        The one we use here originates from https://emailregex.com
+    
+
+    Examples:
+        Example for an EmailEntry element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+
+                def on_exp_access(self):
+                    self += al.EmailEntry(toplab="Enter text here", name="email")
+
+    """
+
+    def __init__(self, pattern=r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", **kwargs):
+        super().__init__(pattern=pattern, **kwargs)
+
+
 @inherit_kwargs(exclude=["force_input", "pattern"])
 class PasswordEntry(RegEntry):
     """
