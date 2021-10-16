@@ -162,7 +162,7 @@ class MatchEntry(TextEntry):
             class Demo(al.Page):
 
                 def on_exp_access(self):
-                    self += al.MatchEntry("Enter text here", pattern=r".*", name="reg1")
+                    self += al.MatchEntry(toplab="Enter text here", pattern=r".*", name="reg1")
 
     """
 
@@ -243,7 +243,7 @@ class RegEntry(MatchEntry):
             class Demo(al.Page):
 
                 def on_exp_access(self):
-                    self += al.RegEntry("Enter text here", pattern=r".*", name="reg1")
+                    self += al.RegEntry(toplab="Enter text here", pattern=r".*", name="reg1")
 
     """
     pass
