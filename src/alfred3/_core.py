@@ -437,6 +437,8 @@ class ExpMember:
         """
         Returns the position of this page or section inside its parent 
         section, starting at 1.
+
+        .. versionadded:: 2.3.0
         """
         members = [m.name for m in self.section.members.values()]
         return members.index(self.name) + 1

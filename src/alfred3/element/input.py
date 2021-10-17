@@ -151,6 +151,8 @@ class MatchEntry(TextEntry):
             match with the regular expression.
         {kwargs}
 
+    .. versionadded:: 2.3.0
+
     Examples:
 
         Example for a MatchEntry element that will match any input::
@@ -257,6 +259,8 @@ class EmailEntry(MatchEntry):
     Args:
         {kwargs}
 
+    .. versionadded:: 2.3.0
+    
     Notes:
         This element is a direct descendant of :class:`.MatchEntry`, 
         simply adding a default regular expression for matching email
@@ -427,10 +431,9 @@ class NumberEntry(TextEntry):
             all NumberEntry elements, change the respective setting
             in the config.conf.
         {kwargs}
-    
-    .. warning::
-        Note that, internally, the input to a numberentry
 
+    .. versionchanged:: 2.3.0
+        NumberEntry element now returns its input as numeric (float).    
 
     Examples:
 

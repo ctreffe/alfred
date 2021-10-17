@@ -526,6 +526,9 @@ class Experiment:
                 'general' of config.conf.
             test: If true, the experiment is started in test mode.
 
+        .. versionchanged:: 2.3.0
+            Added parameter *test*.
+
         Notes:
             .. warning::
                 If you execute this method in your script.py, make sure to

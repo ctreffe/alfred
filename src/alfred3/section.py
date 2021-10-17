@@ -851,6 +851,8 @@ class HideOnForwardSection(Section):
        "forward" will then ignore the hidden pages and take the participant
        back to the most recent page.
 
+    .. versionadded:: 2.3.0
+
     Examples:
         
         You can test the section's behavior with this example::
