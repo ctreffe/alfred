@@ -30,6 +30,11 @@ Types of changes
 
 ### Added v2.2.3
 
+- We are excited to present the new section class `HideOnForwardSection`: 
+  A section that hides pages 
+  once they have been submitted. This is basically a slightly more liberal
+  version of a `ForwardOnlySection`. Take a look at the documentation 
+  for more details!
 - Added `MatchEntry` as alias for `RegEntry` element
 - Added `EmailEntry` element. This is a `MatchEntry` element that offers
   a good default validation for email inputs.

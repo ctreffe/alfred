@@ -834,6 +834,59 @@ class RevisitSection(Section):
 
 
 @inherit_kwargs
+class HideOnForwardSection(Section):
+    """
+    A section that hides pages once they have been submitted.
+
+    Args:
+        {kwargs}
+    
+    This section enables the following behaviors:
+
+    1. Once a participant has entered their data on a page and submitted 
+       it by pressing "forward", the participant cannot revisit that
+       page – it is hidden.
+    2. The participant can, however, go back to pages in previous sections.
+       For instance, they may revisit the instructions page. A press on
+       "forward" will then ignore the hidden pages and take the participant
+       back to the most recent page.
+
+    Examples:
+        
+        You can test the section's behavior with this example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            main = al.Section(name="main")
+            main += al.Page(name="first")
+
+            hide = al.HideOnForwardSection(name="hide")
+            hide += al.Page(name="second")
+            hide += al.Page(name="thirs")
+
+            exp += main
+            exp += hide
+
+    """
+
+    allow_forward: bool = True
+    allow_backward: bool = True
+    allow_jumpfrom: bool = True
+    allow_jumpto: bool = True
+
+    def _forward(self):
+        super()._forward()
+        self.exp.movement_manager.current_page.close()
+        self.exp.movement_manager.current_page.should_be_shown = False
+
+    def _jumpfrom(self):
+        super()._jumpfrom()
+        self.exp.movement_manager.current_page.close()
+        self.exp.movement_manager.current_page.should_be_shown = False
+
+
+@inherit_kwargs
 class ForwardOnlySection(RevisitSection):
     """
     A section that allows only a single step forward; no jumping and no

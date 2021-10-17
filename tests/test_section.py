@@ -80,3 +80,34 @@ class TestSection:
 
         assert main.p1 is not main.last_page
         assert main.p2 is main.last_page
+
+
+class TestHideOnForwardSection:
+
+    def test_jump_backwards(self, exp):
+        main = al.Section(name="main")
+        smart = al.HideOnForwardSection(name="smart")
+
+        main += al.Page(name="first")
+        smart += al.Page(name="second")
+        smart += al.Page(name="third")
+
+        exp += main
+        exp += smart
+
+        exp.start()
+        exp.forward()
+        assert exp.current_page.name == "first"
+        exp.forward()
+        assert exp.current_page.name == "second"
+        exp.backward()
+        assert exp.current_page.name == "first"
+        exp.forward()
+        exp.forward()
+        assert exp.current_page.name == "third"
+        exp.backward()
+        assert exp.current_page.name == "first"
+        exp.forward()
+        assert exp.current_page.name == "third"
+
+        assert exp.second.is_closed

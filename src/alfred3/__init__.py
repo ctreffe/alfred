@@ -10,6 +10,7 @@ from .randomizer import random_condition
 from .section import Section
 from .section import RevisitSection
 from .section import ForwardOnlySection
+from .section import HideOnForwardSection
 
 from .page import Page
 from .page import WidePage
