@@ -13,6 +13,16 @@ def exp_shuffle(tmp_path):
 
     clear_db()
 
+@pytest.fixture
+def exp(tmp_path):
+    script = "tests/res/script-hello_world.py"
+    secrets = "tests/res/secrets-default.conf"
+    exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
+
+    yield exp
+
+    clear_db()
+
 
 class TestSection:
 
@@ -52,3 +62,21 @@ class TestSection:
         assert pages[0].input_elements["task_01"]
         assert pages[1].input_elements["task_02"]
         assert pages[2].input_elements["task_03"]
+    
+    def test_first_page(self):
+        main = al.Section(name="main")
+
+        main += al.Page(name="p1")
+        main += al.Page(name="p2")
+
+        assert main.p1 is main.first_page
+        assert main.p2 is not main.first_page
+    
+    def test_last_page(self):
+        main = al.Section(name="main")
+
+        main += al.Page(name="p1")
+        main += al.Page(name="p2")
+
+        assert main.p1 is not main.last_page
+        assert main.p2 is main.last_page

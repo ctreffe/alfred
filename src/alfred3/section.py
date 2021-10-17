@@ -231,6 +231,26 @@ class Section(ExpMember):
             return list(self.members.values())[0]
         except IndexError:
             return None
+    
+    @property
+    def first_page(self):
+        """
+        Returns the first page inside the current section.
+        """
+        try:
+            return list(self.all_pages.values())[0]
+        except IndexError:
+            return None
+    
+    @property
+    def last_page(self):
+        """
+        Returns the last page inside the current section.
+        """
+        try:
+            return list(self.all_pages.values())[-1]
+        except IndexError:
+            return None
 
     @property
     def all_subsections(self) -> dict:
