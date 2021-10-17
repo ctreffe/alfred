@@ -254,6 +254,8 @@ class MovementManager:
             while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
                 self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
                 i -= 1
+                if i < 0:
+                    raise AbortMove
                 target_page = self.find_page(i)
             return target_page
 
@@ -674,10 +676,15 @@ class UserInterface:
         d["title"] = page.title
         d["subtitle"] = page.subtitle
         
-        if not page is self.exp.movement_manager.first_page:
-            previous_section = self.exp.movement_manager.page_before(page).section
-            if previous_section.allow_backward and page.section.allow_backward:
-                d["backward_text"] = self.experiment.config.get("navigation", "backward")
+        if self.exp.movement_manager.current_index > 0:
+            try:
+                target = self.exp.movement_manager.target_page("backward")
+                previous_section = target.section
+                if previous_section.allow_backward and page.section.allow_backward:
+                    self.exp.movement_manager.target_page("backward")
+                    d["backward_text"] = self.experiment.config.get("navigation", "backward")
+            except AbortMove:
+                pass
         
         if page.section.allow_forward:
             if self.exp.movement_manager.next_page is self.exp.root_section.final_page:
