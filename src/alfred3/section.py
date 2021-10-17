@@ -457,6 +457,18 @@ class Section(ExpMember):
         Executed *once*, when the :class:`.ExperimentSession` becomes
         available to the section.
 
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
+
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
@@ -468,6 +480,18 @@ class Section(ExpMember):
         """
         Executed *every time* this section is entered.
 
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
+
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
@@ -477,6 +501,18 @@ class Section(ExpMember):
     def on_leave(self):
         """
         Executed *every time* this section is left.
+
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
@@ -493,6 +529,18 @@ class Section(ExpMember):
         the parent section becomes the primary current section again: it
         resumes its status.
 
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
+
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
@@ -502,6 +550,18 @@ class Section(ExpMember):
     def on_hand_over(self):
         """
         Executed *every time* a direct subsection of this section is entered.
+
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview

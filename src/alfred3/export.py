@@ -232,12 +232,13 @@ class Exporter:
 
             for name, cb in existing_codebook.items():
                 for lab in ["label_top", "label_left", "label_right", "label_bottom", "placeholder"]:
-                    old = cb.get(lab, "")
-                    new = data[name].get(lab, "")
-                    if not old == new:
+                    oldlab = cb.get(lab, "")
+                    new = data.get(name, "")
+                    newlab = new.get(lab, "") if new else ""
+                    if not new or (not oldlab == newlab):
                         self.exp.log.warning(
                             (
-                                f"{lab} of '{name}' has changed from '{old}' to '{new}'. "
+                                f"{lab} of '{name}' has changed from '{oldlab}' to '{newlab}'. "
                                 "This introduces inconsistencies into the codebook. "
                                 "Do you have dynamic labels that do not match their elements' names? "
                                 "To change a label, increase the experiment version."
