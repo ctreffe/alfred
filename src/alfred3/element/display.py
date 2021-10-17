@@ -299,6 +299,8 @@ class Image(LabelledElement):
         super().added_to_experiment(experiment)
         if self.path:
             p = self.experiment.subpath(self.path)
+            if not p.is_file():
+                raise FileNotFoundError(f"Did not find {p}")
             url = self.experiment.ui.add_static_file(p)
             self.src = url
         else:
