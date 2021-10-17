@@ -427,7 +427,7 @@ class Experiment:
 
         """
         
-        if urlargs.get("admin") in ["true", "True"]:
+        if urlargs.get("admin") in ["true", "True", "TRUE"]:
             
             self.admin.setup_functions += self.setup_functions
             self.admin.final_page = _NothingHerePage(name="__") # name gets changed automatically by setter
@@ -436,6 +436,9 @@ class Experiment:
             )
             return exp_session
         
+        if urlargs.get("debug") in ["true", "True", "TRUE"]:
+            config.read_dict({"general": {"debug": True}})
+
         exp_session = ExperimentSession(
             session_id=session_id, config=config, secrets=secrets, **urlargs
         )
