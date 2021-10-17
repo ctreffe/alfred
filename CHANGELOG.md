@@ -43,6 +43,9 @@ Types of changes
   data (#113)
 - The codebook now includes the number of choices for all choice elements
   (#114)
+- On codebook export, alfred3 will check if the two newest sessions contain
+  identical element labels. If not, alfred3 will log a warning. This can
+  help users to discover unfortunate element or page randomization setups.
 - Added a test mode (#90). If you start an experiment with the url parameter
   `?test=true`, the experiment starts in test mode. The test mode's only
   effect is that it prefixes session IDs of test sessions with "test-".
@@ -50,6 +53,9 @@ Types of changes
     + **Keep in mind** that a test session will take up a slot in list
       randomization just as any other session. You have to use experiment 
       version numbers to manage randomization slots. 
+- Added the possibility to start the "debug" mode with the url parameter
+  `?debug=true`. Debug mode is a "fancy test mode" - session IDs created 
+  in debug mode will be prefixed with "test-".
 - Added the parameter `test` to `ExperimentRunner.auto_run` and, subsequently,
   to `Experiment.run`
 
