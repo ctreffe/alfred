@@ -300,7 +300,7 @@ class Image(LabelledElement):
         if self.path:
             p = self.experiment.subpath(self.path)
             if not p.is_file():
-                raise FileNotFoundError(f"Did not find {p}")
+                raise FileNotFoundError(f"Did not find {p} in element {self}")
             url = self.experiment.ui.add_static_file(p)
             self.src = url
         else:
