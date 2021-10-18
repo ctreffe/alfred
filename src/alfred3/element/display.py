@@ -793,7 +793,7 @@ class ProgressBar(LabelledElement):
     @property
     def progress(self) -> Union[int, float]:
 
-        if self._progress:  # manually defined via element
+        if self._progress or self._progress == 0:  # manually defined via element
             return self._progress
 
         elif self.exp.current_page.progress:  # manually defined via page
@@ -814,7 +814,7 @@ class ProgressBar(LabelledElement):
     def progress(self, value: Union[int, float]):
         try:
             assert isinstance(value, (int, float))
-            assert 0 < value and value < 100
+            assert 0 <= value and value <= 100
         except AssertionError:
             raise ValueError("Progress must be a number between 0 and 100.")
         self._progress = value
