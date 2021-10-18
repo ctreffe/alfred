@@ -26,9 +26,9 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
-## alfred3 v2.2.3 [unreleased]
+## alfred3 v2.3.0 [unreleased]
 
-### Added v2.2.3
+### Added v2.3.0
 
 - We are excited to present the new section class `HideOnForwardSection`: 
   A section that hides pages 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     exp.run(test=True)
 ```
 
-### Changed v2.2.3
+### Changed v2.3.0
 
 - Sections will now immediately raise an error, if you mistakenly define
   a page-only hook like `on_first_show` or `on_first_hide` on a section,
@@ -85,7 +85,7 @@ if __name__ == "__main__":
   the value was returned as a string, which was unexpected behavior in 
   most cases.
 
-### Fixed v2.2.3
+### Fixed v2.3.0
 
 - Some updates to the documentation
 - Fixed the option "logo_text" in the section "layout" in `config.conf`
