@@ -147,6 +147,9 @@ class JumpButtons(SingleChoiceButtons):
         
         super().prepare_web_widget()
 
+        if self.page.prefix_element_names and not self.page.has_been_shown:
+            self.targets = [self.page.name + "_" + target for target in self.targets]
+
         self._js_code = []
 
         for choice, target in zip(self.choices, self.targets):
@@ -311,7 +314,7 @@ class JumpList(Row):
             save_data=save_data
         )
         btn = DynamicJumpButtons(
-            (label, select_name),
+            (label, select.name),
             name=btn_name,
             button_style=button_style,
             button_round_corners=button_round_corners,
@@ -333,7 +336,7 @@ class JumpList(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
-
+        
 
 @inherit_kwargs
 class Button(Element):
