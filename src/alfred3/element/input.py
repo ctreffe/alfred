@@ -1735,7 +1735,7 @@ class SelectPageList(SingleChoiceList):
             try:
                 choice_labels.remove(self.name)
             except ValueError:
-                self.log.debug("ValueError ignored.")
+                self.log.debug("ValueError ignored in PageList while trying to remove self from the list of choice labels.")
                 pass
 
         return choice_labels
