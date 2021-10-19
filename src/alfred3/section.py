@@ -70,6 +70,9 @@ class Section(ExpMember):
     #: section.
     allow_jumpto: bool = True
 
+    #: If *True*, pages in this section will be closed on leaving
+    close_pages_on_leave: bool = False
+
     #: If True, the members of this section will be randomized every
     #: time the section is entered.
     shuffle: bool = False
@@ -587,10 +590,14 @@ class Section(ExpMember):
     def _leave(self):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
-
-        self.validate_on_leave()
-        for page in self.pages.values():
-            page.close()
+        
+        try:
+            self.validate_on_leave()
+        except ValidationError:
+            raise AbortMove
+        if self.close_pages_on_leave:
+            for page in self.pages.values():
+                page.close()
 
         if self is self.parent.last_member:
             self.parent._leave()
