@@ -65,6 +65,7 @@ class ExperimentRunner:
         self.expurl = None
 
         self.test_mode = None
+        self.debug_mode = None
 
     def find_path(self, path):
         if path:
@@ -171,7 +172,9 @@ class ExperimentRunner:
 
         # generate url
         expurl = "http://127.0.0.1:{port}/start".format(port=self.port)
-        expurl = expurl + "?test=true" if self.test_mode else expurl
+        expurl = expurl + "?" if self.debug_mode or self.test_mode else expurl
+        expurl = expurl + "test=true" if self.test_mode else expurl
+        expurl = expurl + "debug=true" if self.debug_mode else expurl
 
         if self.config.getboolean("general", "fullscreen"):
             ChromeKiosk.open(url=expurl)
@@ -198,6 +201,7 @@ class ExperimentRunner:
 
         """
         self.test_mode = test
+        self.debug_mode = debug
         self.generate_session_id()
         self.configure_logging()
         self.create_experiment_app()
