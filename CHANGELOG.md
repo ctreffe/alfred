@@ -35,6 +35,7 @@ Types of changes
   once they have been submitted. This is basically a slightly more liberal
   version of a `ForwardOnlySection`. Take a look at the documentation 
   for more details!
+- Added `SubmittingBar`, the sibling of the already existing `SubmittingButtons`
 - Added `MatchEntry` as alias for `RegEntry` element
 - Added `EmailEntry` element. This is a `MatchEntry` element that offers
   a good default validation for email inputs.
@@ -84,6 +85,11 @@ if __name__ == "__main__":
 - The `NumberEntry` element now returns its value as a `float`. Previously,
   the value was returned as a string, which was unexpected behavior in 
   most cases.
+- From now on, sections do not close all of their pages by default on leaving.
+  Instead, you can override the attribute `close_pages_on_leave`. By setting
+  it to *True*, a section will close all its pages when it is left.
+- Minimal finetuning of the progress bar: It can now be set to zero progress.
+
 
 ### Fixed v2.3.0
 
