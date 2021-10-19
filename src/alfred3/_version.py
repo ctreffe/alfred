@@ -3,4 +3,4 @@
 # 2) we can import it in setup.py for the same reason
 # 3) we can import it into your module module
 
-__version__ = "2.3.0b1"
+__version__ = "2.3.0b2"
