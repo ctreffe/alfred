@@ -21,11 +21,54 @@ from .core import Row
 from .core import Element
 from .misc import JavaScript
 from .input import SingleChoiceButtons
+from .input import SingleChoiceBar
 from .input import SingleChoiceList
 from .input import SelectPageList
 
 @inherit_kwargs
 class SubmittingButtons(SingleChoiceButtons):
+    """
+    SingleChoiceButtons that trigger submission of the current page
+    on click.
+
+    Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
+        {kwargs}
+
+    Examples:
+        Using submitting buttons together with the
+        :class:`.HideNavigation` element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+
+                    self += al.HideNavigation()
+                    self += al.SubmittingButtons("choice1", "choice2", name="b1")
+
+    """
+
+    js_template = jinja_env.get_template("js/submittingbuttons.js.j2")
+
+    def __init__(self, *choice_labels, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+
+        self._js_code = []
+        js = self.js_template.render(choices=self.choices)
+        self.add_js(js)
+
+
+@inherit_kwargs
+class SubmittingBar(SingleChoiceBar):
     """
     SingleChoiceButtons that trigger submission of the current page
     on click.

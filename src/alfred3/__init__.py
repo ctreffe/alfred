@@ -61,6 +61,7 @@ from .element.input import MultipleChoiceBar
 from .element.input import SelectPageList
 
 from .element.action import SubmittingButtons
+from .element.action import SubmittingBar
 from .element.action import JumpButtons
 from .element.action import DynamicJumpButtons
 from .element.action import JumpList
