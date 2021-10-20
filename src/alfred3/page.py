@@ -694,6 +694,9 @@ class _CoreCompositePage(_PageCore):
         
         """
 
+        if not self.has_been_shown:
+            return 0
+
         if len(self.show_times) > len(self.hide_times):
             now = time.time()
         elif len(self.show_times) < len(self.hide_times):
