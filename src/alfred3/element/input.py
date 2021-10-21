@@ -67,36 +67,37 @@ class TextEntry(InputElement):
     def input(self) -> str:
         # docstring inherited
         return self._input
-    
+
     @input.setter
     def input(self, value):
         if not value:
             self._input = None
         else:
-            self._input = bleach.clean(value) # sanitizing input
+            self._input = bleach.clean(value)  # sanitizing input
 
     @property
     def placeholder(self) -> str:
         """str: Placeholder text, displayed inside the input field."""
         return self._placeholder
-    
+
     @placeholder.setter
     def placeholder(self, value):
         self._placeholder = value
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["placeholder"] = self.placeholder
         return d
 
     @property
     def codebook_data(self):
-        
+
         data = super().codebook_data
         data["placeholder"] = self.placeholder
         return data
+
 
 @inherit_kwargs
 class TextArea(TextEntry):
@@ -130,10 +131,11 @@ class TextArea(TextEntry):
 
     @property
     def template_data(self):
-        
+
         d = super().template_data
         d["area_nrows"] = self.area_nrows
         return d
+
 
 @inherit_kwargs
 class MatchEntry(TextEntry):
@@ -177,7 +179,7 @@ class MatchEntry(TextEntry):
         self._match_hint = match_hint  # documented in getter property
 
     def validate_data(self):
-        
+
         if not self.should_be_shown:
             return True
 
@@ -191,7 +193,7 @@ class MatchEntry(TextEntry):
         elif not self.pattern.fullmatch(self.input):
             self.hint_manager.post_message(self.match_hint)
             return False
-        
+
         else:
             return True
 
@@ -216,7 +218,7 @@ class MatchEntry(TextEntry):
 
     @property
     def codebook_data(self) -> dict:
-        
+
         d = super().codebook_data
         d["regex_pattern"] = self.pattern.pattern
         return d
@@ -248,6 +250,7 @@ class RegEntry(MatchEntry):
                     self += al.RegEntry(toplab="Enter text here", pattern=r".*", name="reg1")
 
     """
+
     pass
 
 
@@ -260,15 +263,15 @@ class EmailEntry(MatchEntry):
         {kwargs}
 
     .. versionadded:: 2.3.0
-    
+
     Notes:
-        This element is a direct descendant of :class:`.MatchEntry`, 
+        This element is a direct descendant of :class:`.MatchEntry`,
         simply adding a default regular expression for matching email
         adresses. Note that there may be different preferences about
         which expression to use and feel free to use your own.
 
         The one we use here originates from https://emailregex.com
-    
+
 
     Examples:
         Example for an EmailEntry element::
@@ -294,19 +297,19 @@ class PasswordEntry(RegEntry):
     Displays a password field.
 
     The password field is **force-input by default**.
-    
+
     Args:
         password (str): Password string to match against user input.
-        
+
         force_input (bool): If `True`, users can  only progress to the next page
             if they enter data into this field. Note that a
             :class:`.NoValidationSection` or similar sections might
             overrule this setting. Defaults to *True*.
 
         {kwargs}
-    
 
-    .. warning:: Note that the password will be included in the 
+
+    .. warning:: Note that the password will be included in the
         automatically generated codebook.
 
     """
@@ -319,11 +322,12 @@ class PasswordEntry(RegEntry):
         self._match_hint = match_hint  # documented in getter property
 
         if not isinstance(password, str):
-            raise ValueError(f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string.")
-    
+            raise ValueError(
+                f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string."
+            )
 
     def validate_data(self):
-        
+
         if not self.should_be_shown:
             return True
 
@@ -337,7 +341,7 @@ class PasswordEntry(RegEntry):
         elif not self.input == self.password:
             self.hint_manager.post_message(self.match_hint)
             return False
-        
+
         else:
             return True
 
@@ -354,41 +358,46 @@ class MultiplePasswordEntry(RegEntry):
     Password field that accepts multiple different passwords.
 
     The password field is force-entry by default.
-    
+
     Args:
-        passwords (list): List of password strings to match against user 
+        passwords (list): List of password strings to match against user
             input.
-        
+
         force_input (bool): If `True`, users can  only progress to the next page
             if they enter data into this field. Note that a
             :class:`.NoValidationSection` or similar sections might
             overrule this setting. Defaults to *True*.
 
         {kwargs}
-    
 
-    .. warning:: Note that the password will be included in the 
+
+    .. warning:: Note that the password will be included in the
         automatically generated codebook.
 
     """
 
     element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
 
-    def __init__(self, passwords: List[str], force_input: bool = True, match_hint: str = None, **kwargs):
+    def __init__(
+        self, passwords: List[str], force_input: bool = True, match_hint: str = None, **kwargs
+    ):
         super(RegEntry, self).__init__(force_input=force_input, **kwargs)
         self.passwords = passwords
         self._match_hint = match_hint  # documented in getter property
 
         if not isinstance(passwords, (list, tuple)):
-            raise ValueError(f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple.")
-        
+            raise ValueError(
+                f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple."
+            )
+
         for pw in passwords:
             if not isinstance(pw, str):
-                raise ValueError(f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings.")
-    
+                raise ValueError(
+                    f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings."
+                )
 
     def validate_data(self):
-        
+
         if not self.should_be_shown:
             return True
 
@@ -402,7 +411,7 @@ class MultiplePasswordEntry(RegEntry):
         elif not self.input in self.passwords:
             self.hint_manager.post_message(self.match_hint)
             return False
-        
+
         else:
             return True
 
@@ -433,7 +442,7 @@ class NumberEntry(TextEntry):
         {kwargs}
 
     .. versionchanged:: 2.3.0
-        NumberEntry element now returns its input as numeric (float).    
+        NumberEntry element now returns its input as numeric (float).
 
     Examples:
 
@@ -538,11 +547,11 @@ class NumberEntry(TextEntry):
         signs = " ".join([f"<code>{sign}</code>" for sign in self.decimal_signs])
 
         hint = hint.format(
-            min=str(self.min), 
-            max=str(self.max), 
-            decimal_signs=signs, 
-            ndecimals=str(self.ndecimals)
-            )
+            min=str(self.min),
+            max=str(self.max),
+            decimal_signs=signs,
+            ndecimals=str(self.ndecimals),
+        )
 
         return hint
 
@@ -589,7 +598,7 @@ class NumberEntry(TextEntry):
             self._input = value
 
     def validate_data(self):
-        
+
         if not self.should_be_shown:
             return True
 
@@ -623,7 +632,7 @@ class NumberEntry(TextEntry):
 
     @property
     def codebook_data(self):
-        
+
         data = super().codebook_data
         data["value"] = self.input
 
@@ -651,17 +660,17 @@ class SingleChoice(ChoiceElement):
         This element saves answers in the form of integers, counting
         up from 1. Take a look at the examples to see how to work with
         user input to a SingleChoice element.
-    
+
     See Also:
 
         - :class:`.SingleChoiceButtons` and :class:`.SingleChoiceBar` are
           nicer displays of SingleChoice elements. Those are also
           more suitable for responsive displays.
-        - The class :class:`.SubmittingButtons` is a version of 
+        - The class :class:`.SubmittingButtons` is a version of
           SingleChoiceButtons that automatically moves the experiment
           to the next page, once the participant clicks on an answer.
         - :class:`.SingleChoiceList` is a dropdown list of single
-          choices. The SingleChoiceList saves its data as strings 
+          choices. The SingleChoiceList saves its data as strings
           (instead of integers) and is a good option if you have ten
           or more choices.
         - :class:`.MultipleChoiceButtons` can be used to allow multiple
@@ -680,7 +689,7 @@ class SingleChoice(ChoiceElement):
 
                 def on_exp_access(self):
                     self += al.SingleChoice("Yes", "No", name="c1")
-        
+
         Accessing the input to a SingleChoice element::
 
             import alfred3 as al
@@ -692,15 +701,15 @@ class SingleChoice(ChoiceElement):
 
                 def on_exp_access(self):
                     self += al.SingleChoice("Yes", "No", toplab="Choose one", name="c1")
-                 
-             
+
+
             @exp.member
             class Show(al.Page):
-                
+
                 def on_first_show(self):
                     c1_answer = self.exp.values["c1] # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
-        
+
 
     """
 
@@ -708,7 +717,7 @@ class SingleChoice(ChoiceElement):
     type: str = "radio"
 
     def define_choices(self) -> List[_Choice]:
-        
+
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -718,7 +727,9 @@ class SingleChoice(ChoiceElement):
             else:
                 if self.emojize:
                     label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(
+                    str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+                )
             choice.type = "radio"
             choice.value = i
             choice.name = self.name
@@ -748,13 +759,13 @@ class SingleChoice(ChoiceElement):
     def default_no_input_hint(self) -> str:
         # docstring inherited
         return self.experiment.config.get("hints", "no_inputSingleChoice")
-    
+
     def set_data(self, d):
-        
+
         # Important: We need to have a check that ensures that the
         # generated name for the value of each choice is not used by
         # any other name in the experiment.
-        # For this element, we implement it in the *define_choices* 
+        # For this element, we implement it in the *define_choices*
         # method.
         if not self.name in d:
             return
@@ -764,7 +775,7 @@ class SingleChoice(ChoiceElement):
     @property
     def input(self) -> int:
         """
-        int: Index of selected choice (starting at 1). Returns *None*, 
+        int: Index of selected choice (starting at 1). Returns *None*,
         if there is no input.
         """
         return self._input
@@ -798,7 +809,7 @@ class MultipleChoice(ChoiceElement):
         {kwargs}
 
     Notes:
-        This element saves and returns not a single value, but a 
+        This element saves and returns not a single value, but a
         dictionary of values. Each choice is represented by a key, and
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
@@ -809,11 +820,11 @@ class MultipleChoice(ChoiceElement):
     See Also:
         - See :class:`.MultipleChoiceButtons` and :class:`.MultipleChoiceBar`
           for nice-looking buttons and a button-bar of multiple choices.
-        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and
           :class:`.SingleChoiceBar` for single choice elements.
-        - See :class:`.SubmittingButtons` for single choice buttons 
+        - See :class:`.SubmittingButtons` for single choice buttons
           that trigger a forward move on click.
-    
+
     Examples:
         A multiple choice element with three options::
 
@@ -826,7 +837,7 @@ class MultipleChoice(ChoiceElement):
 
                 def on_exp_access(self):
                     self += al.MultipleChoice("Yes", "No", "Maybe", name="m1")
-        
+
         Accessing the input to a MultipleChoice element::
 
             import alfred3 as al
@@ -834,10 +845,10 @@ class MultipleChoice(ChoiceElement):
 
             @exp.member
             class Demo(al.Page):
-                 
+
                 def on_exp_access(self):
                     self += al.MultipleChoice("a", "b", "c", toplab="Choose one or more", name="c1")
-             
+
             @exp.member
             class Show(al.Page):
 
@@ -909,11 +920,11 @@ class MultipleChoice(ChoiceElement):
             return True
 
     def set_data(self, d):
-        
+
         # Important: We need to have a check that ensures that the
         # generated name for the value of each choice is not used by
         # any other name in the experiment.
-        # For this element, we implement it in the *define_choices* 
+        # For this element, we implement it in the *define_choices*
         # method.
         for choice in self.choices:
 
@@ -921,7 +932,7 @@ class MultipleChoice(ChoiceElement):
             self._input[f"choice{choice.value}"] = str(choice.value) == value
 
     def define_choices(self):
-        
+
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -931,7 +942,9 @@ class MultipleChoice(ChoiceElement):
             else:
                 if self.emojize:
                     label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+                choice.label = cmarkgfm.github_flavored_markdown_to_html(
+                    str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+                )
             choice.type = "checkbox"
             choice.value = i
             choice.id = f"{self.name}_choice{i}"
@@ -972,7 +985,7 @@ class MultipleChoice(ChoiceElement):
         The keys are 'choice{{i}}', with {{i}} being replaced by the
         choice number. The values are *True* or *False*, indicating
         whether the respective choice has been selected.
-        
+
         """
         return self._input
 
@@ -992,20 +1005,20 @@ class SingleChoiceList(SingleChoice):
         {kwargs}
 
     Notes:
-        The SingleChoiceList's input always defaults to the first option. 
+        The SingleChoiceList's input always defaults to the first option.
         A typical way to remove meaning from this default is
         to make the fist choice a no-choice option (see examples).
 
-        Different from pure :class:`.SingleChoice` elements, the 
+        Different from pure :class:`.SingleChoice` elements, the
         SingleChoiceList saves its input as strings. The examples below
         illustrate how to work with user input.
-    
+
     See Also:
 
         - :class:`.SingleChoiceButtons`, :class:`.SingleChoiceBar`,
           and class:`.SingleChoice` for alternatives for selecting
           a single option.
-        - The class :class:`.SubmittingButtons` is a version of 
+        - The class :class:`.SubmittingButtons` is a version of
           SingleChoiceButtons that automatically moves the experiment
           to the next page, once the participant clicks on an answer.
         - :class:`.MultipleChoiceButtons` can be used to allow multiple
@@ -1026,7 +1039,7 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
-        
+
         Accessing the value of a SingleChoiceList::
 
             import alfred3 as al
@@ -1041,10 +1054,10 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
-            
+
             @exp.member
             class Show(al.Page):
-                
+
                 def on_first_show(self):
                     selection = self.exp.values["sel1"] # accesses selection
                     self += al.Text(f"You selected: {{selection}}")
@@ -1060,15 +1073,16 @@ class SingleChoiceList(SingleChoice):
     def __init__(self, *choice_labels, default: int = 1, **kwargs):
         super().__init__(*choice_labels, default=default, **kwargs)
 
-    
     def define_choices(self) -> List[_Choice]:
-        
+
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
             choice = _Choice()
 
             if not isinstance(label, str):
-                raise TypeError(f"Choice label in {type(self).__name__} must be string, not {type(label)}.")
+                raise TypeError(
+                    f"Choice label in {type(self).__name__} must be string, not {type(label)}."
+                )
 
             choice.label = label
             choice.type = "radio"
@@ -1099,11 +1113,11 @@ class SingleChoiceList(SingleChoice):
     @property
     def input(self) -> str:
         """
-        str: Text of selected choice. Returns *None*, 
+        str: Text of selected choice. Returns *None*,
         if there is no input.
 
         Note that, differing from :class:`.SingleChoice`, we do not
-        use an index here. This is due to the fact that in 
+        use an index here. This is due to the fact that in
         :class:`.SingleChoiceList`, all labels must be strings, while
         they can have other classes in SingleChoice elements. Thus, it
         is safe to use the label in SingleChoiceLists, but not in
@@ -1159,13 +1173,13 @@ class SingleChoiceList(SingleChoice):
 
 #     @property
 #     def template_data(self):
-        
+
 #         d = super().template_data
 #         d["size"] = self.size
 #         return d
 
 #     def set_data(self, d):
-        
+
 #         name_map = {str(choice.value): choice.name for choice in self.choices}
 #         val = d.get(self.name, None)
 #         if not val:
@@ -1177,6 +1191,7 @@ class SingleChoiceList(SingleChoice):
 #                 self.input[f"choice{i}"] = True
 #             else:
 #                 self.input[f"choice{i}"] = False
+
 
 @inherit_kwargs
 class SingleChoiceButtons(SingleChoice):
@@ -1209,7 +1224,7 @@ class SingleChoiceButtons(SingleChoice):
             supply their own CSS classes for button-styling.
 
         button_round_corners: A boolean switch to toggle whether buttons
-            should be displayed with  rounded corners (*True*). 
+            should be displayed with  rounded corners (*True*).
 
         {kwargs}
 
@@ -1220,13 +1235,13 @@ class SingleChoiceButtons(SingleChoice):
           user input to a SingleChoice element.
         - The *align* parameter does not affect the alignment of choice
           labels.
-         
+
     See Also:
 
         - :class:`.SingleChoiceBar` is a version of SingleChoiceButtons
           that displays the answering options in a connected bar instead
           of single buttons.
-        - The class :class:`.SubmittingButtons` is a version of 
+        - The class :class:`.SubmittingButtons` is a version of
           SingleChoiceButtons that automatically moves the experiment
           to the next page, once the participant clicks on an answer.
         - :class:`.MultipleChoiceButtons` can be used to allow multiple
@@ -1244,7 +1259,7 @@ class SingleChoiceButtons(SingleChoice):
 
                 def on_exp_access(self):
                     self += al.SingleChoiceButtons("Yes", "No", name="c1")
-         
+
          Accessing the input to a SingleChoiceButtons element::
 
              import alfred3 as al
@@ -1256,11 +1271,11 @@ class SingleChoiceButtons(SingleChoice):
 
                  def on_exp_access(self):
                     self += al.SingleChoiceButtons("Yes", "No", toplab="Choose one", name="c1")
-                 
-             
+
+
              @exp.member
              class Show(al.Page):
-                 
+
                  def on_first_show(self):
                     c1_answer = self.exp.values["c1] # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
@@ -1319,7 +1334,7 @@ class SingleChoiceButtons(SingleChoice):
 
     @property
     def template_data(self) -> dict:
-        
+
         d = super().template_data
         d["button_style"] = self.button_style
         d["button_group_class"] = self.button_group_class
@@ -1410,7 +1425,7 @@ class SingleChoiceButtons(SingleChoice):
             return ""
 
     def prepare_web_widget(self):
-        
+
         super().prepare_web_widget()
 
         if self.button_toolbar:
@@ -1421,6 +1436,7 @@ class SingleChoiceButtons(SingleChoice):
 
         if not self.button_width == "auto":
             self._button_width()
+
 
 @inherit_kwargs
 class SingleChoiceBar(SingleChoiceButtons):
@@ -1440,13 +1456,13 @@ class SingleChoiceBar(SingleChoiceButtons):
           user input to a SingleChoice element.
         - The *align* parameter does not affect the alignment of choice
           labels.
-         
+
     See Also:
 
         - :class:`.SingleChoiceButtons` is a version of a SingleChoiceBar
           that displays the options in the form of single buttons instead
           of a connected bar.
-        - The class :class:`.SubmittingButtons` is a version of 
+        - The class :class:`.SubmittingButtons` is a version of
           SingleChoiceButtons that automatically moves the experiment
           to the next page, once the participant clicks on an answer.
         - :class:`.MultipleChoiceButtons` can be used to allow multiple
@@ -1461,22 +1477,22 @@ class SingleChoiceBar(SingleChoiceButtons):
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-               
+
                 def on_exp_access(self):
                     self += al.SingleChoiceBar("Yes", "No", name="c1")
-       
+
        Accessing the input to a SingleChoiceBar element::
 
             @exp.member
             class Demo(al.Page):
                 name = "demo_page"
-               
+
                 def on_exp_access(self):
                     self += al.SingleChoiceBar("Yes", "No", name="c1")
-                
+
             @exp.member
             class Show(al.Page):
-                 
+
                 def on_first_show(self):
                     c1_answer = self.exp.values["c1] # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
@@ -1511,11 +1527,11 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
         default: Can be a single integer, or a list of integers which
             indicate the choices that should be selected by default.
             Counting starts at 1.
-        
+
         {kwargs}
 
     Notes:
-        This element saves and returns not a single value, but a 
+        This element saves and returns not a single value, but a
         dictionary of values. Each choice is represented by a key, and
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
@@ -1528,9 +1544,9 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
           for nice-looking buttons and a button-bar of multiple choices.
         - See :class:`.MultipleChoiceList` for a a list that allows
           multiple selections.
-        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and
           :class:`.SingleChoiceBar` for single choice elements.
-        - See :class:`.SubmittingButtons` for single choice buttons 
+        - See :class:`.SubmittingButtons` for single choice buttons
           that trigger a forward move on click.
 
     Examples:
@@ -1544,7 +1560,7 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
 
                 def on_exp_access(self):
                     self += al.MultipleChoiceButtons("Yes", "No", "Maybe", name="m1")
-            
+
         Accessing the input to a MultipleChoiceButtons element::
 
             import alfred3 as al
@@ -1552,10 +1568,10 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
 
             @exp.member
             class Demo(al.Page):
-                 
+
                 def on_exp_access(self):
                     self += al.MultipleChoiceButtons("a", "b", "c", toplab="Choose one or more", name="c1")
-             
+
             @exp.member
             class Show(al.Page):
 
@@ -1567,6 +1583,7 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
 
     def __init__(self, *choice_labels, button_round_corners: bool = False, **kwargs):
         super().__init__(*choice_labels, button_round_corners=button_round_corners, **kwargs)
+
 
 @inherit_kwargs
 class MultipleChoiceBar(MultipleChoiceButtons):
@@ -1580,7 +1597,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
         {kwargs}
 
     Notes:
-        This element saves and returns not a single value, but a 
+        This element saves and returns not a single value, but a
         dictionary of values. Each choice is represented by a key, and
         the corresponding value is *True*, if the choice was selected and
         *False* otherwise.
@@ -1591,9 +1608,9 @@ class MultipleChoiceBar(MultipleChoiceButtons):
     See Also:
         - See :class:`.MultipleChoice` and :class:`.MultipleChoiceButtons`
           for nice-looking buttons and a button-bar of multiple choices.
-        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and 
+        - See :class:`.SingleChoice`, :class:`.SingleChoiceButtons`, and
           :class:`.SingleChoiceBar` for single choice elements.
-        - See :class:`.SubmittingButtons` for single choice buttons 
+        - See :class:`.SubmittingButtons` for single choice buttons
           that trigger a forward move on click.
 
     Examples:
@@ -1608,7 +1625,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
 
                 def on_exp_access(self):
                     self += al.MultipleChoiceBar("Yes", "No", "Maybe", name="m1")
-         
+
         Accessing the input to a MultipleChoiceBar element::
 
             import alfred3 as al
@@ -1616,10 +1633,10 @@ class MultipleChoiceBar(MultipleChoiceButtons):
 
             @exp.member
             class Demo(al.Page):
-                 
+
                 def on_exp_access(self):
                     self += al.MultipleChoiceBar("a", "b", "c", toplab="Choose one or more", name="c1")
-             
+
             @exp.member
             class Show(al.Page):
 
@@ -1637,6 +1654,7 @@ class MultipleChoiceBar(MultipleChoiceButtons):
 
     # Documented at :class:`.SingleChoiceButtons
     button_round_corners: bool = False
+
 
 @inherit_kwargs(exclude=["*choice_labels"])
 class SelectPageList(SingleChoiceList):
@@ -1735,13 +1753,15 @@ class SelectPageList(SingleChoiceList):
             try:
                 choice_labels.remove(self.name)
             except ValueError:
-                self.log.debug("ValueError ignored in PageList while trying to remove self from the list of choice labels.")
+                self.log.debug(
+                    "ValueError ignored in PageList while trying to remove self from the list of choice labels."
+                )
                 pass
 
         return choice_labels
 
     def define_choices(self) -> List[_Choice]:
-        
+
         choices = []
         for i, page_name in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -1816,7 +1836,7 @@ class SelectPageList(SingleChoiceList):
         # set default value
         if self.default == i:
             checked = True
-        elif self.input == self.choice_labels[i-1]:
+        elif self.input == self.choice_labels[i - 1]:
             checked = True
         elif self.debug_enabled and i == 1:
             checked = True
@@ -1830,6 +1850,6 @@ class SelectPageList(SingleChoiceList):
         return checked
 
     def prepare_web_widget(self):
-        
+
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
