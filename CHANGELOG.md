@@ -80,6 +80,7 @@ if __name__ == "__main__":
 
 ### Changed v2.3.0
 
+- Changed the default design. The top bar is now white instead of red.
 - Sections will now immediately raise an error, if you mistakenly define
   a page-only hook like `on_first_show` or `on_first_hide` on a section,
   which can be a common but very hard-to-debug programming error.
