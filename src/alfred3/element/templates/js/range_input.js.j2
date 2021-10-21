@@ -1,0 +1,20 @@
+$(document).ready(function() {
+    var value = $("#{{ name }}").val();
+    $("#{{ name }}-display").text(value);
+    var range = document.getElementById("{{ name }}");
+    var h = document.getElementById("{{ name }}-display").offsetHeight;
+    
+    {% if display_position == "top" %}
+        range.style.marginBottom = h + "px";
+    {% else %}
+        {% if display_position == "bottom" %}
+            range.style.marginTop = h + 6 + "px";
+        {% endif %}
+    {% endif %}
+})
+
+
+$("#{{ name }}").on("input change", function() {
+    var value = $("#{{ name }}").val()
+    $("#{{ name }}-display").text(value);
+})

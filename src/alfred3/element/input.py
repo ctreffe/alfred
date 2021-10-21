@@ -643,6 +643,154 @@ class NumberEntry(TextEntry):
 
         return data
 
+
+@inherit_kwargs(exclude=["height"])
+class RangeInput(InputElement):
+    """
+    Range input slider for numerical input.
+
+    Args:
+        min (float, int): The value won't be less than min. The default 
+            is 0.
+        max (float, int): The value won't be greater than max. The default 
+            is 100.
+        step (float, int): The value will be a multiple of step. The 
+            default is 1.
+        display_input (bool): If *True*, the current input value will be 
+            displayed alongside the element.
+        display_position (str): Position of the input value display.
+            Can be *top* or *bottom*. Defaults to *top*.
+        align (str): Horizontal alignment of input value display. Can
+            be *left*, *right*, and *center*. Defaults to *center*.
+        font_size (str, int): Font size for value display. You can use a 
+            keyword or an exact specification. The available keywords 
+            are *tiny*, *small*, *normal*, *big*, and *huge*. The exact
+            specification shoul ideally include a unit, such as *1rem*,
+            or *12pt*. If you supply an integer without a unit, a unit
+            of *pt* will be assumed. Defaults to *normal*.
+        {kwargs}
+    
+    Examples:
+        Basic example::
+
+            import alfred3 as al
+
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                
+                def on_exp_access(self):
+                    self += al.RangeInput(name="range_demo")
+    """
+
+    element_template = jinja_env.get_template("html/RangeInputElement.html.j2")
+    js_template = jinja_env.get_template("js/range_input.js.j2")
+
+    def __init__(
+        self,
+        min: Union[float, int] = 0,
+        max: Union[float, int] = 100,
+        step: Union[float, int] = 1,
+        display_input: bool = True,
+        display_position: str = "top",
+        align: str = "center",
+        **kwargs,
+    ):
+        super().__init__(align=align, **kwargs)
+        if display_position not in ["top", "bottom"]:
+            raise ValueError(
+                f"{self} accepts only 'top' and 'bottom' for argument 'display_position'. You gave '{display_position}'."
+            )
+
+        self.min = min
+        self.max = max
+        self.display_position = display_position
+        self.step = step
+        self.display_input = display_input
+        if display_input:
+            js = self.js_template.render(name=self.name, display_position=display_position)
+            self.add_js(js)
+
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["step"] = self.step
+        d["display_position"] = self.display_position
+        return d
+
+    @property
+    def codebook_data(self):
+
+        data = super().codebook_data
+        data["value"] = self.input
+        data["step"] = self.step
+        data["display_input"] = self.display_input
+        data["min"] = self.min
+        data["max"] = self.max
+
+        return data
+    
+    @property
+    def no_input_hint(self) -> str:
+        """
+        RangeInput always has an input.
+        """
+        return "No Input to RangeInput"
+    
+    @property
+    def match_hint(self):
+        """
+        Should never be needed for RangeInput
+        """
+        return "No match for RangeInput"
+    
+    @property
+    def input(self) -> float:
+        # docstring inherited
+        return float(self._input) if self._input is not None else None
+
+    @input.setter
+    def input(self, value: str):
+        if not value:
+            self._input = None
+        else:
+            self._input = value
+
+
+    def validate_data(self):
+
+        if not self.should_be_shown:
+            return True
+
+        if not self.force_input and not self._input:
+            return True
+
+        elif not self._input:
+            self.hint_manager.post_message(self.no_input_hint)
+            return False
+
+        try:
+            in_number = float(self._input)
+        except ValueError:
+            self.hint_manager.post_message(self.match_hint)
+            return False
+
+        validate = True
+
+        if self.min is not None and in_number < self.min:
+            self.hint_manager.post_message(self.match_hint)
+            validate = False
+
+        elif self.max is not None and in_number > self.max:
+            self.hint_manager.post_message(self.match_hint)
+            validate = False
+
+        return validate
+
+
 @inherit_kwargs
 class SingleChoice(ChoiceElement):
     """

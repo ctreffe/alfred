@@ -35,6 +35,7 @@ Types of changes
   once they have been submitted. This is basically a slightly more liberal
   version of a `ForwardOnlySection`. Take a look at the documentation 
   for more details!
+- Added `RangeInput` element, a slider for number entry.
 - Added `SubmittingBar`, the sibling of the already existing `SubmittingButtons`
 - Added `MatchEntry` as alias for `RegEntry` element
 - Added `EmailEntry` element. This is a `MatchEntry` element that offers

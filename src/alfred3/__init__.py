@@ -50,6 +50,7 @@ from .element.input import RegEntry
 from .element.input import EmailEntry
 from .element.input import PasswordEntry
 from .element.input import NumberEntry
+from .element.input import RangeInput
 from .element.input import SingleChoice
 from .element.input import MultipleChoice
 from .element.input import SingleChoiceList
