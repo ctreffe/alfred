@@ -695,6 +695,7 @@ class RangeInput(InputElement):
         display_input: bool = True,
         display_position: str = "top",
         align: str = "center",
+        display_locale: str = "en-GB",
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
@@ -706,12 +707,24 @@ class RangeInput(InputElement):
         self.min = min
         self.max = max
         self.display_position = display_position
+        self.display_locale = display_locale
         self.step = step
         self.display_input = display_input
+        self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
         if display_input:
-            js = self.js_template.render(name=self.name, display_position=display_position)
+            js = self.js_template.render(self.js_template_data)
             self.add_js(js)
 
+
+    @property
+    def js_template_data(self):
+        d = {}
+        d["name"] = self.name
+        d["display_position"] = self.display_position
+        d["display_locale"] = self.display_locale
+        d["offset_display_height"] = self.offset_display_height
+        return d
+    
     @property
     def template_data(self):
         d = super().template_data
