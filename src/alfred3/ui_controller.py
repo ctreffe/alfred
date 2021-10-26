@@ -441,6 +441,7 @@ class UserInterface:
         "bootstrap-4.5.3.min.css",
         "prism.css",
         "responsive.css",
+        "range_input.css"
     ]
 
     _js_files = [
