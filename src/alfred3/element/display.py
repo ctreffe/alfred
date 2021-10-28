@@ -149,11 +149,15 @@ class Text(Element):
     advanced formatting.
 
     Args:
-        text: Text to be displayed.
-        path: Filepath to a textfile (relative to the experiment
-            directory).
-        emojize: If True (default), emoji shortcodes in the text will
-            be converted to unicode (i.e. emojis will be displayed).
+        text (str, Path, optional): Text to be displayed.
+        path (str, Path, optional): Filepath to a textfile (relative to 
+            the experiment directory).
+        emojize (bool, optional): If *True* (default), emoji shortcodes in 
+            the text will be converted to unicode (i.e. emojis will be 
+            displayed).
+        render_markdown (bool, optional): If *True* (default), markdown
+            will be rendered to html.
+        
         {kwargs}
 
     Examples:
@@ -901,7 +905,7 @@ class Alert(Text):
             Values can be: *info* (default), *success*, *warning*, *primary*,
             *secondary*, *dark*, *light*, *danger*.
         dismiss: If *True*, AlertElement can be
-            closed by a click. If *False*, AlertElement cannot be closed. 
+            closed by a click. If *False*, AlertElement cannot be closed.
             Defaults to *False*
         {kwargs}
 
@@ -923,9 +927,7 @@ class Alert(Text):
 
     element_template = jinja_env.get_template("html/AlertElement.html.j2")
 
-    def __init__(
-        self, text: str = "", category: str = "info", dismiss: bool = False, **kwargs
-    ):
+    def __init__(self, text: str = "", category: str = "info", dismiss: bool = False, **kwargs):
         super().__init__(text=text, **kwargs)
         self.category = category
         self.dismiss = dismiss
@@ -1058,7 +1060,9 @@ class CountUp(Element):
     counter_js = jinja_env.get_template("js/countup.js.j2")
     element_template = jinja_env.get_template("html/TextElement.html.j2")
 
-    def __init__(self, end_after: int = -1, end_msg: str = "expired", start_time: float = 0, **kwargs):
+    def __init__(
+        self, end_after: int = -1, end_msg: str = "expired", start_time: float = 0, **kwargs
+    ):
         super().__init__(**kwargs)
 
         self.end_after = end_after
@@ -1067,7 +1071,12 @@ class CountUp(Element):
 
     def prepare_web_widget(self):
         self._js_code = []
-        js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg, start_time=self.start_time)
+        js = self.counter_js.render(
+            name=self.name,
+            end_after=self.end_after,
+            end_msg=self.end_msg,
+            start_time=self.start_time,
+        )
         self.add_js(js)
 
 
@@ -1084,14 +1093,14 @@ class CountDown(CountUp):
         end_msg (str): Text to be displayed in the countdown's place upon
             expiration.
         reset (bool): If *True*, the countdown will start anew every time
-            the page is reopened, reloaded, or refreshed. Defaults to 
+            the page is reopened, reloaded, or refreshed. Defaults to
             *False*, i.e. the countdown will continue where it left off.
         {kwargs}
 
     Notes:
         The CountDown element offers two alternative constructors:
-        :meth:`.tilltime` (construction from UNIX timestamp) and 
-        :meth:`.tilldate` (construction from date and 24h time 
+        :meth:`.tilltime` (construction from UNIX timestamp) and
+        :meth:`.tilldate` (construction from date and 24h time
         representation).
 
     Examples:
@@ -1148,7 +1157,7 @@ class CountDown(CountUp):
             t (int, float): Target-time in seconds since EPOCH.
             **kwargs: Further keyword arguments are passed on to the
                 ordinary constructor, see :class:`.CountDown`.
-        
+
         Examples:
             Countdown running until July 18th 2036, 13:20:00 is reached::
 
