@@ -17,7 +17,7 @@
 {% endif %}
 
   {% if collapse %}
-  <div id="{{ name }}-collapse" class="collapse {% if start_uncollapsed %}show{% endif %}" aria-labelledby="{{ name }}-header">
+  <div id="{{ name }}-collapse" class="collapse {% if not start_collapsed %}show{% endif %}" aria-labelledby="{{ name }}-header">
     
   {% endif %}
 

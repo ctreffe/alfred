@@ -1281,10 +1281,9 @@ class Card(Element):
         collapse (bool, optional): If *True*, the card header becomes a
             button that can be used to hide and show the card body.
             Defaults to *False*.
-        start_uncollapsed (bool, optional): If *True*, the card body will
-            start in uncollapsed mode. If *False*, it will start in 
-            collapsed mode. Only has an effect, if *collapse* is *True*.
-            Defaults to *False*.
+        start_collapsed (bool, optional): If *True*, the card body will
+            start in collapsed mode. Only has an effect, if *collapse* 
+            is *True*. Defaults to *True*.
         {kwargs}
     
     Examples:
@@ -1317,7 +1316,7 @@ class Card(Element):
         emojize: bool = True,
         render_markdown: bool = True,
         collapse: bool = False,
-        start_uncollapsed: bool = False,
+        start_collapsed: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1331,7 +1330,7 @@ class Card(Element):
         self.emojize = emojize
         self.render_markdown = render_markdown
         self.collapse = collapse
-        self.start_uncollapsed = start_uncollapsed
+        self.start_collapsed = start_collapsed
 
     def added_to_page(self, page):
         super().added_to_page(page)
@@ -1362,7 +1361,7 @@ class Card(Element):
         d["body"] = self.render_text(self.body)
         d["footer"] = self.render_text(self.footer)
         d["collapse"] = self.collapse
-        d["start_uncollapsed"] = self.start_uncollapsed
+        d["start_collapsed"] = self.start_collapsed
 
         return d
 
