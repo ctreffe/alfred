@@ -1,0 +1,31 @@
+<div class="card {{ css_class_element }} mb-3 Card-element-part" id="{{ name }}" style="{{ height }} {{ font_size }}">
+{% if header %}
+  <div class="card-header Card-element-part" id="{{ name }}-header">
+    {{ header | safe }}
+  </div>
+{% endif %}
+  <div class="card-body Card-element-part" id="{{ name }}-body">
+
+  {% if title %}
+    <h5 class="card-title Card-element-part" id="{{ name }}-title">
+    {{ title }}
+    </h5>  
+  {% endif %}
+
+  {% if subtitle %}
+      <h6 class="card-subtitle mb-2 text-muted Card-element-part">
+      {{ subtitle }}
+      </h6>
+  {% endif %}
+
+  {% if body %}
+    {{ body }}
+  {% endif %}
+
+  </div>
+  {% if footer %}
+    <div class="card-footer text-muted Card-element-part" id="{{ name }}-footer">
+        {{ footer }}
+    </div>
+  {% endif %}
+</div>

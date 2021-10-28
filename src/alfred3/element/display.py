@@ -1255,3 +1255,182 @@ class CountDown(CountUp):
             self.end_after = self.end_after_original - already_passed
 
         super().prepare_web_widget()
+
+
+@inherit_kwargs
+class Card(Element):
+    """
+    A card that can be used to display text or other elements.
+
+    Args:
+        header, title, subtitle, body, footer (str, Element): Strings
+            or elements to display in the respective parts of the card.
+        emojize: If True (default), emoji shortcodes in the text will
+            be converted to unicode (i.e. emojis will be displayed).
+        render_markdown (bool, optional): If *True* (default), markdown
+            will be rendered to html.
+        {kwargs}
+    
+    Examples:
+        Basic usage::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += Card(
+                        header="Card Header",
+                        title="Card title",
+                        subtitle="Card subtitle",
+                        body=al.Text("**This text** is placed in the body.", align="center"),
+                    )
+
+    """
+
+    element_template = jinja_env.get_template("html/Card.html.j2")
+
+    def __init__(
+        self,
+        header: Union[str, Element] = "",
+        title: Union[str, Element] = "",
+        subtitle: Union[str, Element] = "",
+        body: Union[str, Element] = "",
+        footer: Union[str, Element] = "",
+        emojize: bool = True,
+        render_markdown: bool = True,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+        self.header = header
+        self.title = title
+        self.subtitle = subtitle
+        self.body = body
+        self.footer = footer
+        self.path = None
+        self.emojize = emojize
+        self.render_markdown = render_markdown
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for part in ["header", "title", "subtitle", "body", "footer"]:
+            try:
+                element = getattr(self, "_" + part)
+                element.display_standalone = False
+                element.added_to_page(page)
+            except AttributeError:
+                pass
+    
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        for part in ["header", "title", "subtitle", "body", "footer"]:
+            try:
+                getattr(self, "_" + part).added_to_experiment(experiment)
+            except AttributeError:
+                pass
+
+    @property
+    def template_data(self):
+        d = super().template_data
+
+        d["header"] = self.render_text(self.header)
+        d["title"] = self.render_text(self.title)
+        d["subtitle"] = self.render_text(self.subtitle)
+        d["body"] = self.render_text(self.body)
+        d["footer"] = self.render_text(self.footer)
+
+        return d
+
+    @property
+    def body(self) -> str:
+        """str: Card body"""
+        try:
+            return self._body.web_widget
+        
+        except AttributeError:
+            return self._body
+    
+    @body.setter
+    def body(self, value: Union[str, Element]):
+        self._body = value
+        
+    def render_text(self, text: str) -> str:
+        """
+        Renders the markdown and emoji shortcodes in :attr:`.text`
+
+        Returns:
+            str: Text rendered to html code
+        """
+
+        if self.emojize:
+            text = emojize(text, use_aliases=True)
+        if self.render_markdown:
+            text = cmarkgfm.github_flavored_markdown_to_html(
+                text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+            )
+        return text
+    
+    @property
+    def title(self) -> str:
+        """
+        str: Card title.
+        """
+        try:
+            return self._title.web_widget
+        
+        except AttributeError:
+            return self._title
+    
+    @title.setter
+    def title(self, value: Union[str, Element]):
+        self._title = value
+    
+    @property
+    def subtitle(self) -> str:
+        """
+        str: Card subtitle.
+        """
+        try:
+            return self._subtitle.web_widget
+        
+        except AttributeError:
+            return self._subtitle
+    
+    @subtitle.setter
+    def subtitle(self, value: Union[str, Element]):
+        self._subtitle = value
+    
+    @property
+    def header(self) -> str:
+        """
+        str: Card header.
+        """
+        try:
+            return self._header.web_widget
+        
+        except AttributeError:
+            return self._header
+    
+    @header.setter
+    def header(self, value: Union[str, Element]):
+        self._header = value
+    
+    @property
+    def footer(self) -> str:
+        """
+        str: Card footer.
+        """
+        try:
+            return self._footer.web_widget
+        
+        except AttributeError:
+            return self._footer
+    
+    @footer.setter
+    def footer(self, value: Union[str, Element]):
+        self._footer = value
+
+    

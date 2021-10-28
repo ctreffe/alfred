@@ -42,6 +42,7 @@ from .element.display import ButtonLabels
 from .element.display import BarLabels
 from .element.display import CountUp
 from .element.display import CountDown
+from .element.display import Card
 
 from .element.input import TextEntry
 from .element.input import TextArea

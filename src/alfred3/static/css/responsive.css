@@ -26,6 +26,10 @@ div.btn-group.choice-button-group>label.btn.choice-button:last-child {
     margin-right: 0!important;
 }
 
+.Card-element-part p:last-child {
+    margin-bottom: 0;
+}
+
 /* make button group separate */
 div.btn-group.choice-button-group>label.btn.choice-button {
     margin-right: .25rem;
