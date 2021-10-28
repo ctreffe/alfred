@@ -1284,6 +1284,12 @@ class Card(Element):
         start_collapsed (bool, optional): If *True*, the card body will
             start in collapsed mode. Only has an effect, if *collapse* 
             is *True*. Defaults to *True*.
+        header_style, body_style, footer_style (str, optional): Can be
+            used to add css classes to the header, body, and footer of
+            the card. For example, *bg-success text-white* will turn
+            the background green and the text white. See 
+            https://getbootstrap.com/docs/4.5/utilities/colors/ for 
+            some possible coloring options.
         {kwargs}
     
     Examples:
@@ -1317,6 +1323,9 @@ class Card(Element):
         render_markdown: bool = True,
         collapse: bool = False,
         start_collapsed: bool = False,
+        header_style: str = "",
+        body_style: str = "",
+        footer_style: str = "",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1331,6 +1340,10 @@ class Card(Element):
         self.render_markdown = render_markdown
         self.collapse = collapse
         self.start_collapsed = start_collapsed
+
+        self.header_style = header_style
+        self.body_style = body_style
+        self.footer_style = footer_style
 
     def added_to_page(self, page):
         super().added_to_page(page)
@@ -1362,6 +1375,9 @@ class Card(Element):
         d["footer"] = self.render_text(self.footer)
         d["collapse"] = self.collapse
         d["start_collapsed"] = self.start_collapsed
+        d["header_style"] = self.header_style
+        d["body_style"] = self.body_style
+        d["footer_style"] = self.footer_style
 
         return d
 

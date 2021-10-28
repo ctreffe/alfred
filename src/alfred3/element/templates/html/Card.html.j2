@@ -1,8 +1,8 @@
 <div class="card {{ css_class_element }} mb-3 Card-element-part" id="{{ name }}" style="{{ height }} {{ font_size }}">
 {% if header %}
-  <div class="card-header Card-element-part" id="{{ name }}-header">
+  <div class="card-header Card-element-part {{ header_style }}" id="{{ name }}-header">
     {% if collapse %}
-    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#{{ name }}-collapse" aria-expanded="true" aria-controls="{{ name }}-collapse">
+    <button class="btn btn-link btn-block text-left {{ header_style }}" type="button" data-toggle="collapse" data-target="#{{ name }}-collapse" aria-expanded="true" aria-controls="{{ name }}-collapse">
     {% endif %}
     {% if collapse %}
     <div class="row">
@@ -21,7 +21,7 @@
     
   {% endif %}
 
-  <div class="card-body Card-element-part" id="{{ name }}-body">
+  <div class="card-body Card-element-part {{ body_style }}" id="{{ name }}-body">
 
   {% if title %}
     <h5 class="card-title Card-element-part" id="{{ name }}-title">
@@ -41,7 +41,7 @@
 
   </div>
   {% if footer %}
-    <div class="card-footer text-muted Card-element-part" id="{{ name }}-footer">
+    <div class="card-footer text-muted Card-element-part {{ footer_style }}" id="{{ name }}-footer">
         {{ footer }}
     </div>
   {% endif %}
