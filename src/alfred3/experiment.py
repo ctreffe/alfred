@@ -1699,7 +1699,10 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager._move(direction="forward")
+        try:
+            self.movement_manager._move(direction="forward")
+        except AbortMove:
+            self.log.debug(f"Movement from {self.current_page} in direction 'forward' was aborted.")
 
     def backward(self):
         """
@@ -1713,7 +1716,10 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager._move(direction="backward")
+        try:
+            self.movement_manager._move(direction="backward")
+        except AbortMove:
+            self.log.debug(f"Movement from {self.current_page} in direction 'backward' was aborted.")
 
     def jump(self, to: Union[str, int]):
         """
@@ -1732,7 +1738,10 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager._move(direction=f"jump>{to}")
+        try:
+            self.movement_manager._move(direction=f"jump>{to}")
+        except AbortMove:
+            self.log.debug(f"Jump from {self.current_page} to page with name '{to}' was aborted.")
 
     @property
     def values(self) -> dict:
