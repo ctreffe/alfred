@@ -42,7 +42,9 @@ Types of changes
   a good default validation for email inputs.
 - Added the elements `BackButton` and `ForwardButton`, which do as they say.
 - Added a `Card` element that can be used for displaying text and other
-  elements in bootstraps nice-looking cards.
+  elements in bootstraps nice-looking cards. The highlight of the card 
+  element is its possibility to turn the header into a button that hides
+  or shows the card body on click via the argument *collapse*.
 - Added the methods `Page.position_in_section` and `Section.position_in_section`.
   These are used to get the position of the current page or section inside
   its parent section, which can be useful if you create section or pages
