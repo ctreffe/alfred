@@ -21,11 +21,54 @@ from .core import Row
 from .core import Element
 from .misc import JavaScript
 from .input import SingleChoiceButtons
+from .input import SingleChoiceBar
 from .input import SingleChoiceList
 from .input import SelectPageList
 
 @inherit_kwargs
 class SubmittingButtons(SingleChoiceButtons):
+    """
+    SingleChoiceButtons that trigger submission of the current page
+    on click.
+
+    Args:
+        *choice_labels: Variable numbers of choice labels. See
+            :class:`.ChoiceElement` for details.
+        {kwargs}
+
+    Examples:
+        Using submitting buttons together with the
+        :class:`.HideNavigation` element::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+
+                    self += al.HideNavigation()
+                    self += al.SubmittingButtons("choice1", "choice2", name="b1")
+
+    """
+
+    js_template = jinja_env.get_template("js/submittingbuttons.js.j2")
+
+    def __init__(self, *choice_labels, **kwargs):
+        super().__init__(*choice_labels, **kwargs)
+    
+    def prepare_web_widget(self):
+        super().prepare_web_widget()
+
+        self._js_code = []
+        js = self.js_template.render(choices=self.choices)
+        self.add_js(js)
+
+
+@inherit_kwargs
+class SubmittingBar(SingleChoiceBar):
     """
     SingleChoiceButtons that trigger submission of the current page
     on click.
@@ -146,6 +189,9 @@ class JumpButtons(SingleChoiceButtons):
     def prepare_web_widget(self):
         
         super().prepare_web_widget()
+
+        if self.page.prefix_element_names and not self.page.has_been_shown:
+            self.targets = [self.page.name + "_" + target for target in self.targets]
 
         self._js_code = []
 
@@ -311,7 +357,7 @@ class JumpList(Row):
             save_data=save_data
         )
         btn = DynamicJumpButtons(
-            (label, select_name),
+            (label, select.name),
             name=btn_name,
             button_style=button_style,
             button_round_corners=button_round_corners,
@@ -333,7 +379,7 @@ class JumpList(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
-
+        
 
 @inherit_kwargs
 class Button(Element):
@@ -510,7 +556,7 @@ class Button(Element):
             raise ValueError(f"{followup} is an inappropriate value for 'followup'.")
 
         if self.followup == "custom" and not self.custom_js:
-            raise ValueError("If you set 'followup' to 'custom', you must specify custom Javascritp to run.")
+            raise ValueError("If you set 'followup' to 'custom', you must specify custom Javascript to run.")
 
         self.button_style = button_style
         self.button_round_corners = button_round_corners
@@ -526,10 +572,12 @@ class Button(Element):
         d["button_style"] = self.button_style
         return d
     
-    def prepare_web_widget(self):
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
         self.url = self.exp.ui.add_callable(self.func)
 
-        # Javascript part
+    def prepare_web_widget(self):
+        
         self._js_code = []
         d = {}
         d["url"] = self.url
@@ -547,4 +595,96 @@ class Button(Element):
             self._css_code = []
             css = f"#{ self.name } {{border-radius: 1rem;}}"
             self.add_css(css)
+
+
+@inherit_kwargs(exclude=["func", "submit_first", "custom_js"])
+class BackButton(Button):
+    """
+    A backward button.
+
+    Args:
+        text (str, optional): Button text. If *None* (default), alfred3
+            uses the default text for backward buttons from config.conf.
+        {kwargs}
     
+    Examples:
+        Simple usage::
+
+            import alfred3 as al
+
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+
+                def on_exp_access(self):
+                    self += al.BackButton()
+    
+    """
+    
+
+    def __init__(self, 
+        text: str = None, 
+        button_style: str = "btn-dark",
+        button_round_corners: bool = False, 
+        button_block: bool = False,
+        **kwargs):
+        
+        for arg in ["func", "submit_first", "custom_js"]:
+            val = kwargs.pop(arg, None)
+            if val is not None:
+                raise TypeError(f"{type(self).__name__} got an unexpected keyword argument '{arg}'")
+
+        super().__init__(text=text, button_style=button_style, button_round_corners=button_round_corners, button_block=button_block, followup= "backward", func=lambda: None, **kwargs)
+    
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+
+        if self.text is None:
+            self.text = self.exp.config.get("navigation", "backward")
+
+
+@inherit_kwargs(exclude=["func", "submit_first", "custom_js"])
+class ForwardButton(Button):
+    """
+    A forward button.
+
+    Args:
+        text (str, optional): Button text. If *None* (default), alfred3
+            uses the default text for forward buttons from config.conf.
+        {kwargs}
+    
+    Examples:
+        Simple usage::
+
+            import alfred3 as al
+
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+
+                def on_exp_access(self):
+                    self += al.ForwardButton()
+    
+    """
+
+    def __init__(self, 
+        text: str = None, 
+        button_style: str = "btn-dark",
+        button_round_corners: bool = False, 
+        button_block: bool = False,
+        **kwargs):
+        
+        for arg in ["func", "submit_first", "custom_js"]:
+            val = kwargs.pop(arg, None)
+            if val is not None:
+                raise TypeError(f"{type(self).__name__} got an unexpected keyword argument '{arg}'")
+
+        super().__init__(text=text, button_style=button_style, button_round_corners=button_round_corners, button_block=button_block, followup= "forward", func=lambda: None, **kwargs)
+    
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+
+        if self.text is None:
+            self.text = self.exp.config.get("navigation", "forward")

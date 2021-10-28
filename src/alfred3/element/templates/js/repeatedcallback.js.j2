@@ -9,7 +9,9 @@ setInterval(function() {
 {% if submit_first %}
     var data = $("#form").serializeArray();
     $.post("{{ set_data_url }}", data)
-    .fail(alertOnFail);
+    //.fail(alertOnFail);
+    //.fail(function(){console.log("FAIL")})
+    //.done(function(){console.log("SUCCESS")})
 {% endif %}
 
 $.get( "{{ url }}", function(data) {

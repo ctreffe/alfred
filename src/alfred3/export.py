@@ -57,7 +57,7 @@ class Exporter:
     1. Check if a file of the designated name exists in the designated
        directory.
     2. If yes, append the data from the current session to this file.
-    3. If not, scan all available .json files and produce a new, 
+    3. If not, scan all available .json files and produce a new,
        complete csv file.
     """
 
@@ -87,7 +87,7 @@ class Exporter:
             self.export_unlinked()
         elif data_type == DataManager.EXP_DATA:
             self.export_exp_data()
-    
+
     def _load(self, path: Union[str, Path]) -> list:
         """
         Returns a list of dictonaries with session data, read from an
@@ -110,7 +110,7 @@ class Exporter:
             reader = csv.DictReader(csvfile, delimiter=delimiter)
             existing_data = [dict(row) for row in reader]
         return existing_data
-    
+
     def _write(self, data: Iterator[dict], fieldnames: List[str], path: Path):
         """
         Writes a list of session data dictionaries to a csv file.
@@ -131,7 +131,7 @@ class Exporter:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=delimiter)
             writer.writeheader()
             writer.writerows(data)
-    
+
     def export_exp_data(self):
         csv_name = "exp_data.csv"
         path = self.csv_dir / csv_name
@@ -140,7 +140,7 @@ class Exporter:
             alldata = self._load(path)
             sessiondata = self.exp.data_manager.flat_session_data
             alldata.append(sessiondata)
-            
+
             # get fieldnames from list of flat datasets
             metadata = list(self.exp.data_manager.metadata.keys())
             client_info = list(self.exp.data_manager.client_data.keys())
@@ -152,12 +152,16 @@ class Exporter:
                             element_names.append(colname)
             fieldnames = metadata + client_info + sorted(element_names)
         else:
-            data = list(DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir))
+            data = list(
+                DataManager.iterate_local_data(
+                    data_type=DataManager.EXP_DATA, directory=self.save_dir
+                )
+            )
             fieldnames = DataManager.extract_ordered_fieldnames(data)
             alldata = [DataManager.flatten(d) for d in data]
         self._write(alldata, fieldnames, path)
         self.exp.log.info(f"Exported main experiment data to {path.parent.name}/{path.name}.")
-    
+
     def export_move_history(self):
         csv_name = "move_history.csv"
         data = self.exp.data_manager.move_history
@@ -169,11 +173,13 @@ class Exporter:
             history += data
             fieldnames = DataManager.extract_fieldnames(history)
         else:
-            existing_data = DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.save_dir)
+            existing_data = DataManager.iterate_local_data(
+                data_type=DataManager.EXP_DATA, directory=self.save_dir
+            )
             history = [d["exp_move_history"] for d in existing_data]
             fieldnames = DataManager.extract_fieldnames(chain(*history))
             history = chain(*history)
-        
+
         self._write(history, fieldnames, path)
         self.exp.log.info(f"Exported movement history to {path.parent.name}/{path.name}.")
 
@@ -195,10 +201,14 @@ class Exporter:
             data = ul_data
         else:
             unlinked_dir = self.exp.config.get("local_saving_agent_unlinked", "path")
-            existing_data = list(DataManager.iterate_local_data(data_type=DataManager.UNLINKED_DATA, directory=unlinked_dir))
+            existing_data = list(
+                DataManager.iterate_local_data(
+                    data_type=DataManager.UNLINKED_DATA, directory=unlinked_dir
+                )
+            )
             data = [DataManager.flatten(d) for d in existing_data]
             fieldnames = DataManager.extract_fieldnames(data)
-        
+
         if self.exp.config.getboolean("local_saving_agent_unlinked", "decrypt_csv_export"):
             if self.exp.secrets.get("encryption", "key"):
                 key = self.exp.secrets.get("encryption", "key").encode()
@@ -219,7 +229,22 @@ class Exporter:
             with open(path, "r", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=self.delimiter)
                 existing_codebook = {dict(row)["name"]: dict(row) for row in reader}
-            
+
+            for name, cb in existing_codebook.items():
+                for lab in ["label_top", "label_left", "label_right", "label_bottom", "placeholder"]:
+                    oldlab = cb.get(lab, "")
+                    new = data.get(name, "")
+                    newlab = new.get(lab, "") if new else ""
+                    if not new or (not oldlab == newlab):
+                        self.exp.log.warning(
+                            (
+                                f"{lab} of '{name}' has changed from '{oldlab}' to '{newlab}'. "
+                                "This introduces inconsistencies into the codebook. "
+                                "Do you have dynamic labels that do not match their elements' names? "
+                                "To change a label, increase the experiment version."
+                            )
+                        )
+
             existing_codebook.update(data)
             data = existing_codebook
 
@@ -227,6 +252,7 @@ class Exporter:
         fieldnames = DataManager.sort_codebook_fieldnames(fieldnames)
         self._write(data.values(), fieldnames, path)
         self.exp.log.info(f"Exported codebook to {path.parent.name}/{path.name}.")
+
 
 def find_unique_name(directory, filename, exp_version=None, index: int = 1):
     filename = Path(filename)
@@ -245,12 +271,14 @@ def find_unique_name(directory, filename, exp_version=None, index: int = 1):
         i = index + 1
         return find_unique_name(directory=directory, filename=filename, index=i)
 
+
 def find_data_directory(expdir, saving_agent):
     config = ExperimentConfig(expdir=expdir)
     path = Path(config.get(saving_agent, "path")).resolve()
     if not path.is_absolute():
         path = expdir.resolve() / path
     return path
+
 
 def find_csv_dir(expdir):
     config = ExperimentConfig(expdir=expdir)
@@ -259,9 +287,8 @@ def find_csv_dir(expdir):
         path = expdir.resolve() / path
     return path
 
+
 def find_csv_name(expdir, data_type):
     directory = find_csv_dir(expdir)
     filename = data_type + ".csv"
     return find_unique_name(directory, filename)
-
-

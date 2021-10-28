@@ -1,0 +1,52 @@
+<div class="card {{ css_class_element }} mb-3 Card-element-part" id="{{ name }}" style="{{ height }} {{ font_size }}">
+{% if header %}
+  <div class="card-header Card-element-part {{ header_style }}" id="{{ name }}-header">
+    {% if collapse %}
+    <button class="btn btn-link btn-block text-left {{ header_style }}" type="button" data-toggle="collapse" data-target="#{{ name }}-collapse" aria-expanded="true" aria-controls="{{ name }}-collapse">
+    {% endif %}
+    {% if collapse %}
+    <div class="row">
+    <div class="col-1" style="margin-right: -2.5rem;"><i class="fas fa-chevron-down"></i></div>
+    <div class="col">{{ header | safe }}</div>
+    </div>
+    {% else %}
+    {{ header | safe }}
+    {% endif %}
+  {% if collapse %}</button>{% endif %}
+  </div>
+{% endif %}
+
+  {% if collapse %}
+  <div id="{{ name }}-collapse" class="collapse {% if not start_collapsed %}show{% endif %}" aria-labelledby="{{ name }}-header">
+    
+  {% endif %}
+
+  <div class="card-body Card-element-part {{ body_style }}" id="{{ name }}-body">
+
+  {% if title %}
+    <h5 class="card-title Card-element-part" id="{{ name }}-title">
+    {{ title }}
+    </h5>  
+  {% endif %}
+
+  {% if subtitle %}
+      <h6 class="card-subtitle mb-2 text-muted Card-element-part">
+      {{ subtitle }}
+      </h6>
+  {% endif %}
+
+  {% if body %}
+    {{ body }}
+  {% endif %}
+
+  </div>
+  {% if footer %}
+    <div class="card-footer text-muted Card-element-part {{ footer_style }}" id="{{ name }}-footer">
+        {{ footer }}
+    </div>
+  {% endif %}
+
+  {% if collapse %}
+    </div>
+  {% endif %}
+</div>

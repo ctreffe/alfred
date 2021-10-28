@@ -304,9 +304,9 @@ class Value(InputElement):
 
     """
 
-    def __init__(self, value: Union[str, int, float], name: str):
+    def __init__(self, value: Union[str, int, float], name: str, description: str = ""):
         """Constructor method."""
-        super().__init__(name=name)
+        super().__init__(name=name, description=description)
 
         #: The value that you want to save.
         self.input: Union[str, int, float] = value

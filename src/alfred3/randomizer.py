@@ -97,6 +97,11 @@ class ListRandomizer(SessionQuota):
     an information page for participants. This
     behavior can be customized (see :meth:`.get_condition`).
 
+    The ListRandomizer will not count experiment sessions that have
+    expired due to being inactive for a long time. You can control
+    this timeout via :attr:`.ExperimentSession.session_timeout`.
+
+
     .. warning:: Be mindful of the argument *respect_version*! With the
         default setting (True), randomization starts from scratch for
         every experiment version. If you set it to False, you will
@@ -281,6 +286,8 @@ class ListRandomizer(SessionQuota):
         if mode in ["strict", "inclusive"]:
             self.exp.log.warning(("Argument 'mode' is deprecated. Please use 'inclusive=True' or 'inclusive=False'  "f"instead. Using 'mode={mode}' for now for compatibility."))
             self.inclusive = mode == "inclusive"
+        
+        self.exp.append_plugin_data_query(self._plugin_data_query)
 
     @classmethod
     def balanced(cls, *conditions, n: int, **kwargs):
@@ -414,6 +421,18 @@ class ListRandomizer(SessionQuota):
 
         return cls(*conditions, **kwargs)
 
+    @property
+    def _plugin_data_query(self):
+        f = {"exp_id": self.exp.exp_id, "type": self.DATA_TYPE, "name": self.name}
+
+        q = {}
+        q["title"] = "Randomizer Data"
+        q["type"] = self.DATA_TYPE
+        q["query"] = {"filter": f}
+        q["encrypted"] = False
+
+        return q
+    
     @property
     def nslots(self) -> int:
         if not self._nslots:

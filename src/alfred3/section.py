@@ -70,6 +70,9 @@ class Section(ExpMember):
     #: section.
     allow_jumpto: bool = True
 
+    #: If *True*, pages in this section will be closed on leaving
+    close_pages_on_leave: bool = False
+
     #: If True, the members of this section will be randomized every
     #: time the section is entered.
     shuffle: bool = False
@@ -86,15 +89,14 @@ class Section(ExpMember):
 
         if shuffle is not None:
             self.shuffle = shuffle
+        
+        self._catch_page_hooks()
 
     def __contains__(self, member):
         try:
             return member.name in self.all_members or member.name in self.all_elements
         except AttributeError:
             return member in self.all_members or member in self.all_elements
-
-    def __repr__(self):
-        return f"Section(class='{type(self).__name__}', name='{self.name}')"
 
     def __iadd__(self, other):
         self.append(other)
@@ -139,7 +141,7 @@ class Section(ExpMember):
 
         members = list(self.members.items())
         shuffle(members)
-        self.members = dict(members)
+        self._members = dict(members)
 
     @property
     def members(self) -> dict:
@@ -230,6 +232,26 @@ class Section(ExpMember):
         """
         try:
             return list(self.members.values())[0]
+        except IndexError:
+            return None
+    
+    @property
+    def first_page(self):
+        """
+        Returns the first page inside the current section.
+        """
+        try:
+            return list(self.all_pages.values())[0]
+        except IndexError:
+            return None
+    
+    @property
+    def last_page(self):
+        """
+        Returns the last page inside the current section.
+        """
+        try:
+            return list(self.all_pages.values())[-1]
         except IndexError:
             return None
 
@@ -438,6 +460,18 @@ class Section(ExpMember):
         Executed *once*, when the :class:`.ExperimentSession` becomes
         available to the section.
 
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
+
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
@@ -449,6 +483,18 @@ class Section(ExpMember):
         """
         Executed *every time* this section is entered.
 
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
+
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
@@ -458,6 +504,18 @@ class Section(ExpMember):
     def on_leave(self):
         """
         Executed *every time* this section is left.
+
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
@@ -474,6 +532,18 @@ class Section(ExpMember):
         the parent section becomes the primary current section again: it
         resumes its status.
 
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
+
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
             of available hooks.
@@ -483,6 +553,18 @@ class Section(ExpMember):
     def on_hand_over(self):
         """
         Executed *every time* a direct subsection of this section is entered.
+
+        .. warning:: We are currently questioning the four section hooks *on_enter*,
+            *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+            to accomplish with these hooks can be done in page hooks. The section
+            versions have some caveats that make them a bit tougher
+            to use correctly. So, for the meantime, please avoid these hooks and
+            use page hooks instead. The attributes :attr:`.Section.first_page`
+            and :attr:`.Section.last_page` may be useful for you in this regard.
+
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+            at some point decide to introduce an alternative name for it in order
+            to avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
             See "How to use hooks" for a how to on using hooks and an overview
@@ -508,10 +590,14 @@ class Section(ExpMember):
     def _leave(self):
         self.log.debug(f"Leaving {self}.")
         self.on_leave()
-
-        self.validate_on_leave()
-        for page in self.pages.values():
-            page.close()
+        
+        try:
+            self.validate_on_leave()
+        except ValidationError:
+            raise AbortMove
+        if self.close_pages_on_leave:
+            for page in self.pages.values():
+                page.close()
 
         if self is self.parent.last_member:
             self.parent._leave()
@@ -577,8 +663,6 @@ class Section(ExpMember):
         elif direction.startswith("jump"):
             self.validate_on_jump()
         
-
-
     def validate_on_leave(self):
         """
         Validates pages and their input elements within the section.
@@ -672,6 +756,41 @@ class Section(ExpMember):
         """
         self.validate_on_move()
 
+    def _catch_page_hooks(self):
+        """
+        Raises errors, if users define page hooks on a section.
+        """
+        
+        explanation = " This does not work. Remove the method to continue."
+
+        try:
+            self.on_first_show()
+            msg = f"You tried to use the page-only hook method 'on_first_show' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
+        try:
+            self.on_each_show()
+            msg = f"You tried to use the page-only hook method 'on_each_show' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
+        try:
+            self.on_each_hide()
+            msg = f"You tried to use the page-only hook method 'on_each_hide' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
+        try:
+            self.on_first_hide()
+            msg = f"You tried to use the page-only hook method 'on_first_hide' on the section {self}."
+            raise AlfredError(msg + explanation)
+        except AttributeError:
+            pass
+
 
 @inherit_kwargs
 class RevisitSection(Section):
@@ -719,6 +838,61 @@ class RevisitSection(Section):
     def _jumpfrom(self):
         super()._jumpfrom()
         self.exp.movement_manager.current_page.close()
+
+
+@inherit_kwargs
+class HideOnForwardSection(Section):
+    """
+    A section that hides pages once they have been submitted.
+
+    Args:
+        {kwargs}
+    
+    This section enables the following behaviors:
+
+    1. Once a participant has entered their data on a page and submitted 
+       it by pressing "forward", the participant cannot revisit that
+       page – it is hidden.
+    2. The participant can, however, go back to pages in previous sections.
+       For instance, they may revisit the instructions page. A press on
+       "forward" will then ignore the hidden pages and take the participant
+       back to the most recent page.
+
+    .. versionadded:: 2.3.0
+
+    Examples:
+        
+        You can test the section's behavior with this example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            main = al.Section(name="main")
+            main += al.Page(name="first")
+
+            hide = al.HideOnForwardSection(name="hide")
+            hide += al.Page(name="second")
+            hide += al.Page(name="thirs")
+
+            exp += main
+            exp += hide
+
+    """
+
+    allow_forward: bool = True
+    allow_backward: bool = True
+    allow_jumpfrom: bool = True
+    allow_jumpto: bool = True
+
+    def _forward(self):
+        super()._forward()
+        self.exp.movement_manager.current_page.close()
+        self.exp.movement_manager.current_page.should_be_shown = False
+
+    def _jumpfrom(self):
+        super()._jumpfrom()
+        self.exp.movement_manager.current_page.close()
+        self.exp.movement_manager.current_page.should_be_shown = False
 
 
 @inherit_kwargs
@@ -824,27 +998,47 @@ class _RootSection(Section):
 
     @property
     def all_page_names(self):
-        """Improvised caching mechanism for the list of all page names."""
+        """
+        Improvised caching mechanism for the list of all page names.
+        
+        Danger: The caching is not compatible with sections that shuffle their members.
+        The shuffling does not affect this list, which is unexpected
+        behavior in most cases.
 
-        if not self._all_page_names:
-            self._all_page_names = list(self.all_pages.keys())
+        For this reason, the caching is currently deactivated.
+        """
 
-        elif not len(self._all_page_names) == len(self.all_pages):
-            self._all_page_names = list(self.all_pages.keys())
+        return list(self.all_pages.keys())
 
-        return self._all_page_names
+        # if not self._all_page_names:
+        #     self._all_page_names = list(self.all_pages.keys())
+
+        # elif not len(self._all_page_names) == len(self.all_pages):
+        #     self._all_page_names = list(self.all_pages.keys())
+
+        # return self._all_page_names
 
     @property
     def all_pages_list(self):
-        """Improvised caching mechanism for the list of all pages."""
+        """
+        Improvised caching mechanism for the list of all pages.
 
-        if not self._all_pages_list:
-            self._all_pages_list = list(self.all_pages.values())
+        Danger: The caching is not compatible with sections that shuffle their members.
+        The shuffling does not affect this list, which is unexpected
+        behavior in most cases.
 
-        elif not len(self._all_pages_list) == len(self.all_pages):
-            self._all_pages_list = list(self.all_pages.values())
+        For this reason, the caching is currently deactivated.
+        """
 
-        return self._all_pages_list
+        return list(self.all_pages.values())
+        
+        # if not self._all_pages_list:
+        #     self._all_pages_list = list(self.all_pages.values())
+
+        # elif not len(self._all_pages_list) == len(self.all_pages):
+        #     self._all_pages_list = list(self.all_pages.values())
+
+        # return self._all_pages_list
 
     @property
     def final_page(self):

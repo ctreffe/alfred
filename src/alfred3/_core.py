@@ -432,4 +432,21 @@ class ExpMember:
         part that is the same for all members.
         """
         return self.tree.replace("_root._content.", "")
+    
+    def position_in_section(self) -> int:
+        """
+        Returns the position of this page or section inside its parent 
+        section, starting at 1.
+
+        .. versionadded:: 2.3.0
+        """
+        members = [m.name for m in self.section.members.values()]
+        return members.index(self.name) + 1
+    
+
+    def __str__(self):
+        return f"{type(self).__name__}(name='{self.name}')"
+
+    def __repr__(self):
+        return self.__str__()
 

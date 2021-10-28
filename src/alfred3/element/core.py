@@ -617,7 +617,7 @@ class Element:
         from .. import page as pg
 
         if not isinstance(page, pg._PageCore):
-            raise TypeError()
+            raise TypeError(f"{page} is not a Page.")
 
         self.page = page
         if self.name is None:
@@ -1329,12 +1329,12 @@ class Row(Element):
             if self.elements_full_width:
                 element.width = "full"
 
-    def _prepare_web_widget(self):
+    # def _prepare_web_widget(self):
 
-        for element in self.elements:
-            element.prepare_web_widget()
+    #     for element in self.elements:
+    #         element.prepare_web_widget()
 
-        super()._prepare_web_widget()
+    #     super()._prepare_web_widget()
 
     @property
     def _cols(self) -> Iterator:
@@ -2169,6 +2169,8 @@ class ChoiceElement(InputElement, ABC):
     def codebook_data(self):
 
         d = super().codebook_data
+
+        d["n_choices"] = len(self.choice_labels)
 
         for i, lab in enumerate(self.choice_labels, start=1):
             try:

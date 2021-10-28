@@ -413,9 +413,6 @@ class _PageCore(ExpMember):
         data = self.experiment.data_manager.session_data
         self.exp.data_saver.main.save_with_all_agents(data=data, level=level, sync=sync)
 
-    def __repr__(self):
-        return f"Page(class='{type(self).__name__}', name='{self.name}')"
-
     def prepare_web_widget(self):
         """
         Hook for computations for preparing a page for display.
@@ -696,6 +693,9 @@ class _CoreCompositePage(_PageCore):
             float: Duration of a visit in seconds.
         
         """
+
+        if not self.has_been_shown:
+            return 0
 
         if len(self.show_times) > len(self.hide_times):
             now = time.time()
@@ -1286,7 +1286,7 @@ class AutoClosePage(TimeoutPage):
 @inherit_kwargs
 class NoDataPage(Page):
     """
-    A page that does not save any data.
+    A page that does not collect any data.
 
     Args:
         {kwargs}
@@ -1299,7 +1299,23 @@ class NoDataPage(Page):
     
     See Also:
         See :class:`.NoSavingPage` for a page that does not trigger a
-        saving event.
+        saving event, but still collects data.
+    
+    Examples:
+    
+        A simple NoDataPage::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.meber
+            class DemoPage1(al.NoDataPage):
+                title = "My demo page"
+
+                def on_exp_access(self):
+                    self += al.TextEntry(placeholder="Enter something", name="el1")
+                    self += al.Alert(text="Note: input to this element WILL NOT BE SAVED!", category="danger")
+
     """
 
     data = {}
@@ -1324,6 +1340,12 @@ class NoSavingPage(Page):
         experiment. To prevent this, you can switch the option 
         'save_data' in section 'data' of config.conf to 'false'.
 
+    .. warning:: Note that a NoSavingPage does not trigger a saving 
+        event, but it does collect data! If a later page triggers a 
+        saving event, data from the NoSavingPage will be saved to the 
+        experiment data! To prevent this behavior, use a :class:`.NoDataPage`
+        instead of NoSavingPage.
+
     See Also:
         See :class:`.NoDataPage` for a page that does not collect any
         data.
@@ -1334,46 +1356,36 @@ class NoSavingPage(Page):
 
             import alfred3 as al
             exp = al.Experiment()
-            exp += al.NoSavingPage(name="demo")
+
+            @exp.meber
+            class DemoPage1(al.NoSavingPage):
+                title = "My demo page"
+
+                def on_exp_access(self):
+                    self += al.TextEntry(placeholder="Enter something", name="el1")
+            
+
+            @exp.member
+            class DemoPage2(al.Page):
+                title = "My second demo page"
+
+                def on_first_show(self):
+                    user_input = self.exp.values.get("el1")
+                    self += al.Text(text=f"You input on the previous page: {{user_input}}")
+
+                    self += al.Text(text="Note that a 'NoSavingPage' does not trigger a saving event, but it does collect data! If a later page triggers a saving event, data from the 'NoSavingPage' will be saved to the experiment data! To prevent this behavior, use a 'NoDataPage' instead of 'NoSavingPage'.")
+
 
         Example 2, a NoSavingPage that also does not collect any data::
 
             import alfred3 as al
             exp = al.Experiment()
 
+            @exp.member
             class NoDataNoSavingPage(al.NoSavingPage):
 
                 data = {{}}
             
-            exp += NoDataNoSavingPage(name="demo")
-        
-        Example 3, a more elaborate example. Here, we create an 
-        experiment with an "admin" mode, triggered by an url parameter,
-        in which no data will be saved.
-        Note that, if we use this method, we do not even need to use
-        a NoSavingPage::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.setup
-            def setup(exp):
-                admin = exp.urlargs.get("admin", False)
-                if admin == "true":
-                    exp.config.read_dict({{"data": {{"save_data": "false"}}}})
-                    exp.log.info("Admin mode triggered. No data will be saved")
-
-            exp += al.Page(name="demo")
-        
-        If this experiment is started with the suffix ``?admin=true`` to
-        the starting url, no data will be saved. In case of a locally 
-        running experiment, the url would be 
-        http://localhost:5000/start?admin=true
-
-        .. note:: Note that the experiment will most likely crash, if
-            the /start route gets called twice for any reason in a local
-            experiment.
-
     """
 
     def save_data(self, *args, **kwargs):
@@ -1639,10 +1651,32 @@ class _NothingHerePage(Page):
         self += elm.misc.WebExitEnabler()
 
 
+@inherit_kwargs
 class PasswordPage(WidePage):
-    password = None
+    """
+    A wide page that requires the input of a password for continuation.
+    
+    Args:
+        password: A string, or a tuple of strings. Those are the accepted
+            passwords.
+        {kwargs}
+    
+    Examples:
 
-    def __init__(self, password: t.Union[str, t.List[str]], **kwargs):
+        A minimal experiment with a password page::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.PasswordPage):
+                password = "test"
+
+    """
+    password = None
+    title = "Password required"
+
+    def __init__(self, password: t.Union[str, t.Tuple[str]] = None, **kwargs):
         super().__init__(**kwargs)
         if password is not None:
             self.password = password
@@ -1658,14 +1692,14 @@ class PasswordPage(WidePage):
         self += elm.display.VerticalSpace("20px")
 
         # use single password or multiple password element depending on input
-        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center")
+        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center", force_input=True)
         if isinstance(self.password, str):
             self += elm.input.PasswordEntry(password=self.password, **pwargs)
         else:
             self += elm.input.MultiplePasswordEntry(passwords=self.password, **pwargs)
 
         self += elm.action.SubmittingButtons(
-            "Enter", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
+            "Submit", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
         )
 
         # enables submit via enter-press for password field

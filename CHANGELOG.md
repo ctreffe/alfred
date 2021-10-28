@@ -26,6 +26,90 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.3.0 [unreleased]
+
+### Added v2.3.0
+
+- We are excited to present the new section class `HideOnForwardSection`: 
+  A section that hides pages 
+  once they have been submitted. This is basically a slightly more liberal
+  version of a `ForwardOnlySection`. Take a look at the documentation 
+  for more details!
+- Added `RangeInput` element, a slider for number entry.
+- Added `SubmittingBar`, the sibling of the already existing `SubmittingButtons`
+- Added `MatchEntry` as alias for `RegEntry` element
+- Added `EmailEntry` element. This is a `MatchEntry` element that offers
+  a good default validation for email inputs.
+- Added the elements `BackButton` and `ForwardButton`, which do as they say.
+- Added a `Card` element that can be used for displaying text and other
+  elements in bootstraps nice-looking cards. The highlight of the card 
+  element is its possibility to turn the header into a button that hides
+  or shows the card body on click via the argument *collapse*.
+- Added the methods `Page.position_in_section` and `Section.position_in_section`.
+  These are used to get the position of the current page or section inside
+  its parent section, which can be useful if you create section or pages
+  in loops.
+- Added the prefix "sid-" to session IDs.
+- Added the possibility to download the randomizer's data in Mortimer (#112).
+- alfred3 now saves the length of the session timeout to the experiment 
+  data (#113)
+- The codebook now includes the number of choices for all choice elements
+  (#114)
+- On codebook export, alfred3 will check if the two newest sessions contain
+  identical element labels. If not, alfred3 will log a warning. This can
+  help users to discover unfortunate element or page randomization setups.
+- Added a test mode (#90). If you start an experiment with the url parameter
+  `?test=true`, the experiment starts in test mode. The test mode's only
+  effect is that it prefixes session IDs of test sessions with "test-".
+  Test mode is active in debug mode aswell.
+    + **Keep in mind** that a test session will take up a slot in list
+      randomization just as any other session. You have to use experiment 
+      version numbers to manage randomization slots. 
+- Added the possibility to start the "debug" mode with the url parameter
+  `?debug=true`. Debug mode is a "fancy test mode" - session IDs created 
+  in debug mode will be prefixed with "test-".
+- Added the parameter `test` to `ExperimentRunner.auto_run` and, subsequently,
+  to `Experiment.run`
+
+To start an experiment in test mode locally, you can use this parameter 
+in the ``if __name__ == "__main__"`` block:
+
+```python
+import alfred3 as al
+exp = al.Experiment()
+exp += al.Page(name="demo")
+
+if __name__ == "__main__":
+    exp.run(test=True)
+```
+
+### Changed v2.3.0
+
+- Changed the default design. The top bar is now white instead of red.
+- Sections will now immediately raise an error, if you mistakenly define
+  a page-only hook like `on_first_show` or `on_first_hide` on a section,
+  which can be a common but very hard-to-debug programming error.
+- The `NumberEntry` element now returns its value as a `float`. Previously,
+  the value was returned as a string, which was unexpected behavior in 
+  most cases.
+- From now on, sections do not close all of their pages by default on leaving.
+  Instead, you can override the attribute `close_pages_on_leave`. By setting
+  it to *True*, a section will close all its pages when it is left.
+- Minimal finetuning of the progress bar: It can now be set to zero progress.
+
+
+### Fixed v2.3.0
+
+- Some updates to the documentation
+- Fixed the option "logo_text" in the section "layout" in `config.conf`
+- Fixed the "shuffle" argument of Sections. Previously, it did not
+  successfully lead to randomization of the pages and subsections in a 
+  section. It affects only first-level subsections, i.e. the order of 
+  subsections is randomized, but the order of pages inside those 
+  subsections is not affected.
+- Fixed the defaults for SingleChoice element and its children that are
+  used in debug mode (#125).
+
 ## alfred3 v2.2.2 (Released 2021-10-14)
 
 The last update (v2.2.1) did not contain the intended changes. This update
@@ -36,6 +120,7 @@ fixes this issue.
 - We temporarily deactivated the `MultipleChoiceList` element, because
   we have to sort out some issues with it. It has seen no use so far, so
   the deactivation should not be a problem.
+
 
 ### Fixed v2.2.2
 

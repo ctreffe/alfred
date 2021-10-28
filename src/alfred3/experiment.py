@@ -293,8 +293,8 @@ class Experiment:
 
                 @exp.member(of_section="main")
                 class HelloWorld(al.Page):
-                    name = "hello_world"
                     title = "Hello, World!"
+
                     def on_exp_access(self):
                         self += al.Text("This is a 'hello, world!' Page.")
 
@@ -427,7 +427,7 @@ class Experiment:
 
         """
         
-        if urlargs.get("admin") in ["true", "True"]:
+        if urlargs.get("admin") in ["true", "True", "TRUE"]:
             
             self.admin.setup_functions += self.setup_functions
             self.admin.final_page = _NothingHerePage(name="__") # name gets changed automatically by setter
@@ -436,6 +436,9 @@ class Experiment:
             )
             return exp_session
         
+        if urlargs.get("debug") in ["true", "True", "TRUE"]:
+            config.read_dict({"general": {"debug": True}})
+
         exp_session = ExperimentSession(
             session_id=session_id, config=config, secrets=secrets, **urlargs
         )
@@ -515,7 +518,16 @@ class Experiment:
             path: Path to the experiment directory, containing script.py.
                 If None, alfred looks for a script.py in the directory
                 from which this method is executed.
-            **kwargs: Keyword arguments passed on to :class:`alfred3.run.ExperimentRunner.auto_run`
+            open_browser: Indicates, whether alfred should try to open
+                a new browser window automatically.
+            debug: Indicates, whether the underlying flask app should be
+                run in debug mode. Defaults to None, which leads to
+                taking the value from option 'open_browser' in section
+                'general' of config.conf.
+            test: If true, the experiment is started in test mode.
+
+        .. versionchanged:: 2.3.0
+            Added parameter *test*.
 
         Notes:
             .. warning::
@@ -542,6 +554,25 @@ class Experiment:
 
                 if __name__ == "__main__":
                     exp.run()
+            
+            To start an experiment in test mode::
+
+                import alfred3 as al
+                exp = al.Experiment()
+                exp += al.Page(name="demo")
+
+                if __name__ == "__main__":
+                    exp.run(test=True)
+            
+            To start an experiment without trying to open a browser
+            window automatically::
+
+                import alfred3 as al
+                exp = al.Experiment()
+                exp += al.Page(name="demo")
+
+                if __name__ == "__main__":
+                    exp.run(open_browser=False)
 
 
         """
@@ -824,6 +855,7 @@ class ExperimentSession:
     def progress_bar(self, bar: elm.display.ProgressBar):
         if bar is None:
             self._progress_bar = None
+            return
         if bar.name is not None:
             raise AlfredError(
                 "If you redefine the progress bar, you can't set a custom name. It is fixed to 'progress_bar_'."
@@ -1352,6 +1384,33 @@ class ExperimentSession:
     def admin_mode(self) -> bool:
         """bool: Indicates whether the experiment runs in admin mode."""
         return self.config.getboolean("general", "admin")
+    
+    @property
+    def test_mode(self) -> bool:
+        """
+        bool: Indicates whether the experiment runs in test mode.
+
+        In test mode, alfred3 prefixes all session IDs with ``test``
+        for easy and save separation of test and production sessions.
+
+        You can start the test mode by appending ``test=true`` to
+        alfred3's start url. In a local experiment, this would mean
+        using::
+
+            http://127.0.0.1:5000/start?test=true
+
+        .. warning:: **Keep in mind** that a test session will take up a 
+            slot in list randomization via :class:`.ListRandomizer` just 
+            as any other session. You have to use experiment 
+            version numbers to manage randomization slots. 
+        
+        Notes:
+            The test mode will **also be activated in debug mode**.
+
+        """
+        test_mode = self.urlargs.get("test", False) in ["true", "True", "TRUE"]
+        debug_mode = self.config.getboolean("general", "debug")
+        return test_mode or debug_mode
 
     @property
     def type(self) -> str:
@@ -1640,7 +1699,10 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager._move(direction="forward")
+        try:
+            self.movement_manager._move(direction="forward")
+        except AbortMove:
+            self.log.debug(f"Movement from {self.current_page} in direction 'forward' was aborted.")
 
     def backward(self):
         """
@@ -1654,7 +1716,10 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager._move(direction="backward")
+        try:
+            self.movement_manager._move(direction="backward")
+        except AbortMove:
+            self.log.debug(f"Movement from {self.current_page} in direction 'backward' was aborted.")
 
     def jump(self, to: Union[str, int]):
         """
@@ -1673,7 +1738,10 @@ class ExperimentSession:
             guidance on how to implement a custom movement method.
 
         """
-        self.movement_manager._move(direction=f"jump>{to}")
+        try:
+            self.movement_manager._move(direction=f"jump>{to}")
+        except AbortMove:
+            self.log.debug(f"Jump from {self.current_page} to page with name '{to}' was aborted.")
 
     @property
     def values(self) -> dict:
@@ -2114,7 +2182,8 @@ class ExperimentSession:
         """
         str: Unique session identifier
         """
-        return self._session_id
+        sid = "test-" + self._session_id if self.test_mode else self._session_id
+        return sid
 
     @property
     def config(self):

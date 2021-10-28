@@ -1,0 +1,12 @@
+{% if display_position == "top" %}
+<div id="{{ name }}-display" class="{{ align }} mb-1" style="{{ fontsize }}"></div>
+{% endif %}
+
+<input type="range" class="form-control-range input-field {{ css_class_element }}" id="{{ name }}" placeholder="{{ placeholder }}"
+    name="{{ name }}" {% if input %} value="{{ input }}" {% elif default %} value="{{ default }}" {% endif %} {% if disabled %}disabled{% endif %} style="{{ height }} {{ fontsize }}" {% if min %} min="{{ min }}" {% endif %} {% if max %} max="{{ max }}" {% endif %} {% if step %} step="{{ step }}" {% endif %}>
+
+{% if display_position == "bottom" %}
+<div id="{{ name }}-display" class="{{ align }} mt-1" style="{{ fontsize }}"></div>
+{% endif %}
+
+{# <div id="{{ name }}-layout-helper" class="text-center" style="{{ fontsize }}">a</div> #}

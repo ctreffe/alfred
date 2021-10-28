@@ -149,11 +149,15 @@ class Text(Element):
     advanced formatting.
 
     Args:
-        text: Text to be displayed.
-        path: Filepath to a textfile (relative to the experiment
-            directory).
-        emojize: If True (default), emoji shortcodes in the text will
-            be converted to unicode (i.e. emojis will be displayed).
+        text (str, Path, optional): Text to be displayed.
+        path (str, Path, optional): Filepath to a textfile (relative to 
+            the experiment directory).
+        emojize (bool, optional): If *True* (default), emoji shortcodes in 
+            the text will be converted to unicode (i.e. emojis will be 
+            displayed).
+        render_markdown (bool, optional): If *True* (default), markdown
+            will be rendered to html.
+        
         {kwargs}
 
     Examples:
@@ -299,6 +303,8 @@ class Image(LabelledElement):
         super().added_to_experiment(experiment)
         if self.path:
             p = self.experiment.subpath(self.path)
+            if not p.is_file():
+                raise FileNotFoundError(f"Did not find {p} in element {self}")
             url = self.experiment.ui.add_static_file(p)
             self.src = url
         else:
@@ -791,7 +797,7 @@ class ProgressBar(LabelledElement):
     @property
     def progress(self) -> Union[int, float]:
 
-        if self._progress:  # manually defined via element
+        if self._progress or self._progress == 0:  # manually defined via element
             return self._progress
 
         elif self.exp.current_page.progress:  # manually defined via page
@@ -812,7 +818,7 @@ class ProgressBar(LabelledElement):
     def progress(self, value: Union[int, float]):
         try:
             assert isinstance(value, (int, float))
-            assert 0 < value and value < 100
+            assert 0 <= value and value <= 100
         except AssertionError:
             raise ValueError("Progress must be a number between 0 and 100.")
         self._progress = value
@@ -888,6 +894,7 @@ class ProgressBar(LabelledElement):
         return d
 
 
+@inherit_kwargs
 class Alert(Text):
     """
     Allows the display of customized alerts.
@@ -895,31 +902,33 @@ class Alert(Text):
     Args:
         text: Alert text
         category: Affects the appearance of alerts.
-            Values can be: "info", "success", "warning", "primary",
-            "secondory", "dark", "light", "danger".
-        dismiss: Boolean parameter. If "True", AlertElement can be
-            dismissed by a click. If "False", AlertElement is not
-            dismissible. Default = "False"
-        **element_args: Keyword arguments passed to the parent class
-            :class:`TextElement`. Accepted keyword arguments are: name,
-            font_size, align, width, position, showif,
-            instance_log.
+            Values can be: *info* (default), *success*, *warning*, *primary*,
+            *secondary*, *dark*, *light*, *danger*.
+        dismiss: If *True*, AlertElement can be
+            closed by a click. If *False*, AlertElement cannot be closed.
+            Defaults to *False*
+        {kwargs}
 
     Examples:
 
-        >>> import alfred3 as al
-        >>> alert = al.AlertElement(text="Alert text", dismiss=True, name="al1")
-        >>> alert
-        Alert(name='al1')
+        A simple alert::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                title = "Alert Demo"
+
+                def on_exp_access(self):
+                    self += al.Alert(text="Alert text", category="warning")
 
     """
 
     element_template = jinja_env.get_template("html/AlertElement.html.j2")
 
-    def __init__(
-        self, text: str = "", category: str = "info", dismiss: bool = False, **element_args
-    ):
-        super().__init__(text=text, **element_args)
+    def __init__(self, text: str = "", category: str = "info", dismiss: bool = False, **kwargs):
+        super().__init__(text=text, **kwargs)
         self.category = category
         self.dismiss = dismiss
 
@@ -1051,7 +1060,9 @@ class CountUp(Element):
     counter_js = jinja_env.get_template("js/countup.js.j2")
     element_template = jinja_env.get_template("html/TextElement.html.j2")
 
-    def __init__(self, end_after: int = -1, end_msg: str = "expired", start_time: float = 0, **kwargs):
+    def __init__(
+        self, end_after: int = -1, end_msg: str = "expired", start_time: float = 0, **kwargs
+    ):
         super().__init__(**kwargs)
 
         self.end_after = end_after
@@ -1060,7 +1071,12 @@ class CountUp(Element):
 
     def prepare_web_widget(self):
         self._js_code = []
-        js = self.counter_js.render(name=self.name, end_after=self.end_after, end_msg=self.end_msg, start_time=self.start_time)
+        js = self.counter_js.render(
+            name=self.name,
+            end_after=self.end_after,
+            end_msg=self.end_msg,
+            start_time=self.start_time,
+        )
         self.add_js(js)
 
 
@@ -1077,14 +1093,14 @@ class CountDown(CountUp):
         end_msg (str): Text to be displayed in the countdown's place upon
             expiration.
         reset (bool): If *True*, the countdown will start anew every time
-            the page is reopened, reloaded, or refreshed. Defaults to 
+            the page is reopened, reloaded, or refreshed. Defaults to
             *False*, i.e. the countdown will continue where it left off.
         {kwargs}
 
     Notes:
         The CountDown element offers two alternative constructors:
-        :meth:`.tilltime` (construction from UNIX timestamp) and 
-        :meth:`.tilldate` (construction from date and 24h time 
+        :meth:`.tilltime` (construction from UNIX timestamp) and
+        :meth:`.tilldate` (construction from date and 24h time
         representation).
 
     Examples:
@@ -1141,7 +1157,7 @@ class CountDown(CountUp):
             t (int, float): Target-time in seconds since EPOCH.
             **kwargs: Further keyword arguments are passed on to the
                 ordinary constructor, see :class:`.CountDown`.
-        
+
         Examples:
             Countdown running until July 18th 2036, 13:20:00 is reached::
 
@@ -1248,3 +1264,210 @@ class CountDown(CountUp):
             self.end_after = self.end_after_original - already_passed
 
         super().prepare_web_widget()
+
+
+@inherit_kwargs
+class Card(Element):
+    """
+    A card that can be used to display text or other elements.
+
+    Args:
+        header, title, subtitle, body, footer (str, Element): Strings
+            or elements to display in the respective parts of the card.
+        emojize: If True (default), emoji shortcodes in the text will
+            be converted to unicode (i.e. emojis will be displayed).
+        render_markdown (bool, optional): If *True* (default), markdown
+            will be rendered to html.
+        collapse (bool, optional): If *True*, the card header becomes a
+            button that can be used to hide and show the card body.
+            Defaults to *False*.
+        start_collapsed (bool, optional): If *True*, the card body will
+            start in collapsed mode. Only has an effect, if *collapse* 
+            is *True*. Defaults to *True*.
+        header_style, body_style, footer_style (str, optional): Can be
+            used to add css classes to the header, body, and footer of
+            the card. For example, *bg-success text-white* will turn
+            the background green and the text white. See 
+            https://getbootstrap.com/docs/4.5/utilities/colors/ for 
+            some possible coloring options.
+        {kwargs}
+    
+    Examples:
+        Basic usage::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += Card(
+                        header="Card Header",
+                        title="Card title",
+                        subtitle="Card subtitle",
+                        body=al.Text("**This text** is placed in the body.", align="center"),
+                    )
+
+    """
+
+    element_template = jinja_env.get_template("html/Card.html.j2")
+
+    def __init__(
+        self,
+        header: Union[str, Element] = "",
+        title: Union[str, Element] = "",
+        subtitle: Union[str, Element] = "",
+        body: Union[str, Element] = "",
+        footer: Union[str, Element] = "",
+        emojize: bool = True,
+        render_markdown: bool = True,
+        collapse: bool = False,
+        start_collapsed: bool = False,
+        header_style: str = "",
+        body_style: str = "",
+        footer_style: str = "",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+        self.header = header
+        self.title = title
+        self.subtitle = subtitle
+        self.body = body
+        self.footer = footer
+        self.path = None
+        self.emojize = emojize
+        self.render_markdown = render_markdown
+        self.collapse = collapse
+        self.start_collapsed = start_collapsed
+
+        self.header_style = header_style
+        self.body_style = body_style
+        self.footer_style = footer_style
+
+    def added_to_page(self, page):
+        super().added_to_page(page)
+
+        for part in ["header", "title", "subtitle", "body", "footer"]:
+            try:
+                element = getattr(self, "_" + part)
+                element.display_standalone = False
+                element.added_to_page(page)
+            except AttributeError:
+                pass
+    
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        for part in ["header", "title", "subtitle", "body", "footer"]:
+            try:
+                getattr(self, "_" + part).added_to_experiment(experiment)
+            except AttributeError:
+                pass
+
+    @property
+    def template_data(self):
+        d = super().template_data
+
+        d["header"] = self.render_text(self.header)
+        d["title"] = self.render_text(self.title)
+        d["subtitle"] = self.render_text(self.subtitle)
+        d["body"] = self.render_text(self.body)
+        d["footer"] = self.render_text(self.footer)
+        d["collapse"] = self.collapse
+        d["start_collapsed"] = self.start_collapsed
+        d["header_style"] = self.header_style
+        d["body_style"] = self.body_style
+        d["footer_style"] = self.footer_style
+
+        return d
+
+    @property
+    def body(self) -> str:
+        """str: Card body"""
+        try:
+            return self._body.web_widget
+        
+        except AttributeError:
+            return self._body
+    
+    @body.setter
+    def body(self, value: Union[str, Element]):
+        self._body = value
+        
+    def render_text(self, text: str) -> str:
+        """
+        Renders the markdown and emoji shortcodes in :attr:`.text`
+
+        Returns:
+            str: Text rendered to html code
+        """
+
+        if self.emojize:
+            text = emojize(text, use_aliases=True)
+        if self.render_markdown:
+            text = cmarkgfm.github_flavored_markdown_to_html(
+                text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+            )
+        return text
+    
+    @property
+    def title(self) -> str:
+        """
+        str: Card title.
+        """
+        try:
+            return self._title.web_widget
+        
+        except AttributeError:
+            return self._title
+    
+    @title.setter
+    def title(self, value: Union[str, Element]):
+        self._title = value
+    
+    @property
+    def subtitle(self) -> str:
+        """
+        str: Card subtitle.
+        """
+        try:
+            return self._subtitle.web_widget
+        
+        except AttributeError:
+            return self._subtitle
+    
+    @subtitle.setter
+    def subtitle(self, value: Union[str, Element]):
+        self._subtitle = value
+    
+    @property
+    def header(self) -> str:
+        """
+        str: Card header.
+        """
+        try:
+            return self._header.web_widget
+        
+        except AttributeError:
+            return self._header
+    
+    @header.setter
+    def header(self, value: Union[str, Element]):
+        self._header = value
+    
+    @property
+    def footer(self) -> str:
+        """
+        str: Card footer.
+        """
+        try:
+            return self._footer.web_widget
+        
+        except AttributeError:
+            return self._footer
+    
+    @footer.setter
+    def footer(self, value: Union[str, Element]):
+        self._footer = value
+
+    

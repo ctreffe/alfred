@@ -254,6 +254,8 @@ class MovementManager:
             while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
                 self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
                 i -= 1
+                if i < 0:
+                    raise AbortMove
                 target_page = self.find_page(i)
             return target_page
 
@@ -311,8 +313,8 @@ class MovementManager:
 
         self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
 
-        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
         target_page._on_showing_widget(show_time=time.time())
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
 
         target_page = self._update_target_page(previous_target=target_page, direction=direction)
 
@@ -336,8 +338,8 @@ class MovementManager:
 
         self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
 
-        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
         target_page._on_showing_widget(show_time=time.time())
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
 
         return self._update_target_page(previous_target=target_page, direction=direction)
 
@@ -439,6 +441,7 @@ class UserInterface:
         "bootstrap-4.5.3.min.css",
         "prism.css",
         "responsive.css",
+        "range_input.css"
     ]
 
     _js_files = [
@@ -573,7 +576,13 @@ class UserInterface:
                 content_type = "image/jpeg"
             logo_url = self.add_static_file(logo, content_type=content_type)
             self.config["logo_url"] = logo_url
+        
 
+        # read custom logo text
+        logo_text = self.exp.config.get("layout", "logo_text")
+        if logo_text:
+            self.config["logo_text"] = logo_text
+        
     def _add_resource_links(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
         
@@ -668,10 +677,15 @@ class UserInterface:
         d["title"] = page.title
         d["subtitle"] = page.subtitle
         
-        if not page is self.exp.movement_manager.first_page:
-            previous_section = self.exp.movement_manager.page_before(page).section
-            if previous_section.allow_backward and page.section.allow_backward:
-                d["backward_text"] = self.experiment.config.get("navigation", "backward")
+        if self.exp.movement_manager.current_index > 0:
+            try:
+                target = self.exp.movement_manager.target_page("backward")
+                previous_section = target.section
+                if previous_section.allow_backward and page.section.allow_backward:
+                    self.exp.movement_manager.target_page("backward")
+                    d["backward_text"] = self.experiment.config.get("navigation", "backward")
+            except AbortMove:
+                pass
         
         if page.section.allow_forward:
             if self.exp.movement_manager.next_page is self.exp.root_section.final_page:

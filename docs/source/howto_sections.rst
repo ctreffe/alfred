@@ -144,6 +144,9 @@ validation methods:
     :nosignatures:
 
     ~alfred3.section.Section.validate_on_move
+    ~alfred3.section.Section.validate_on_forward
+    ~alfred3.section.Section.validate_on_backward
+    ~alfred3.section.Section.validate_on_jump
     ~alfred3.section.Section.validate_on_leave
 
 Usage can be illustrated by looking at how *validate_on_move* is implemented::
@@ -155,6 +158,10 @@ Usage can be illustrated by looking at how *validate_on_move* is implemented::
         
         if not self.exp.current_page._validate():
             raise ValidationError()
+
+By default, *validate_on_foward* and *validate_on_backward* of a standard
+:class:`.Section` simply call *validate_on_move*. You can customize them
+to achieve more control over validation behavior.
 
 Basically, whenever validation fails, any of these methods raise a
 :class:`.alfred3.exceptions.ValidationError`. A very simply use case

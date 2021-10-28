@@ -1,0 +1,32 @@
+$(document).ready(function() {
+    var value = $("#{{ name }}").val();
+    $("#{{ name }}-display").text(value + "{{ display_suffix }}");
+
+    var offset_display_height = "{{ offset_display_height }}";
+
+    var apply_display_height_offset = function() {
+        var range = document.getElementById("{{ name }}");
+        var h = document.getElementById("{{ name }}-display").offsetHeight;
+        
+        {% if display_position == "top" %}
+            range.style.marginBottom = h + "px";
+        {% else %}
+            {% if display_position == "bottom" %}
+                range.style.marginTop = h + 6 + "px";
+            {% endif %}
+        {% endif %}
+    }
+
+    if (offset_display_height == "true") {
+        apply_display_height_offset()
+    }
+    
+})
+
+
+$("#{{ name }}").on("input change", function() {
+    var value = parseFloat($("#{{ name }}").val())
+    var displayValue = value.toLocaleString("{{ display_locale }}", {"maximumFractionDigits": 2})
+    
+    $("#{{ name }}-display").text(displayValue + "{{ display_suffix }}");
+})

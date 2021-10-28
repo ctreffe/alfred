@@ -55,7 +55,7 @@ would look like this::
    class Page2(al.Page):
 
       def on_first_show(self):
-         entered_number = float(self.exp.values.get("n1")) 
+         entered_number = self.exp.values.get("n1")
          calculated_number = entered_number - 10
          self += al.Text(f"The result of our calculation is: {calculated_number}")
 
@@ -101,6 +101,18 @@ There is also an additional hook that is defined by
 Section Hooks
 -------------
 
+.. warning:: We are currently questioning the four section hooks *on_enter*,
+   *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+   to accomplish with these hooks can be done in page hooks. The section
+   versions have some caveats that make them a bit tougher
+   to use correctly. So, for the meantime, please avoid these hooks and
+   use page hooks instead. The attributes :attr:`.Section.first_page`
+   and :attr:`.Section.last_page` may be useful for you in this regard.
+
+   The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+   at some point decide to introduce an alternative name for it in order
+   to avoid confusion with :meth:`.Page.on_exp_access`.
+
 .. autosummary::
    :nosignatures:
 
@@ -118,6 +130,9 @@ methods for more information.
    :nosignatures:
 
     ~alfred3.section.Section.validate_on_move
+    ~alfred3.section.Section.validate_on_forward
+    ~alfred3.section.Section.validate_on_backward
+    ~alfred3.section.Section.validate_on_jump
     ~alfred3.section.Section.validate_on_leave
 
 

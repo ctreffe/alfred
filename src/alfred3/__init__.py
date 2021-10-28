@@ -10,6 +10,7 @@ from .randomizer import random_condition
 from .section import Section
 from .section import RevisitSection
 from .section import ForwardOnlySection
+from .section import HideOnForwardSection
 
 from .page import Page
 from .page import WidePage
@@ -41,12 +42,16 @@ from .element.display import ButtonLabels
 from .element.display import BarLabels
 from .element.display import CountUp
 from .element.display import CountDown
+from .element.display import Card
 
 from .element.input import TextEntry
 from .element.input import TextArea
+from .element.input import MatchEntry
 from .element.input import RegEntry
+from .element.input import EmailEntry
 from .element.input import PasswordEntry
 from .element.input import NumberEntry
+from .element.input import RangeInput
 from .element.input import SingleChoice
 from .element.input import MultipleChoice
 from .element.input import SingleChoiceList
@@ -58,10 +63,13 @@ from .element.input import MultipleChoiceBar
 from .element.input import SelectPageList
 
 from .element.action import SubmittingButtons
+from .element.action import SubmittingBar
 from .element.action import JumpButtons
 from .element.action import DynamicJumpButtons
 from .element.action import JumpList
 from .element.action import Button
+from .element.action import BackButton
+from .element.action import ForwardButton
 
 from .element.misc import Style
 from .element.misc import HideNavigation
