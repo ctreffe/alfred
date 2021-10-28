@@ -617,7 +617,7 @@ class Element:
         from .. import page as pg
 
         if not isinstance(page, pg._PageCore):
-            raise TypeError()
+            raise TypeError(f"{page} is not a Page.")
 
         self.page = page
         if self.name is None:
