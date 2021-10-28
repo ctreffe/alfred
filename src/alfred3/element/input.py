@@ -668,6 +668,9 @@ class RangeInput(InputElement):
             specification shoul ideally include a unit, such as *1rem*,
             or *12pt*. If you supply an integer without a unit, a unit
             of *pt* will be assumed. Defaults to *normal*.
+        display_suffix (str, optional): A suffix for the display of the 
+            current input value. Can be used, for example, to add a
+            unit to the display. Defaults to an empty string.
         {kwargs}
     
     Examples:
@@ -696,6 +699,7 @@ class RangeInput(InputElement):
         display_position: str = "top",
         align: str = "center",
         display_locale: str = "en-GB",
+        display_suffix: str = "",
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
@@ -708,6 +712,7 @@ class RangeInput(InputElement):
         self.max = max
         self.display_position = display_position
         self.display_locale = display_locale
+        self.display_suffix = display_suffix
         self.step = step
         self.display_input = display_input
         self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
@@ -722,6 +727,7 @@ class RangeInput(InputElement):
         d["name"] = self.name
         d["display_position"] = self.display_position
         d["display_locale"] = self.display_locale
+        d["display_suffix"] = self.display_suffix
         d["offset_display_height"] = self.offset_display_height
         return d
     
