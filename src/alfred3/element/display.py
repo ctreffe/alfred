@@ -1278,6 +1278,13 @@ class Card(Element):
             be converted to unicode (i.e. emojis will be displayed).
         render_markdown (bool, optional): If *True* (default), markdown
             will be rendered to html.
+        collapse (bool, optional): If *True*, the card header becomes a
+            button that can be used to hide and show the card body.
+            Defaults to *False*.
+        start_uncollapsed (bool, optional): If *True*, the card body will
+            start in uncollapsed mode. If *False*, it will start in 
+            collapsed mode. Only has an effect, if *collapse* is *True*.
+            Defaults to *False*.
         {kwargs}
     
     Examples:
@@ -1309,6 +1316,8 @@ class Card(Element):
         footer: Union[str, Element] = "",
         emojize: bool = True,
         render_markdown: bool = True,
+        collapse: bool = False,
+        start_uncollapsed: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1321,6 +1330,8 @@ class Card(Element):
         self.path = None
         self.emojize = emojize
         self.render_markdown = render_markdown
+        self.collapse = collapse
+        self.start_uncollapsed = start_uncollapsed
 
     def added_to_page(self, page):
         super().added_to_page(page)
@@ -1350,6 +1361,8 @@ class Card(Element):
         d["subtitle"] = self.render_text(self.subtitle)
         d["body"] = self.render_text(self.body)
         d["footer"] = self.render_text(self.footer)
+        d["collapse"] = self.collapse
+        d["start_uncollapsed"] = self.start_uncollapsed
 
         return d
 

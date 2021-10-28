@@ -1,9 +1,26 @@
 <div class="card {{ css_class_element }} mb-3 Card-element-part" id="{{ name }}" style="{{ height }} {{ font_size }}">
 {% if header %}
   <div class="card-header Card-element-part" id="{{ name }}-header">
+    {% if collapse %}
+    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#{{ name }}-collapse" aria-expanded="true" aria-controls="{{ name }}-collapse">
+    {% endif %}
+    {% if collapse %}
+    <div class="row">
+    <div class="col-1" style="margin-right: -2.5rem;"><i class="fas fa-chevron-down"></i></div>
+    <div class="col">{{ header | safe }}</div>
+    </div>
+    {% else %}
     {{ header | safe }}
+    {% endif %}
+  {% if collapse %}</button>{% endif %}
   </div>
 {% endif %}
+
+  {% if collapse %}
+  <div id="{{ name }}-collapse" class="collapse {% if start_uncollapsed %}show{% endif %}" aria-labelledby="{{ name }}-header">
+    
+  {% endif %}
+
   <div class="card-body Card-element-part" id="{{ name }}-body">
 
   {% if title %}
@@ -26,6 +43,10 @@
   {% if footer %}
     <div class="card-footer text-muted Card-element-part" id="{{ name }}-footer">
         {{ footer }}
+    </div>
+  {% endif %}
+
+  {% if collapse %}
     </div>
   {% endif %}
 </div>
