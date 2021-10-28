@@ -40,6 +40,9 @@ Types of changes
 - Added `MatchEntry` as alias for `RegEntry` element
 - Added `EmailEntry` element. This is a `MatchEntry` element that offers
   a good default validation for email inputs.
+- Added the elements `BackButton` and `ForwardButton`, which do as they say.
+- Added a `Card` element that can be used for displaying text and other
+  elements in bootstraps nice-looking cards.
 - Added the methods `Page.position_in_section` and `Section.position_in_section`.
   These are used to get the position of the current page or section inside
   its parent section, which can be useful if you create section or pages
