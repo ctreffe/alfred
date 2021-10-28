@@ -26,6 +26,13 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.3.1 (Released 2021-10-28)
+
+### Fixed v2.3.1
+
+- Fixed an issue with string inputs to `NumberEntryElement` that was
+  introduced in v2.3.0
+
 ## alfred3 v2.3.0 (Released 2021-10-28)
 
 ### Added v2.3.0

@@ -585,7 +585,10 @@ class NumberEntry(TextEntry):
     @property
     def input(self) -> float:
         # docstring inherited
-        return float(self._input) if self._input is not None else None
+        try:
+            return float(self._input) if self._input is not None else None
+        except ValueError:
+            return self._input
 
     @input.setter
     def input(self, value: str):
