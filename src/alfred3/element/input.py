@@ -668,6 +668,12 @@ class RangeInput(InputElement):
             specification shoul ideally include a unit, such as *1rem*,
             or *12pt*. If you supply an integer without a unit, a unit
             of *pt* will be assumed. Defaults to *normal*.
+        display_locale (str, optional): A locale specification for 
+            displaying the current input value in an appropriate format.
+            The default is *en-GB*, which uses a dot as a decimal sign.
+            Use *de-DE* for german display with a comma as the decimal
+            sign. Other possible values can be taken from
+            https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Intl#locale_identification_and_negotiation
         display_suffix (str, optional): A suffix for the display of the 
             current input value. Can be used, for example, to add a
             unit to the display. Defaults to an empty string.
