@@ -8,6 +8,14 @@
     margin-bottom: 0;
 }
 
+.Button-element, .BackButton-element, .ForwardButton-element {
+    margin-bottom: 1rem;
+}
+
+.BackButton-element>p:last-child, .ForwardButton-element>p:last-child {
+    margin-bottom: 0;
+}
+
 div.btn-group.choice-button-group>label.btn.choice-button:only-child {
     margin-left: 0;
     margin-right: 0;

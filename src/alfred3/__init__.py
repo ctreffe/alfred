@@ -68,6 +68,8 @@ from .element.action import JumpButtons
 from .element.action import DynamicJumpButtons
 from .element.action import JumpList
 from .element.action import Button
+from .element.action import BackButton
+from .element.action import ForwardButton
 
 from .element.misc import Style
 from .element.misc import HideNavigation
