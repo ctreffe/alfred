@@ -183,7 +183,7 @@ class MatchEntry(TextEntry):
         if not self.should_be_shown:
             return True
 
-        elif not self.force_input and self.input == "":
+        elif not self.force_input and not self.input:
             return True
 
         elif not self.input:
