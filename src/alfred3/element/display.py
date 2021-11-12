@@ -1352,7 +1352,8 @@ class Card(Element):
             try:
                 element = getattr(self, "_" + part)
                 element.display_standalone = False
-                element.added_to_page(page)
+                element.width = "full"
+                page += element
             except AttributeError:
                 pass
     
