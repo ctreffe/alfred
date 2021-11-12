@@ -1212,6 +1212,25 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
+        
+
+        A single choice list with a no-choice option as first option that
+        still enforces force-input. This works, because the empty string
+        will not be accepted if force_input is True::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceList(
+                        "", "choi1", "choi2", "choi3",
+                         name="sel1", force_input=True
+                         )
+
 
         Accessing the value of a SingleChoiceList::
 
