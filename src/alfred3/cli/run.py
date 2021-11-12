@@ -6,7 +6,7 @@ from alfred3.run import ExperimentRunner
 @click.option(
     "-a/-m",
     "--auto-open/--manual-open",
-    default=None,
+    default=True,
     help="If this flag is set to '-a', the experiment will open a browser window automatically. [default: '-a']",
 )
 @click.option("--path", default=Path.cwd())
