@@ -1322,7 +1322,7 @@ class Card(Element):
         emojize: bool = True,
         render_markdown: bool = True,
         collapse: bool = False,
-        start_collapsed: bool = False,
+        start_collapsed: bool = True,
         header_style: str = "",
         body_style: str = "",
         footer_style: str = "",
