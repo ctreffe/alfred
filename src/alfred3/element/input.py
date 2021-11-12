@@ -1173,8 +1173,8 @@ class SingleChoiceList(SingleChoice):
     A dropdown list, allowing selection of one option.
 
     Args:
-        *choice_labels: Variable numbers of choice labels. See
-            :class:`.ChoiceElement` for details.
+        *choice_labels: Variable numbers of choice labels. Labels must be
+            strings. The number of labels determines the number of choices.
         {kwargs}
 
     Notes:
