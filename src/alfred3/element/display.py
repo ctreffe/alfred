@@ -1301,7 +1301,7 @@ class Card(Element):
             @exp.member
             class Demo(al.Page):
                 def on_exp_access(self):
-                    self += Card(
+                    self += al.Card(
                         header="Card Header",
                         title="Card title",
                         subtitle="Card subtitle",
