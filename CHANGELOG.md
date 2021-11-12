@@ -26,6 +26,22 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
+## alfred3 v2.3.1 [unreleased]
+
+### Changed
+
+- `alfred3.Card` elements with *collapse=True* will now start in collapsed
+  view.
+
+### Fixed
+
+- Fixed #141
+- Fixed #144
+- Fixed an issue that lead `alfred3.Card` elements to render sub-elements
+  as codeblocks instead of correctly displaying their full web widget.
+- Fixed an issue that lead `alfred3.Card` elements to not add input elements
+  to the parent page in the intended way.
+
 ## alfred3 v2.3.0 (Released 2021-10-28)
 
 ### Added v2.3.0
