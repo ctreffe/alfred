@@ -428,13 +428,16 @@ class NumberEntry(TextEntry):
     Displays an input field which only accepts numerical input.
 
     Args:
-        decimals: Accepted number of decimals (0 as default).
-        min: Minimum accepted entry value.
-        max: Maximum accepted entry value.
-        decimal_signs: Tuple of accepted decimal signs. Defaults to
-            ``(",", ".")``, i.e. by default, both a comma and a dot are
-            interpreted as decimal signs.
-        match_hint: Specialized match hint for this element. You can
+        ndecimals (int): Accepted number of decimals. Defaults to 0.
+        min (int, float): Minimum accepted entry value. If *None* 
+            (default), no minimum value is enforced.
+        max (int, float): Maximum accepted entry value. If *None* 
+            (default), no maximum value is enforced.
+        decimal_signs (tuple): Tuple of accepted decimal signs. Defaults to
+            ``(",", ".")``, i.e. by default, **both** a comma and a dot are
+            interpreted as decimal signs. This is due to alfred3 being
+            developed in Germany, which uses the comma as a decimal sign.
+        match_hint (str): Specialized match hint for this element. You can
             use the placeholders ``{{min}}``, ``{{max}}``, ``{{ndecimals}}``,
             and ``{{decimal_signs}}``. To customize the match hint for
             all NumberEntry elements, change the respective setting
