@@ -177,7 +177,7 @@ looks in practice::
 
         def on_exp_access(self):
             for index in range(3):
-            self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
+                self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
 
     
     class ImagePage(al.Page):
@@ -207,7 +207,7 @@ as before, using the loop index in the definition of our image path::
 
         def on_exp_access(self):
             for index in range(3):
-            self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
+                self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
 
     
     class ImagePage(al.Page):
@@ -276,7 +276,7 @@ its pages will be shown in random order::
 
         def on_exp_access(self):
             for index in range(3):
-            self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
+                self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
 
     
     class ImagePage(al.Page):
@@ -321,7 +321,7 @@ change the construction of our page to an *on_first_show* hook::
 
         def on_exp_access(self):
             for index in range(3):
-            self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
+                self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
 
     
     class ImagePage(al.Page):
@@ -381,7 +381,7 @@ variables in the *on_fist_show* hook like this::
 
         def on_exp_access(self):
             for index in range(3):
-            self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
+                self += ImagePage(name=f"img{index+1:02}", vargs={"index": index})
 
     
     class ImagePage(al.Page):
