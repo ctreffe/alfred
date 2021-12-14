@@ -1056,6 +1056,13 @@ class ExperimentSession:
                         self += al.TextEntry(name="el2")
 
         """
+        if self.aborted:
+            msg = (
+                "ExperimentSession.finish() called, but the experiment was already aborted. "
+                "Cancelling ExperimentSession.finish() - the experiment is not finished."
+            )
+            self.log.warning(msg)
+            return
 
         for func in self.finish_functions:
             func(self)
