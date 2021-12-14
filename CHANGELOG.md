@@ -26,18 +26,21 @@ Types of changes
 6. Security in case of vulnerabilities. 
 -->
 
-## alfred3 v2.3.1 [unreleased]
+## alfred3 v2.3.2 [unreleased]
 
 ### Changed
 
 - `alfred3.Card` elements with *collapse=True* will now start in collapsed
   view.
+- Any call to `Experiment.finish()` will only go through now, if the experiment
+  session is *not* already aborted.
 
 ### Fixed
 
 - Fixed #141
 - Fixed #144
 - Fixed #139
+- Fixed #169
 - Fixed an issue that lead `alfred3.Card` elements to render sub-elements
   as codeblocks instead of correctly displaying their full web widget.
 - Fixed an issue that lead `alfred3.Card` elements to not add input elements
