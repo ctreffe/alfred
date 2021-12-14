@@ -1068,9 +1068,9 @@ class ExperimentSession:
             func(self)
 
         if self.finished:
-            msg = "ExperimentSession._finish() called. Experiment was already finished. Finishing again."
+            msg = "ExperimentSession.finish() called. Experiment was already finished. Finishing again."
         else:
-            msg = "ExperimentSession._finish() called. Session is finishing."
+            msg = "ExperimentSession.finish() called. Session is finishing."
 
         self.log.info(msg)
         self.finished = True
