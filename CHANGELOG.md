@@ -28,14 +28,14 @@ Types of changes
 
 ## alfred3 v2.3.2 [unreleased]
 
-### Changed
+### Changed v2.3.2
 
 - `alfred3.Card` elements with *collapse=True* will now start in collapsed
   view.
 - Any call to `Experiment.finish()` will only go through now, if the experiment
   session is *not* already aborted.
 
-### Fixed
+### Fixed v2.3.2
 
 - Fixed #141
 - Fixed #144
@@ -45,6 +45,14 @@ Types of changes
   as codeblocks instead of correctly displaying their full web widget.
 - Fixed an issue that lead `alfred3.Card` elements to not add input elements
   to the parent page in the intended way.
+
+
+## alfred3 v2.3.1 (Released 2021-10-28)
+
+### Fixed v2.3.1
+
+- Fixed an issue with string inputs to `NumberEntryElement` that was
+  introduced in v2.3.0
 
 ## alfred3 v2.3.0 (Released 2021-10-28)
 
