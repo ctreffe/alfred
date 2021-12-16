@@ -1019,7 +1019,7 @@ class ExperimentSession:
         self.log.info(f"ExperimentSession.abort() called. Aborting session. Reason: {reason}")
         self.aborted = True
         self._aborted_because = reason
-        self.current_page.save_data()
+        self._save_data()
 
 
     def finish(self):
