@@ -30,8 +30,8 @@ These are the currently available commands::
 
 import click
 
-from .template import template
-from .run import run
+from .template_exp import template
+from .run_exp import run
 from .extract import json_to_csv
 
 @click.group()

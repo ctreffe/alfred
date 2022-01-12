@@ -1,3 +1,90 @@
+"""
+Provides a command line interface for transforming .json data files
+into .csv files.
+
+By default, the command expects to find the .json files in the current
+working directory. A basic example would look something like this. You
+have run some local experiment sessions. Now you have an experiment directory
+that looks something like this::
+
+    data/
+    save/
+        exp/
+            2021-04-27_12.03.58_data_0f278318f0bb4ea6b8cb6a58e8a5afc3.json
+            2021-04-27_13.06.01_data_d06249f45d66494192aca0cc7b91b54d.json
+            2021-04-29_12.08.59_data_5999f44eaea0447ca0abbf079824b9ce.json
+    log/
+    script.py
+    config.conf
+
+
+The .json files in the directory ``save/exp/`` hold data of *individual sessions*.
+We want to combine them into a .csv file for further data anaylsis. Usually,
+alfred3 will do this automatically for you after each experiment run and
+save the result in the ``data/`` directory, but lets assume that this 
+does not work in our case. To transform the data, we follow these steps:
+
+**1. Open up a terminal.**
+
+On Mac, this is just the *Terminal* app. On Windows,
+this is the command line application. If you are using an IDE like PyCharm,
+there is most likely a terminal integrated into the user interface.
+
+**2. Make sure that you are in the correct working directory.**
+
+You can go to a specific directory by running the following code::
+
+    $ cd path/to/directory
+
+Replace ``path/to/directory`` with your actual full path to the ``save/exp/`` 
+directory of your experiment.
+Note that, on Windows, you probably need to use backshlashes (\) instead 
+of ordinary slashes (/) in the path.
+
+**3. Run the command in the terminal**
+
+Run the following command::
+
+    $ alfred3 json-to-csv
+
+Et voilà! This will place the .csv file inside the current directory. 
+If you run into problem at this point, make sure that you have alfred3
+installed in your current environment. If you are usually working in a 
+virtual environment, you may need to activate that environment.
+
+
+You can access the full manual to all available options of the ``json-to-csv``
+command by executing::
+
+    $ alfred3 json-to-csv --help
+
+The current version is::
+
+    Usage: alfred3 json-to-csv [OPTIONS]
+
+    Options:
+    --dtype TEXT        The data type to extratct form .json files. Can be
+                        'exp_data', 'codebook', 'move_history', and
+                        'unlinked_data'.  [default: exp_data]
+
+    --in_path TEXT      Path to directory containing json files. If None
+                        (default), the current working directory will be used.
+
+    --out_path TEXT     Path to directory in which the output csv file will be
+                        place. If None (default), the current working directory
+                        will be used.
+
+    --exp_version TEXT  The experiment version for which codebook data should be
+                        extracted. Only relevant for codebook data.
+
+    --delimiter TEXT    Delimiter to use in the resulting csv file. Defaults to
+                        ';'
+
+    --help              Show this message and exit.
+
+"""
+
+
 from pathlib import Path
 from itertools import chain
 

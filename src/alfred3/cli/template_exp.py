@@ -1,3 +1,31 @@
+"""
+Provides a command line command for creating a new alfred3 experiment.
+
+In your terminal, change to an empty directory and execute the following
+command::
+
+    $ alfred3 template
+
+This will generate a minimal alfred3 experiment in the current working
+directory.
+
+You can access the help for this command directly in the terminal by
+executing::
+
+    $ alfred3 template --help
+
+The current version offers the following options::
+
+    Usage: alfred3 template [OPTIONS]
+
+    Options:
+    -b           If '-b' is given, a more extensive template will be loaded,
+                including, for instance, a secrets.conf and a .gitignore file.
+
+    --path PATH  The directory in which to place alfred3 template files.
+    --help       Show this message and exit.
+
+"""
 from importlib import resources as res
 from pathlib import Path
 
