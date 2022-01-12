@@ -1329,13 +1329,6 @@ class Row(Element):
             if self.elements_full_width:
                 element.width = "full"
 
-    # def _prepare_web_widget(self):
-
-    #     for element in self.elements:
-    #         element.prepare_web_widget()
-
-    #     super()._prepare_web_widget()
-
     @property
     def _cols(self) -> Iterator:
         """Yields preprocessed ``_RowCol`` columns ."""
