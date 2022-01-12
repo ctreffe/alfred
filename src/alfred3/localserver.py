@@ -46,6 +46,15 @@ script = Script()
 @app.route("/start", methods=["GET", "POST"])
 def start():
 
+    # this prevents an error in case of repeated calls to /start
+    if script.exp_session is not None:
+        script.log.warning((
+            "The '/start' route was called, but there was already "
+            "a session running. Redirecting to '/experiment'."
+            ))
+        return redirect(url_for("experiment"))
+
+
     logger = logging.getLogger(f"alfred3")
     logger.info("Starting experiment initialization.")
 
