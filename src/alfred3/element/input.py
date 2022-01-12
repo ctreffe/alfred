@@ -728,7 +728,11 @@ class RangeInput(InputElement):
         self.step = step
         self.display_input = display_input
         self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
-        if display_input:
+        
+    
+    def added_to_page(self, page):
+        super().added_to_page(page)
+        if self.display_input:
             js = self.js_template.render(self.js_template_data)
             self.add_js(js)
 
