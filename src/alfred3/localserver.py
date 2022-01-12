@@ -62,7 +62,7 @@ def start():
     try:
         script.exp_session = script.exp.create_session(session_id=session_id, config=script.config, secrets=script.secrets, **request.args)
     except Exception:
-        script.log.exception("Expection during experiment generation.")
+        script.log.exception("Exception during experiment generation.")
         abort(500)
 
     # start experiment
