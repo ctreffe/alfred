@@ -20,13 +20,15 @@ alfred3.element.input
       :template: autosummary/class.rst
       :nosignatures:
    
+      EmailEntry
+      MatchEntry
       MultipleChoice
       MultipleChoiceBar
       MultipleChoiceButtons
-      MultipleChoiceList
       MultiplePasswordEntry
       NumberEntry
       PasswordEntry
+      RangeInput
       RegEntry
       SelectPageList
       SingleChoice

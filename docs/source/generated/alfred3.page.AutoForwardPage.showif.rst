@@ -1,6 +1,6 @@
-AutoForwardPage.showif
+AutoForwardPage.showif()
 ===================================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: AutoForwardPage.showif
+.. automethod:: AutoForwardPage.showif

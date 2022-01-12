@@ -60,10 +60,16 @@ Page
       ~Page.on_first_show
    
    
+      ~Page.position_in_section
+   
+   
       ~Page.prepare_web_widget
    
    
       ~Page.save_data
+   
+   
+      ~Page.showif
    
    
       ~Page.uptree
@@ -113,7 +119,6 @@ Page
          ~Page.section
          ~Page.short_tree
          ~Page.should_be_shown
-         ~Page.showif
          ~Page.subtitle
          ~Page.tag
          ~Page.title

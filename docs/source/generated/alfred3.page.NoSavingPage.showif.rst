@@ -1,6 +1,6 @@
-NoSavingPage.showif
+NoSavingPage.showif()
 ================================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: NoSavingPage.showif
+.. automethod:: NoSavingPage.showif

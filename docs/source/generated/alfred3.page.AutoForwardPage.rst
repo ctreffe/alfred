@@ -63,10 +63,16 @@ AutoForwardPage
       ~AutoForwardPage.on_timeout
    
    
+      ~AutoForwardPage.position_in_section
+   
+   
       ~AutoForwardPage.prepare_web_widget
    
    
       ~AutoForwardPage.save_data
+   
+   
+      ~AutoForwardPage.showif
    
    
       ~AutoForwardPage.uptree
@@ -117,7 +123,6 @@ AutoForwardPage
          ~AutoForwardPage.section
          ~AutoForwardPage.short_tree
          ~AutoForwardPage.should_be_shown
-         ~AutoForwardPage.showif
          ~AutoForwardPage.subtitle
          ~AutoForwardPage.tag
          ~AutoForwardPage.timeout

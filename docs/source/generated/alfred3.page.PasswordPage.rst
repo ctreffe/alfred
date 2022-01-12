@@ -60,10 +60,16 @@ PasswordPage
       ~PasswordPage.on_first_show
    
    
+      ~PasswordPage.position_in_section
+   
+   
       ~PasswordPage.prepare_web_widget
    
    
       ~PasswordPage.save_data
+   
+   
+      ~PasswordPage.showif
    
    
       ~PasswordPage.uptree
@@ -114,7 +120,6 @@ PasswordPage
          ~PasswordPage.section
          ~PasswordPage.short_tree
          ~PasswordPage.should_be_shown
-         ~PasswordPage.showif
          ~PasswordPage.subtitle
          ~PasswordPage.tag
          ~PasswordPage.title

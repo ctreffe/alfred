@@ -24,6 +24,7 @@ alfred3.element.display
       Audio
       BarLabels
       ButtonLabels
+      Card
       CodeBlock
       CountDown
       CountUp

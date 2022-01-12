@@ -21,6 +21,7 @@
       :nosignatures:
    
       ForwardOnlySection
+      HideOnForwardSection
       RevisitSection
       Section
    

@@ -1,6 +1,6 @@
-ForwardOnlySection.showif
+ForwardOnlySection.showif()
 =========================================
 
 .. currentmodule:: alfred3.section
 
-.. autoattribute:: ForwardOnlySection.showif
+.. automethod:: ForwardOnlySection.showif

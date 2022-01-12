@@ -60,10 +60,16 @@ WidePage
       ~WidePage.on_first_show
    
    
+      ~WidePage.position_in_section
+   
+   
       ~WidePage.prepare_web_widget
    
    
       ~WidePage.save_data
+   
+   
+      ~WidePage.showif
    
    
       ~WidePage.uptree
@@ -113,7 +119,6 @@ WidePage
          ~WidePage.section
          ~WidePage.short_tree
          ~WidePage.should_be_shown
-         ~WidePage.showif
          ~WidePage.subtitle
          ~WidePage.tag
          ~WidePage.title

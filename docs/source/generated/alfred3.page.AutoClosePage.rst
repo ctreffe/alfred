@@ -63,10 +63,16 @@ AutoClosePage
       ~AutoClosePage.on_timeout
    
    
+      ~AutoClosePage.position_in_section
+   
+   
       ~AutoClosePage.prepare_web_widget
    
    
       ~AutoClosePage.save_data
+   
+   
+      ~AutoClosePage.showif
    
    
       ~AutoClosePage.uptree
@@ -117,7 +123,6 @@ AutoClosePage
          ~AutoClosePage.section
          ~AutoClosePage.short_tree
          ~AutoClosePage.should_be_shown
-         ~AutoClosePage.showif
          ~AutoClosePage.subtitle
          ~AutoClosePage.tag
          ~AutoClosePage.timeout

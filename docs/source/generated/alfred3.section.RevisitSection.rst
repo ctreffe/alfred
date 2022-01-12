@@ -42,6 +42,12 @@ RevisitSection
       ~RevisitSection.on_resume
    
    
+      ~RevisitSection.position_in_section
+   
+   
+      ~RevisitSection.showif
+   
+   
       ~RevisitSection.uptree
    
    
@@ -51,10 +57,7 @@ RevisitSection
       ~RevisitSection.validate_on_forward
    
    
-      ~RevisitSection.validate_on_jumpfrom
-   
-   
-      ~RevisitSection.validate_on_jumpto
+      ~RevisitSection.validate_on_jump
    
    
       ~RevisitSection.validate_on_leave
@@ -93,13 +96,16 @@ RevisitSection
          ~RevisitSection.allow_forward
          ~RevisitSection.allow_jumpfrom
          ~RevisitSection.allow_jumpto
+         ~RevisitSection.close_pages_on_leave
          ~RevisitSection.data
          ~RevisitSection.empty
          ~RevisitSection.exp
          ~RevisitSection.experiment
          ~RevisitSection.first_member
+         ~RevisitSection.first_page
          ~RevisitSection.instance_log
          ~RevisitSection.last_member
+         ~RevisitSection.last_page
          ~RevisitSection.members
          ~RevisitSection.name
          ~RevisitSection.pages
@@ -108,7 +114,6 @@ RevisitSection
          ~RevisitSection.section
          ~RevisitSection.short_tree
          ~RevisitSection.should_be_shown
-         ~RevisitSection.showif
          ~RevisitSection.shuffle
          ~RevisitSection.subsections
          ~RevisitSection.subtitle
