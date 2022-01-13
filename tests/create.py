@@ -19,7 +19,7 @@ import click
 @click.command()
 @click.option("-name", prompt="Enter a name for the test experiment", help="Name for test experiment")
 def testexp(name):
-    timestamp = datetime.today().strftime("%Y-%m-%d-%H%M")
+    timestamp = datetime.today().strftime("%Y%m%d%H%M")
     dirname = timestamp + "-" + name
     
     path = Path.cwd() / "exp" / dirname
@@ -28,6 +28,8 @@ def testexp(name):
     path.mkdir(parents=True)
 
     run(["alfred3", "template", f"--path={str(path)}", ])
+
+    run(["code", path / "script.py"])
 
 
 if __name__ == "__main__":
