@@ -1,11 +1,11 @@
 """
-Convenience script for creating test experiments
+Convenience script for creating test experiments.
 
-Execute like this from the main alfred3 directory::
+Execute from /tests/::
 
-    $ python3 tests/create.py
+    $ python3 create.py
 
-Or like this, from within tests/::
+Or like this::
 
     $ python3 -m create
 
