@@ -40,9 +40,9 @@ def running_app(tmp_path):
     yield app
 
 
-def test_one(running_app, driver, tmp_path):
-    driver.get("http://localhost:5000/start")
-    form = driver.find_element_by_id("form")
-    form.submit()
-    time.sleep(1)
-    assert tmp_path.joinpath("save") in list(tmp_path.iterdir())
+# def test_one(running_app, driver, tmp_path):
+#     driver.get("http://localhost:5000/start")
+#     form = driver.find_element_by_id("form")
+#     form.submit()
+#     time.sleep(1)
+#     assert tmp_path.joinpath("save") in list(tmp_path.iterdir())
