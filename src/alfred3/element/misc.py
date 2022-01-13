@@ -201,12 +201,12 @@ class JavaScript(Element):
 
                         js_code = '''
                         $( '#test_el' ).on('change', function() {
-                            $( '#form' ).submit();
-                        };)
+                            move('forward') // the move() JavaScript function is provided by alfred3.
+                        })
                         '''
 
                         self += al.JavaScript(code=js_code)
-                        self += al.Text("Element 1", name="test_el")
+                        self += al.TextEntry("Element 1", name="test_el")
 
     """
 
