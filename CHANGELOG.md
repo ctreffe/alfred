@@ -34,9 +34,12 @@ Types of changes
   view.
 - Any call to `Experiment.finish()` will only go through now, if the experiment
   session is *not* already aborted.
+- Some small updates to the documentation, most notably regarding the command
+  line interface (CLI).
 
 ### Fixed v2.3.2
 
+- Hotfix for #174
 - Fixed #141
 - Fixed #144
 - Fixed #139
