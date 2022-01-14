@@ -683,6 +683,10 @@ class RangeInput(InputElement):
         display_suffix (str, optional): A suffix for the display of the 
             current input value. Can be used, for example, to add a
             unit to the display. Defaults to an empty string.
+        mindecimals (int, optional): Minimum number of decimals to display.
+            Defaults to 0.
+        maxdecimals (int, optional): Maximum number of decimals to display.
+            Defaults to 2.
         {kwargs}
     
     Examples:
@@ -712,6 +716,8 @@ class RangeInput(InputElement):
         align: str = "center",
         display_locale: str = "en-GB",
         display_suffix: str = "",
+        mindecimals: int = 0,
+        maxdecimals: int = 2,
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
@@ -726,6 +732,8 @@ class RangeInput(InputElement):
         self.display_locale = display_locale
         self.display_suffix = display_suffix
         self.step = step
+        self.mindecimals = mindecimals
+        self.maxdecimals = maxdecimals
         self.display_input = display_input
         self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
         
@@ -745,6 +753,8 @@ class RangeInput(InputElement):
         d["display_locale"] = self.display_locale
         d["display_suffix"] = self.display_suffix
         d["offset_display_height"] = self.offset_display_height
+        d["mindecimals"] = self.mindecimals
+        d["maxdecimals"] = self.maxdecimals
         return d
     
     @property
