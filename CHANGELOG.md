@@ -44,6 +44,7 @@ Types of changes
 - Fixed #144
 - Fixed #139
 - Fixed #169
+- Fixed #157
 - Fixed an issue that lead `alfred3.Card` elements to render sub-elements
   as codeblocks instead of correctly displaying their full web widget.
 - Fixed an issue that lead `alfred3.Card` elements to not add input elements
