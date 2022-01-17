@@ -82,10 +82,14 @@ def start():
         abort(500)
 
     # Experiment startup message
-
     session["page_tokens"] = []
 
+    # jump to page
+    page = request.args.get("page", None)
+
     try:
+        if page:
+            return redirect(url_for("experiment", page=page))
         return redirect(url_for("experiment"))
     except Exception:
         log.exception("Exception during experiment startup.")
@@ -135,7 +139,7 @@ def experiment():
         elif request.method == "GET":
             url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
             if url_pagename:
-                script.exp_session.movement_manager.jump_by_name(name=url_pagename)
+                script.exp_session.movement_manager.move(direction=f"jump>{url_pagename}")
 
             page_token = str(uuid4())
 
