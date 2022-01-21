@@ -900,7 +900,7 @@ class SingleChoice(ChoiceElement):
             class Show(al.Page):
 
                 def on_first_show(self):
-                    c1_answer = self.exp.values["c1] # access value
+                    c1_answer = self.exp.values["c1"] # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
 
 
