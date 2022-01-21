@@ -28,6 +28,10 @@ Types of changes
 
 ## alfred3 v2.3.2 [unreleased]
 
+### Added v2.3.2
+
+- Added `DateEntry` and `TimeEntry` elements for date and time input.
+
 ### Changed v2.3.2
 
 - `alfred3.Card` elements with *collapse=True* will now start in collapsed
@@ -49,6 +53,8 @@ Types of changes
   as codeblocks instead of correctly displaying their full web widget.
 - Fixed an issue that lead `alfred3.Card` elements to not add input elements
   to the parent page in the intended way.
+- Fixed an issue in `ExperimentSession.all_unlinked_data` for access to 
+  *local* unlinked data.
 
 
 ## alfred3 v2.3.1 (Released 2021-10-28)
