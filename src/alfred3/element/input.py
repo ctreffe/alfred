@@ -6,6 +6,7 @@ Provides elements that allow participant input.
 
 import re
 import string
+from datetime import datetime
 
 from typing import Union
 from typing import Tuple
@@ -2065,3 +2066,101 @@ class SelectPageList(SingleChoiceList):
 
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
+
+
+
+@inherit_kwargs
+class DateEntry(InputElement):
+    """
+    An element for date entry.
+
+    Args:
+        default (str): Default date, provided as a string in YYYY-MM-DD
+            format. If *None* (default), the current date will be used.
+        min (str): Minimum date, provided as a string in YYYY-MM-DD
+            format.
+        max (str): Maximum date, provided as a string in YYYY-MM-DD
+            format.
+        {kwargs}
+    
+    Examples:
+        Minimum example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.DateEntry(default="2022-01-17", name="demo_date")
+    """
+    element_template = jinja_env.get_template("html/DateEntryElement.html.j2")
+
+    def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self.default = self.validate_date(default) if default is not None else ""
+        self.min = self.validate_date(min) if min is not None else ""
+        self.max = self.validate_date(max) if max is not None else ""
+    
+    @staticmethod
+    def validate_date(date: str):
+        datetime.strptime(date, "%Y-%m-%d")
+        return date
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["default"] = self.default
+        return d
+
+
+
+@inherit_kwargs
+class TimeEntry(InputElement):
+    """
+    An element for time entry.
+
+    Args:
+        default (str): Default time, provided as a string in HH:MM
+            format. If *None* (default), the element will display a
+            greyed-out time of "12:30".
+        min (str): Minimum time, provided as a string in HH:MM
+            format.
+        max (str): Maximum time, provided as a string in HH:MM
+            format.
+        {kwargs}
+    
+    Examples:
+        Minimum example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.TimeEntry(default="14:30", name="demo_time")
+    """
+
+    element_template = jinja_env.get_template("html/TimeEntryElement.html.j2")
+
+    def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self.default = self.validate_time(default) if default is not None else ""
+        self.min = self.validate_time(min) if min is not None else ""
+        self.max = self.validate_time(max) if max is not None else ""
+    
+    @staticmethod
+    def validate_time(time: str):
+        datetime.strptime(time, "%H:%M")
+        return time
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["default"] = self.default
+        return d
