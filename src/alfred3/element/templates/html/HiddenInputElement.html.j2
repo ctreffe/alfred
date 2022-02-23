@@ -1,0 +1,6 @@
+<input type="hidden"
+       class="form-control {{ align }} {{ css_class_element }}"
+       id="{{ name }}"
+       name="{{ name }}"
+       {% if input %}value="{{ input }}"
+       {% elif default %} value="{{ default }}" {% endif %}>

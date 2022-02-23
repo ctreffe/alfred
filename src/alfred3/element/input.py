@@ -2051,3 +2051,30 @@ class SelectPageList(SingleChoiceList):
 
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
+
+
+@inherit_kwargs
+class HiddenInput(InputElement):
+    """
+    Provides a hidden entry field.
+
+    Args:
+        {kwargs}
+
+    Examples:
+        ::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.HiddenInput(name="hi1", default="fixed")
+
+    """
+
+    base_template = jinja_env.get_template("EmptyElement.html.j2")
+    element_template = jinja_env.get_template("HiddenInputElement.html.j2")
