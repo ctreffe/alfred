@@ -20,6 +20,9 @@ ExperimentSession?**
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
+from email.message import EmailMessage
+from email.utils import formataddr
+import smtplib
 from ._version import __version__
 
 import os
@@ -1688,6 +1691,50 @@ class ExperimentSession:
 
         d = self._encryptor.decrypt(d_bytes)
         return d.decode()
+
+    def send_mail(self, msg: EmailMessage, tls: bool = False):
+        """
+        Sends an email message using credentials defined in secrets.conf.
+
+        Args:
+            msg (EmailMessage): The *msg* is a :class:`EmailMessage`
+                objects that holds information on the subject, the
+                recipient, and the text body.
+            tls (bool): If *True*, will try to connect with the mail
+                server over tls. If *False* (default), will try to
+                connect over SSL.
+
+        Notes:
+            Your *secrets.conf* must have a section ``[mail]`` with the
+            following fields:
+
+            - *address*: Sender email address.
+            - *name*: Sender name.
+            - *password*: Password to sender email account.
+            - *server*: SMTP server address of sender's email provider.
+            - *port*: SMTP server port. If port is zero, the standard
+                SMTP-over-SSL port (465) is used.
+        """
+        email = self.secrets.get("mail", "address")
+        name = self.secrets.get("mail", "name")
+        password = self.secrets.get("mail", "password")
+        server = self.secrets.get("mail", "server")
+        port = self.secrets.getint("mail", "port")
+
+        msg["From"] = formataddr((name, email))
+
+        if tls:
+            with smtplib.SMTP(server, port) as smtp:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.login(email, password)
+                smtp.helo()
+                smtp.send_message(msg)
+
+        else:
+            with smtplib.SMTP_SSL(server, port) as smtp:
+                smtp.login(email, password)
+                smtp.send_message(msg)
 
     @property
     def current_page(self):
