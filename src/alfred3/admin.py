@@ -6,8 +6,10 @@ import typing as t
 from enum import Enum
 from abc import ABC, abstractproperty
 from functools import total_ordering
+from jinja2 import Template
 
-from .element.display import Text
+from .element.core import Element
+from .element.display import Text, VerticalSpace
 from .element.action import JumpList
 from .element.misc import WebExitEnabler
 from .page import Page
@@ -376,3 +378,129 @@ class _AdminSection(Section):
         else:
             raise AlfredError("Invalid password.")
 
+
+
+
+DELETE_UNLINKED_HTML = """
+<!-- Button trigger modal -->
+<button 
+    type="button" 
+    class="btn btn-danger {{ css_class_element }}" 
+    data-toggle="modal" 
+    data-target="#{{ name }}-modal"
+    id="{{ name }}"
+    style="{{ fontsize }}"
+    >
+  <i class="fas fa-trash-alt mr-2"></i>{{ text }}
+</button>
+
+<!-- Modal -->
+<div 
+    class="modal fade" 
+    id="{{ name }}-modal" 
+    tabindex="-1" 
+    aria-labelledby="{{ name}}-modal-label" 
+    aria-hidden="true">
+  
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="{{ name}}-modal-label">Delete Unlinked Data</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <div class="mb-3">
+      This action cannot be undone!
+      </div>
+      
+
+        <div class="form-group">
+            <label for="{{ name }}-confirm">Enter experiment title: <b>{{ exptitle }}</b></label>
+            <input type="text" class="form-control" id="{{ name }}-confirm" name="{{ name }}-confirm" aria-describedby="deleteConfirmation">
+            <small id="deleteConfirmation" class="form-text text-muted">This is a safety measure to ensure that you do not delete data accidentally.</small>
+        </div>
+
+        <span id="{{ name }}-spinner" class="mr-1"></span>
+        <span id="{{ name }}-feedback"></span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-danger" id="{{ name }}-delete"><i class="fas fa-trash-alt mr-2"></i>DELETE</button>
+        
+      </div>
+    </div>
+  </div>
+</div>
+"""
+
+DELETE_UNLINKED_JS = """
+$(document).ready(function() {
+    $( "#{{ name }}-delete" ).click(function() {
+        value = $( "#{{ name }}-confirm" ).val()
+        console.log(value)
+        
+        if (value == "{{ exptitle }}") {
+            $( "#{{ name }}-spinner" ).html("<div class='spinner-border' role='status'><span class='sr-only'>Loading...</span></div>")
+            $.get("{{ url }}", function(data){
+
+            setTimeout(function() {
+                $( "#{{ name }}-spinner" ).html("<i class='fas fa-check-circle'></i>")
+                $( "#{{ name }}-feedback" ).html(data)
+            }, 2000)
+            })
+            
+        } else {
+            alert("Wrong input")
+        }
+    })
+})
+"""
+
+class DeleteUnlinkedButton(Element):
+    element_template = Template(DELETE_UNLINKED_HTML)
+    js_template = Template(DELETE_UNLINKED_JS)
+
+    def __init__(self, text: str = "Delete", **kwargs):
+        super().__init__(**kwargs)
+        self.text = text
+
+    def delete(self):
+        query = {"exp_id": self.exp.exp_id, "type": self.exp.data_manager.UNLINKED_DATA}
+        count = self.exp.db_unlinked.count_documents(query)
+        result = self.exp.db_unlinked.delete_many(query)
+        msg = f"Deleted {result.deleted_count} of {count} documents in unlinked data collection."
+        self.exp.log.info(msg)
+        return msg
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self.url = self.exp.ui.add_callable(self.delete)
+    
+    def prepare_web_widget(self):
+        
+        self._js_code = []
+        d = {}
+        d["url"] = self.url
+        d["name"] = self.name
+        d["exptitle"] = self.exp.title
+        js = self.js_template.render(d)
+        self.add_js(js)
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["exptitle"] = self.exp.title
+        d["text"] = self.text
+        d["name"] = self.name
+        return d
+
+
+class DeleteUnlinkedPage(ManagerPage):
+    title = "Delete Unlinked Data"
+
+    def on_exp_access(self):
+        self += VerticalSpace("150px")
+        self += Text("By clicking on this button, you can delete all unlinked data", align="center")
+        self += DeleteUnlinkedButton(font_size="14pt", align="center")
