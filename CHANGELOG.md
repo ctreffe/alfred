@@ -31,6 +31,9 @@ Types of changes
 ### Added v2.3.2
 
 - Added `DateEntry` and `TimeEntry` elements for date and time input.
+- Added `DeleteUnlinkedPage`. This page allows you to delete the unlinked
+  data associated to a specific experiment. Must be imported from 
+  `alfred3.admin` directly.
 
 ### Changed v2.3.2
 
