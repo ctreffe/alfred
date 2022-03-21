@@ -497,7 +497,34 @@ class DeleteUnlinkedButton(Element):
         return d
 
 
+@inherit_kwargs
 class DeleteUnlinkedPage(ManagerPage):
+    """
+    Allows you to delete unlinked data for a specific experiment.
+
+    Args:
+        {kwargs}
+    
+    Examples:
+        Minimal Example::
+
+            import alfred3 as al
+            from alfred3.admin import DeleteUnlinkedPage
+
+            exp = al.Experiment()
+
+            @exp.member(admin=True)
+            class DeleteUnlinkedDemo(DeleteUnlinkedPage): pass
+
+
+            @exp.member
+            class TestUnlink(al.UnlinkedDataPage):
+                
+                def on_exp_access(self):
+                    self += al.TextEntry(name="test")
+    """
+
+
     title = "Delete Unlinked Data"
 
     def on_exp_access(self):
