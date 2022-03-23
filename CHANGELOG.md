@@ -34,6 +34,8 @@ Types of changes
 - Added `DeleteUnlinkedPage`. This page allows you to delete the unlinked
   data associated to a specific experiment. Must be imported from 
   `alfred3.admin` directly.
+- Added `ExperimentSession.tmp`, which is a dictionary for temporary data
+  that does not need to be saved to the experiment data.
 
 ### Changed v2.3.2
 
