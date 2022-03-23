@@ -680,6 +680,7 @@ class ExperimentSession:
     ):
 
         self._plugins = _DictObj()  # docs in getter
+        self._tmp = _DictObj()
         
         # list of dictionaries, each containing a query specification
         # that can be used to query plugin-related data from a mongoDB
@@ -2118,9 +2119,28 @@ class ExperimentSession:
         return None
 
     @property
-    def plugins(self):
+    def plugins(self) -> _DictObj:
         """
-        dict: A dictionary of experiment plugins for use in the experiment session.
+        dict: A modified dictionary of experiment plugins.
+        
+        This dictionary allows access to values via dot-notation.
+        """
+        return self._plugins
+    
+    @property
+    def tmp(self) -> _DictObj:
+        """
+        A modified dictionary of temporary data. 
+        
+        This dictionary allows access to values via dot-notation.
+
+        Notes:
+            **How to decide whether you should use :attr:`.tmp` or
+            :attr:`.adata`?** :attr:`.adata` is saved to the experiment
+            data set, :attr:`.tmp` is not. If you are certain that
+            you need something only temporarily in an ongoing session,
+            use :attr:`.tmp`. If you may want to access the information
+            while analyzing your data later on, use :attr:`.adata`.
         """
         return self._plugins
 
