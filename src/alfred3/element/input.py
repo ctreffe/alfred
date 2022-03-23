@@ -477,6 +477,7 @@ class NumberEntry(TextEntry):
         self.min = min  # documented in getter property
         self.max = max  # documented in getter property
         self._match_hint = match_hint  # documented in getter property
+        self._original_input = None
         super().__init__(**kwargs)
 
     @property
@@ -596,6 +597,7 @@ class NumberEntry(TextEntry):
 
     @input.setter
     def input(self, value: str):
+        self._original_input = value
         if not value:
             self._input = None
         else:
@@ -650,6 +652,12 @@ class NumberEntry(TextEntry):
 
         return data
 
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["input"] = self._original_input
+        return d
+    
 
 @inherit_kwargs(exclude=["height"])
 class RangeInput(InputElement):
