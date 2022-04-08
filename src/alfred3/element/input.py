@@ -2076,5 +2076,5 @@ class HiddenInput(InputElement):
 
     """
 
-    base_template = jinja_env.get_template("EmptyElement.html.j2")
-    element_template = jinja_env.get_template("HiddenInputElement.html.j2")
+    base_template = jinja_env.get_template("html/EmptyElement.html.j2")
+    element_template = jinja_env.get_template("html/HiddenInputElement.html.j2")
