@@ -61,6 +61,7 @@ from .element.input import SingleChoiceBar
 from .element.input import MultipleChoiceButtons
 from .element.input import MultipleChoiceBar
 from .element.input import SelectPageList
+from .element.input import HiddenInput
 
 from .element.action import SubmittingButtons
 from .element.action import SubmittingBar

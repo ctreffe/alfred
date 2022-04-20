@@ -2076,6 +2076,32 @@ class SelectPageList(SingleChoiceList):
         self.choices = self.define_choices()
 
 
+@inherit_kwargs
+class HiddenInput(InputElement):
+    """
+    Provides a hidden entry field.
+
+    Args:
+        {kwargs}
+
+    Examples:
+        Minimum example::
+        
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.HiddenInput(name="hi1", default="fixed")
+
+    """
+
+    base_template = jinja_env.get_template("html/EmptyElement.html.j2")
+    element_template = jinja_env.get_template("html/HiddenInputElement.html.j2")
+
 
 @inherit_kwargs
 class DateEntry(InputElement):
@@ -2093,12 +2119,14 @@ class DateEntry(InputElement):
     
     Examples:
         Minimum example::
-
+            
             import alfred3 as al
             exp = al.Experiment()
 
             @exp.member
             class Demo(al.Page):
+                name = "demo"
+
                 def on_exp_access(self):
                     self += al.DateEntry(default="2022-01-17", name="demo_date")
     """
