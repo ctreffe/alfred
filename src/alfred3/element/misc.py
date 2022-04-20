@@ -14,6 +14,7 @@ from .core import Element
 from .core import InputElement
 from .core import jinja_env
 
+from .._helper import inherit_kwargs
 
 class Style(Element):
     """
@@ -201,12 +202,12 @@ class JavaScript(Element):
 
                         js_code = '''
                         $( '#test_el' ).on('change', function() {
-                            $( '#form' ).submit();
-                        };)
+                            move('forward') // the move() JavaScript function is provided by alfred3.
+                        })
                         '''
 
                         self += al.JavaScript(code=js_code)
-                        self += al.Text("Element 1", name="test_el")
+                        self += al.TextEntry("Element 1", name="test_el")
 
     """
 
@@ -525,3 +526,31 @@ class RepeatedCallback(Element):
 
         js = self.js_template.render(d)
         self.add_js(js)
+
+
+
+@inherit_kwargs
+class HiddenInput(InputElement):
+    """
+    Provides a hidden entry field.
+
+    Args:
+        {kwargs}
+
+    Examples:
+        ::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.HiddenInput(name="hi1", default="fixed")
+
+    """
+
+    base_template = jinja_env.get_template("html/EmptyElement.html.j2")
+    element_template = jinja_env.get_template("html/HiddenInputElement.html.j2")

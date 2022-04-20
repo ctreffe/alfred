@@ -6,6 +6,7 @@ Provides elements that allow participant input.
 
 import re
 import string
+from datetime import datetime
 
 from typing import Union
 from typing import Tuple
@@ -476,6 +477,7 @@ class NumberEntry(TextEntry):
         self.min = min  # documented in getter property
         self.max = max  # documented in getter property
         self._match_hint = match_hint  # documented in getter property
+        self._original_input = None
         super().__init__(**kwargs)
 
     @property
@@ -595,6 +597,7 @@ class NumberEntry(TextEntry):
 
     @input.setter
     def input(self, value: str):
+        self._original_input = value
         if not value:
             self._input = None
         else:
@@ -649,6 +652,12 @@ class NumberEntry(TextEntry):
 
         return data
 
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["input"] = self._original_input
+        return d
+    
 
 @inherit_kwargs(exclude=["height"])
 class RangeInput(InputElement):
@@ -674,15 +683,19 @@ class RangeInput(InputElement):
             specification shoul ideally include a unit, such as *1rem*,
             or *12pt*. If you supply an integer without a unit, a unit
             of *pt* will be assumed. Defaults to *normal*.
-        display_locale (str, optional): A locale specification for 
+        display_locale (str): A locale specification for 
             displaying the current input value in an appropriate format.
             The default is *en-GB*, which uses a dot as a decimal sign.
             Use *de-DE* for german display with a comma as the decimal
             sign. Other possible values can be taken from
             https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Intl#locale_identification_and_negotiation
-        display_suffix (str, optional): A suffix for the display of the 
+        display_suffix (str): A suffix for the display of the 
             current input value. Can be used, for example, to add a
             unit to the display. Defaults to an empty string.
+        mindecimals (int): Minimum number of decimals to display.
+            Defaults to 0.
+        maxdecimals (int): Maximum number of decimals to display.
+            Defaults to 2.
         {kwargs}
     
     Examples:
@@ -712,6 +725,8 @@ class RangeInput(InputElement):
         align: str = "center",
         display_locale: str = "en-GB",
         display_suffix: str = "",
+        mindecimals: int = 0,
+        maxdecimals: int = 2,
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
@@ -726,9 +741,15 @@ class RangeInput(InputElement):
         self.display_locale = display_locale
         self.display_suffix = display_suffix
         self.step = step
+        self.mindecimals = mindecimals
+        self.maxdecimals = maxdecimals
         self.display_input = display_input
         self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
-        if display_input:
+        
+    
+    def added_to_page(self, page):
+        super().added_to_page(page)
+        if self.display_input:
             js = self.js_template.render(self.js_template_data)
             self.add_js(js)
 
@@ -741,6 +762,8 @@ class RangeInput(InputElement):
         d["display_locale"] = self.display_locale
         d["display_suffix"] = self.display_suffix
         d["offset_display_height"] = self.offset_display_height
+        d["mindecimals"] = self.mindecimals
+        d["maxdecimals"] = self.maxdecimals
         return d
     
     @property
@@ -886,7 +909,7 @@ class SingleChoice(ChoiceElement):
             class Show(al.Page):
 
                 def on_first_show(self):
-                    c1_answer = self.exp.values["c1] # access value
+                    c1_answer = self.exp.values["c1"] # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
 
 
@@ -2062,8 +2085,8 @@ class HiddenInput(InputElement):
         {kwargs}
 
     Examples:
-        ::
-
+        Minimum example::
+        
             import alfred3 as al
             exp = al.Experiment()
 
@@ -2078,3 +2101,102 @@ class HiddenInput(InputElement):
 
     base_template = jinja_env.get_template("html/EmptyElement.html.j2")
     element_template = jinja_env.get_template("html/HiddenInputElement.html.j2")
+
+
+@inherit_kwargs
+class DateEntry(InputElement):
+    """
+    An element for date entry.
+
+    Args:
+        default (str): Default date, provided as a string in YYYY-MM-DD
+            format. If *None* (default), the current date will be used.
+        min (str): Minimum date, provided as a string in YYYY-MM-DD
+            format.
+        max (str): Maximum date, provided as a string in YYYY-MM-DD
+            format.
+        {kwargs}
+    
+    Examples:
+        Minimum example::
+            
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.DateEntry(default="2022-01-17", name="demo_date")
+    """
+    element_template = jinja_env.get_template("html/DateEntryElement.html.j2")
+
+    def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self.default = self.validate_date(default) if default is not None else ""
+        self.min = self.validate_date(min) if min is not None else ""
+        self.max = self.validate_date(max) if max is not None else ""
+    
+    @staticmethod
+    def validate_date(date: str):
+        datetime.strptime(date, "%Y-%m-%d")
+        return date
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["default"] = self.default
+        return d
+
+
+
+@inherit_kwargs
+class TimeEntry(InputElement):
+    """
+    An element for time entry.
+
+    Args:
+        default (str): Default time, provided as a string in HH:MM
+            format. If *None* (default), the element will display a
+            greyed-out time of "12:30".
+        min (str): Minimum time, provided as a string in HH:MM
+            format.
+        max (str): Maximum time, provided as a string in HH:MM
+            format.
+        {kwargs}
+    
+    Examples:
+        Minimum example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.TimeEntry(default="14:30", name="demo_time")
+    """
+
+    element_template = jinja_env.get_template("html/TimeEntryElement.html.j2")
+
+    def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self.default = self.validate_time(default) if default is not None else ""
+        self.min = self.validate_time(min) if min is not None else ""
+        self.max = self.validate_time(max) if max is not None else ""
+    
+    @staticmethod
+    def validate_time(time: str):
+        datetime.strptime(time, "%H:%M")
+        return time
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["default"] = self.default
+        return d

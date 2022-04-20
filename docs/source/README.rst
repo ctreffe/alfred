@@ -14,7 +14,12 @@ If you have Python 3.7 or newer installed, just install alfred3 via pip::
 
     $ pip3 install alfred3
 
-A detailed step-by-step guide is available here:
+.. note:: The above is a *terminal command*. You can type or paste this
+   command into your ´*terminal* app (Mac) or the command line prompt
+   (Windows) to install alfred3. The ``$`` at the start indicates the 
+   start of a new command. If you copy-paste the command, you can omit
+   the ``$``.
+
 
 A "Hello, world" experiment
 ---------------------------

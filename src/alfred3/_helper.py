@@ -152,7 +152,7 @@ def is_url(url=None):
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc, result.path])
-    except:
+    except Exception:
         return False
 
 

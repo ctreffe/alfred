@@ -60,10 +60,16 @@ NoNavigationPage
       ~NoNavigationPage.on_first_show
    
    
+      ~NoNavigationPage.position_in_section
+   
+   
       ~NoNavigationPage.prepare_web_widget
    
    
       ~NoNavigationPage.save_data
+   
+   
+      ~NoNavigationPage.showif
    
    
       ~NoNavigationPage.uptree
@@ -113,7 +119,6 @@ NoNavigationPage
          ~NoNavigationPage.section
          ~NoNavigationPage.short_tree
          ~NoNavigationPage.should_be_shown
-         ~NoNavigationPage.showif
          ~NoNavigationPage.subtitle
          ~NoNavigationPage.tag
          ~NoNavigationPage.title

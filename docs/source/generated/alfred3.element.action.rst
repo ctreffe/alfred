@@ -20,10 +20,13 @@ alfred3.element.action
       :template: autosummary/class.rst
       :nosignatures:
    
+      BackButton
       Button
       DynamicJumpButtons
+      ForwardButton
       JumpButtons
       JumpList
+      SubmittingBar
       SubmittingButtons
    
    

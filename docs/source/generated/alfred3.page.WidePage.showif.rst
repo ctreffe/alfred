@@ -1,6 +1,6 @@
-WidePage.showif
+WidePage.showif()
 ============================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: WidePage.showif
+.. automethod:: WidePage.showif

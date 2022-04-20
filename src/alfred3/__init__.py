@@ -80,6 +80,7 @@ from .element.misc import Value
 from .element.misc import Data
 from .element.misc import Callback
 from .element.misc import RepeatedCallback
+from .element.misc import HiddenInput
 
 from .util import emoji
 from .util import icon

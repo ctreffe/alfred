@@ -780,7 +780,7 @@ class _CoreCompositePage(_PageCore):
         # check minimum display time
         mintime = self._mdt
         if time.time() - self.show_times[0] < mintime:
-            msg = self.minimum_display_time_msg.format(mdt=str(mintime))
+            msg = self.minimum_display_time_msg.format(mdt=self.minimum_display_time)
             self.exp.message_manager.post_message(msg)
             return False
 

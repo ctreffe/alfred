@@ -46,6 +46,15 @@ script = Script()
 @app.route("/start", methods=["GET", "POST"])
 def start():
 
+    # this prevents an error in case of repeated calls to /start
+    if script.exp_session is not None:
+        script.log.warning((
+            "The '/start' route was called, but there was already "
+            "a session running. Redirecting to '/experiment'."
+            ))
+        return redirect(url_for("experiment"))
+
+
     logger = logging.getLogger(f"alfred3")
     logger.info("Starting experiment initialization.")
 
@@ -62,7 +71,7 @@ def start():
     try:
         script.exp_session = script.exp.create_session(session_id=session_id, config=script.config, secrets=script.secrets, **request.args)
     except Exception:
-        script.log.exception("Expection during experiment generation.")
+        script.log.exception("Exception during experiment generation.")
         abort(500)
 
     # start experiment
@@ -73,10 +82,14 @@ def start():
         abort(500)
 
     # Experiment startup message
-
     session["page_tokens"] = []
 
+    # jump to page
+    page = request.args.get("page", None)
+
     try:
+        if page:
+            return redirect(url_for("experiment", page=page))
         return redirect(url_for("experiment"))
     except Exception:
         log.exception("Exception during experiment startup.")
@@ -126,7 +139,7 @@ def experiment():
         elif request.method == "GET":
             url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
             if url_pagename:
-                script.exp_session.movement_manager.jump_by_name(name=url_pagename)
+                script.exp_session.movement_manager.move(direction=f"jump>{url_pagename}")
 
             page_token = str(uuid4())
 

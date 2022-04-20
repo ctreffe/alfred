@@ -20,6 +20,9 @@ ExperimentSession?**
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
+from email.message import EmailMessage
+from email.utils import formataddr
+import smtplib
 from ._version import __version__
 
 import os
@@ -677,6 +680,7 @@ class ExperimentSession:
     ):
 
         self._plugins = _DictObj()  # docs in getter
+        self._tmp = _DictObj()
         
         # list of dictionaries, each containing a query specification
         # that can be used to query plugin-related data from a mongoDB
@@ -1689,6 +1693,50 @@ class ExperimentSession:
         d = self._encryptor.decrypt(d_bytes)
         return d.decode()
 
+    def send_mail(self, msg: EmailMessage, tls: bool = False):
+        """
+        Sends an email message using credentials defined in secrets.conf.
+
+        Args:
+            msg (EmailMessage): The *msg* is a :class:`EmailMessage`
+                objects that holds information on the subject, the
+                recipient, and the text body.
+            tls (bool): If *True*, will try to connect with the mail
+                server over tls. If *False* (default), will try to
+                connect over SSL.
+
+        Notes:
+            Your *secrets.conf* must have a section ``[mail]`` with the
+            following fields:
+
+            - *address*: Sender email address.
+            - *name*: Sender name.
+            - *password*: Password to sender email account.
+            - *server*: SMTP server address of sender's email provider.
+            - *port*: SMTP server port. If port is zero, the standard
+                SMTP-over-SSL port (465) is used.
+        """
+        email = self.secrets.get("mail", "address")
+        name = self.secrets.get("mail", "name")
+        password = self.secrets.get("mail", "password")
+        server = self.secrets.get("mail", "server")
+        port = self.secrets.getint("mail", "port")
+
+        msg["From"] = formataddr((name, email))
+
+        if tls:
+            with smtplib.SMTP(server, port) as smtp:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.login(email, password)
+                smtp.helo()
+                smtp.send_message(msg)
+
+        else:
+            with smtplib.SMTP_SSL(server, port) as smtp:
+                smtp.login(email, password)
+                smtp.send_message(msg)
+
     @property
     def current_page(self):
         """
@@ -2071,9 +2119,28 @@ class ExperimentSession:
         return None
 
     @property
-    def plugins(self):
+    def plugins(self) -> _DictObj:
         """
-        dict: A dictionary of experiment plugins for use in the experiment session.
+        dict: A modified dictionary of experiment plugins.
+        
+        This dictionary allows access to values via dot-notation.
+        """
+        return self._plugins
+    
+    @property
+    def tmp(self) -> _DictObj:
+        """
+        A modified dictionary of temporary data. 
+        
+        This dictionary allows access to values via dot-notation.
+
+        Notes:
+            **How to decide whether you should use :attr:`.tmp` or
+            :attr:`.adata`?** :attr:`.adata` is saved to the experiment
+            data set, :attr:`.tmp` is not. If you are certain that
+            you need something only temporarily in an ongoing session,
+            use :attr:`.tmp`. If you may want to access the information
+            while analyzing your data later on, use :attr:`.adata`.
         """
         return self._plugins
 

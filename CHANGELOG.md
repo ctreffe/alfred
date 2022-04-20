@@ -28,23 +28,38 @@ Types of changes
 
 ## alfred3 v2.3.2 [unreleased]
 
+### Added v2.3.2
+
+- Added `DateEntry` and `TimeEntry` elements for date and time input.
+- Added `DeleteUnlinkedPage`. This page allows you to delete the unlinked
+  data associated to a specific experiment. Must be imported from 
+  `alfred3.admin` directly.
+- Added `ExperimentSession.tmp`, which is a dictionary for temporary data
+  that does not need to be saved to the experiment data.
+
 ### Changed v2.3.2
 
 - `alfred3.Card` elements with *collapse=True* will now start in collapsed
   view.
 - Any call to `Experiment.finish()` will only go through now, if the experiment
   session is *not* already aborted.
+- Some small updates to the documentation, most notably regarding the command
+  line interface (CLI).
 
 ### Fixed v2.3.2
 
+- Hotfix for #174
 - Fixed #141
 - Fixed #144
 - Fixed #139
 - Fixed #169
+- Fixed #157
 - Fixed an issue that lead `alfred3.Card` elements to render sub-elements
   as codeblocks instead of correctly displaying their full web widget.
 - Fixed an issue that lead `alfred3.Card` elements to not add input elements
   to the parent page in the intended way.
+- Fixed an issue in `ExperimentSession.all_unlinked_data` for access to 
+  *local* unlinked data.
 
 
 ## alfred3 v2.3.1 (Released 2021-10-28)

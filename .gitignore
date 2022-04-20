@@ -144,3 +144,4 @@ alfred_venv/
 .alfred.venv/
 .alenv/
 tests/exp/
+docs/source/generated

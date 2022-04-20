@@ -63,10 +63,16 @@ TimeoutPage
       ~TimeoutPage.on_timeout
    
    
+      ~TimeoutPage.position_in_section
+   
+   
       ~TimeoutPage.prepare_web_widget
    
    
       ~TimeoutPage.save_data
+   
+   
+      ~TimeoutPage.showif
    
    
       ~TimeoutPage.uptree
@@ -117,7 +123,6 @@ TimeoutPage
          ~TimeoutPage.section
          ~TimeoutPage.short_tree
          ~TimeoutPage.should_be_shown
-         ~TimeoutPage.showif
          ~TimeoutPage.subtitle
          ~TimeoutPage.tag
          ~TimeoutPage.timeout
