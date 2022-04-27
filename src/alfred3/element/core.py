@@ -2002,7 +2002,7 @@ class InputElement(LabelledElement):
         data["prefix"] = self._codebook_prefix
         data["suffix"] = self._codebook_suffix
         data["default"] = self.default
-        data["description"] = self.description
+        data["description"] = " ".join(self.description.splitlines())
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
