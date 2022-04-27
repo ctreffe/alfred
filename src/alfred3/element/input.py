@@ -1196,7 +1196,7 @@ class MultipleChoice(ChoiceElement):
         self._input = value
 
 
-@inherit_kwargs
+@inherit_kwargs(exclude=["align"])
 class SingleChoiceList(SingleChoice):
     """
     A dropdown list, allowing selection of one option.
@@ -1292,6 +1292,8 @@ class SingleChoiceList(SingleChoice):
     type = "select_one"
 
     def __init__(self, *choice_labels, default: int = 1, **kwargs):
+        if "align" in kwargs:
+            raise ValueError(f"Argument 'align' is not supported for {type(self).__name__}")
         super().__init__(*choice_labels, default=default, **kwargs)
 
     def define_choices(self) -> List[_Choice]:
