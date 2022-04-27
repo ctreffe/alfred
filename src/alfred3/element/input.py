@@ -1323,10 +1323,11 @@ class SingleChoiceList(SingleChoice):
             choice.label_id = f"{choice.id}-lab"
             choice.disabled = True if self.disabled else False
 
-            if self.input:
+            # set default
+            if isinstance(self.input, int):
+                choice.checked = self.input == i
+            else:
                 choice.checked = self.input == choice.value
-            elif self.default is not None:
-                choice.checked = True if self.default == i else False
 
             choice.css_class = f"choice-button choice-button-{self.name}"
 
