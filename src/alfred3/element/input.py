@@ -1116,6 +1116,7 @@ class MultipleChoice(ChoiceElement):
             return False
 
         elif not (self.min <= sum(list(self.input.values())) <= self.max):
+            self.hint_manager.post_message(self.select_hint)
             return False
 
         else:
