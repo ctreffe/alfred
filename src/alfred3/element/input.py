@@ -180,8 +180,6 @@ class MatchEntry(TextEntry):
         self._match_hint = match_hint  # documented in getter property
 
     def validate_data(self, silent: bool = False) -> bool:
-        print("func validate_data()")
-        print(f"value silent: {silent}")
 
         if not self.should_be_shown:
             return True
@@ -190,21 +188,16 @@ class MatchEntry(TextEntry):
             return True
 
         elif not self.input:
-            print("Kein Input")
             if not silent:
                 self.hint_manager.post_message(self.no_input_hint)
-                print("Hint Messenger no input")
             return False
 
         elif not self.pattern.fullmatch(self.input):
-            print("Kein vollständiges Pattern")
             if not silent:
                 self.hint_manager.post_message(self.match_hint)
-                print("hint messenger no pattern")
             return False
 
         else:
-            print("vollständiges Pattern 2")
             return True
 
     @property
