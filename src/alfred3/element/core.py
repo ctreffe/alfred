@@ -1851,15 +1851,13 @@ class InputElement(LabelledElement):
             proceed to the next page, *False*, if the input is not
             in the correct form.
         """
-        print("func validate_data() from core")
-        print(f"core value silent: {silent}")
+
         if not self.should_be_shown:
             return True
 
         elif self.force_input and not self.input:
             if not silent:
                 self.hint_manager.post_message(self.no_input_hint)
-                print("hint messenger no input core")
             return False
 
         else:
@@ -2006,7 +2004,7 @@ class InputElement(LabelledElement):
         data["prefix"] = self._codebook_prefix
         data["suffix"] = self._codebook_suffix
         data["default"] = self.default
-        data["description"] = " ".join(self.description.splitlines())
+        data["description"] = " ".join(self.description.splitlines()) if self.description else None
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 
