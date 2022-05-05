@@ -402,7 +402,7 @@ class DataManager:
         """
         if data_type == "exp_data":
             path = self.exp.config.get("local_saving_agent", "path")
-        elif data_type == "unlinked_data":
+        elif data_type == "unlinked":
             path = self.exp.config.get("local_saving_agent_unlinked", "path")
 
         path = self.exp.subpath(path)

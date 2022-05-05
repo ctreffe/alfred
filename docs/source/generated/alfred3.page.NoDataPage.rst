@@ -60,10 +60,16 @@ NoDataPage
       ~NoDataPage.on_first_show
    
    
+      ~NoDataPage.position_in_section
+   
+   
       ~NoDataPage.prepare_web_widget
    
    
       ~NoDataPage.save_data
+   
+   
+      ~NoDataPage.showif
    
    
       ~NoDataPage.uptree
@@ -113,7 +119,6 @@ NoDataPage
          ~NoDataPage.section
          ~NoDataPage.short_tree
          ~NoDataPage.should_be_shown
-         ~NoDataPage.showif
          ~NoDataPage.subtitle
          ~NoDataPage.tag
          ~NoDataPage.title

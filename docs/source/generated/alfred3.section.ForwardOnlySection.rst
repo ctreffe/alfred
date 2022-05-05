@@ -42,6 +42,12 @@ ForwardOnlySection
       ~ForwardOnlySection.on_resume
    
    
+      ~ForwardOnlySection.position_in_section
+   
+   
+      ~ForwardOnlySection.showif
+   
+   
       ~ForwardOnlySection.uptree
    
    
@@ -51,10 +57,7 @@ ForwardOnlySection
       ~ForwardOnlySection.validate_on_forward
    
    
-      ~ForwardOnlySection.validate_on_jumpfrom
-   
-   
-      ~ForwardOnlySection.validate_on_jumpto
+      ~ForwardOnlySection.validate_on_jump
    
    
       ~ForwardOnlySection.validate_on_leave
@@ -93,13 +96,16 @@ ForwardOnlySection
          ~ForwardOnlySection.allow_forward
          ~ForwardOnlySection.allow_jumpfrom
          ~ForwardOnlySection.allow_jumpto
+         ~ForwardOnlySection.close_pages_on_leave
          ~ForwardOnlySection.data
          ~ForwardOnlySection.empty
          ~ForwardOnlySection.exp
          ~ForwardOnlySection.experiment
          ~ForwardOnlySection.first_member
+         ~ForwardOnlySection.first_page
          ~ForwardOnlySection.instance_log
          ~ForwardOnlySection.last_member
+         ~ForwardOnlySection.last_page
          ~ForwardOnlySection.members
          ~ForwardOnlySection.name
          ~ForwardOnlySection.pages
@@ -108,7 +114,6 @@ ForwardOnlySection
          ~ForwardOnlySection.section
          ~ForwardOnlySection.short_tree
          ~ForwardOnlySection.should_be_shown
-         ~ForwardOnlySection.showif
          ~ForwardOnlySection.shuffle
          ~ForwardOnlySection.subsections
          ~ForwardOnlySection.subtitle

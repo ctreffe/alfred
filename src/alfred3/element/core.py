@@ -799,7 +799,7 @@ class Element:
         :class:`.JavaScript` element is a better choice.
 
         Args:
-            code: Css code
+            code: JavaScript code
             priority: Can be used to influence the order in which code
                 is added to the page. Sorting is ascending, i.e. the
                 lowest numbers appear closest to the top of the page.
@@ -1329,13 +1329,6 @@ class Row(Element):
             if self.elements_full_width:
                 element.width = "full"
 
-    # def _prepare_web_widget(self):
-
-    #     for element in self.elements:
-    #         element.prepare_web_widget()
-
-    #     super()._prepare_web_widget()
-
     @property
     def _cols(self) -> Iterator:
         """Yields preprocessed ``_RowCol`` columns ."""
@@ -1849,7 +1842,7 @@ class InputElement(LabelledElement):
             d["corrective_hints"] = list(self.corrective_hints)
         return d
 
-    def validate_data(self) -> bool:
+    def validate_data(self, silent: bool = False) -> bool:
         """
         Method for validation of input to the element.
 
@@ -1858,11 +1851,13 @@ class InputElement(LabelledElement):
             proceed to the next page, *False*, if the input is not
             in the correct form.
         """
+
         if not self.should_be_shown:
             return True
 
         elif self.force_input and not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         else:
@@ -2009,7 +2004,7 @@ class InputElement(LabelledElement):
         data["prefix"] = self._codebook_prefix
         data["suffix"] = self._codebook_suffix
         data["default"] = self.default
-        data["description"] = self.description
+        data["description"] = " ".join(self.description.splitlines()) if self.description else None
         data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
         return data
 

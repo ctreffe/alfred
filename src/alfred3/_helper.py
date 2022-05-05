@@ -152,7 +152,7 @@ def is_url(url=None):
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc, result.path])
-    except:
+    except Exception:
         return False
 
 
@@ -411,9 +411,15 @@ def inherit_kwargs(
 
             # apply inclusion and exclusion
             for arg in list(inherited_docs.keys()):
-                if arg in exclude: del inherited_docs[arg]
-                elif include is not None and arg not in include: del inherited_docs[arg]
-
+                for ex in exclude:
+                    ex = re.sub(r"\*", "\*", ex)
+                    m = re.match(ex + r"(\s?\(.+\))?", arg)
+                    if m:
+                        del inherited_docs[arg]
+                if include is not None:
+                    if not re.sub(r"(\s?\(.+\))?", "", arg) in include:
+                        del inherited_docs[arg]
+                    
             if sort_kwargs:
                 inherited_docs = sort_dict(inherited_docs)
             

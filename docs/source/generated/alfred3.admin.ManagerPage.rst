@@ -60,10 +60,16 @@ ManagerPage
       ~ManagerPage.on_first_show
    
    
+      ~ManagerPage.position_in_section
+   
+   
       ~ManagerPage.prepare_web_widget
    
    
       ~ManagerPage.save_data
+   
+   
+      ~ManagerPage.showif
    
    
       ~ManagerPage.uptree
@@ -114,7 +120,6 @@ ManagerPage
          ~ManagerPage.section
          ~ManagerPage.short_tree
          ~ManagerPage.should_be_shown
-         ~ManagerPage.showif
          ~ManagerPage.subtitle
          ~ManagerPage.tag
          ~ManagerPage.title

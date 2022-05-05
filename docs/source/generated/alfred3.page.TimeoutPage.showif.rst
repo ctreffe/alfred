@@ -1,6 +1,6 @@
-TimeoutPage.showif
+TimeoutPage.showif()
 ===============================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: TimeoutPage.showif
+.. automethod:: TimeoutPage.showif

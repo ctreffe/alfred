@@ -9,12 +9,19 @@ for a wide range of applications.
 
 Installation
 ------------
+If you are starting from scratch, please go to our detailed installation video:
+https://youtu.be/of_3RDjCijI
 
-If you have Python 3.7 or newer installed, just install alfred3 via pip::
+But if you already have Python 3.7 or newer installed, just install alfred3 via pip::
 
     $ pip3 install alfred3
 
-A detailed step-by-step guide is available here:
+.. note:: The above is a *terminal command*. You can type or paste this
+   command into your ´*terminal* app (Mac) or the command line prompt
+   (Windows) to install alfred3. The ``$`` at the start indicates the 
+   start of a new command. If you copy-paste the command, you can omit
+   the ``$``.
+
 
 A "Hello, world" experiment
 ---------------------------
@@ -41,9 +48,11 @@ with the experiment opens automatically. Otherwise, open any webbrowser
 and visit http://127.0.0.1:5000/start to start the experiment.
 
 Of course, this "Hello, world" experiment does not contain much content:
-Only a single page with a heading. To learn how to add content to an 
-experiment, visit our tutorials: (to be filled)
+Only a single page with a heading. You can learn how to add content to an experiment in
+our tutorials, listed in the left sidebar under "how to".
 
+If you have never programmed in python before, you are welcome to visit our
+python introduction course: https://ctreffe.github.io/alspace/py3-tutorial
 
 Questions and Answers
 ----------------------

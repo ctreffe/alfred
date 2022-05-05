@@ -3,4 +3,4 @@ PasswordPage.title
 
 .. currentmodule:: alfred3.page
 
-.. autoproperty:: PasswordPage.title
+.. autoattribute:: PasswordPage.title

@@ -60,10 +60,16 @@ UnlinkedDataPage
       ~UnlinkedDataPage.on_first_show
    
    
+      ~UnlinkedDataPage.position_in_section
+   
+   
       ~UnlinkedDataPage.prepare_web_widget
    
    
       ~UnlinkedDataPage.save_data
+   
+   
+      ~UnlinkedDataPage.showif
    
    
       ~UnlinkedDataPage.uptree
@@ -114,7 +120,6 @@ UnlinkedDataPage
          ~UnlinkedDataPage.section
          ~UnlinkedDataPage.short_tree
          ~UnlinkedDataPage.should_be_shown
-         ~UnlinkedDataPage.showif
          ~UnlinkedDataPage.subtitle
          ~UnlinkedDataPage.tag
          ~UnlinkedDataPage.title

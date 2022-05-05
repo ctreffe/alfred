@@ -60,6 +60,9 @@ ExperimentSession
       ~ExperimentSession.read_csv_tolist
    
    
+      ~ExperimentSession.start
+   
+   
       ~ExperimentSession.subpath
    
 
@@ -116,6 +119,7 @@ ExperimentSession
          ~ExperimentSession.session_timeout
          ~ExperimentSession.start_time
          ~ExperimentSession.start_timestamp
+         ~ExperimentSession.test_mode
          ~ExperimentSession.title
          ~ExperimentSession.type
          ~ExperimentSession.urlargs

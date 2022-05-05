@@ -60,10 +60,16 @@ AdminPage
       ~AdminPage.on_first_show
    
    
+      ~AdminPage.position_in_section
+   
+   
       ~AdminPage.prepare_web_widget
    
    
       ~AdminPage.save_data
+   
+   
+      ~AdminPage.showif
    
    
       ~AdminPage.uptree
@@ -114,7 +120,6 @@ AdminPage
          ~AdminPage.section
          ~AdminPage.short_tree
          ~AdminPage.should_be_shown
-         ~AdminPage.showif
          ~AdminPage.subtitle
          ~AdminPage.tag
          ~AdminPage.title

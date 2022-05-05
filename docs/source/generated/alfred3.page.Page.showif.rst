@@ -1,6 +1,6 @@
-Page.showif
+Page.showif()
 ========================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: Page.showif
+.. automethod:: Page.showif

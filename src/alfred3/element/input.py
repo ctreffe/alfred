@@ -6,6 +6,7 @@ Provides elements that allow participant input.
 
 import re
 import string
+from datetime import datetime
 
 from typing import Union
 from typing import Tuple
@@ -178,20 +179,22 @@ class MatchEntry(TextEntry):
         self.pattern: re.Pattern = re.compile(pattern)
         self._match_hint = match_hint  # documented in getter property
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
 
-        elif not self.force_input and self.input == "":
+        elif not self.force_input and not self.input:
             return True
 
         elif not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         elif not self.pattern.fullmatch(self.input):
-            self.hint_manager.post_message(self.match_hint)
+            if not silent:
+                self.hint_manager.post_message(self.match_hint)
             return False
 
         else:
@@ -326,7 +329,7 @@ class PasswordEntry(RegEntry):
                 f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string."
             )
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -335,11 +338,13 @@ class PasswordEntry(RegEntry):
             return True
 
         elif not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         elif not self.input == self.password:
-            self.hint_manager.post_message(self.match_hint)
+            if not silent:
+                self.hint_manager.post_message(self.match_hint)
             return False
 
         else:
@@ -396,7 +401,7 @@ class MultiplePasswordEntry(RegEntry):
                     f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings."
                 )
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -405,7 +410,8 @@ class MultiplePasswordEntry(RegEntry):
             return True
 
         elif not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         elif not self.input in self.passwords:
@@ -428,13 +434,16 @@ class NumberEntry(TextEntry):
     Displays an input field which only accepts numerical input.
 
     Args:
-        decimals: Accepted number of decimals (0 as default).
-        min: Minimum accepted entry value.
-        max: Maximum accepted entry value.
-        decimal_signs: Tuple of accepted decimal signs. Defaults to
-            ``(",", ".")``, i.e. by default, both a comma and a dot are
-            interpreted as decimal signs.
-        match_hint: Specialized match hint for this element. You can
+        ndecimals (int): Accepted number of decimals. Defaults to 0.
+        min (int, float): Minimum accepted entry value. If *None* 
+            (default), no minimum value is enforced.
+        max (int, float): Maximum accepted entry value. If *None* 
+            (default), no maximum value is enforced.
+        decimal_signs (tuple): Tuple of accepted decimal signs. Defaults to
+            ``(",", ".")``, i.e. by default, **both** a comma and a dot are
+            interpreted as decimal signs. This is due to alfred3 being
+            developed in Germany, which uses the comma as a decimal sign.
+        match_hint (str): Specialized match hint for this element. You can
             use the placeholders ``{{min}}``, ``{{max}}``, ``{{ndecimals}}``,
             and ``{{decimal_signs}}``. To customize the match hint for
             all NumberEntry elements, change the respective setting
@@ -473,6 +482,7 @@ class NumberEntry(TextEntry):
         self.min = min  # documented in getter property
         self.max = max  # documented in getter property
         self._match_hint = match_hint  # documented in getter property
+        self._original_input = None
         super().__init__(**kwargs)
 
     @property
@@ -592,6 +602,7 @@ class NumberEntry(TextEntry):
 
     @input.setter
     def input(self, value: str):
+        self._original_input = value
         if not value:
             self._input = None
         else:
@@ -600,7 +611,7 @@ class NumberEntry(TextEntry):
                 value = value.replace(sign, ".")
             self._input = value
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -609,7 +620,8 @@ class NumberEntry(TextEntry):
             return True
 
         elif not self._input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         try:
@@ -646,6 +658,12 @@ class NumberEntry(TextEntry):
 
         return data
 
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["input"] = self._original_input
+        return d
+    
 
 @inherit_kwargs(exclude=["height"])
 class RangeInput(InputElement):
@@ -671,15 +689,19 @@ class RangeInput(InputElement):
             specification shoul ideally include a unit, such as *1rem*,
             or *12pt*. If you supply an integer without a unit, a unit
             of *pt* will be assumed. Defaults to *normal*.
-        display_locale (str, optional): A locale specification for 
+        display_locale (str): A locale specification for 
             displaying the current input value in an appropriate format.
             The default is *en-GB*, which uses a dot as a decimal sign.
             Use *de-DE* for german display with a comma as the decimal
             sign. Other possible values can be taken from
             https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Intl#locale_identification_and_negotiation
-        display_suffix (str, optional): A suffix for the display of the 
+        display_suffix (str): A suffix for the display of the 
             current input value. Can be used, for example, to add a
             unit to the display. Defaults to an empty string.
+        mindecimals (int): Minimum number of decimals to display.
+            Defaults to 0.
+        maxdecimals (int): Maximum number of decimals to display.
+            Defaults to 2.
         {kwargs}
     
     Examples:
@@ -709,6 +731,8 @@ class RangeInput(InputElement):
         align: str = "center",
         display_locale: str = "en-GB",
         display_suffix: str = "",
+        mindecimals: int = 0,
+        maxdecimals: int = 2,
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
@@ -723,9 +747,15 @@ class RangeInput(InputElement):
         self.display_locale = display_locale
         self.display_suffix = display_suffix
         self.step = step
+        self.mindecimals = mindecimals
+        self.maxdecimals = maxdecimals
         self.display_input = display_input
         self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
-        if display_input:
+        
+    
+    def added_to_page(self, page):
+        super().added_to_page(page)
+        if self.display_input:
             js = self.js_template.render(self.js_template_data)
             self.add_js(js)
 
@@ -738,6 +768,8 @@ class RangeInput(InputElement):
         d["display_locale"] = self.display_locale
         d["display_suffix"] = self.display_suffix
         d["offset_display_height"] = self.offset_display_height
+        d["mindecimals"] = self.mindecimals
+        d["maxdecimals"] = self.maxdecimals
         return d
     
     @property
@@ -787,8 +819,7 @@ class RangeInput(InputElement):
         else:
             self._input = value
 
-
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -796,8 +827,9 @@ class RangeInput(InputElement):
         if not self.force_input and not self._input:
             return True
 
-        elif not self._input:
-            self.hint_manager.post_message(self.no_input_hint)
+        elif not self.input:
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         try:
@@ -883,7 +915,7 @@ class SingleChoice(ChoiceElement):
             class Show(al.Page):
 
                 def on_first_show(self):
-                    c1_answer = self.exp.values["c1] # access value
+                    c1_answer = self.exp.values["c1"] # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
 
 
@@ -1079,7 +1111,7 @@ class MultipleChoice(ChoiceElement):
             msg = self.experiment.config.get("hints", "select_MultipleChoice")
             return msg.format(min=self.min, max=self.max)
 
-    def validate_data(self) -> bool:
+    def validate_data(self, silent: bool = False) -> bool:
         checked_values = {k: v for k, v in self.input.items() if v}
 
         if not self.should_be_shown:
@@ -1090,6 +1122,7 @@ class MultipleChoice(ChoiceElement):
             return False
 
         elif not (self.min <= sum(list(self.input.values())) <= self.max):
+            self.hint_manager.post_message(self.select_hint)
             return False
 
         else:
@@ -1170,14 +1203,14 @@ class MultipleChoice(ChoiceElement):
         self._input = value
 
 
-@inherit_kwargs
+@inherit_kwargs(exclude=["align"])
 class SingleChoiceList(SingleChoice):
     """
     A dropdown list, allowing selection of one option.
 
     Args:
-        *choice_labels: Variable numbers of choice labels. See
-            :class:`.ChoiceElement` for details.
+        *choice_labels: Variable numbers of choice labels. Labels must be
+            strings. The number of labels determines the number of choices.
         {kwargs}
 
     Notes:
@@ -1215,6 +1248,25 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
+        
+
+        A single choice list with a no-choice option as first option that
+        still enforces force-input. This works, because the empty string
+        will not be accepted if force_input is True::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.SingleChoiceList(
+                        "", "choi1", "choi2", "choi3",
+                         name="sel1", force_input=True
+                         )
+
 
         Accessing the value of a SingleChoiceList::
 
@@ -1247,6 +1299,8 @@ class SingleChoiceList(SingleChoice):
     type = "select_one"
 
     def __init__(self, *choice_labels, default: int = 1, **kwargs):
+        if "align" in kwargs:
+            raise ValueError(f"Argument 'align' is not supported for {type(self).__name__}")
         super().__init__(*choice_labels, default=default, **kwargs)
 
     def define_choices(self) -> List[_Choice]:
@@ -1276,10 +1330,11 @@ class SingleChoiceList(SingleChoice):
             choice.label_id = f"{choice.id}-lab"
             choice.disabled = True if self.disabled else False
 
-            if self.input:
+            # set default
+            if isinstance(self.input, int):
+                choice.checked = self.input == i
+            else:
                 choice.checked = self.input == choice.value
-            elif self.default is not None:
-                choice.checked = True if self.default == i else False
 
             choice.css_class = f"choice-button choice-button-{self.name}"
 
@@ -2029,3 +2084,129 @@ class SelectPageList(SingleChoiceList):
 
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
+
+
+@inherit_kwargs
+class HiddenInput(InputElement):
+    """
+    Provides a hidden entry field.
+
+    Args:
+        {kwargs}
+
+    Examples:
+        Minimum example::
+        
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.HiddenInput(name="hi1", default="fixed")
+
+    """
+
+    base_template = jinja_env.get_template("html/EmptyElement.html.j2")
+    element_template = jinja_env.get_template("html/HiddenInputElement.html.j2")
+
+
+@inherit_kwargs
+class DateEntry(InputElement):
+    """
+    An element for date entry.
+
+    Args:
+        default (str): Default date, provided as a string in YYYY-MM-DD
+            format. If *None* (default), the current date will be used.
+        min (str): Minimum date, provided as a string in YYYY-MM-DD
+            format.
+        max (str): Maximum date, provided as a string in YYYY-MM-DD
+            format.
+        {kwargs}
+    
+    Examples:
+        Minimum example::
+            
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.DateEntry(default="2022-01-17", name="demo_date")
+    """
+    element_template = jinja_env.get_template("html/DateEntryElement.html.j2")
+
+    def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self.default = self.validate_date(default) if default is not None else ""
+        self.min = self.validate_date(min) if min is not None else ""
+        self.max = self.validate_date(max) if max is not None else ""
+    
+    @staticmethod
+    def validate_date(date: str):
+        datetime.strptime(date, "%Y-%m-%d")
+        return date
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["default"] = self.default
+        return d
+
+
+
+@inherit_kwargs
+class TimeEntry(InputElement):
+    """
+    An element for time entry.
+
+    Args:
+        default (str): Default time, provided as a string in HH:MM
+            format. If *None* (default), the element will display a
+            greyed-out time of "12:30".
+        min (str): Minimum time, provided as a string in HH:MM
+            format.
+        max (str): Maximum time, provided as a string in HH:MM
+            format.
+        {kwargs}
+    
+    Examples:
+        Minimum example::
+
+            import alfred3 as al
+            exp = al.Experiment()
+
+            @exp.member
+            class Demo(al.Page):
+                def on_exp_access(self):
+                    self += al.TimeEntry(default="14:30", name="demo_time")
+    """
+
+    element_template = jinja_env.get_template("html/TimeEntryElement.html.j2")
+
+    def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
+        super().__init__(**kwargs)
+        self.default = self.validate_time(default) if default is not None else ""
+        self.min = self.validate_time(min) if min is not None else ""
+        self.max = self.validate_time(max) if max is not None else ""
+    
+    @staticmethod
+    def validate_time(time: str):
+        datetime.strptime(time, "%H:%M")
+        return time
+    
+    @property
+    def template_data(self):
+        d = super().template_data
+        d["min"] = self.min
+        d["max"] = self.max
+        d["default"] = self.default
+        return d

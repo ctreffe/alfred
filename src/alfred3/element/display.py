@@ -1301,7 +1301,7 @@ class Card(Element):
             @exp.member
             class Demo(al.Page):
                 def on_exp_access(self):
-                    self += Card(
+                    self += al.Card(
                         header="Card Header",
                         title="Card title",
                         subtitle="Card subtitle",
@@ -1322,7 +1322,7 @@ class Card(Element):
         emojize: bool = True,
         render_markdown: bool = True,
         collapse: bool = False,
-        start_collapsed: bool = False,
+        start_collapsed: bool = True,
         header_style: str = "",
         body_style: str = "",
         footer_style: str = "",
@@ -1352,18 +1352,11 @@ class Card(Element):
             try:
                 element = getattr(self, "_" + part)
                 element.display_standalone = False
-                element.added_to_page(page)
+                element.width = "full"
+                page += element
             except AttributeError:
                 pass
     
-    def added_to_experiment(self, experiment):
-        super().added_to_experiment(experiment)
-        for part in ["header", "title", "subtitle", "body", "footer"]:
-            try:
-                getattr(self, "_" + part).added_to_experiment(experiment)
-            except AttributeError:
-                pass
-
     @property
     def template_data(self):
         d = super().template_data

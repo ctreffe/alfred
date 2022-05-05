@@ -42,6 +42,12 @@ Section
       ~Section.on_resume
    
    
+      ~Section.position_in_section
+   
+   
+      ~Section.showif
+   
+   
       ~Section.uptree
    
    
@@ -51,10 +57,7 @@ Section
       ~Section.validate_on_forward
    
    
-      ~Section.validate_on_jumpfrom
-   
-   
-      ~Section.validate_on_jumpto
+      ~Section.validate_on_jump
    
    
       ~Section.validate_on_leave
@@ -93,13 +96,16 @@ Section
          ~Section.allow_forward
          ~Section.allow_jumpfrom
          ~Section.allow_jumpto
+         ~Section.close_pages_on_leave
          ~Section.data
          ~Section.empty
          ~Section.exp
          ~Section.experiment
          ~Section.first_member
+         ~Section.first_page
          ~Section.instance_log
          ~Section.last_member
+         ~Section.last_page
          ~Section.members
          ~Section.name
          ~Section.pages
@@ -108,7 +114,6 @@ Section
          ~Section.section
          ~Section.short_tree
          ~Section.should_be_shown
-         ~Section.showif
          ~Section.shuffle
          ~Section.subsections
          ~Section.subtitle

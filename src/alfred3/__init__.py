@@ -61,6 +61,7 @@ from .element.input import SingleChoiceBar
 from .element.input import MultipleChoiceButtons
 from .element.input import MultipleChoiceBar
 from .element.input import SelectPageList
+from .element.input import HiddenInput
 
 from .element.action import SubmittingButtons
 from .element.action import SubmittingBar
@@ -79,6 +80,7 @@ from .element.misc import Value
 from .element.misc import Data
 from .element.misc import Callback
 from .element.misc import RepeatedCallback
+from .element.misc import HiddenInput
 
 from .util import emoji
 from .util import icon

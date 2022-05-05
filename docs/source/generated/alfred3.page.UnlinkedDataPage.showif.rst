@@ -1,6 +1,6 @@
-UnlinkedDataPage.showif
+UnlinkedDataPage.showif()
 ====================================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: UnlinkedDataPage.showif
+.. automethod:: UnlinkedDataPage.showif

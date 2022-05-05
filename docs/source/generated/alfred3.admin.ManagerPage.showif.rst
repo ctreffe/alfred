@@ -1,6 +1,6 @@
-ManagerPage.showif
+ManagerPage.showif()
 ================================
 
 .. currentmodule:: alfred3.admin
 
-.. autoattribute:: ManagerPage.showif
+.. automethod:: ManagerPage.showif

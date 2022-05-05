@@ -1,6 +1,6 @@
-AutoClosePage.showif
+AutoClosePage.showif()
 =================================
 
 .. currentmodule:: alfred3.page
 
-.. autoattribute:: AutoClosePage.showif
+.. automethod:: AutoClosePage.showif

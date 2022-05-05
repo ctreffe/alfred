@@ -1,6 +1,12 @@
 $(document).ready(function() {
     var value = $("#{{ name }}").val();
-    $("#{{ name }}-display").text(value + "{{ display_suffix }}");
+    var displayValue = parseFloat(value).toLocaleString(
+        "{{ display_locale }}", 
+        {"maximumFractionDigits": {{ maxdecimals }},
+        "minimumFractionDigits": {{ mindecimals }}}
+    )
+
+    $("#{{ name }}-display").text(displayValue + "{{ display_suffix }}");
 
     var offset_display_height = "{{ offset_display_height }}";
 
@@ -26,7 +32,10 @@ $(document).ready(function() {
 
 $("#{{ name }}").on("input change", function() {
     var value = parseFloat($("#{{ name }}").val())
-    var displayValue = value.toLocaleString("{{ display_locale }}", {"maximumFractionDigits": 2})
+    var displayValue = value.toLocaleString("{{ display_locale }}", 
+        {"maximumFractionDigits": {{ maxdecimals }},
+        "minimumFractionDigits": {{ mindecimals }}}
+    )
     
     $("#{{ name }}-display").text(displayValue + "{{ display_suffix }}");
 })

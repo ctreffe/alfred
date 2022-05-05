@@ -28,6 +28,6 @@
    :recursive:
 
    alfred3.cli.extract
-   alfred3.cli.run
-   alfred3.cli.template
+   alfred3.cli.run_exp
+   alfred3.cli.template_exp
 
