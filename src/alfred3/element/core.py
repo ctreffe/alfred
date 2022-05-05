@@ -1842,7 +1842,7 @@ class InputElement(LabelledElement):
             d["corrective_hints"] = list(self.corrective_hints)
         return d
 
-    def validate_data(self) -> bool:
+    def validate_data(self, silent: bool = False) -> bool:
         """
         Method for validation of input to the element.
 
@@ -1851,11 +1851,15 @@ class InputElement(LabelledElement):
             proceed to the next page, *False*, if the input is not
             in the correct form.
         """
+        print("func validate_data() from core")
+        print(f"core value silent: {silent}")
         if not self.should_be_shown:
             return True
 
         elif self.force_input and not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
+                print("hint messenger no input core")
             return False
 
         else:

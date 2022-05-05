@@ -179,7 +179,9 @@ class MatchEntry(TextEntry):
         self.pattern: re.Pattern = re.compile(pattern)
         self._match_hint = match_hint  # documented in getter property
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
+        print("func validate_data()")
+        print(f"value silent: {silent}")
 
         if not self.should_be_shown:
             return True
@@ -188,14 +190,21 @@ class MatchEntry(TextEntry):
             return True
 
         elif not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            print("Kein Input")
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
+                print("Hint Messenger no input")
             return False
 
         elif not self.pattern.fullmatch(self.input):
-            self.hint_manager.post_message(self.match_hint)
+            print("Kein vollständiges Pattern")
+            if not silent:
+                self.hint_manager.post_message(self.match_hint)
+                print("hint messenger no pattern")
             return False
 
         else:
+            print("vollständiges Pattern 2")
             return True
 
     @property
@@ -327,7 +336,7 @@ class PasswordEntry(RegEntry):
                 f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string."
             )
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -336,11 +345,13 @@ class PasswordEntry(RegEntry):
             return True
 
         elif not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         elif not self.input == self.password:
-            self.hint_manager.post_message(self.match_hint)
+            if not silent:
+                self.hint_manager.post_message(self.match_hint)
             return False
 
         else:
@@ -397,7 +408,7 @@ class MultiplePasswordEntry(RegEntry):
                     f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings."
                 )
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -406,7 +417,8 @@ class MultiplePasswordEntry(RegEntry):
             return True
 
         elif not self.input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         elif not self.input in self.passwords:
@@ -606,7 +618,7 @@ class NumberEntry(TextEntry):
                 value = value.replace(sign, ".")
             self._input = value
 
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -615,7 +627,8 @@ class NumberEntry(TextEntry):
             return True
 
         elif not self._input:
-            self.hint_manager.post_message(self.no_input_hint)
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         try:
@@ -813,8 +826,7 @@ class RangeInput(InputElement):
         else:
             self._input = value
 
-
-    def validate_data(self):
+    def validate_data(self, silent: bool = False) -> bool:
 
         if not self.should_be_shown:
             return True
@@ -822,8 +834,9 @@ class RangeInput(InputElement):
         if not self.force_input and not self._input:
             return True
 
-        elif not self._input:
-            self.hint_manager.post_message(self.no_input_hint)
+        elif not self.input:
+            if not silent:
+                self.hint_manager.post_message(self.no_input_hint)
             return False
 
         try:
@@ -1105,7 +1118,7 @@ class MultipleChoice(ChoiceElement):
             msg = self.experiment.config.get("hints", "select_MultipleChoice")
             return msg.format(min=self.min, max=self.max)
 
-    def validate_data(self) -> bool:
+    def validate_data(self, silent: bool = False) -> bool:
         checked_values = {k: v for k, v in self.input.items() if v}
 
         if not self.should_be_shown:
