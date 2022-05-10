@@ -542,7 +542,7 @@ class UserInterface:
                 url = self.add_static_file(f, content_type="text/css")
                 self.css_urls.append((5, url))
 
-            with importlib.resources.path(img, "uni_goe_logo_white.png") as p:
+            with importlib.resources.path(img, "uni_goe_logo_white_new.png") as p:
                 url = self.add_static_file(p, content_type="image/png")
                 self.config["logo_url"] = url
             
