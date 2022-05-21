@@ -209,10 +209,7 @@ class SlotManager:
         npending = [slot.npending(exp) for slot in slots]
         n = min(npending)
         minimal_pending = [slot for slot in slots if slot.npending(exp) == n]
-        if len(minimal_pending) == 1:
-            return minimal_pending
-        else:
-            return minimal_pending
+        return minimal_pending
     
     def _oldest_slot(self, slots, exp) -> Slot:
         most_recent_save = [slot.most_recent_save(exp) for slot in slots]
