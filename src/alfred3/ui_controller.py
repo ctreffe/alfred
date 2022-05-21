@@ -293,6 +293,18 @@ class MovementManager:
         self.current_page = self.exp.root_section.all_pages_list[self.current_index]
 
     def _move(self, direction: str) -> Tuple[int, int]:
+        if self.exp.session_expired:
+            return self.exp.abort(
+                reason="session timed out", 
+                title="Session expired",
+                icon="hourglass-end",
+                msg= "Sorry! The experiment session timed out."
+                )
+        
+        if self.exp.aborted:
+            self.log.debug(f"A move was called, but the experiment is aborted. No move is being conducted.")
+            return
+
         cpage = self.current_page
         initial_target_page = self.target_page(direction=direction)
         self._check_permissions(target_page=initial_target_page, direction=direction)
