@@ -7,47 +7,47 @@ Image
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~Image.add_css
-
-
+   
+   
       ~Image.add_js
-
-
+   
+   
       ~Image.added_to_experiment
-
-
+   
+   
       ~Image.added_to_page
-
-
+   
+   
       ~Image.prepare_web_widget
-
-
+   
+   
       ~Image.render_inner_html
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~Image.base_template
          ~Image.bottomlab
          ~Image.converted_width
@@ -79,3 +79,7 @@ Image
          ~Image.tree
          ~Image.web_widget
          ~Image.width
+      
+   
+   
+   

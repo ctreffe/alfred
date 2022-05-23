@@ -7,56 +7,56 @@ BarLabels
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~BarLabels.add_css
-
-
+   
+   
       ~BarLabels.add_js
-
-
+   
+   
       ~BarLabels.added_to_experiment
-
-
+   
+   
       ~BarLabels.added_to_page
-
-
+   
+   
       ~BarLabels.define_choices
-
-
+   
+   
       ~BarLabels.prepare_web_widget
-
-
+   
+   
       ~BarLabels.render_inner_html
-
-
+   
+   
       ~BarLabels.set_data
-
-
+   
+   
       ~BarLabels.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~BarLabels.base_template
          ~BarLabels.bottomlab
          ~BarLabels.button_group_class
@@ -111,3 +111,7 @@ BarLabels
          ~BarLabels.vertical
          ~BarLabels.web_widget
          ~BarLabels.width
+      
+   
+   
+   

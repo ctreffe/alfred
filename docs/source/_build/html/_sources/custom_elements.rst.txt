@@ -4,12 +4,12 @@ Deriving new elements
 The simplest way to subclass *Element* is to define the *inner_html* attribute::
 
     import alfred3.element_responsive as el
-
+    
     class NewElement(el.Element):
 
         inner_html = "Element html goes <b>here</b>"
 
-For most cases, you will want some additional control. Maybe you even
+For most cases, you will want some additional control. Maybe you even 
 want to use your own jinja template. In this case, add the template
 as a class variable and add the values that you want to hand over
 to the template in a `template_data` property::
@@ -26,31 +26,31 @@ to the template in a `template_data` property::
             d["text"] = "here"          # add custom values
             return d                    # don't forget to return the dictionary
 
-Both of the above methods utilise alfred's basic element html
+Both of the above methods utilise alfred's basic element html 
 template and inject your code into it, which allows the basic layout
 and logic to simply translate to your new element. If your new
 Element has its own *__init__* constructor method, you can pass
-specific arguments or all available arguments on to the Element
+specific arguments or all available arguments on to the Element 
 base class::
 
     # define new argument 'myarg' and save it as an attribute
-    # set a new default for argument width and pass it on to the
-    # Element base class allow all other valid keyword arguments for
+    # set a new default for argument width and pass it on to the 
+    # Element base class allow all other valid keyword arguments for 
     # the Element base class and pass them on ('**kwargs')
 
     import alfred3.element_responsive as el
-
+    
     class NewElement(el.Element):
 
         def __init__(self, myarg: str = "test", width: str = "narrow", **kwargs):
             super().__init__(width=width, **kwargs)
             self.myarg = myarg
-
+    
 
 .. note::
     All elements that are derived in this way receive a CSS class
     of their class name, which can be used for css styling (i.e. a
-    new element 'ExampleElement' receives the CSS class
+    new element 'ExampleElement' receives the CSS class 
     'ExampleElement'). Further, all elements receive a html element
     ID of the form 'elid-<name>', where <name> is replaced by the
     element's name attribute. This can be used to style individual

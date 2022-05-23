@@ -7,53 +7,53 @@ InputElement
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~InputElement.add_css
-
-
+   
+   
       ~InputElement.add_js
-
-
+   
+   
       ~InputElement.added_to_experiment
-
-
+   
+   
       ~InputElement.added_to_page
-
-
+   
+   
       ~InputElement.prepare_web_widget
-
-
+   
+   
       ~InputElement.render_inner_html
-
-
+   
+   
       ~InputElement.set_data
-
-
+   
+   
       ~InputElement.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~InputElement.base_template
          ~InputElement.bottomlab
          ~InputElement.codebook_data
@@ -101,3 +101,7 @@ InputElement
          ~InputElement.tree
          ~InputElement.web_widget
          ~InputElement.width
+      
+   
+   
+   

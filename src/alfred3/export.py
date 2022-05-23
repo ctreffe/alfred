@@ -1,4 +1,4 @@
-"""Provides functionality for exporting alfred data to .csv via the
+"""Provides functionality for exporting alfred data to .csv via the 
 command line.
 
 Easiest use case is to call it from within your experiment directory.
@@ -7,14 +7,14 @@ config.conf and secrets.conf files.::
 
     python -m alfred3.export
 
-Optionally, specify the source manually by giving the name of a
+Optionally, specify the source manually by giving the name of a 
 config.conf or a secrets.conf section. The function will then export data
 that was saved with the saving agent defined in that section::
 
     python -m alfred3.export --src="mongo_saving_agent"
 
-You can also use it to convert .json files from the current working
-directory to .csv, saving the resulting file in the current working
+You can also use it to convert .json files from the current working 
+directory to .csv, saving the resulting file in the current working 
 directory aswell::
 
     python -m alfred3.export -h
@@ -23,25 +23,29 @@ For more detailed usage information, see::
 
     python -m alfred3.export --help
 
-.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
+.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de> 
 """
 
 
+from pprint import pprint
+
 import csv
-import io
 import json
+import io
 import os
 import random
-from itertools import chain
+
+from typing import Union
+from typing import List, Iterator
 from pathlib import Path
-from pprint import pprint
-from typing import Iterator, List, Union
+from itertools import chain
 
 import click
 
-from .config import ExperimentConfig, ExperimentSecrets
-from .data_manager import DataManager, decrypt_recursively
 from .saving_agent import AutoMongoClient
+from .data_manager import DataManager
+from .data_manager import decrypt_recursively
+from .config import ExperimentConfig, ExperimentSecrets
 
 
 class Exporter:
@@ -62,9 +66,7 @@ class Exporter:
         self.exp = experiment
         self.csv_dir = self.exp.subpath(self.exp.config.get("data", "csv_directory"))
         self.delimiter = self.exp.config.get("data", "csv_delimiter")
-        self.save_dir = self.exp.subpath(
-            self.exp.config.get("local_saving_agent", "path")
-        )
+        self.save_dir = self.exp.subpath(self.exp.config.get("local_saving_agent", "path"))
 
     def export(self, data_type: str):
         """
@@ -86,7 +88,7 @@ class Exporter:
         elif data_type == DataManager.EXP_DATA:
             self.export_exp_data()
 
-    def _load(self, path: str | Path) -> list:
+    def _load(self, path: Union[str, Path]) -> list:
         """
         Returns a list of dictonaries with session data, read from an
         existing csv file.
@@ -97,19 +99,19 @@ class Exporter:
         return self.load(path, self.delimiter)
 
     @staticmethod
-    def load(path: str | Path, delimiter: str) -> list:
+    def load(path: Union[str, Path], delimiter: str) -> list:
         """
         Returns a list of dictonaries with session data, read from an
         existing csv file.
 
         This version of 'load' is available as a public static method.
         """
-        with open(path, encoding="utf-8", newline="") as csvfile:
+        with open(path, "r", encoding="utf-8", newline="") as csvfile:
             reader = csv.DictReader(csvfile, delimiter=delimiter)
             existing_data = [dict(row) for row in reader]
         return existing_data
 
-    def _write(self, data: Iterator[dict], fieldnames: list[str], path: Path):
+    def _write(self, data: Iterator[dict], fieldnames: List[str], path: Path):
         """
         Writes a list of session data dictionaries to a csv file.
 
@@ -119,7 +121,7 @@ class Exporter:
         self.write(data, fieldnames, path, self.delimiter)
 
     @staticmethod
-    def write(data: Iterator[dict], fieldnames: list[str], path: Path, delimiter: str):
+    def write(data: Iterator[dict], fieldnames: List[str], path: Path, delimiter: str):
         """
         Writes a list of session data dictionaries to a csv file.
 
@@ -158,9 +160,7 @@ class Exporter:
             fieldnames = DataManager.extract_ordered_fieldnames(data)
             alldata = [DataManager.flatten(d) for d in data]
         self._write(alldata, fieldnames, path)
-        self.exp.log.info(
-            f"Exported main experiment data to {path.parent.name}/{path.name}."
-        )
+        self.exp.log.info(f"Exported main experiment data to {path.parent.name}/{path.name}.")
 
     def export_move_history(self):
         csv_name = "move_history.csv"
@@ -181,9 +181,7 @@ class Exporter:
             history = chain(*history)
 
         self._write(history, fieldnames, path)
-        self.exp.log.info(
-            f"Exported movement history to {path.parent.name}/{path.name}."
-        )
+        self.exp.log.info(f"Exported movement history to {path.parent.name}/{path.name}.")
 
     def export_unlinked(self):
         csv_name = "unlinked.csv"
@@ -211,9 +209,7 @@ class Exporter:
             data = [DataManager.flatten(d) for d in existing_data]
             fieldnames = DataManager.extract_fieldnames(data)
 
-        if self.exp.config.getboolean(
-            "local_saving_agent_unlinked", "decrypt_csv_export"
-        ):
+        if self.exp.config.getboolean("local_saving_agent_unlinked", "decrypt_csv_export"):
             if self.exp.secrets.get("encryption", "key"):
                 key = self.exp.secrets.get("encryption", "key").encode()
                 data = decrypt_recursively(data, key=key)
@@ -230,27 +226,23 @@ class Exporter:
         path = self.csv_dir / csv_name
 
         if path.exists() and path.read_text(encoding="utf-8"):
-            with open(path, encoding="utf-8") as csvfile:
+            with open(path, "r", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=self.delimiter)
                 existing_codebook = {dict(row)["name"]: dict(row) for row in reader}
 
             for name, cb in existing_codebook.items():
-                for lab in [
-                    "label_top",
-                    "label_left",
-                    "label_right",
-                    "label_bottom",
-                    "placeholder",
-                ]:
+                for lab in ["label_top", "label_left", "label_right", "label_bottom", "placeholder"]:
                     oldlab = cb.get(lab, "")
                     new = data.get(name, "")
                     newlab = new.get(lab, "") if new else ""
                     if not new or (not oldlab == newlab):
                         self.exp.log.warning(
-                            f"{lab} of '{name}' has changed from '{oldlab}' to '{newlab}'. "
-                            "This introduces inconsistencies into the codebook. "
-                            "Do you have dynamic labels that do not match their elements' names? "
-                            "To change a label, increase the experiment version."
+                            (
+                                f"{lab} of '{name}' has changed from '{oldlab}' to '{newlab}'. "
+                                "This introduces inconsistencies into the codebook. "
+                                "Do you have dynamic labels that do not match their elements' names? "
+                                "To change a label, increase the experiment version."
+                            )
                         )
 
             existing_codebook.update(data)

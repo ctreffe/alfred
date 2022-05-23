@@ -2,11 +2,10 @@ import alfred3 as al
 
 exp = al.Experiment()
 
-
 class Text(al.Text):
     prepare_web_widget_executed = False
     callcount = 0
-
+            
     def prepare_web_widget(self):
         self.prepare_web_widget_executed = True
         self.callcount += 1

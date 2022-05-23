@@ -18,7 +18,7 @@
 
   {% if collapse %}
   <div id="{{ name }}-collapse" class="collapse {% if not start_collapsed %}show{% endif %}" aria-labelledby="{{ name }}-header">
-
+    
   {% endif %}
 
   <div class="card-body Card-element-part {{ body_style }}" id="{{ name }}-body">
@@ -26,7 +26,7 @@
   {% if title %}
     <h5 class="card-title Card-element-part" id="{{ name }}-title">
     {{ title }}
-    </h5>
+    </h5>  
   {% endif %}
 
   {% if subtitle %}

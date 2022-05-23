@@ -7,53 +7,53 @@ PasswordEntry
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~PasswordEntry.add_css
-
-
+   
+   
       ~PasswordEntry.add_js
-
-
+   
+   
       ~PasswordEntry.added_to_experiment
-
-
+   
+   
       ~PasswordEntry.added_to_page
-
-
+   
+   
       ~PasswordEntry.prepare_web_widget
-
-
+   
+   
       ~PasswordEntry.render_inner_html
-
-
+   
+   
       ~PasswordEntry.set_data
-
-
+   
+   
       ~PasswordEntry.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~PasswordEntry.base_template
          ~PasswordEntry.bottomlab
          ~PasswordEntry.codebook_data
@@ -104,3 +104,7 @@ PasswordEntry
          ~PasswordEntry.tree
          ~PasswordEntry.web_widget
          ~PasswordEntry.width
+      
+   
+   
+   

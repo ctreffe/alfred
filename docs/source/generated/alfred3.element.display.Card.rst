@@ -7,50 +7,50 @@ Card
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~Card.add_css
-
-
+   
+   
       ~Card.add_js
-
-
+   
+   
       ~Card.added_to_experiment
-
-
+   
+   
       ~Card.added_to_page
-
-
+   
+   
       ~Card.prepare_web_widget
-
-
+   
+   
       ~Card.render_inner_html
-
-
+   
+   
       ~Card.render_text
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~Card.base_template
          ~Card.body
          ~Card.converted_width
@@ -81,3 +81,7 @@ Card
          ~Card.tree
          ~Card.web_widget
          ~Card.width
+      
+   
+   
+   

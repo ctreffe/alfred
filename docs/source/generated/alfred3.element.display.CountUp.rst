@@ -7,47 +7,47 @@ CountUp
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~CountUp.add_css
-
-
+   
+   
       ~CountUp.add_js
-
-
+   
+   
       ~CountUp.added_to_experiment
-
-
+   
+   
       ~CountUp.added_to_page
-
-
+   
+   
       ~CountUp.prepare_web_widget
-
-
+   
+   
       ~CountUp.render_inner_html
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~CountUp.base_template
          ~CountUp.converted_width
          ~CountUp.counter_js
@@ -74,3 +74,7 @@ CountUp
          ~CountUp.tree
          ~CountUp.web_widget
          ~CountUp.width
+      
+   
+   
+   

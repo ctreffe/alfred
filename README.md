@@ -1,5 +1,5 @@
 ![GitHub](https://img.shields.io/github/license/ctreffe/alfred) [![zenodo](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371)
-# Welcome to alfred3
+# Welcome to alfred3 
 
 Alfred3 is a package for Python 3 offering an easy way to create
 computer experiments that meet the highest standards of Open Science.
@@ -67,7 +67,7 @@ is available here: [Link to docs](https://alfredo3.psych.bio.uni-goettingen.de/d
 
 ## Questions and Answers
 
-We use [GitHub Discussions](https://github.com/ctreffe/alfred/discussions/categories/q-a).
+We use [GitHub Discussions](https://github.com/ctreffe/alfred/discussions/categories/q-a). 
 You can ask questions, share ideas, and showcase your work there. Do not
 hesitate to ask!
 
@@ -80,7 +80,7 @@ must be named ``script.py``
 ```python
 import alfred3 as al
 exp = al.Experiment()
-exp += al.Page("Hello, world!", name="hello_world")
+exp += al.Page("Hello, world!", name="hello_world") 
 ```
 
 To run the script, open a terminal and change the working directory to
@@ -96,31 +96,31 @@ Next, simply execute the following command in the terminal::
 $ alfred3 run
 ```
 
-If you have *Google Chrome* installed on your machine, a browser window
-with the experiment opens automatically. Otherwise, open any webbrowser
+If you have *Google Chrome* installed on your machine, a browser window 
+with the experiment opens automatically. Otherwise, open any webbrowser 
 and visit ``http://127.0.0.1:5000/start`` to start the experiment.
 
 Of course, this "Hello, world" experiment does not contain much content:
-Only a single page with a heading. To learn how to add content to an
+Only a single page with a heading. To learn how to add content to an 
 experiment, visit our tutorials in the [alfred3 documentation](
 https://alfredo3.psych.bio.uni-goettingen.de/docs/).
 
 ## Citation
 
-**If you are publishing research conducted using alfred3, the
+**If you are publishing research conducted using alfred3, the 
 following citation is required:**
 
->Treffenstaedt, C., Brachem, J., & Wiemann, P. (2021). Alfred3 - A
-library for rapid experiment development (Version x.x.x). Göttingen,
+>Treffenstaedt, C., Brachem, J., & Wiemann, P. (2021). Alfred3 - A 
+library for rapid experiment development (Version x.x.x). Göttingen, 
 Germany: https://doi.org/10.5281/zenodo.1437219
 
-If you want to use alfred3 and need more information, don't hesitate to
+If you want to use alfred3 and need more information, don't hesitate to 
 contact us via alfred@psych.uni-goettingen.de.
 
 ## alfred3 Mailing List
 
-If you want to stay up to date with current developments, you can join
+If you want to stay up to date with current developments, you can join 
 our [mailing list](mailto:https://listserv.gwdg.de/mailman/listinfo/Alfred).
-We use this list to announce new releases and spread important
-information concerning the use of Alfred. You can expect to receive at
+We use this list to announce new releases and spread important 
+information concerning the use of Alfred. You can expect to receive at 
 most one mail per month.

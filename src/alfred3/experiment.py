@@ -1,7 +1,7 @@
 """
 This module contains the main experiment and experiment session objects.
 
-**What's the difference between the Experiment and the
+**What's the difference between the Experiment and the 
 ExperimentSession?**
 
 * The Experiment class is the first thing you create in your *script.py*.
@@ -12,7 +12,7 @@ ExperimentSession?**
   subject.
 
 * The ExperimentSession class is the main experiment organizer. This is
-  the class that actually coordinates all the work in an ongoing
+  the class that actually coordinates all the work in an ongoing 
   experiment. When you interact with a Section's or a Page's *exp*
   attribute, you are actually interacting with the current
   *ExperimentSession* object.
@@ -20,41 +20,52 @@ ExperimentSession?**
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
-import copy
-import functools
-import json
-import logging
-import os
-import random
-import smtplib
-import sys
-import threading
-import time
-from configparser import NoOptionError
 from email.message import EmailMessage
 from email.utils import formataddr
-from inspect import isclass
+import smtplib
+from ._version import __version__
+
+import os
+import sys
+import time
+import logging
+import json
+import random
+import threading
+import functools
+import copy
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple, Union
+from inspect import isclass
 from uuid import uuid4
+from configparser import NoOptionError
+from typing import Union
+from typing import Dict
+from typing import Tuple
+from typing import List
+from typing import Iterator
 
 import pymongo
 from cryptography.fernet import Fernet
 
 from . import alfredlog
-from . import element as elm
-from . import messages, page, saving_agent, section, util
-from ._helper import _DictObj
-from ._version import __version__
-from .alfredlog import QueuedLoggingInterface
-from .config import ExperimentConfig, ExperimentSecrets
-from .data_manager import DataManager
-from .exceptions import AbortMove, AlfredError, SavingAgentException
-from .export import Exporter
+from .section import Section, _RootSection, _AbortSection
 from .page import Page, _NothingHerePage
+from . import messages, page, section
+from . import saving_agent
+from .alfredlog import QueuedLoggingInterface
+from ._helper import _DictObj
+from .data_manager import DataManager
+from .export import Exporter
 from .saving_agent import DataSaver, MongoSavingAgent
-from .section import Section, _AbortSection, _RootSection
-from .ui_controller import MovementManager, UserInterface
+from .ui_controller import UserInterface
+from .ui_controller import MovementManager
+from .exceptions import SavingAgentException
+from .exceptions import AlfredError
+from .exceptions import AbortMove
+from .config import ExperimentConfig
+from .config import ExperimentSecrets
+from . import util
+from . import element as elm
 
 
 class Experiment:
@@ -96,7 +107,7 @@ class Experiment:
 
     """
 
-    def __init__(self, timeout=60 * 60 * 24):
+    def __init__(self):
         self._final_page = None
 
         #: A dictionary of all pages and sections added to the experiment.
@@ -111,19 +122,17 @@ class Experiment:
         #: A list of function that will be called upon creation of an
         #: experiment session. They are added with the :meth:`.setup`
         #: decorator
-        self.setup_functions: list[callable] = []
+        self.setup_functions: List[callable] = []
 
         #: A list of function that will be called upon finishing an
         #: experiment session. They are added with the :meth:`.finish`
         #: decorator
-        self.finish_functions: list[callable] = []
+        self.finish_functions: List[callable] = []
 
         #: A list of function that will be called upon aborting an
         #: experiment session. They are added with the :meth:`.abort`
         #: decorator
-        self.abort_functions: list[callable] = []
-
-        self.timeout = timeout
+        self.abort_functions: List[callable] = []
 
     def setup(self, func):
         """
@@ -171,7 +180,7 @@ class Experiment:
             return func
 
         return wrapper()
-
+    
     def abort(self, func):
         """
         Decorator for functions that work on the experiment session
@@ -252,9 +261,7 @@ class Experiment:
 
         return wrapper
 
-    def member(
-        self, _member=None, *, of_section: str = "_content", admin: bool = False
-    ):
+    def member(self, _member=None, *, of_section: str = "_content", admin: bool = False):
         """
         Decorator for adding pages and sections to the experiment.
 
@@ -320,7 +327,7 @@ class Experiment:
         if not self._admin:
             self._admin = ExperimentAdmin()
         return self._admin
-
+    
     @admin.setter
     def admin(self, value):
         self._admin = value
@@ -408,12 +415,7 @@ class Experiment:
         return wrapper()
 
     def create_session(
-        self,
-        session_id: str,
-        config: ExperimentConfig,
-        secrets: ExperimentSecrets,
-        timeout=None,
-        **urlargs,
+        self, session_id: str, config: ExperimentConfig, secrets: ExperimentSecrets, **urlargs
     ):
         """
         Creates an experiment session.
@@ -427,29 +429,21 @@ class Experiment:
             to interact with an experiment session object.
 
         """
-
-        timeout = self.timeout if timeout is None else timeout
-
+        
         if urlargs.get("admin") in ["true", "True", "TRUE"]:
-
+            
             self.admin.setup_functions += self.setup_functions
-            self.admin.final_page = _NothingHerePage(
-                name="__"
-            )  # name gets changed automatically by setter
+            self.admin.final_page = _NothingHerePage(name="__") # name gets changed automatically by setter
             exp_session = self.admin.create_session(
                 session_id=session_id, config=config, secrets=secrets, **urlargs
             )
             return exp_session
-
+        
         if urlargs.get("debug") in ["true", "True", "TRUE"]:
             config.read_dict({"general": {"debug": True}})
 
         exp_session = ExperimentSession(
-            session_id=session_id,
-            config=config,
-            secrets=secrets,
-            timeout=timeout,
-            **urlargs,
+            session_id=session_id, config=config, secrets=secrets, **urlargs
         )
 
         for fun in self.setup_functions:
@@ -505,13 +499,9 @@ class Experiment:
 
         for member in members:
             name = member.name
-            if name in self.members or name in [
-                "_content",
-                "_root",
-                "_finished_section",
-            ]:
+            if name in self.members or name in ["_content", "_root", "_finished_section"]:
                 raise ValueError(f"A section or page of name '{name}' already exists.")
-
+            
             member.parent_name = to_section
             member_inst = member() if isclass(member) else member
 
@@ -523,7 +513,7 @@ class Experiment:
                 parent = self.members[member_inst.parent_name]
                 parent += member_inst
 
-    def run(self, path: str | Path = None, **kwargs):
+    def run(self, path: Union[str, Path] = None, **kwargs):
         """
         Runs the experiment.
 
@@ -567,7 +557,7 @@ class Experiment:
 
                 if __name__ == "__main__":
                     exp.run()
-
+            
             To start an experiment in test mode::
 
                 import alfred3 as al
@@ -576,7 +566,7 @@ class Experiment:
 
                 if __name__ == "__main__":
                     exp.run(test=True)
-
+            
             To start an experiment without trying to open a browser
             window automatically::
 
@@ -594,7 +584,7 @@ class Experiment:
         runner = ExperimentRunner(path=path)
         runner.auto_run(**kwargs)
 
-    def __iadd__(self, other: Section | Page):
+    def __iadd__(self, other: Union[Section, Page]):
         self.append(other, to_section="_content")
         return self
 
@@ -609,19 +599,12 @@ class Experiment:
 
 
 class ExperimentAdmin(Experiment):
-    def create_session(
-        self,
-        session_id: str,
-        config: ExperimentConfig,
-        secrets: ExperimentSecrets,
-        **urlargs,
-    ):
-
+    
+    def create_session(self, session_id: str, config: ExperimentConfig, secrets: ExperimentSecrets, **urlargs):
+        
         config.read_dict(self.admin_config)
 
-        exp_session = ExperimentSession(
-            session_id=session_id, config=config, secrets=secrets, **urlargs
-        )
+        exp_session = ExperimentSession(session_id=session_id, config=config, secrets=secrets, **urlargs)
 
         for fun in self.setup_functions:
             fun(exp_session)
@@ -631,12 +614,12 @@ class ExperimentAdmin(Experiment):
         exp_session.finish_functions.extend(self.finish_functions)
 
         exp_session._admin_auth_page_.admin_members = self._root_members
-
+        
         if self.final_page is not None:
             exp_session.final_page = self.final_page
 
         return exp_session
-
+    
     @property
     def admin_config(self) -> dict:
         config = {}
@@ -698,20 +681,20 @@ class ExperimentSession:
 
         self._plugins = _DictObj()  # docs in getter
         self._tmp = _DictObj()
-
+        
         # list of dictionaries, each containing a query specification
         # that can be used to query plugin-related data from a mongoDB
         # (if a mongoDB is used). The query is saved along with the
         # experiment data
-        self._plugin_data_queries = []
-
-        self._finish_functions: list[callable] = []  # docs in getter
-        self._abort_functions: list[callable] = []  # docs in getter
+        self._plugin_data_queries = [] 
+        
+        self._finish_functions: List[callable] = []  # docs in getter
+        self._abort_functions: List[callable] = []  # docs in getter
 
         self._condition = ""  # docs in getter
         self._session = ""  # docs in getter
 
-        self.session_timeout = timeout  # docs in getter
+        self.session_timeout = 60 * 60 * 24  # docs in getter
         self.finished: bool = False  # docs in getter
         self.aborted: bool = False  # docs in getter
 
@@ -731,12 +714,8 @@ class ExperimentSession:
         self._session_id = session_id  # docs in getter
         self._session_status = None  # docs in getter
 
-        self._config = (
-            config if config is not None else ExperimentConfig()
-        )  # docs in getter
-        self._secrets = (
-            secrets if secrets is not None else ExperimentSecrets()
-        )  # docs in getter
+        self._config = config if config is not None else ExperimentConfig()  # docs in getter
+        self._secrets = secrets if secrets is not None else ExperimentSecrets()  # docs in getter
         self._urlargs = urlargs  # docs in getter
 
         self._log = QueuedLoggingInterface(base_logger="alfred3")  # docs in getter
@@ -762,13 +741,16 @@ class ExperimentSession:
 
         # init logging message
         self.log.info(
-            f"Alfred {self.type} experiment session initialized! "
-            f"Alfred version: {self.alfred_version}, "
-            f"Experiment title: {self.title}, "
-            f"Experiment version: {self.version}"
+            (
+                f"Alfred {self.type} experiment session initialized! "
+                f"Alfred version: {self.alfred_version}, "
+                f"Experiment title: {self.title}, "
+                f"Experiment version: {self.version}"
+            )
         )
         if not self.admin_mode:
             self._save_data(sync=True)
+        
 
     def append_plugin_data_query(self, query: dict):
         """
@@ -785,7 +767,7 @@ class ExperimentSession:
                     ...
                 }
             }
-
+        
         The 'filter' subfield of 'query' contains the actual filter to
         be passed on to the database. You can also define a 'projection'
         subfield to control exactly which field will be returned by the
@@ -801,16 +783,16 @@ class ExperimentSession:
 
         elif not "title" in query:
             raise ValueError("Query must contain field 'title'.")
-
+        
         elif not "type" in query:
             raise ValueError("Query must contain field 'filename'.")
-
+        
         elif not "query" in query:
             raise ValueError("Query must contain field 'query'.")
-
+        
         elif not "filter" in query["query"]:
             raise ValueError("Field 'query' must contain subfield 'filter'.")
-
+        
         self._plugin_data_queries.append(query)
 
     @property
@@ -924,7 +906,7 @@ class ExperimentSession:
 
         """
         self._start()
-
+        
     def _start(self):
         if self.aborted:
             return
@@ -943,9 +925,7 @@ class ExperimentSession:
 
         jumpto = self.urlargs.get("jumpto")
         if jumpto and not self.aborted:
-            self.log.info(
-                f"Experiment session started with a jump. Jumping to Page '{jumpto}'."
-            )
+            self.log.info(f"Experiment session started with a jump. Jumping to Page '{jumpto}'.")
             self.movement_manager.move("jump", to=jumpto)
 
     def abort(
@@ -1001,11 +981,9 @@ class ExperimentSession:
                                 )
         """
         if self.aborted:
-            self.log.debug(
-                f"ExperimentSession.abort() called, but it was already aborted. New Reason: {reason}, Old Reason: {self._aborted_because}"
-            )
+            self.log.debug(f"ExperimentSession.abort() called, but it was already aborted. New Reason: {reason}, Old Reason: {self._aborted_because}")
             return
-
+        
         for func in self.abort_functions:
             func(self)
 
@@ -1025,7 +1003,7 @@ class ExperimentSession:
             if msg:
                 abort_page += elm.display.VerticalSpace("100px")
                 abort_page += elm.display.Text(msg, align="center")
-
+        
             abort_page += elm.misc.HideNavigation()
             abort_page += elm.misc.WebExitEnabler()
 
@@ -1042,12 +1020,11 @@ class ExperimentSession:
         abort_page._on_showing_widget()
         self.movement_manager._direct_jump(to=pg_name)
 
-        self.log.info(
-            f"ExperimentSession.abort() called. Aborting session. Reason: {reason}"
-        )
+        self.log.info(f"ExperimentSession.abort() called. Aborting session. Reason: {reason}")
         self.aborted = True
         self._aborted_because = reason
         self._save_data()
+
 
     def finish(self):
         """
@@ -1055,8 +1032,8 @@ class ExperimentSession:
 
         This method gets called automatically with the last click in an
         experiment. You can manually call it earlier to mark a dataset
-        as complete. This may be useful if you want to append some
-        purely informational or optional pages at the end of your
+        as complete. This may be useful if you want to append some 
+        purely informational or optional pages at the end of your 
         experiment.
 
         Examples:
@@ -1071,7 +1048,7 @@ class ExperimentSession:
 
                     def on_exp_access(self):
                         self += al.TextEntry(name="el1")
-
+                    
                     def on_first_hide(self):
                         self.exp.finish()
 
@@ -1104,7 +1081,7 @@ class ExperimentSession:
         self._close_previous_pages()
         self._save_data(sync=True)
         self._export_data()
-
+    
     def _close_previous_pages(self):
         for i, page in enumerate(self.root_section.all_pages.values()):
             if i > self.movement_manager.current_index:
@@ -1131,9 +1108,7 @@ class ExperimentSession:
             exporter.export(DataManager.UNLINKED_DATA)
         if cfg.getboolean("export_codebook"):
             exporter.export(DataManager.CODEBOOK_DATA)
-        if cfg.getboolean("export_move_history") and cfg.getboolean(
-            "record_move_history"
-        ):
+        if cfg.getboolean("export_move_history") and cfg.getboolean("record_move_history"):
             exporter.export(DataManager.HISTORY)
 
     def _save_data(self, sync: bool = False):
@@ -1245,14 +1220,14 @@ class ExperimentSession:
     def final_page(self, value: Page):
         if not isinstance(value, page._PageCore):
             raise ValueError("Not a valid page.")
-
+        
         if value.name != "_final_page":
             value._set_name("_final_page", via="argument")
         value += elm.misc.HideNavigation()
         self.root_section.finished_section.members.clear()
         self.root_section.finished_section += value
 
-    def subpath(self, path: str | Path) -> Path:
+    def subpath(self, path: Union[str, Path]) -> Path:
         """
         Returns the full path of an experiment subdirectory.
 
@@ -1270,7 +1245,7 @@ class ExperimentSession:
             return self.path / path
 
     def read_csv_todict(
-        self, path: str | Path, encoding: str = "utf-8", **kwargs
+        self, path: Union[str, Path], encoding: str = "utf-8", **kwargs
     ) -> Iterator[dict]:
         """
         Iterates over the rows in a .csv file, yielding dictionaries.
@@ -1337,10 +1312,11 @@ class ExperimentSession:
 
         """
         p = self.subpath(path)
-        yield from util._read_csv_todict(p, encoding=encoding, **kwargs)
+        for row in util._read_csv_todict(p, encoding=encoding, **kwargs):
+            yield row
 
     def read_csv_tolist(
-        self, path: str | Path, encoding: str = "utf-8", **kwargs
+        self, path: Union[str, Path], encoding: str = "utf-8", **kwargs
     ) -> Iterator[list]:
         """
         Iterates over the rows in a .csv file, yielding lists.
@@ -1408,18 +1384,20 @@ class ExperimentSession:
 
         """
         p = self.subpath(path)
-        yield from util._read_csv_tolist(p, encoding=encoding, **kwargs)
+        for row in util._read_csv_tolist(p, encoding=encoding, **kwargs):
+            yield row
 
     @property
     def author(self) -> str:
         """str: Returns the experiment author."""
         return self.config.get("metadata", "author")
 
+
     @property
     def admin_mode(self) -> bool:
         """bool: Indicates whether the experiment runs in admin mode."""
         return self.config.getboolean("general", "admin")
-
+    
     @property
     def test_mode(self) -> bool:
         """
@@ -1434,11 +1412,11 @@ class ExperimentSession:
 
             http://127.0.0.1:5000/start?test=true
 
-        .. warning:: **Keep in mind** that a test session will take up a
-            slot in list randomization via :class:`.ListRandomizer` just
-            as any other session. You have to use experiment
-            version numbers to manage randomization slots.
-
+        .. warning:: **Keep in mind** that a test session will take up a 
+            slot in list randomization via :class:`.ListRandomizer` just 
+            as any other session. You have to use experiment 
+            version numbers to manage randomization slots. 
+        
         Notes:
             The test mode will **also be activated in debug mode**.
 
@@ -1589,10 +1567,7 @@ class ExperimentSession:
 
     def __contains__(self, key):
         try:
-            return (
-                key.name in self.all_members
-                or key.name in self.root_section.all_elements
-            )
+            return key.name in self.all_members or key.name in self.root_section.all_elements
         except AttributeError:
             return key in self.all_members or key in self.root_section.all_elements
 
@@ -1632,7 +1607,7 @@ class ExperimentSession:
             self.log.debug("No encryption key found. Encryptor was not set.")
             return None
 
-    def encrypt(self, data: str | int | float) -> str:
+    def encrypt(self, data: Union[str, int, float]) -> str:
         """
         Encrypts the input and returns the encrypted string.
 
@@ -1695,7 +1670,7 @@ class ExperimentSession:
         encrypted = self._encryptor.encrypt(d_bytes)
         return encrypted.decode()
 
-    def decrypt(self, data: str | bytes) -> str:
+    def decrypt(self, data: Union[str, bytes]) -> str:
         """
         Decrypts input and returns the decrypted object as `str`.
 
@@ -1784,9 +1759,7 @@ class ExperimentSession:
         try:
             self.movement_manager._move(direction="forward")
         except AbortMove:
-            self.log.debug(
-                f"Movement from {self.current_page} in direction 'forward' was aborted."
-            )
+            self.log.debug(f"Movement from {self.current_page} in direction 'forward' was aborted.")
 
     def backward(self):
         """
@@ -1803,11 +1776,9 @@ class ExperimentSession:
         try:
             self.movement_manager._move(direction="backward")
         except AbortMove:
-            self.log.debug(
-                f"Movement from {self.current_page} in direction 'backward' was aborted."
-            )
+            self.log.debug(f"Movement from {self.current_page} in direction 'backward' was aborted.")
 
-    def jump(self, to: str | int):
+    def jump(self, to: Union[str, int]):
         """
         Jumps to a specific page in the experiment.
 
@@ -1827,9 +1798,7 @@ class ExperimentSession:
         try:
             self.movement_manager._move(direction=f"jump>{to}")
         except AbortMove:
-            self.log.debug(
-                f"Jump from {self.current_page} to page with name '{to}' was aborted."
-            )
+            self.log.debug(f"Jump from {self.current_page} to page with name '{to}' was aborted.")
 
     @property
     def values(self) -> dict:
@@ -1867,7 +1836,7 @@ class ExperimentSession:
         return self.data_manager.session_data
 
     @property
-    def move_history(self) -> list[dict]:
+    def move_history(self) -> List[dict]:
         """
         A list, containing the movement history for the current session.
 
@@ -1928,7 +1897,7 @@ class ExperimentSession:
         return self.data_manager.client_data
 
     @property
-    def all_exp_data(self) -> list[dict]:
+    def all_exp_data(self) -> List[dict]:
         """
         list: List of all experiment datasets.
 
@@ -1967,7 +1936,7 @@ class ExperimentSession:
             return list(mongodata) + list(localdata)
 
     @property
-    def all_unlinked_data(self) -> list[dict]:
+    def all_unlinked_data(self) -> List[dict]:
         """
         list: List of all unlinked datasets.
 
@@ -2153,16 +2122,16 @@ class ExperimentSession:
     def plugins(self) -> _DictObj:
         """
         dict: A modified dictionary of experiment plugins.
-
+        
         This dictionary allows access to values via dot-notation.
         """
         return self._plugins
-
+    
     @property
     def tmp(self) -> _DictObj:
         """
-        A modified dictionary of temporary data.
-
+        A modified dictionary of temporary data. 
+        
         This dictionary allows access to values via dot-notation.
 
         Notes:
@@ -2184,7 +2153,7 @@ class ExperimentSession:
             The :meth:`.Experiment.finish` decorator can be used to add functions to this list.
         """
         return self._finish_functions
-
+    
     @finish_functions.setter
     def finish_functions(self, value):
         self._finish_functions = value
@@ -2198,7 +2167,7 @@ class ExperimentSession:
             The :meth:`.Experiment.abort` decorator can be used to add functions to this list.
         """
         return self._abort_functions
-
+    
     @abort_functions.setter
     def abort_functions(self, value):
         self._abort_functions = value
@@ -2207,7 +2176,7 @@ class ExperimentSession:
     def session_timeout(self):
         """
         int: The session's timeout (in seconds).
-
+        
         After expiration of the timeout, the session will abort on
         the next move.
 
@@ -2232,7 +2201,7 @@ class ExperimentSession:
 
     @session_timeout.setter
     def session_timeout(self, value):
-        if value is not None and not isinstance(value, (int, float)):
+        if value is not None and not isinstance(value, int): 
             raise TypeError
         self._session_timeout = value
 
@@ -2245,8 +2214,7 @@ class ExperimentSession:
 
     @finished.setter
     def finished(self, value: bool):
-        if not isinstance(value, bool):
-            raise TypeError
+        if not isinstance(value, bool): raise TypeError
         self._finished = value
 
     @property
@@ -2258,8 +2226,7 @@ class ExperimentSession:
 
     @aborted.setter
     def aborted(self, value: bool):
-        if not isinstance(value, bool):
-            raise TypeError
+        if not isinstance(value, bool): raise TypeError
         self._aborted = value
 
     @property

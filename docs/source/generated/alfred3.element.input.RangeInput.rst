@@ -7,53 +7,53 @@ RangeInput
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~RangeInput.add_css
-
-
+   
+   
       ~RangeInput.add_js
-
-
+   
+   
       ~RangeInput.added_to_experiment
-
-
+   
+   
       ~RangeInput.added_to_page
-
-
+   
+   
       ~RangeInput.prepare_web_widget
-
-
+   
+   
       ~RangeInput.render_inner_html
-
-
+   
+   
       ~RangeInput.set_data
-
-
+   
+   
       ~RangeInput.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~RangeInput.base_template
          ~RangeInput.bottomlab
          ~RangeInput.codebook_data
@@ -104,3 +104,7 @@ RangeInput
          ~RangeInput.tree
          ~RangeInput.web_widget
          ~RangeInput.width
+      
+   
+   
+   

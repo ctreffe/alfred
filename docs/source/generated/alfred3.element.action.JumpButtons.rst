@@ -7,56 +7,56 @@ JumpButtons
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~JumpButtons.add_css
-
-
+   
+   
       ~JumpButtons.add_js
-
-
+   
+   
       ~JumpButtons.added_to_experiment
-
-
+   
+   
       ~JumpButtons.added_to_page
-
-
+   
+   
       ~JumpButtons.define_choices
-
-
+   
+   
       ~JumpButtons.prepare_web_widget
-
-
+   
+   
       ~JumpButtons.render_inner_html
-
-
+   
+   
       ~JumpButtons.set_data
-
-
+   
+   
       ~JumpButtons.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~JumpButtons.base_template
          ~JumpButtons.bottomlab
          ~JumpButtons.button_group_class
@@ -112,3 +112,7 @@ JumpButtons
          ~JumpButtons.vertical
          ~JumpButtons.web_widget
          ~JumpButtons.width
+      
+   
+   
+   

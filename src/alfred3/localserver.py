@@ -1,33 +1,35 @@
-import logging
-import os
-import re
-import traceback
+from builtins import map, object
 from builtins import callable as builtins_callable
-from pathlib import Path
+import logging
+import traceback
+import re
+import os
+
 from uuid import uuid4
+from pathlib import Path
 
 from flask import (
     Flask,
-    abort,
-    jsonify,
-    make_response,
-    redirect,
-    request,
     send_file,
-    send_from_directory,
-    session,
+    redirect,
     url_for,
+    abort,
+    request,
+    make_response,
+    session,
+    send_from_directory,
+    jsonify
 )
-
-from . import alfredlog
+from uuid import uuid4
 from .config import ExperimentConfig, ExperimentSecrets
+from . import alfredlog
 
 # def process_multiple_choice_lists(data: dict) -> dict:
-#     multiple_choice_lists = [name.replace("__multiple_", "")  for name in data if name.startswith("__multiple_")]
-#     for name in multiple_choice_lists:
-#         data[name] = request.form.getlist(name)
-#         del data[f"__multiple_{name}"]
-#     return data
+ #     multiple_choice_lists = [name.replace("__multiple_", "")  for name in data if name.startswith("__multiple_")]
+ #     for name in multiple_choice_lists:
+ #         data[name] = request.form.getlist(name)
+ #         del data[f"__multiple_{name}"]
+ #     return data
 
 
 class Script:
@@ -41,17 +43,17 @@ class Script:
 app = Flask(__name__)
 script = Script()
 
-
 @app.route("/start", methods=["GET", "POST"])
 def start():
 
     # this prevents an error in case of repeated calls to /start
     if script.exp_session is not None:
-        script.log.warning(
+        script.log.warning((
             "The '/start' route was called, but there was already "
             "a session running. Redirecting to '/experiment'."
-        )
+            ))
         return redirect(url_for("experiment"))
+
 
     logger = logging.getLogger(f"alfred3")
     logger.info("Starting experiment initialization.")
@@ -67,12 +69,7 @@ def start():
     script.log = log
 
     try:
-        script.exp_session = script.exp.create_session(
-            session_id=session_id,
-            config=script.config,
-            secrets=script.secrets,
-            **request.args,
-        )
+        script.exp_session = script.exp.create_session(session_id=session_id, config=script.config, secrets=script.secrets, **request.args)
     except Exception:
         script.log.exception("Exception during experiment generation.")
         abort(500)
@@ -100,7 +97,7 @@ def start():
             reason="error",
             title="Oops - Something went wrong",
             icon="mug-hot",
-            msg="Sorry, there was an error on our side.",
+            msg="Sorry, there was an error on our side."
         )
         return redirect(url_for("experiment"))
 
@@ -140,13 +137,9 @@ def experiment():
             return redirect(url_for("experiment"))
 
         elif request.method == "GET":
-            url_pagename = request.args.get(
-                "page", None
-            )  # https://basepath.de/experiment?page=name
+            url_pagename = request.args.get("page", None) # https://basepath.de/experiment?page=name
             if url_pagename:
-                script.exp_session.movement_manager.move(
-                    direction=f"jump>{url_pagename}"
-                )
+                script.exp_session.movement_manager.move(direction=f"jump>{url_pagename}")
 
             page_token = str(uuid4())
 
@@ -171,7 +164,7 @@ def experiment():
             reason="error",
             title="Oops - Something went wrong",
             icon="mug-hot",
-            msg="Sorry, there was an error on our side (500).",
+            msg="Sorry, there was an error on our side (500)."
         )
         html = script.exp_session.user_interface_controller.render_html(page_token)
         resp = make_response(html)
@@ -179,11 +172,10 @@ def experiment():
         return resp
 
 
+
 @app.route("/staticfile/<identifier>")
 def staticfile(identifier):
-    path, content_type = script.exp_session.user_interface_controller.get_static_file(
-        identifier
-    )
+    path, content_type = script.exp_session.user_interface_controller.get_static_file(identifier)
     dirname, filename = os.path.split(path)
     resp = make_response(send_from_directory(dirname, filename, mimetype=content_type))
     return resp
@@ -191,9 +183,7 @@ def staticfile(identifier):
 
 @app.route("/dynamicfile/<identifier>")
 def dynamicfile(identifier):
-    strIO, content_type = script.exp_session.user_interface_controller.get_dynamic_file(
-        identifier
-    )
+    strIO, content_type = script.exp_session.user_interface_controller.get_dynamic_file(identifier)
     resp = make_response(send_file(strIO, mimetype=content_type))
     resp.cache_control.no_cache = True
     return resp
@@ -202,7 +192,7 @@ def dynamicfile(identifier):
 @app.route("/callable/<identifier>", methods=["GET", "POST"])
 def callable(identifier):
     f = script.exp_session.user_interface_controller.get_callable(identifier)
-
+    
     if request.content_type == "application/json":
         values = request.get_json()
     else:
@@ -215,7 +205,6 @@ def callable(identifier):
         resp = make_response(redirect(url_for("experiment")))
     resp.cache_control.no_cache = True
     return resp
-
 
 # @app.route("/None")
 # def none(): pass

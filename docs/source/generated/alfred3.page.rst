@@ -3,23 +3,23 @@
 
 .. automodule:: alfred3.page
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
+   
+   
    .. rubric:: Classes
 
    .. autosummary::
       :toctree:
       :template: autosummary/class.rst
       :nosignatures:
-
+   
       AutoClosePage
       AutoForwardPage
       NoDataPage
@@ -30,3 +30,12 @@
       TimeoutPage
       UnlinkedDataPage
       WidePage
+   
+   
+
+   
+   
+   
+
+
+

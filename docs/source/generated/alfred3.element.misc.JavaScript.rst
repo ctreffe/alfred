@@ -7,47 +7,47 @@ JavaScript
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~JavaScript.add_css
-
-
+   
+   
       ~JavaScript.add_js
-
-
+   
+   
       ~JavaScript.added_to_experiment
-
-
+   
+   
       ~JavaScript.added_to_page
-
-
+   
+   
       ~JavaScript.prepare_web_widget
-
-
+   
+   
       ~JavaScript.render_inner_html
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~JavaScript.base_template
          ~JavaScript.converted_width
          ~JavaScript.css_class_container
@@ -73,3 +73,7 @@ JavaScript
          ~JavaScript.tree
          ~JavaScript.web_widget
          ~JavaScript.width
+      
+   
+   
+   

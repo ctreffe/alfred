@@ -1,10 +1,8 @@
 import logging
-
 import pytest
 
 import alfred3 as al
-from alfred3.testutil import clear_db, get_exp_session
-
+from alfred3.testutil import get_exp_session, clear_db
 
 @pytest.fixture
 def exp(tmp_path):
@@ -13,7 +11,6 @@ def exp(tmp_path):
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
     yield exp
     clear_db()
-
 
 @pytest.fixture
 def blank_exp(tmp_path):
@@ -25,44 +22,46 @@ def blank_exp(tmp_path):
 
 
 class Section(al.Section):
+
     def on_enter(self):
         self.log.info(f"{self.name}: on_enter executed")
-
+    
     def on_resume(self):
         self.log.info(f"{self.name}: on_resume executed")
-
+    
     def on_hand_over(self):
         self.log.info(f"{self.name}: on_hand_over executed")
 
     def on_leave(self):
         self.log.info(f"{self.name}: on_leave executed")
-
+    
     def validate_on_leave(self):
         self.log.info(f"{self.name}: validate_on_leave executed")
         return super().validate_on_leave()
-
+    
     def validate_on_forward(self):
         self.log.info(f"{self.name}: validate_on_forward executed")
         return super().validate_on_forward()
-
+    
     def validate_on_backward(self):
         self.log.info(f"{self.name}: validate_on_backward executed")
         return super().validate_on_backward()
-
+    
     def validate_on_jumpfrom(self):
         self.log.info(f"{self.name}: validate_on_jumpfrom executed")
         return super().validate_on_jumpfrom()
-
+    
     def validate_on_jumpto(self):
         self.log.info(f"{self.name}: validate_on_jumpto executed")
         return super().validate_on_jumpto()
-
+    
     def validate_on_move(self):
         self.log.info(f"{self.name}: validate_on_move executed")
         return super().validate_on_move()
 
 
 class Page(al.Page):
+    
     def on_first_show(self):
         self.log.info(f"{self.name}: on_first_show executed")
         return super().on_first_show()
@@ -70,17 +69,18 @@ class Page(al.Page):
     def on_each_show(self):
         self.log.info(f"{self.name}: on_each_show executed")
         return super().on_each_show()
-
+    
     def on_first_hide(self):
         self.log.info(f"{self.name}: on_first_hide executed")
         return super().on_first_hide()
-
+    
     def on_each_hide(self):
         self.log.info(f"{self.name}: on_each_hide executed")
         return super().on_each_hide()
 
 
 class TestBasicMovement:
+
     def test_forward(self, exp, caplog):
         caplog.set_level(logging.DEBUG)
         exp.start()
@@ -93,6 +93,7 @@ class TestBasicMovement:
         exp.movement_manager.move("forward")
         assert exp.finished
         assert exp.current_page is exp.final_page
+    
 
     def test_backward(self, exp):
         exp.start()
@@ -113,7 +114,7 @@ class TestBasicMovement:
 
     def test_jump_to_nonexistent_page(self):
         ...
-
+    
     def test_page_should_not_be_shown(self, exp, caplog):
         # page with should_be_shown = False should be skipped
         # none of its hooks should run
@@ -128,7 +129,7 @@ class TestBasicMovement:
         assert not "Page2: on_each_show executed" in caplog.text
         assert not "Page2: on_first_hide executed" in caplog.text
         assert not "Page2: on_each_show executed" in caplog.text
-
+    
     def test_skip_on_hiding(self, blank_exp, caplog):
         caplog.set_level(logging.DEBUG)
         exp = blank_exp
@@ -137,7 +138,7 @@ class TestBasicMovement:
             def on_first_hide(self):
                 self.log.info(f"{self.name}: on_first_hide executed")
                 self.exp.my_target_test_page.should_be_shown = False
-
+        
         exp += TestPage(name="test_page")
         exp += al.Page(name="my_target_test_page")
 
@@ -150,15 +151,16 @@ class TestBasicMovement:
         assert not "my_target_test_page: on_each_show executed" in caplog.text
         assert not "my_target_test_page: on_first_hide executed" in caplog.text
         assert not "my_target_test_page: on_each_show executed" in caplog.text
-
+    
     def test_skip_two_pages(self, blank_exp, caplog):
         caplog.set_level(logging.DEBUG)
         exp = blank_exp
 
         class TestPage(Page):
+            
             def on_exp_access(self):
                 self.should_be_shown = False
-
+        
         exp += Page(name="base_page")
         exp += TestPage(name="test1")
         exp += TestPage(name="test2")
@@ -179,16 +181,19 @@ class TestBasicMovement:
         assert not "test2: on_first_hide executed" in caplog.text
         assert not "test2: on_each_show executed" in caplog.text
 
+        
 
 class TestCustomMove:
+
     def test_custom_move_backward(self, exp):
+
         class MovePage(al.Page):
             custom_move_has_run = False
 
             def custom_move(self):
                 self.custom_move_has_run = True
                 self.exp.backward()
-
+        
         exp += MovePage(name="custom_move_page")
 
         exp.start()
@@ -201,7 +206,7 @@ class TestCustomMove:
         exp.movement_manager.move("forward")
         assert exp.custom_move_page.custom_move_has_run
         assert exp.current_page.name == "Page2"
-
+    
     def test_custom_move_jump(self, exp):
         class MovePage(al.Page):
             custom_move_has_run = False
@@ -209,7 +214,7 @@ class TestCustomMove:
             def custom_move(self):
                 self.custom_move_has_run = True
                 self.exp.jump("Page1")
-
+        
         exp += MovePage(name="custom_move_page")
 
         exp.start()
@@ -222,7 +227,7 @@ class TestCustomMove:
         exp.movement_manager.move("forward")
         assert exp.custom_move_page.custom_move_has_run
         assert exp.current_page.name == "Page1"
-
+    
     def test_custom_move_return(self, exp):
         class MovePage(al.Page):
             custom_move_has_run = False
@@ -230,7 +235,7 @@ class TestCustomMove:
             def custom_move(self):
                 self.custom_move_has_run = True
                 return True
-
+        
         exp += MovePage(name="custom_move_page")
 
         exp.start()
@@ -243,9 +248,10 @@ class TestCustomMove:
         exp.movement_manager.move("forward")
         assert exp.custom_move_page.custom_move_has_run
         assert exp.finished
-
+        
 
 class TestPermissions:
+
     def test_allow_foward(self, exp, caplog):
         caplog.set_level(logging.DEBUG)
         exp.basic_section.allow_forward = False
@@ -272,7 +278,7 @@ class TestPermissions:
         assert exp.current_page.name == "Page2"
         assert exp.current_page.name in caplog.text
         assert "does not allow movement in direction 'backward'" in caplog.text
-
+    
     def test_allow_backward_to(self, exp, caplog):
         caplog.set_level(logging.DEBUG)
         exp.basic_section.allow_backward = False
@@ -296,7 +302,7 @@ class TestPermissions:
 
         exp.movement_manager.move("backward")
         assert exp.current_page.name == "outer_page"
-
+        
         assert "inner_page" in caplog.text
         assert "does not allow movement in direction 'backward'" in caplog.text
 
@@ -311,7 +317,7 @@ class TestPermissions:
         assert exp.current_page.name == "Page1"
         assert "Page2" in caplog.text
         assert "cannot be jumped to" in caplog.text
-
+    
     def test_allow_jumpfrom(self, exp, caplog):
         caplog.set_level(logging.DEBUG)
         exp.basic_section.allow_jumpfrom = False
@@ -326,6 +332,7 @@ class TestPermissions:
 
 
 class TestOrder:
+    
     def test_permissions(self, exp, caplog):
         # if move is not permitted:
         # validation should not run
@@ -347,26 +354,25 @@ class TestOrder:
         assert "on_each_hide" not in caplog.text
         assert "on_first_hide" not in caplog.text
         assert nmoves == len(exp.move_history)
-
+    
     def test_validation(self, exp, caplog):
         # if validation fails:
         # hooks should not run
         # no move should be recorded
         caplog.set_level(logging.DEBUG)
-
         class Page(al.Page):
             def validate(self):
                 self.log.info(f"{self.name}: validate executed")
                 return False
-
+            
             def on_first_hide(self):
                 self.log.info(f"{self.name}: on_first_hide executed")
                 return super().on_first_hide()
-
+            
             def on_each_hide(self):
                 self.log.info(f"{self.name}: on_each_hide executed")
                 return super().on_each_hide()
-
+        
         exp += Page(name="testpage")
         exp.start()
 
@@ -383,7 +389,7 @@ class TestOrder:
         assert nmoves == len(exp.move_history)
 
     def test_on_hiding(self, blank_exp, caplog):
-        # on_hiding...
+        # on_hiding... 
         # ... should run before leaving, handing over, resuming, entering sections
         # ... should run before on_showing of the next page
         caplog.set_level(logging.DEBUG)
@@ -397,13 +403,13 @@ class TestOrder:
 
             def on_leave(self):
                 order.append(self.name)
-
+        
         class TestPage(al.Page):
             name = "test_page"
 
             def on_first_hide(self):
                 order.append(self.name)
-
+        
         sec = TestSection()
         sec += TestPage()
         exp += sec
@@ -413,19 +419,21 @@ class TestOrder:
 
         assert order == ["test_page", "test_section"]
 
-
+    
 class TestAddingPages:
+
     def test_add_page_on_hiding_to_current_section(self, exp, caplog):
         # inserting a page directly after the current one in a forward
         # move should lead to a move to the added page
         caplog.set_level(logging.DEBUG)
 
         class Page(al.Page):
+            
             def on_first_hide(self):
                 self.log.info(f"{self.name}: on_first_hide executed")
                 self.section += al.Page(name="added_page")
                 return super().on_first_hide()
-
+        
         exp += Page(name="testpage")
         exp.start()
         assert exp.current_page.name == "Page1"
@@ -437,6 +445,7 @@ class TestAddingPages:
 
         assert "testpage: on_first_hide" in caplog.text
         assert exp.current_page.name == "added_page"
+    
 
     def test_add_page_on_hiding_to_exp(self, exp, caplog):
         # inserting a page directly after the current one in a forward
@@ -444,11 +453,12 @@ class TestAddingPages:
         caplog.set_level(logging.DEBUG)
 
         class Page(al.Page):
+            
             def on_first_hide(self):
                 self.log.info(f"{self.name}: on_first_hide executed")
                 self.exp += al.Page(name="added_page")
                 return super().on_first_hide()
-
+        
         exp += Page(name="testpage")
         exp.start()
         assert exp.current_page.name == "Page1"
@@ -483,6 +493,7 @@ class TestAddingPages:
     #     exp.forward()
     #     assert exp.finished
     #     assert exp.current_page is exp.final_page
+    
 
     # def test_add_page_on_enter_to_empty_section(self, blank_exp, caplog):
     #     caplog.set_level(logging.DEBUG)
@@ -493,7 +504,7 @@ class TestAddingPages:
 
     #         def on_enter(self):
     #             self += al.Page(name="test_page")
-
+        
     #     exp += al.Page(name="base_page")
     #     exp += TestSection()
 
@@ -503,8 +514,12 @@ class TestAddingPages:
     #     exp.forward()
     #     assert exp.current_page.name == "test_page"
 
+        
+
+
 
 class TestBasicSectionMovement:
+
     def test_enter(self, blank_exp, caplog):
         exp = blank_exp
         caplog.set_level(logging.DEBUG)
@@ -522,6 +537,7 @@ class TestBasicSectionMovement:
         exp.forward()
         assert exp.current_page.name == "p2"
         assert "s2: on_enter" in caplog.text
+    
 
     def test_leave(self, blank_exp, caplog):
         exp = blank_exp
@@ -534,7 +550,7 @@ class TestBasicSectionMovement:
 
         exp.start()
         assert exp.current_page.name == "p1"
-
+        
         exp.forward()
         assert exp.current_page.name == "p2"
         assert "s1: on_leave" in caplog.text
@@ -548,6 +564,7 @@ class TestBasicSectionMovement:
 
 
 class TestNestedMovement:
+
     def test_hand_over1(self, blank_exp, caplog):
         exp = blank_exp
         caplog.set_level(logging.DEBUG)
@@ -564,22 +581,22 @@ class TestNestedMovement:
         exp.start()
 
         assert "parent_section: on_enter" in caplog.text
-        assert "parent_section: on_hand_over" not in caplog.text
-        assert "parent_section: on_leave" not in caplog.text
-        assert "child_section: on_enter" not in caplog.text
-
+        assert not "parent_section: on_hand_over" in caplog.text
+        assert not "parent_section: on_leave" in caplog.text
+        assert not "child_section: on_enter" in caplog.text
+        
         exp.forward()
         assert exp.current_page.name == "child_page"
         assert "parent_section: on_hand_over" in caplog.text
         assert "child_section: on_enter" in caplog.text
-        assert "parent_section: on_leave" not in caplog.text
-        assert "parent_section: validate_on_leave" not in caplog.text
+        assert not "parent_section: on_leave" in caplog.text
+        assert not "parent_section: validate_on_leave" in caplog.text
 
         exp.forward()
         assert not "parent_section: on_resume" in caplog.text
         assert "child_section: on_leave" in caplog.text
         assert "parent_section: on_leave" in caplog.text
-
+    
     def test_hand_over2(self, blank_exp, caplog):
         exp = blank_exp
         caplog.set_level(logging.DEBUG)
@@ -599,7 +616,7 @@ class TestNestedMovement:
         assert "parent_section: on_hand_over" in caplog.text
         assert "child_section: on_enter" in caplog.text
         assert not "parent_section: on_leave" in caplog.text
-
+        
         exp.forward()
         assert "parent_section: on_resume" in caplog.text
         assert "child_section: on_leave" in caplog.text
@@ -607,3 +624,6 @@ class TestNestedMovement:
 
         exp.forward()
         assert "parent_section: on_leave" in caplog.text
+
+
+

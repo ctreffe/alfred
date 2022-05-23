@@ -1,19 +1,19 @@
 Documentation Guidelines
 ================================
 
-Generally, alfred3 adheres to `Google Style docstrings`_, with a few
-customizations. Here, I note only the deviations from Google Style.
+Generally, alfred3 adheres to `Google Style docstrings`_, with a few 
+customizations. Here, I note only the deviations from Google Style. 
 
-Useful resources for writing docstrings concern directives_
-(special commands, e.g. for creating notes or warnings),
-`cross-referencing`_ (i.e. links within the documentation), and a
+Useful resources for writing docstrings concern directives_ 
+(special commands, e.g. for creating notes or warnings), 
+`cross-referencing`_ (i.e. links within the documentation), and a 
 general `ReStructured Text cheat sheet`_. The creation of tables can be
 most convenient via `csv tables`_.
 
 One-Sentence summary
 --------------------
 
-The one-sentence summary of a docstring should start on its own, new
+The one-sentence summary of a docstring should start on its own, new 
 line instead of being on the same line as the three opening quotes.
 This improves readability::
 
@@ -31,7 +31,7 @@ Class and instance attributes
 
 Class and instance attributes are documented where they are defined,
 by placing short descriptions starting with ``#:`` directly above
-their definition. This is inspired by Flask's documentation and is
+their definition. This is inspired by Flask's documentation and is 
 done for two reasons:
 
 1) It works with Sphinx's automatic layout
@@ -39,7 +39,7 @@ done for two reasons:
 2) The docstrings are available directly where the attribute is defined.
 
 **Note**: For complicated docstrings that exceed five lines, you
-should turn to using properties instead of attributes and document
+should turn to using properties instead of attributes and document 
 the property in its getter method.
 
 Example::
@@ -50,7 +50,7 @@ Example::
         class_attribute = "value"
 
         def __init__(self, inst_attr: str):
-
+            
             #: str: This is a short description of an instance attribute
             self.inst_attr = inst_attr
 
@@ -61,15 +61,15 @@ above).
 Docstrings of inherited methods
 -------------------------------
 
-(Quoted in parts from matplotlib_ documentation) If a subclass
-overrides a method but does not change the semantics, we can reuse the
+(Quoted in parts from matplotlib_ documentation) If a subclass 
+overrides a method but does not change the semantics, we can reuse the 
 parent docstring for the method of the child class, or tell sphinx not
-to add it to the classes own documentation.
+to add it to the classes own documentation. 
 
-*Reusing the parent docstring*: Python does this automatically, if
-the subclass method does not have a docstring. Use a plain comment
-``# docstring`` inherited to denote the intention to reuse the parent
-docstring. That way we do not accidentially create a docstring in the
+*Reusing the parent docstring*: Python does this automatically, if 
+the subclass method does not have a docstring. Use a plain comment 
+``# docstring`` inherited to denote the intention to reuse the parent 
+docstring. That way we do not accidentially create a docstring in the 
 future. Example::
 
     class A:
@@ -82,8 +82,8 @@ future. Example::
             # docstring inherited
             pass
 
-*Suppressing redundant docstrings*: To suppress redundant
-documentation of a child method, add
+*Suppressing redundant docstrings*: To suppress redundant 
+documentation of a child method, add 
 ``:meta private: (documented at <parent>)`` as the method's
 docstring. That way, we know why the docstring is suppressed. Example::
 
@@ -105,8 +105,8 @@ Writing Examples
 **Examples are one of the most important parts of a docstring**. Never
 forgo writing an example lightly!
 
-Examples in docstrings, besides illustrating the usage of the
-function or method, must be valid Python code, that can be copied
+Examples in docstrings, besides illustrating the usage of the 
+function or method, must be valid Python code, that can be copied 
 and run by users. Comments describing the examples can be added.
 
 Alfred3 should be imported with the statement ``import alfred3 as al``
@@ -133,7 +133,7 @@ requires a different hook, elements (pages) should be added to pages
 
 Ordinary codeblocks
 ^^^^^^^^^^^^^^^^^^^
-When appropriate, ordinary code-blocks
+When appropriate, ordinary code-blocks 
 without output can be used as examples. This has the advantage that
 it is similar to the style in which alfred experiments are actually
 written, and the code can be copy-pasted directly. Ordinary codeblocks
@@ -155,12 +155,12 @@ between the double-colon and the first line of code. Example::
 
 Doctest style codeblocks
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Another good way to present examples can be to
-write them as a session in the Python terminal. ``>>>`` is used to
-present code, ``…`` is used for code continuing from the previous
-line. Output is presented immediately after the last line of code
-generating the output (no blank lines in between). Comments
-describing the examples can be added with blank lines before and
+Another good way to present examples can be to 
+write them as a session in the Python terminal. ``>>>`` is used to 
+present code, ``…`` is used for code continuing from the previous 
+line. Output is presented immediately after the last line of code 
+generating the output (no blank lines in between). Comments 
+describing the examples can be added with blank lines before and 
 after them. Doctest style codeblocks do not need to start with a double-
 colon.
 
@@ -169,7 +169,7 @@ Both styles may be appropriate. It is up to you to choose.
 (Inspired by and adapted from the pandas_ docstring guidelines)
 
 
-Code Example using the doctest style (Adding a page directly to the main
+Code Example using the doctest style (Adding a page directly to the main 
 content section, from the :meth:`.Experiment.member` documentation)::
 
     def member(self, _member=None, *, of_section: str = "_content"):
@@ -187,11 +187,11 @@ content section, from the :meth:`.Experiment.member` documentation)::
             Adding a page directly to the main content section:
 
             >>> exp = al.Experiment()
-            ...
+            ... 
             >>> @exp.member
             >>> class HelloWorld(al.Page):
             ...     name = "hello_world"
-            ...
+            ...     
             ...     def on_exp_access(self):
             ...         self += al.Text("This is a 'hello, world!' Page.")
             ...

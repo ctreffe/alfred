@@ -7,56 +7,56 @@ DynamicJumpButtons
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~DynamicJumpButtons.add_css
-
-
+   
+   
       ~DynamicJumpButtons.add_js
-
-
+   
+   
       ~DynamicJumpButtons.added_to_experiment
-
-
+   
+   
       ~DynamicJumpButtons.added_to_page
-
-
+   
+   
       ~DynamicJumpButtons.define_choices
-
-
+   
+   
       ~DynamicJumpButtons.prepare_web_widget
-
-
+   
+   
       ~DynamicJumpButtons.render_inner_html
-
-
+   
+   
       ~DynamicJumpButtons.set_data
-
-
+   
+   
       ~DynamicJumpButtons.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~DynamicJumpButtons.base_template
          ~DynamicJumpButtons.bottomlab
          ~DynamicJumpButtons.button_group_class
@@ -112,3 +112,7 @@ DynamicJumpButtons
          ~DynamicJumpButtons.vertical
          ~DynamicJumpButtons.web_widget
          ~DynamicJumpButtons.width
+      
+   
+   
+   

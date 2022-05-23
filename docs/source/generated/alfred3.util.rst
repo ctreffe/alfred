@@ -3,17 +3,17 @@
 
 .. automodule:: alfred3.util
 
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Functions
 
    .. autosummary::
       :toctree:
-
+   
       emoji
       flatten_dict
       icon
@@ -26,3 +26,16 @@
       prefix_keys
       prefix_keys_safely
       to_dict
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

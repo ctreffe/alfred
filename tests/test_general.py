@@ -1,16 +1,15 @@
 """
-General tests that have not yet been refactored into specific test
+General tests that have not yet been refactored into specific test 
 modules.
 """
 
 import pytest
-from dotenv import load_dotenv
-
 import alfred3 as al
+
 from alfred3.testutil import *
 
+from dotenv import load_dotenv
 load_dotenv()
-
 
 @pytest.fixture
 def expfin(tmp_path):
@@ -35,5 +34,5 @@ def test_early_finish(expfin):
 def test_normal_finish(expfin):
     expfin.forward()
     expfin.forward()
-    assert expfin.finished
+    assert expfin.finished 
     assert expfin.Second.is_closed

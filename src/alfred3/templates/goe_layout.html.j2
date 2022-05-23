@@ -5,13 +5,13 @@
 				<h2 id="header-text">Georg-Elias-Müller-Institut für Psychologie<br>
 				<small>Georg-August-Universität Göttingen</small></h2>
 			</div>
-
+			
 			<div class="span2 pagination-centered">
 				<img style="margin-top: 5%;" src="{{ logo_url }}">
 			</div>
 		</div>
 	</div>
-
+	
 	<div class="row with-margin" id="main-area">
 		{% if messages %}
         {% for message in messages %}
@@ -35,15 +35,15 @@
 		    </ul>
 		</div>
 		{% endif %}
-
+		
 		{% if title is defined %}
 	    <h3 id="title">{{ title }}</h3>
 	    {% endif %}
-
+	    
 	    {% if subtitle is defined %}
 	    <h4 id="subtitle">{{ subtitle }}</h4>
 	    {% endif %}
-
+	    
 		<div class="span12" id="question-container">
 	    	{{ widget }}
 		</div>
@@ -53,7 +53,7 @@
 			{{statustext}}
 		</div>
 	</div>
-
+	
 	<div class="row with-margin pagination-centered form-actions" id="controls">
         {% if backward_text is defined %}
             <button class = "btn" id="back_button" name="move" value="backward" submit="backward">{{ backward_text }}</button>
@@ -73,7 +73,7 @@
             <button class = "btn" id="finish_button" name="move" value="forward" submit="forward">{{ finish_text }}</button>
         {% endif %}
 	</div>
-
+	
 	<div class="row with-margin" id="footer">
 		<div class"span12">
 			<small>Alfredo Web Experiment</small>

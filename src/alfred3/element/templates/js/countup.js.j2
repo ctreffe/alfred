@@ -14,7 +14,7 @@ function countup( elementName, maxSecs, msg, startTime)
     function updateTimer()
     {
         msCount = Date.now() - startTime;
-
+       
         if ( msCount < 1000 ) {
 
             element.innerHTML = "00:00";

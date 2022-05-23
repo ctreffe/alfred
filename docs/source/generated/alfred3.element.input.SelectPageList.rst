@@ -7,56 +7,56 @@ SelectPageList
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~SelectPageList.add_css
-
-
+   
+   
       ~SelectPageList.add_js
-
-
+   
+   
       ~SelectPageList.added_to_experiment
-
-
+   
+   
       ~SelectPageList.added_to_page
-
-
+   
+   
       ~SelectPageList.define_choices
-
-
+   
+   
       ~SelectPageList.prepare_web_widget
-
-
+   
+   
       ~SelectPageList.render_inner_html
-
-
+   
+   
       ~SelectPageList.set_data
-
-
+   
+   
       ~SelectPageList.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~SelectPageList.base_template
          ~SelectPageList.bottomlab
          ~SelectPageList.choice_labels
@@ -108,3 +108,7 @@ SelectPageList
          ~SelectPageList.vertical
          ~SelectPageList.web_widget
          ~SelectPageList.width
+      
+   
+   
+   

@@ -7,47 +7,47 @@ ForwardButton
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~ForwardButton.add_css
-
-
+   
+   
       ~ForwardButton.add_js
-
-
+   
+   
       ~ForwardButton.added_to_experiment
-
-
+   
+   
       ~ForwardButton.added_to_page
-
-
+   
+   
       ~ForwardButton.prepare_web_widget
-
-
+   
+   
       ~ForwardButton.render_inner_html
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~ForwardButton.base_template
          ~ForwardButton.converted_width
          ~ForwardButton.css_class_container
@@ -74,3 +74,7 @@ ForwardButton
          ~ForwardButton.tree
          ~ForwardButton.web_widget
          ~ForwardButton.width
+      
+   
+   
+   

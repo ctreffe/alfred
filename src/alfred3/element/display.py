@@ -6,17 +6,23 @@ Provides elements that display content.
 
 import io
 import time
+
 from datetime import datetime
-from pathlib import Path
 from typing import Union
+from pathlib import Path
 from uuid import uuid4
 
+from emoji import emojize
 import cmarkgfm
 from cmarkgfm.cmark import Options as cmarkgfmOptions
-from emoji import emojize
 
-from .._helper import inherit_kwargs, is_url
-from .core import Element, LabelledElement, RowLayout, jinja_env
+from .._helper import is_url
+from .._helper import inherit_kwargs
+
+from .core import jinja_env
+from .core import Element
+from .core import RowLayout
+from .core import LabelledElement
 from .input import SingleChoiceButtons
 
 
@@ -99,7 +105,7 @@ class Html(Element):
     def __init__(
         self,
         html: str = None,
-        path: Path | str = None,
+        path: Union[Path, str] = None,
         **element_args,
     ):
 
@@ -144,14 +150,14 @@ class Text(Element):
 
     Args:
         text (str, Path, optional): Text to be displayed.
-        path (str, Path, optional): Filepath to a textfile (relative to
+        path (str, Path, optional): Filepath to a textfile (relative to 
             the experiment directory).
-        emojize (bool, optional): If *True* (default), emoji shortcodes in
-            the text will be converted to unicode (i.e. emojis will be
+        emojize (bool, optional): If *True* (default), emoji shortcodes in 
+            the text will be converted to unicode (i.e. emojis will be 
             displayed).
         render_markdown (bool, optional): If *True* (default), markdown
             will be rendered to html.
-
+        
         {kwargs}
 
     Examples:
@@ -178,7 +184,7 @@ class Text(Element):
     def __init__(
         self,
         text: str = None,
-        path: Path | str = None,
+        path: Union[Path, str] = None,
         emojize: bool = True,
         render_markdown: bool = True,
         **kwargs,
@@ -273,7 +279,7 @@ class Image(LabelledElement):
     # Documented at :class:`.Element`
     element_template = jinja_env.get_template("html/ImageElement.html.j2")
 
-    def __init__(self, path: str | Path = None, url: str = None, **kwargs):
+    def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
         super().__init__(**kwargs)
 
         self.path = path
@@ -354,7 +360,7 @@ class Audio(Image):
 
     def __init__(
         self,
-        path: str | Path = None,
+        path: Union[str, Path] = None,
         url: str = None,
         controls: bool = True,
         autoplay: bool = False,
@@ -421,7 +427,7 @@ class Video(Audio):
 
     def __init__(
         self,
-        path: str | Path = None,
+        path: Union[str, Path] = None,
         url: str = None,
         allow_fullscreen: bool = True,
         video_height: str = "auto",
@@ -572,7 +578,7 @@ class CodeBlock(Text):
     def __init__(
         self,
         text: str = None,
-        path: Path | str = None,
+        path: Union[Path, str] = None,
         lang: str = "auto",
         width: str = "full",
         **element_args,
@@ -739,7 +745,7 @@ class ProgressBar(LabelledElement):
 
     def __init__(
         self,
-        progress: str | float | int = "auto",
+        progress: Union[str, float, int] = "auto",
         bar_height: str = "6px",
         show_text: bool = False,
         striped: bool = True,
@@ -766,9 +772,7 @@ class ProgressBar(LabelledElement):
         self._striped: bool = striped
         self._bar_style: str = style
         self._animated: bool = animated
-        self._round_corners: bool = (
-            "border-radius: 0;" if round_corners == False else ""
-        )
+        self._round_corners: bool = "border-radius: 0;" if round_corners == False else ""
 
     def added_to_experiment(self, exp):
 
@@ -791,7 +795,7 @@ class ProgressBar(LabelledElement):
                 raise e
 
     @property
-    def progress(self) -> int | float:
+    def progress(self) -> Union[int, float]:
 
         if self._progress or self._progress == 0:  # manually defined via element
             return self._progress
@@ -811,7 +815,7 @@ class ProgressBar(LabelledElement):
                 return 100
 
     @progress.setter
-    def progress(self, value: int | float):
+    def progress(self, value: Union[int, float]):
         try:
             assert isinstance(value, (int, float))
             assert 0 <= value and value <= 100
@@ -923,9 +927,7 @@ class Alert(Text):
 
     element_template = jinja_env.get_template("html/AlertElement.html.j2")
 
-    def __init__(
-        self, text: str = "", category: str = "info", dismiss: bool = False, **kwargs
-    ):
+    def __init__(self, text: str = "", category: str = "info", dismiss: bool = False, **kwargs):
         super().__init__(text=text, **kwargs)
         self.category = category
         self.dismiss = dismiss
@@ -1059,11 +1061,7 @@ class CountUp(Element):
     element_template = jinja_env.get_template("html/TextElement.html.j2")
 
     def __init__(
-        self,
-        end_after: int = -1,
-        end_msg: str = "expired",
-        start_time: float = 0,
-        **kwargs,
+        self, end_after: int = -1, end_msg: str = "expired", start_time: float = 0, **kwargs
     ):
         super().__init__(**kwargs)
 
@@ -1139,9 +1137,7 @@ class CountDown(CountUp):
     counter_js = jinja_env.get_template("js/countdown.js.j2")
     element_template = jinja_env.get_template("html/TextElement.html.j2")
 
-    def __init__(
-        self, end_after: int, end_msg: str = "expired", reset: bool = False, **kwargs
-    ):
+    def __init__(self, end_after: int, end_msg: str = "expired", reset: bool = False, **kwargs):
         super().__init__(**kwargs)
 
         self.end_after_original = end_after
@@ -1152,7 +1148,7 @@ class CountDown(CountUp):
         self.reset = reset
 
     @classmethod
-    def tilltime(cls, t: int | float, **kwargs):
+    def tilltime(cls, t: Union[int, float], **kwargs):
         """
         Alternative constructor for a countdown targeted at a specific
         unix timestamp.
@@ -1286,16 +1282,16 @@ class Card(Element):
             button that can be used to hide and show the card body.
             Defaults to *False*.
         start_collapsed (bool, optional): If *True*, the card body will
-            start in collapsed mode. Only has an effect, if *collapse*
+            start in collapsed mode. Only has an effect, if *collapse* 
             is *True*. Defaults to *True*.
         header_style, body_style, footer_style (str, optional): Can be
             used to add css classes to the header, body, and footer of
             the card. For example, *bg-success text-white* will turn
-            the background green and the text white. See
-            https://getbootstrap.com/docs/4.5/utilities/colors/ for
+            the background green and the text white. See 
+            https://getbootstrap.com/docs/4.5/utilities/colors/ for 
             some possible coloring options.
         {kwargs}
-
+    
     Examples:
         Basic usage::
 
@@ -1318,11 +1314,11 @@ class Card(Element):
 
     def __init__(
         self,
-        header: str | Element = "",
-        title: str | Element = "",
-        subtitle: str | Element = "",
-        body: str | Element = "",
-        footer: str | Element = "",
+        header: Union[str, Element] = "",
+        title: Union[str, Element] = "",
+        subtitle: Union[str, Element] = "",
+        body: Union[str, Element] = "",
+        footer: Union[str, Element] = "",
         emojize: bool = True,
         render_markdown: bool = True,
         collapse: bool = False,
@@ -1360,7 +1356,7 @@ class Card(Element):
                 page += element
             except AttributeError:
                 pass
-
+    
     @property
     def template_data(self):
         d = super().template_data
@@ -1383,14 +1379,14 @@ class Card(Element):
         """str: Card body"""
         try:
             return self._body.web_widget
-
+        
         except AttributeError:
             return self._body
-
+    
     @body.setter
-    def body(self, value: str | Element):
+    def body(self, value: Union[str, Element]):
         self._body = value
-
+        
     def render_text(self, text: str) -> str:
         """
         Renders the markdown and emoji shortcodes in :attr:`.text`
@@ -1406,7 +1402,7 @@ class Card(Element):
                 text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
             )
         return text
-
+    
     @property
     def title(self) -> str:
         """
@@ -1414,14 +1410,14 @@ class Card(Element):
         """
         try:
             return self._title.web_widget
-
+        
         except AttributeError:
             return self._title
-
+    
     @title.setter
-    def title(self, value: str | Element):
+    def title(self, value: Union[str, Element]):
         self._title = value
-
+    
     @property
     def subtitle(self) -> str:
         """
@@ -1429,14 +1425,14 @@ class Card(Element):
         """
         try:
             return self._subtitle.web_widget
-
+        
         except AttributeError:
             return self._subtitle
-
+    
     @subtitle.setter
-    def subtitle(self, value: str | Element):
+    def subtitle(self, value: Union[str, Element]):
         self._subtitle = value
-
+    
     @property
     def header(self) -> str:
         """
@@ -1444,14 +1440,14 @@ class Card(Element):
         """
         try:
             return self._header.web_widget
-
+        
         except AttributeError:
             return self._header
-
+    
     @header.setter
-    def header(self, value: str | Element):
+    def header(self, value: Union[str, Element]):
         self._header = value
-
+    
     @property
     def footer(self) -> str:
         """
@@ -1459,10 +1455,12 @@ class Card(Element):
         """
         try:
             return self._footer.web_widget
-
+        
         except AttributeError:
             return self._footer
-
+    
     @footer.setter
-    def footer(self, value: str | Element):
+    def footer(self, value: Union[str, Element]):
         self._footer = value
+
+    

@@ -5,17 +5,17 @@ Provides configuration handling for alfred3 experiments.
 """
 
 
-import importlib
 import os
 import platform
 import sys
+import importlib
+
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from typing import Union
 
 from . import files
 from ._helper import inherit_kwargs
-
 
 class ExperimentConfig(ConfigParser):
     """
@@ -25,11 +25,11 @@ class ExperimentConfig(ConfigParser):
         expdir: Path to the experiment directory.
         config_objects: A list of dictionaries and/or strings with alfred
             configuration in ini format. Defaults to `None`.
-        **kwargs, inline_comment_prefixes: Keyword arguments that are passed on to
+        **kwargs, inline_comment_prefixes: Keyword arguments that are passed on to 
             :class:`configparser.ConfigParser`
-
+    
     Notes:
-        This is a child class of :class:`configparser.ConfigParser`,
+        This is a child class of :class:`configparser.ConfigParser`, 
         which parses alfred configuration files and objects on intialization
         and behaves just like a usual `ConfigParser` afterwards, most
         importantly providing the methods ``get(section, option)``,
@@ -37,11 +37,11 @@ class ExperimentConfig(ConfigParser):
         and ``getboolean(section, option)`` for retrieving values from the
         parser instance. There are many more methods available, which are
         documented in the official ConfigParser `documentation`_.
-
+    
     .. _documentation: https://docs.python.org/3/library/configparser.html#configparser.ConfigParser
     """
 
-    #: Environment variable key that corresponds to a
+    #: Environment variable key that corresponds to a 
     #: full filepath (including filename) to an alfred configuration
     #: file.
     env_location = "ALFRED_CONFIG_FILE"
@@ -52,13 +52,7 @@ class ExperimentConfig(ConfigParser):
     #: Name of the experiment-specific configuration file.
     exp_config_name = "config.conf"
 
-    def __init__(
-        self,
-        expdir: str = None,
-        config_objects: list = None,
-        inline_comment_prefixes: str = ("#"),
-        **kwargs
-    ):
+    def __init__(self, expdir: str = None, config_objects: list = None, inline_comment_prefixes: str = ("#"), **kwargs):
         super().__init__(inline_comment_prefixes=inline_comment_prefixes, **kwargs)
 
         self._config_objects = config_objects if config_objects is not None else []
@@ -98,9 +92,7 @@ class ExperimentConfig(ConfigParser):
 
         for obj in self._config_objects:
             if not isinstance(obj, (str, dict)):
-                raise TypeError(
-                    "Config objects must be list of strings or dictionaries."
-                )
+                raise TypeError("Config objects must be list of strings or dictionaries.")
 
             try:
                 self.read_dict(obj)
@@ -111,7 +103,7 @@ class ExperimentConfig(ConfigParser):
         """
         Converts the ConfigParser structure into a nested dict.
 
-        Each section name is a first level key in the the dict, and the
+        Each section name is a first level key in the the dict, and the 
         key values of the section becomes the dict in the second level::
 
             {
@@ -119,15 +111,13 @@ class ExperimentConfig(ConfigParser):
                     'key': 'value'
                 }
             }
-
+        
         Returns:
             dict: A dictionary representation of the parser instance.
-
+        
         """
 
-        return {
-            section_name: dict(self[section_name]) for section_name in self.sections()
-        }
+        return {section_name: dict(self[section_name]) for section_name in self.sections()}
 
     def get_section(self, name: str) -> SectionProxy:
         """
@@ -172,7 +162,6 @@ class ExperimentConfig(ConfigParser):
 
         return parser["section"]
 
-
 class ExperimentSecrets(ExperimentConfig):
     """
     Provides functionality for parsing secret config, e.g. DB credentials.
@@ -188,3 +177,4 @@ class ExperimentSecrets(ExperimentConfig):
     env_location = "ALFRED_SECRETS_FILE"
     global_config_name = "secrets.conf"
     exp_config_name = "secrets.conf"
+

@@ -1,12 +1,12 @@
 Documentation Guidelines
 ================================
 
-Generally, alfred3 adheres to `Google Style docstrings`_, with a few
-customizations. Here, we note only the deviations from Google Style.
+Generally, alfred3 adheres to `Google Style docstrings`_, with a few 
+customizations. Here, we note only the deviations from Google Style. 
 
-Useful resources for writing docstrings concern directives_
-(special commands, e.g. for creating notes or warnings),
-`cross-referencing`_ (i.e. links within the documentation), and a
+Useful resources for writing docstrings concern directives_ 
+(special commands, e.g. for creating notes or warnings), 
+`cross-referencing`_ (i.e. links within the documentation), and a 
 general `ReStructured Text cheat sheet`_. The creation of tables can be
 most convenient via `csv tables`_.
 
@@ -17,7 +17,7 @@ Here's the summary:
 3. Document instance attributes in their getter property.
 4. Let methods inherit docstrings and leave a note on the inheritance at
    the inherited method.
-5. Use the :func:`.inherit_kwargs` decorator to share argument
+5. Use the :func:`.inherit_kwargs` decorator to share argument 
    documentation between child and parent classes.
 6. **Write examples**!
 7. Use type annotations.
@@ -25,7 +25,7 @@ Here's the summary:
 One-Sentence summary
 --------------------
 
-The one-sentence summary of a docstring should start on its own, new
+The one-sentence summary of a docstring should start on its own, new 
 line instead of being on the same line as the three opening quotes.
 This improves readability::
 
@@ -43,7 +43,7 @@ Class and instance attributes
 
 Class attributes are documented where they are defined,
 by placing short descriptions starting with ``#:`` directly above
-their definition. This is inspired by Flask's documentation and is
+their definition. This is inspired by Flask's documentation and is 
 done for two reasons:
 
 1) It works with Sphinx's automatic layout
@@ -64,9 +64,9 @@ Example::
         class_attribute: str = "value"
 
         def __init__(self, inst_attr: str):
-
+            
             self._inst_attr: str = inst_attr # documented in getter method
-
+        
         @property
         def inst_attr(self):
             """
@@ -78,15 +78,15 @@ Example::
 Docstrings of inherited methods
 -------------------------------
 
-(Quoted in parts from matplotlib_ documentation) If a subclass
-overrides a method but does not change the semantics, we can reuse the
+(Quoted in parts from matplotlib_ documentation) If a subclass 
+overrides a method but does not change the semantics, we can reuse the 
 parent docstring for the method of the child class, or tell sphinx not
-to add it to the classes own documentation.
+to add it to the classes own documentation. 
 
-*Reusing the parent docstring*: Python does this automatically, if
-the subclass method does not have a docstring. Use a plain comment
-``# docstring`` inherited to denote the intention to reuse the parent
-docstring. That way we do not accidentially create a docstring in the
+*Reusing the parent docstring*: Python does this automatically, if 
+the subclass method does not have a docstring. Use a plain comment 
+``# docstring`` inherited to denote the intention to reuse the parent 
+docstring. That way we do not accidentially create a docstring in the 
 future. Example::
 
     class A:
@@ -121,8 +121,8 @@ Writing Examples
 Examples are one of the most important parts of a docstring. Never
 forgo writing an example lightly!
 
-Examples in docstrings, besides illustrating the usage of the
-function or method, must be valid Python code, that can be copied
+Examples in docstrings, besides illustrating the usage of the 
+function or method, must be valid Python code, that can be copied 
 and run by users. Comments describing the examples can be added.
 
 Alfred3 should be imported with the statement ``import alfred3 as al``
@@ -145,7 +145,7 @@ requires a different hook, elements (pages) should be added to pages
             self += al.Text("Example text")
 
 
-Codeblocks can be created simply by ending a line with a double-colon
+Codeblocks can be created simply by ending a line with a double-colon 
 (``::``). Example::
 
     This is ordinary text::
@@ -158,15 +158,15 @@ Codeblocks can be created simply by ending a line with a double-colon
 Using type annotations
 ----------------------
 
-It's very useful to know the type of function arguments and returned
+It's very useful to know the type of function arguments and returned 
 values, which is why we love type annotations. Here's an example::
 
     def example_function(arg1: str, arg2: str = "default") -> str:
         return arg1 + arg2
 
-The parts ``arg1: str`` and ``arg2: str = "default"`` are annotated
+The parts ``arg1: str`` and ``arg2: str = "default"`` are annotated 
 function arguments. The part ``-> str`` specifies the function's return
-type. For more details on how to use type annotations, refer to the
+type. For more details on how to use type annotations, refer to the 
 :mod:`typing` module documentation.
 
 

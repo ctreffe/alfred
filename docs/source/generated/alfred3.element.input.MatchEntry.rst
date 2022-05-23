@@ -7,53 +7,53 @@ MatchEntry
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~MatchEntry.add_css
-
-
+   
+   
       ~MatchEntry.add_js
-
-
+   
+   
       ~MatchEntry.added_to_experiment
-
-
+   
+   
       ~MatchEntry.added_to_page
-
-
+   
+   
       ~MatchEntry.prepare_web_widget
-
-
+   
+   
       ~MatchEntry.render_inner_html
-
-
+   
+   
       ~MatchEntry.set_data
-
-
+   
+   
       ~MatchEntry.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~MatchEntry.base_template
          ~MatchEntry.bottomlab
          ~MatchEntry.codebook_data
@@ -104,3 +104,7 @@ MatchEntry
          ~MatchEntry.tree
          ~MatchEntry.web_widget
          ~MatchEntry.width
+      
+   
+   
+   

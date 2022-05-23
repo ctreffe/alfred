@@ -1,11 +1,9 @@
 import pytest
+from alfred3.quota import SessionQuota
+from alfred3.testutil import get_exp_session, clear_db
 from dotenv import load_dotenv
 
-from alfred3.quota import SessionQuota
-from alfred3.testutil import clear_db, get_exp_session
-
 load_dotenv()
-
 
 @pytest.fixture
 def exp(tmp_path):
@@ -32,6 +30,7 @@ def exp_factory(tmp_path):
 
 
 class TestQuota:
+
     def test_initialization(self, exp):
         quota = SessionQuota(3, exp)
 
@@ -40,6 +39,7 @@ class TestQuota:
         assert quota.nopen == 3
         assert quota.nfinished == 0
         assert quota.npending == 0
+    
 
     def test_count_pending_count(self, exp):
         quota = SessionQuota(3, exp)
@@ -48,11 +48,11 @@ class TestQuota:
         assert quota.nopen == 2
         assert quota.nfinished == 0
         assert quota.npending == 1
-
+    
     def test_count_pending_abort(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
-
+        
         quota1 = SessionQuota(1, exp1)
         quota1.count()
 
@@ -68,7 +68,7 @@ class TestQuota:
     def test_count_pending_inclusive(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
-
+        
         quota1 = SessionQuota(1, exp1, inclusive=True)
         quota1.count()
 
@@ -81,6 +81,7 @@ class TestQuota:
 
         assert label == quota2.slot_label
 
+    
     def test_count_finished(self, exp):
         quota = SessionQuota(3, exp)
 
@@ -92,11 +93,11 @@ class TestQuota:
         assert quota.nopen == 2
         assert quota.nfinished == 1
         assert quota.npending == 0
-
+    
     def test_count_abort(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
-
+        
         quota1 = SessionQuota(1, exp1)
         quota1.count()
 
@@ -111,7 +112,7 @@ class TestQuota:
         quota2.count()
 
         assert exp2.aborted
-
+    
     def test_count_exp_version(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()

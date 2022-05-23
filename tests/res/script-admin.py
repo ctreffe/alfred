@@ -5,19 +5,21 @@ exp = al.Experiment()
 
 
 class MySpectatorPage(admin.SpectatorPage):
+
     def on_exp_access(self):
         self += al.Text("My spectator page")
 
 
 class MyOperatorPage(admin.OperatorPage):
+
     def on_exp_access(self):
         self += al.Text("My operator page")
 
 
 class MyManagerPage(admin.ManagerPage):
+
     def on_exp_access(self):
         self += al.Text("My manager page")
-
 
 exp.admin += MySpectatorPage(title="Spectator", name="spectator")
 exp.admin += MyOperatorPage(title="Operator", name="operator")

@@ -7,47 +7,47 @@ RepeatedCallback
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~RepeatedCallback.add_css
-
-
+   
+   
       ~RepeatedCallback.add_js
-
-
+   
+   
       ~RepeatedCallback.added_to_experiment
-
-
+   
+   
       ~RepeatedCallback.added_to_page
-
-
+   
+   
       ~RepeatedCallback.prepare_web_widget
-
-
+   
+   
       ~RepeatedCallback.render_inner_html
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~RepeatedCallback.base_template
          ~RepeatedCallback.converted_width
          ~RepeatedCallback.css_class_container
@@ -74,3 +74,7 @@ RepeatedCallback
          ~RepeatedCallback.tree
          ~RepeatedCallback.web_widget
          ~RepeatedCallback.width
+      
+   
+   
+   

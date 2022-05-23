@@ -3,21 +3,21 @@
 
 .. automodule:: alfred3.element
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -32,3 +32,4 @@
    alfred3.element.display
    alfred3.element.input
    alfred3.element.misc
+

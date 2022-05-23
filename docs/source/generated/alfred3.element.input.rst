@@ -3,23 +3,23 @@ alfred3.element.input
 
 .. automodule:: alfred3.element.input
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
+   
+   
    .. rubric:: Classes
 
    .. autosummary::
       :toctree:
       :template: autosummary/class.rst
       :nosignatures:
-
+   
       EmailEntry
       MatchEntry
       MultipleChoice
@@ -37,3 +37,12 @@ alfred3.element.input
       SingleChoiceList
       TextArea
       TextEntry
+   
+   
+
+   
+   
+   
+
+
+

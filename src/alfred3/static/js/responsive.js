@@ -57,7 +57,7 @@ $(document).on("keydown", ":input:not(textarea):not(:submit)", function(event) {
         event.preventDefault();
     }
 });
-
+  
 
 // Responsive support for choice elements (switch to vertical layout on XS screens)
 const responsive_adjustments = function () {
@@ -67,7 +67,7 @@ const responsive_adjustments = function () {
 
         $(".choice-button-bar.btn-group").addClass("btn-group-vertical changed-bar choice-button-group");
         $(".choice-button-bar.btn-group").removeClass("btn-group choice-button-bar");
-
+        
         $(".form-check-inline").addClass("changed");
         $(".form-check-inline").removeClass("form-check-inline");
 

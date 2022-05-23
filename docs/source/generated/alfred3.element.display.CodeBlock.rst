@@ -7,50 +7,50 @@ CodeBlock
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~CodeBlock.add_css
-
-
+   
+   
       ~CodeBlock.add_js
-
-
+   
+   
       ~CodeBlock.added_to_experiment
-
-
+   
+   
       ~CodeBlock.added_to_page
-
-
+   
+   
       ~CodeBlock.prepare_web_widget
-
-
+   
+   
       ~CodeBlock.render_inner_html
-
-
+   
+   
       ~CodeBlock.render_text
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~CodeBlock.base_template
          ~CodeBlock.converted_width
          ~CodeBlock.css_class_container
@@ -77,3 +77,7 @@ CodeBlock
          ~CodeBlock.tree
          ~CodeBlock.web_widget
          ~CodeBlock.width
+      
+   
+   
+   

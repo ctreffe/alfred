@@ -7,53 +7,53 @@ TextEntry
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~TextEntry.add_css
-
-
+   
+   
       ~TextEntry.add_js
-
-
+   
+   
       ~TextEntry.added_to_experiment
-
-
+   
+   
       ~TextEntry.added_to_page
-
-
+   
+   
       ~TextEntry.prepare_web_widget
-
-
+   
+   
       ~TextEntry.render_inner_html
-
-
+   
+   
       ~TextEntry.set_data
-
-
+   
+   
       ~TextEntry.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~TextEntry.base_template
          ~TextEntry.bottomlab
          ~TextEntry.codebook_data
@@ -102,3 +102,7 @@ TextEntry
          ~TextEntry.tree
          ~TextEntry.web_widget
          ~TextEntry.width
+      
+   
+   
+   

@@ -1,88 +1,93 @@
+# -*- coding: utf-8 -*-
 from ._version import __version__
-from .element.action import (
-    BackButton,
-    Button,
-    DynamicJumpButtons,
-    ForwardButton,
-    JumpButtons,
-    JumpList,
-    SubmittingBar,
-    SubmittingButtons,
-)
-from .element.core import Row, RowLayout, Stack
-from .element.display import (
-    Alert,
-    Audio,
-    BarLabels,
-    ButtonLabels,
-    Card,
-    CodeBlock,
-    CountDown,
-    CountUp,
-    Hline,
-    Html,
-    Image,
-    Label,
-    MatPlot,
-    ProgressBar,
-    Text,
-    VerticalSpace,
-    Video,
-)
 
-# from .element.input import MultipleChoiceList
-from .element.input import (
-    EmailEntry,
-    HiddenInput,
-    MatchEntry,
-    MultipleChoice,
-    MultipleChoiceBar,
-    MultipleChoiceButtons,
-    NumberEntry,
-    PasswordEntry,
-    RangeInput,
-    RegEntry,
-    SelectPageList,
-    SingleChoice,
-    SingleChoiceBar,
-    SingleChoiceButtons,
-    SingleChoiceList,
-    TextArea,
-    TextEntry,
-)
-from .element.misc import (
-    Callback,
-    Data,
-    HiddenInput,
-    HideNavigation,
-    JavaScript,
-    RepeatedCallback,
-    Style,
-    Value,
-    WebExitEnabler,
-)
 from .experiment import Experiment
-from .page import (
-    AutoClosePage,
-    AutoForwardPage,
-    NoDataPage,
-    NoNavigationPage,
-    NoSavingPage,
-    Page,
-    PasswordPage,
-    UnlinkedDataPage,
-    WidePage,
-)
+
 from .quota import SessionQuota
-from .randomizer import ListRandomizer, random_condition
-from .section import ForwardOnlySection, HideOnForwardSection, RevisitSection, Section
-from .util import (
-    emoji,
-    icon,
-    is_element,
-    is_input_element,
-    is_label,
-    is_page,
-    is_section,
-    multiple_choice_numbers,
-)
+from .randomizer import ListRandomizer
+from .randomizer import random_condition
+
+from .section import Section
+from .section import RevisitSection
+from .section import ForwardOnlySection
+from .section import HideOnForwardSection
+
+from .page import Page
+from .page import WidePage
+from .page import UnlinkedDataPage
+from .page import AutoForwardPage
+from .page import AutoClosePage
+from .page import NoNavigationPage
+from .page import NoDataPage
+from .page import NoSavingPage
+from .page import PasswordPage
+
+from .element.core import Row
+from .element.core import Stack
+from .element.core import RowLayout
+
+from .element.display import VerticalSpace
+from .element.display import Html
+from .element.display import Text
+from .element.display import Label
+from .element.display import Image
+from .element.display import Audio
+from .element.display import Video
+from .element.display import MatPlot
+from .element.display import Hline
+from .element.display import CodeBlock
+from .element.display import ProgressBar
+from .element.display import Alert
+from .element.display import ButtonLabels
+from .element.display import BarLabels
+from .element.display import CountUp
+from .element.display import CountDown
+from .element.display import Card
+
+from .element.input import TextEntry
+from .element.input import TextArea
+from .element.input import MatchEntry
+from .element.input import RegEntry
+from .element.input import EmailEntry
+from .element.input import PasswordEntry
+from .element.input import NumberEntry
+from .element.input import RangeInput
+from .element.input import SingleChoice
+from .element.input import MultipleChoice
+from .element.input import SingleChoiceList
+# from .element.input import MultipleChoiceList
+from .element.input import SingleChoiceButtons
+from .element.input import SingleChoiceBar
+from .element.input import MultipleChoiceButtons
+from .element.input import MultipleChoiceBar
+from .element.input import SelectPageList
+from .element.input import HiddenInput
+
+from .element.action import SubmittingButtons
+from .element.action import SubmittingBar
+from .element.action import JumpButtons
+from .element.action import DynamicJumpButtons
+from .element.action import JumpList
+from .element.action import Button
+from .element.action import BackButton
+from .element.action import ForwardButton
+
+from .element.misc import Style
+from .element.misc import HideNavigation
+from .element.misc import JavaScript
+from .element.misc import WebExitEnabler
+from .element.misc import Value
+from .element.misc import Data
+from .element.misc import Callback
+from .element.misc import RepeatedCallback
+from .element.misc import HiddenInput
+
+from .util import emoji
+from .util import icon
+
+from .util import is_element
+from .util import is_input_element
+from .util import is_label
+from .util import is_page
+from .util import is_section
+from .util import multiple_choice_numbers

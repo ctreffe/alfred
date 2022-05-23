@@ -1,5 +1,5 @@
 """
-You can run the experiment by executing the following command in a
+You can run the experiment by executing the following command in a 
 terminal from inside the experiment directory::
 
     $ alfred3 run
@@ -8,7 +8,6 @@ Refer to the alfred documentation for more guidance.
 """
 
 import alfred3 as al
-
 exp = al.Experiment()
 
 exp += al.Page(title="Hello, world!", name="hello_world")

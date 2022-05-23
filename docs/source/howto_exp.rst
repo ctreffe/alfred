@@ -1,10 +1,10 @@
 How to write an experiment
 ==========================
 
-This guide will teach you how to approach the process of writing an
+This guide will teach you how to approach the process of writing an 
 alfred experiment. We will not cover each topic in depth, but instead
-touch on many relevant topics to point out, how they are connected and
-how they can be used together to unleash alfred's power. Basically,
+touch on many relevant topics to point out, how they are connected and 
+how they can be used together to unleash alfred's power. Basically, 
 these are the steps:
 
 1. Set up the experiment directory
@@ -33,7 +33,7 @@ everything goes smoothly::
 
     $ alfred3 run
 
-You should see the experiment window popping up in your browser.
+You should see the experiment window popping up in your browser. 
 Congratulations! Your experiment directory is ready.
 
 Fill in the metadata in config.conf
@@ -66,9 +66,9 @@ code::
     '2dbfd859bf724fa28c79d3568ae29aff'
 
 .. note:: If you run alfred experiments on mortimer, there's no need to
-    fill in the metadata in config.conf. Mortimer will set the data
+    fill in the metadata in config.conf. Mortimer will set the data 
     automatically (except for the experiment version, which you enter
-    manually in mortimer).
+    manually in mortimer). 
 
 You can find some more guidance on how to configure an alfred experiment
 here: :doc:`howto_config`
@@ -89,7 +89,7 @@ example, to assign an experimental condition via :class:`.ListRandomizer`::
         # assigning a random condition
         randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
         exp.condition = randomizer.get_condition()
-
+    
 
     # a demo page that displays the condition
     @exp.member
@@ -111,7 +111,7 @@ seconds::
     @exp.setup
     def setup(exp):
         exp.session_timeout = 60 * 60 * 3 # setting timeout to 3 hours
-
+    
 
     @exp.member
     class Demo(al.Page):
@@ -126,7 +126,7 @@ seconds::
 Add content to your experiment
 ------------------------------
 
-You add content to the experiment in your *script.py*. The minimal
+You add content to the experiment in your *script.py*. The minimal 
 script.py will look like this::
 
     import alfred3 as al
@@ -137,7 +137,7 @@ script.py will look like this::
         exp.run()
 
 .. note:: To understand, what the ``if __name__ == "__main__"`` block
-    in the template *script.py* created by the terminal command is for,
+    in the template *script.py* created by the terminal command is for, 
     you may want to watch Corey Schafer's
     explanation on YouTube: https://www.youtube.com/watch?v=sugvnHA7ElY
 
@@ -147,8 +147,8 @@ In script.py, you can add Sections and Pages to your experiment.
 can create an experiment in which participants can move only forward
 by adding an :class:`.ForwardOnlySection`.
 
-**Pages** generally hold Elements. But they can even do more than that -
-for example, you can define a minmal amount of time that participants
+**Pages** generally hold Elements. But they can even do more than that - 
+for example, you can define a minmal amount of time that participants 
 have to spend on a page, before they are allowed to move forward.
 
 **Elements** are the basic building blocks of an experiment. They can
@@ -158,7 +158,7 @@ or even sophisticated elements that trigger some kind of action, like
 :class:`.SubmittingButtons`.
 
 Let's bring these three concepts together to showcase a simple two-page
-experiment with a text entry field on each page. Participants will only
+experiment with a text entry field on each page. Participants will only 
 be able to move forward in this experiment::
 
     import alfred3 as al
@@ -173,7 +173,7 @@ be able to move forward in this experiment::
     exp.main.page2 += al.TextEntry(leftlab="Enter here", name="t2")
 
 
-So now you know about sections, pages, and elements. You can find
+So now you know about sections, pages, and elements. You can find 
 overviews of the available classes in the respective API reference pages:
 
 .. autosummary::
@@ -188,23 +188,23 @@ Implement dynamic content
 In alfred, you can dynamically access data in three ways:
 
 1. Inside an experiment, you can access data entered on previous pages.
-2. You can access data from other sessions of the same experiment.
+2. You can access data from other sessions of the same experiment. 
 3. You can access data from other experiments.
 
-To utilize 2) and 3) to their full extent, alfred needs to work with a database, which can be
+To utilize 2) and 3) to their full extent, alfred needs to work with a database, which can be 
 done either by using a *mongo_saving_agent* (see :doc:`howto_config`), or
 by running your experiment on Mortimer (https://github.com/ctreffe/mortimer).
-For 3), you also need to know the experiment ID of the experiment from
+For 3), you also need to know the experiment ID of the experiment from 
 which you want to query data, which means you have to either be their
 author or ask the author.
 
 The interfaces for dynamic content are, in large parts, provided by
 the :class:`.ExperimentSession` object. You will need access to this
 object when writing sections and pages (or when you derive new elements).
-For this purpose, we provide a number of hooks, which can be utilized in
-the "class style" of writing sections and pages. Our documentation
+For this purpose, we provide a number of hooks, which can be utilized in 
+the "class style" of writing sections and pages. Our documentation 
 contains guides on :doc:`howto_hooks`, :ref:`page-class-style`, and
-:ref:`section-class-style`.
+:ref:`section-class-style`. 
 
 Here is an example for a two-page experiment, in which the second page
 uses data from the first page by simply displaying it::
@@ -226,7 +226,7 @@ uses data from the first page by simply displaying it::
 Add content with loops
 ----------------------
 
-Loops are so powerful, it's almost ridiculous. You can add virtually
+Loops are so powerful, it's almost ridiculous. You can add virtually 
 unlimited amounts of similar section, pages, and elements with minimal
 code by using loops. If you would like to find out about this feature,
 check out :doc:`howto_loops`.

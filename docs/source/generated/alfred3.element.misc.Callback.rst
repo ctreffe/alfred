@@ -7,47 +7,47 @@ Callback
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~Callback.add_css
-
-
+   
+   
       ~Callback.add_js
-
-
+   
+   
       ~Callback.added_to_experiment
-
-
+   
+   
       ~Callback.added_to_page
-
-
+   
+   
       ~Callback.prepare_web_widget
-
-
+   
+   
       ~Callback.render_inner_html
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~Callback.base_template
          ~Callback.converted_width
          ~Callback.css_class_container
@@ -75,3 +75,7 @@ Callback
          ~Callback.tree
          ~Callback.web_widget
          ~Callback.width
+      
+   
+   
+   

@@ -7,50 +7,50 @@ Alert
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~Alert.add_css
-
-
+   
+   
       ~Alert.add_js
-
-
+   
+   
       ~Alert.added_to_experiment
-
-
+   
+   
       ~Alert.added_to_page
-
-
+   
+   
       ~Alert.prepare_web_widget
-
-
+   
+   
       ~Alert.render_inner_html
-
-
+   
+   
       ~Alert.render_text
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~Alert.base_template
          ~Alert.converted_width
          ~Alert.css_class_container
@@ -77,3 +77,7 @@ Alert
          ~Alert.tree
          ~Alert.web_widget
          ~Alert.width
+      
+   
+   
+   

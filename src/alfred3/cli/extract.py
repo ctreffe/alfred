@@ -1,4 +1,4 @@
-r"""
+"""
 Provides a command line interface for transforming .json data files
 into .csv files.
 
@@ -21,7 +21,7 @@ that looks something like this::
 The .json files in the directory ``save/exp/`` hold data of *individual sessions*.
 We want to combine them into a .csv file for further data anaylsis. Usually,
 alfred3 will do this automatically for you after each experiment run and
-save the result in the ``data/`` directory, but lets assume that this
+save the result in the ``data/`` directory, but lets assume that this 
 does not work in our case. To transform the data, we follow these steps:
 
 **1. Open up a terminal.**
@@ -36,9 +36,9 @@ You can go to a specific directory by running the following code::
 
     $ cd path/to/directory
 
-Replace ``path/to/directory`` with your actual full path to the ``save/exp/``
+Replace ``path/to/directory`` with your actual full path to the ``save/exp/`` 
 directory of your experiment.
-Note that, on Windows, you probably need to use backshlashes (\) instead
+Note that, on Windows, you probably need to use backshlashes (\) instead 
 of ordinary slashes (/) in the path.
 
 **3. Run the command in the terminal**
@@ -47,9 +47,9 @@ Run the following command::
 
     $ alfred3 json-to-csv
 
-Et voilà! This will place the .csv file inside the current directory.
+Et voilà! This will place the .csv file inside the current directory. 
 If you run into problem at this point, make sure that you have alfred3
-installed in your current environment. If you are usually working in a
+installed in your current environment. If you are usually working in a 
 virtual environment, you may need to activate that environment.
 
 
@@ -85,13 +85,12 @@ The current version is::
 """
 
 
-from itertools import chain
 from pathlib import Path
-
-import click
+from itertools import chain
 
 from alfred3.data_manager import DataManager
 from alfred3.export import Exporter, find_unique_name
+import click
 
 
 class Extractor:
@@ -137,9 +136,7 @@ class Extractor:
             >>> ex.extract_exp_data()
         """
         data = list(
-            DataManager.iterate_local_data(
-                data_type=DataManager.EXP_DATA, directory=self.in_path
-            )
+            DataManager.iterate_local_data(data_type=DataManager.EXP_DATA, directory=self.in_path)
         )
         fieldnames = DataManager.extract_ordered_fieldnames(data)
         alldata = [DataManager.flatten(d) for d in data]
@@ -201,15 +198,11 @@ class Extractor:
             >>> ex.extract_codebook("1.0")
         """
         cursor = DataManager.iterate_local_data(
-            data_type=DataManager.EXP_DATA,
-            directory=self.in_path,
-            exp_version=exp_version,
+            data_type=DataManager.EXP_DATA, directory=self.in_path, exp_version=exp_version
         )
 
         cursor_unlinked = DataManager.iterate_local_data(
-            data_type=DataManager.UNLINKED_DATA,
-            directory=self.in_path,
-            exp_version=exp_version,
+            data_type=DataManager.UNLINKED_DATA, directory=self.in_path, exp_version=exp_version
         )
 
         # extract individual codebooks for each experimen session
@@ -229,9 +222,7 @@ class Extractor:
 
         fieldnames = DataManager.extract_fieldnames(data.values())
         fieldnames = DataManager.sort_codebook_fieldnames(fieldnames)
-        csvname = find_unique_name(
-            directory=self.out_path, filename=f"codebook_{exp_version}.csv"
-        )
+        csvname = find_unique_name(directory=self.out_path, filename=f"codebook_{exp_version}.csv")
         Exporter.write(
             data=data.values(),
             fieldnames=fieldnames,
@@ -294,9 +285,7 @@ class Extractor:
     help="The experiment version for which codebook data should be extracted. Only relevant for codebook data.",
 )
 @click.option(
-    "--delimiter",
-    default=";",
-    help="Delimiter to use in the resulting csv file. Defaults to ';'",
+    "--delimiter", default=";", help="Delimiter to use in the resulting csv file. Defaults to ';'"
 )
 def json_to_csv(dtype, in_path, out_path, exp_version, delimiter):
     extractor = Extractor(in_path=in_path, out_path=out_path, delimiter=delimiter)
@@ -321,5 +310,7 @@ def json_to_csv(dtype, in_path, out_path, exp_version, delimiter):
         msg = f"Value {dtype} for option '--dtype' is not valid. See 'alfred3 json-to-csv --help' for more."
         raise ValueError(msg)
 
-    msg = f"Data transformed to csv. File '{csvname}' was placed in directory '{extractor.out_path}'"
+    msg = (
+        f"Data transformed to csv. File '{csvname}' was placed in directory '{extractor.out_path}'"
+    )
     click.echo(msg)

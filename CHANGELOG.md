@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-<!--
+<!-- 
 Guiding Principles
 
 Changelogs are for humans, not machines.
@@ -23,7 +23,7 @@ Types of changes
 3. Deprecated for soon-to-be removed features.
 4. Removed for now removed features.
 5. Fixed for any bug fixes.
-6. Security in case of vulnerabilities.
+6. Security in case of vulnerabilities. 
 -->
 
 ## alfred3 v2.3.2 (Released 2022-05-05)
@@ -32,7 +32,7 @@ Types of changes
 
 - Added `DateEntry` and `TimeEntry` elements for date and time input.
 - Added `DeleteUnlinkedPage`. This page allows you to delete the unlinked
-  data associated to a specific experiment. Must be imported from
+  data associated to a specific experiment. Must be imported from 
   `alfred3.admin` directly.
 - Added `ExperimentSession.tmp`, which is a dictionary for temporary data
   that does not need to be saved to the experiment data.
@@ -61,7 +61,7 @@ Types of changes
   as codeblocks instead of correctly displaying their full web widget.
 - Fixed an issue that lead `alfred3.Card` elements to not add input elements
   to the parent page in the intended way.
-- Fixed an issue in `ExperimentSession.all_unlinked_data` for access to
+- Fixed an issue in `ExperimentSession.all_unlinked_data` for access to 
   *local* unlinked data.
 
 
@@ -85,14 +85,14 @@ Types of changes
     a default validation for email inputs.
   - Added the elements `BackButton` and `ForwardButton`, which do as they say.
   - Added a `Card` element that can be used for displaying text and other
-    elements in bootstraps nice-looking cards. The highlight of the card
+    elements in bootstraps nice-looking cards. The highlight of the card 
     element is its possibility to turn the header into a button that hides
     or shows the card body on click via the argument *collapse*.
 - Pages and Sections
-  - We are excited to present the new section class `HideOnForwardSection`:
-    A section that hides pages
+  - We are excited to present the new section class `HideOnForwardSection`: 
+    A section that hides pages 
     once they have been submitted. This is basically a slightly more liberal
-    version of a `ForwardOnlySection`. Take a look at the documentation
+    version of a `ForwardOnlySection`. Take a look at the documentation 
     for more details!
   - Added the methods `Page.position_in_section` and `Section.position_in_section`.
     These are used to get the position of the current page or section inside
@@ -110,15 +110,15 @@ Types of changes
     effect is that it prefixes session IDs of test sessions with "test-".
     Test mode is active in debug mode aswell.
       + **Keep in mind** that a test session will take up a slot in list
-        randomization just as any other session. You have to use experiment
-        version numbers to manage randomization slots.
+        randomization just as any other session. You have to use experiment 
+        version numbers to manage randomization slots. 
   - Added the possibility to start the "debug" mode with the url parameter
-    `?debug=true`. Debug mode is a "fancy test mode" - session IDs created
+    `?debug=true`. Debug mode is a "fancy test mode" - session IDs created 
     in debug mode will be prefixed with "test-".
   - Added the parameter `test` to `ExperimentRunner.auto_run` and, subsequently,
     to `Experiment.run`
 
-To start an experiment in test mode locally, you can use this parameter
+To start an experiment in test mode locally, you can use this parameter 
 in the ``if __name__ == "__main__"`` block:
 
 ```python
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 - Miscellaneous
   - Added the prefix "sid-" to session IDs.
   - Added the possibility to download the randomizer's data in Mortimer (#112).
-  - alfred3 now saves the length of the session timeout to the experiment
+  - alfred3 now saves the length of the session timeout to the experiment 
     data (#113)
 
 ### Changed v2.3.0
@@ -143,7 +143,7 @@ if __name__ == "__main__":
   a page-only hook like `on_first_show` or `on_first_hide` on a section,
   which can be a common but very hard-to-debug programming error.
 - The `NumberEntry` element now returns its value as a `float`. Previously,
-  the value was returned as a string, which was unexpected behavior in
+  the value was returned as a string, which was unexpected behavior in 
   most cases.
 - From now on, sections do not close all of their pages by default on leaving.
   Instead, you can override the attribute `close_pages_on_leave`. By setting
@@ -156,9 +156,9 @@ if __name__ == "__main__":
 - Some updates to the documentation
 - Fixed the option "logo_text" in the section "layout" in `config.conf`
 - Fixed the "shuffle" argument of Sections. Previously, it did not
-  successfully lead to randomization of the pages and subsections in a
-  section. It affects only first-level subsections, i.e. the order of
-  subsections is randomized, but the order of pages inside those
+  successfully lead to randomization of the pages and subsections in a 
+  section. It affects only first-level subsections, i.e. the order of 
+  subsections is randomized, but the order of pages inside those 
   subsections is not affected.
 - Fixed the defaults for SingleChoice element and its children that are
   used in debug mode (#125).
@@ -199,12 +199,12 @@ fixes this issue.
 ### Added v2.2.0
 
 - Added `alfred3.SessionQuota`, a class for smart session counting. You
-  can use it to control the maximum number of participants to your
+  can use it to control the maximum number of participants to your 
   experiment. The SessionQuota is a new parent class to ListRandomizer.
 
 - Added a new admin mode to alfred3 that you can use to access experiment
   information and manage your experiment (#113). You can also grant access to
-  others on three different levels of authorization. You can add
+  others on three different levels of authorization. You can add 
   functionality to your experiment's admin mode by adding pages, just like
   you add pages to an ordinary experiment. You start it by adding
   `?admin=true` to the experiment's start url.
@@ -217,14 +217,14 @@ fixes this issue.
 
 ### Changed v2.2.0
 
-- Removed the method *ListRandomizer.abort_if_full*. Instead, you can check
+- Removed the method *ListRandomizer.abort_if_full*. Instead, you can check 
   the randomizer's status with the attributes :attr:`.full`,
-  :attr:`.allfinished`, :attr:`.nopen`, :attr:`.npending`, and
-  :attr:`.nfinished` and call :meth:`.ExperimentSession.abort`
+  :attr:`.allfinished`, :attr:`.nopen`, :attr:`.npending`, and 
+  :attr:`.nfinished` and call :meth:`.ExperimentSession.abort` 
   directly.
 
 - We turned `Page.showif` and `Section.showif` into hooks that you can use
-  to dynamically control whether a page or section is shown or not. You
+  to dynamically control whether a page or section is shown or not. You 
   use it by overloading
   the method when writing a page or section in class style. If the method
   returns *True*, the page or section is shown, if it returns *False* it
@@ -239,11 +239,11 @@ fixes this issue.
 ### Added v2.1.7
 
 - Added the `ListRandomizer.factors` alternative constructor for the
-  ListRandomizer. This constructor allows experimenters to easily create
+  ListRandomizer. This constructor allows experimenters to easily create 
   a set of conditions from combinations of factors. For instance,
   factor 1 with values "A1" and "A2" can be combined with factor 2, which
   has values "B1" and "B2". The result will be four conditions:
-  "A1.B1", "A1.B2", "A2.B1", "A2.B2". Take a look at the
+  "A1.B1", "A1.B2", "A2.B1", "A2.B2". Take a look at the 
   [documentation]() for further instructions and examples.
 
 - Added the `ListRandomizer.abort_if_full` method. This method allows
@@ -261,14 +261,14 @@ fixes this issue.
 
 ### Fixed v2.1.6
 
-- Fixed an issue with the upper allocation limits of the
-  `ListRandomizer`.
+- Fixed an issue with the upper allocation limits of the 
+  `ListRandomizer`. 
 
 ## alfred3 v2.1.5 (Released 2021-06-09)
 
 ### Added v2.1.5
 
-- You know how Facebook, Twitter, WhatsApp, etc. all create small
+- You know how Facebook, Twitter, WhatsApp, etc. all create small 
   previews for websites, if you post a link? Well, if you host alfred3
   on a Mortimer v0.8.9 or newer, alfred3 now supports these previews.
   And in alfred3's `config.conf`, you can now set the following options
@@ -289,7 +289,7 @@ preview_image_small =                       # Full URL to custom preview image f
 - Changed the default width of `alfred3.Text` element to `with="full"`.
   Previously, we tried to be smart about the text's default width, making
   it smaller for optimizing redability. But that was not in line with how
-  users expected and wished the text to behave, because it often caused
+  users expected and wished the text to behave, because it often caused 
   misalignment between full-width input elements and the narrower text.
 
 ### Fixed v2.1.5
@@ -314,7 +314,7 @@ preview_image_small =                       # Full URL to custom preview image f
   of participants to conditions. With this bug, random allocation to conditions
   was not affected, but the `ListRandomizer` operated like a true pseudo-random
   allocator instead of using actual list randomization: If you defined conditions
-  "a" and "b" to get 20 participants each, you may have ended up with 22
+  "a" and "b" to get 20 participants each, you may have ended up with 22 
   participants in condition "a" and 26 in condition "b" instead.
   This was update fixes this bug and includes 19 automatic unit tests that make
   sure that the randomizer works as intended.
@@ -335,26 +335,26 @@ preview_image_small =                       # Full URL to custom preview image f
 
 ### Changed v2.1.1
 
-- We now save a basic skeleton of an experiment's data directly on
+- We now save a basic skeleton of an experiment's data directly on 
   initializing a session. While this introduces a short delay (max 1s)
   upon starting an experiment, this makes it easier for plugins such
-  as `alfred3_interact` to rely on certain data being available during
+  as `alfred3_interact` to rely on certain data being available during 
   setup.
 
 ## alfred3 v2.1.0 (Released 2021-05-14)
 
 ### Added v2.1.0
 
-- `alfred3.multiple_choice_names`: A new utility function that you can
-  use to find the indexes of selected choices in multiple choice elements.
-  You can apply it to the data dictionary corresponding to the element of
-  interest in `alfred3.experiment.ExperimentSession.values`, or to the
+- `alfred3.multiple_choice_names`: A new utility function that you can 
+  use to find the indexes of selected choices in multiple choice elements. 
+  You can apply it to the data dictionary corresponding to the element of 
+  interest in `alfred3.experiment.ExperimentSession.values`, or to the 
   `input` attribute of the element directly.
-- Four new hooks for finetuning a section's validation behavior. All
-  except `validate_on_jumpto` default to calling `validate_on_move`. Their
-  intended use is to allow for specialized behavior by being overloaded.
-  For example, you can implement a section that does not validate input on
-  backwards movements by overriding the `validate_on_backward` method with
+- Four new hooks for finetuning a section's validation behavior. All 
+  except `validate_on_jumpto` default to calling `validate_on_move`. Their 
+  intended use is to allow for specialized behavior by being overloaded. 
+  For example, you can implement a section that does not validate input on 
+  backwards movements by overriding the `validate_on_backward` method with 
   an empty method. These are the locations:
     - `alfred3.section.Section.validate_on_forward`
     - `alfred3.section.Section.validate_on_backward`
@@ -368,19 +368,19 @@ preview_image_small =                       # Full URL to custom preview image f
   participants about the reason for validation failures. This custom page
   validation will be executed *after* all standard validation checks for the
   page and its elements.
-- The command line interface for getting an experiment template now offers
-  a `-b` option, which you can use to get a slightly more extensive template.
-  This template will include a `secrets.conf`, a `.gitignore`, and a more
-  extensive `script.py` next to the usual `config.conf`. Use it by calling
+- The command line interface for getting an experiment template now offers 
+  a `-b` option, which you can use to get a slightly more extensive template. 
+  This template will include a `secrets.conf`, a `.gitignore`, and a more 
+  extensive `script.py` next to the usual `config.conf`. Use it by calling 
   `alfred3 template -b` in from a terminal session.
-- Data saving can be turned off for individual elements via the argument
+- Data saving can be turned off for individual elements via the argument 
   `save_data`, which of course defaults to `True`.
-- We added a public `ExperimentSession.finish` method. This method can be
-  used to finish an experiment session earlier than usual, which may be
-  useful if you want to mark a session as complete but still show some
-  optional information to participants. Previously, if participants left
-  the experiment during such an optional part before clicking all the way
-  through to the end, the session could not be marked as finished, even
+- We added a public `ExperimentSession.finish` method. This method can be 
+  used to finish an experiment session earlier than usual, which may be 
+  useful if you want to mark a session as complete but still show some 
+  optional information to participants. Previously, if participants left 
+  the experiment during such an optional part before clicking all the way 
+  through to the end, the session could not be marked as finished, even 
   though all data was available and correct. (#78)
 
 
@@ -391,14 +391,14 @@ preview_image_small =                       # Full URL to custom preview image f
     - SingleChoice type elements use an integer to represent participant
       input, which starts counting at 1. Previously, they used the same
       representation as MultipleChoice type elements, which lead to
-      unnecessarily overcrowded output data. Now, each SingleChoice
+      unnecessarily overcrowded output data. Now, each SingleChoice 
       element will by represented by only one variable in the final dataset.
-    - MultipleChoice type elements remain the same: For each choice, they
+    - MultipleChoice type elements remain the same: For each choice, they 
       have a dummy variable, which indicates whether that specific choice
       was selected (True/False). Within alfred3, this takes the form of
       a dictionary with an entry for each choice. In the final dataset,
       there is a dummy variable for each choice.
-    - SingleChoice**List** type elements use a string to represent
+    - SingleChoice**List** type elements use a string to represent 
       participant input. The string is the exact choice label that was
       selected. This representation reflects the fact that SingleChoiceLists
       are intended to be comfortable with really long lists of possible
@@ -411,32 +411,32 @@ preview_image_small =                       # Full URL to custom preview image f
       label: The list of labels is saved in the element's attribute
       `choice_labels`, which has a method `index`. Supply this method
       with the selected choice string, and you get the index of that string
-      in the list of choice labels. *Be aware though, that in this case,
+      in the list of choice labels. *Be aware though, that in this case, 
       python will start counting at 0!*
-- `alfred3.page.TimeoutPage` and its two child classes
+- `alfred3.page.TimeoutPage` and its two child classes 
   `alfred3.AutoForwardPage` and `alfred3.AutoClosePage` received a new,
   more robust implementation with an additional argument *callbackargs*.
-  Check out the documentation for more details. Also, they now accept an
-  integer as in the `timeout` argument in addition to string. The integer
+  Check out the documentation for more details. Also, they now accept an 
+  integer as in the `timeout` argument in addition to string. The integer 
   version gives the timeout in seconds.
 - `alfred3.Row` now offers an additional *layout* parameter similar to
   the implementation used in `alfred3.element.core.LabelledElement`
-- `alfred3.Callback` and `alfred3.RepeatedCallback` have seen some
+- `alfred3.Callback` and `alfred3.RepeatedCallback` have seen some 
   improvements, including additional arguments and docstrings.
 - Clarified the default match hints for NumberEntry elements.
-- For all input elements, their `input` attribute now clearly states the
+- For all input elements, their `input` attribute now clearly states the 
   type of the returned input.
-- Image, Audio, and Video elements now support labels like input elements
-  do: You can use the arguments `leftlab`, `rightlab`, `toplab`, and
+- Image, Audio, and Video elements now support labels like input elements 
+  do: You can use the arguments `leftlab`, `rightlab`, `toplab`, and 
   `bottomlab`.
 
 
 ### Fixed v2.1.0
 
 - Some problems with input handling in choice elements
-- A small visual hickup with a verbose message displayed upon using the
+- A small visual hickup with a verbose message displayed upon using the 
   debug jump mode
-- Fixed a problem in `ExperimentSession.all_exp_data` and
+- Fixed a problem in `ExperimentSession.all_exp_data` and 
   `ExperimentSession.all_unlinked_data`.
 - Fixed a hole in the input validation of `alfred3.NumberEntry` elements.
   If the minimum or maximum was excatly zero, user input did not get
@@ -444,23 +444,23 @@ preview_image_small =                       # Full URL to custom preview image f
 - Fixed a problem that prevent the final page from being set correctly.
 - Fixed the *path* argument of `alfred3.JavaScript`
 - Fixed the *custom_js* argument of `alfred3.Button`
-- Fixed some alignment issues
+- Fixed some alignment issues 
 - JumpLists do not save any data in debug mode anymore (#79)
 - Fixed suboptimal saving of suffixes and prefixes in the codebook (#77)
-- Errors trough multiple accidental (or impatient) clicks on the
+- Errors trough multiple accidental (or impatient) clicks on the 
   navigation buttons are prevented (#75)
 - SubmittingButtons now work as expected in Firefox (#76)
 
 
 ## alfred3 v2.0.0 (Released 2021-04-20)
 
-We are excited to announce the release of alfred3 v2.0!
+We are excited to announce the release of alfred3 v2.0! 
 
-**Note**: This is a major release. While the basic building blocks of
+**Note**: This is a major release. While the basic building blocks of 
 alfred3 experiments – sections, pages, and elements – remain at the heart
-of the framework's logic, many other aspects have undergone
+of the framework's logic, many other aspects have undergone 
 disruptive changes. These are too many to sensibly detail all of them
-here. We recommend instead to start from scratch using the new
+here. We recommend instead to start from scratch using the new 
 documentation: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
 
 In short, the biggest changes are the following:
@@ -468,10 +468,10 @@ In short, the biggest changes are the following:
 * New syntax: Experiments in alfred3 v2.0 can be written in what we call
   the instance-style or the class-style. Together they replace the previous
   style of writing an experiment. We also streamlined the
-  element names, removing the suffix "Element". For instance,
+  element names, removing the suffix "Element". For instance, 
   `TextEntryElement` can now be accessed under the name `TextEntry`.
 
-* We added a number of elements that
+* We added a number of elements that 
   should make your life easier when writing dynamic, or even interactive
   experiments.
 
@@ -479,7 +479,7 @@ In short, the biggest changes are the following:
   make your life a lot easier.
 
 * New Layout: We did a complete redesign of alfred3's page layout, moving
-  to Bootstrap v4.5 and making the layout responsive to screen size. This
+  to Bootstrap v4.5 and making the layout responsive to screen size. This 
   introduces the possibility for participants to use their mobile devices
   for completing alfred experiments - an important feature nowadays. Of
   course, experimenters can choose to turn off responsiveness if their
@@ -488,11 +488,11 @@ In short, the biggest changes are the following:
 * Documentation and tutorials for alfred3's most important features
   is now available: [Link to docs](https://jobrachem.github.io/alfred_docs/html/index.html)
 
-* Integrated list randomization: We integrated the possibility for smart list
+* Integrated list randomization: We integrated the possibility for smart list 
   randomization directly into alfred3 through `alfred3.ListRandomizer`,
   thereby offering a remarkably simple way for efficient randomization.
 
-* Movement history: Alfred3 can now record detailed information about
+* Movement history: Alfred3 can now record detailed information about 
   participants' movements in an experiment, such as the duration of
   individual visists to a page.
 
@@ -533,14 +533,14 @@ csv_delimiter = ; # Controls the delimiter. Default is semicolon.
 
 Through a new command line interface, you can export alfred data, both from your local `save` directory, and from your MongoDB storage. Standard usage is to call the CLI from your experiment directory. It automatically extracts the relevant data from your config.conf or secrets.conf.
 
-```
+``` 
 
 python3 -m alfred3.export --src=local_saving_agent
 ```
 
 Detailed description of all parameters (available also from the terminal via `python3 -m alfred3.export --help` )
 
-```
+``` 
 
 Usage: export.py [OPTIONS]
 
@@ -581,7 +581,7 @@ Options:
   --help               Show this message and exit.
 ```
 
-#### New page hooks for more control
+#### New page hooks for more control 
 
 All page classes now provide the possibility to define additional hooks, granting you more fine-grained control over the exact time your code gets executed. Here is a list of them:
 
@@ -605,7 +605,7 @@ from alfred3.element import TextElement
 class Welcome(Page):
     def on_exp_access(self):
         self += TextElement("This code is executed upon adding the page to the experiment.")
-
+    
     def on_first_show(self):
         self += TextElement("This code is executed right before showing the page for the first time")
 
@@ -630,7 +630,7 @@ from alfred3.page import Page
 class Main(Section):
     def on_exp_access(self):
         self += Page(title="Demo Page, added upon adding the section to the experiment.")
-
+    
     def on_enter(self):
         print("Code executed upon entering the section.")
 ```
@@ -705,13 +705,13 @@ class Welcome(Page):
 * We made using the flask debugger easier:
     - If you use the command line interface, you can add the flag 'debug' to start an experiment in debugging mode and use flask's builtin debugging tools. The command becomes `python -m alfred3.run -debug` .
     - If you use the small `run.py` , you can pass `debug=True` as a parameter in `auto_run()` : `runner.auto_run(debug=True)`
-* Upgraded the command line interface for downloading templates.
+* Upgraded the command line interface for downloading templates. 
     - Most notably, the interface gained the flag '-h'/'--here', that you can use to indicate that you want the template's files to be placed directly in the '--path' (by default, in the current working directory).
     - Instead of the '-b'/'--big' and '-r'/'--runpy' flags, you can now choose between variants by setting the option '--variant' to 's', 'm' (default), or 'l'.
     - Enhanced handling of naming conflicts.
     - This is the full new usage:
 
-```
+``` 
 
 Usage: template.py [OPTIONS]
 
@@ -749,14 +749,14 @@ Options:
 
 * We added support for custom imports of `.py` files from subdirectories that are transferable to mortimer by including the package `thesmuggler` . If you want to store content in an external `.py` file (which we highly recommend, as it leads to a clearer directory structure), you can import such a file by using `thesmuggler.smuggle()` . Example:
 
-```
+``` 
 
 # files/instructions.py
 
 text = "This text resides in files/instructions.py"
 ```
 
-```
+``` 
 
 # script.py
 from thesmuggler import smuggle
@@ -798,7 +798,7 @@ from alfred3.run import ExperimentRunner
 
 if __name__ == "__main__":
     runner = ExperimentRunner()
-    runner.auto_run()
+    runner.auto_run() 
 ```
 
 This feature eliminates the need for a `run.py` file in your experiment directory. The API might still change in the future, so this feature is considered experimental.
@@ -883,10 +883,10 @@ def generate_experiment(self, config=None):
     exp = Experiment(config=config)
 
     welcome = Welcome(title="Welcome page")
-
+    
     if exp.config.getboolean("my_section", "my_bool"):
         exp.append(welcome)
-
+    
     return exp
 ```
 
@@ -913,11 +913,11 @@ def generate_experiment(self, config=None):
     exp.log.info("This message will be logged after initialization of the experiment.")
 
     welcome = Welcome(title="Welcome page")
-
+    
     # Sets the log level to 'WARNING'
     # The message logged above in the 'on_showing' definition will therefore
     # not be logged, as it is of level 'info'
-    welcome.log.setLevel("WARNING")
+    welcome.log.setLevel("WARNING") 
 
     exp.append(welcome)
 ```
@@ -951,7 +951,7 @@ Instead, you can turn to the new option for running experiments in Google Chrome
 
 * Alfred3 can now be installed via pip:
 
-```
+``` 
 
 pip install alfred3
 ```
@@ -980,7 +980,7 @@ pip install alfred3
 
 ### Encryption
 
-* In your script.py, you can now use symmetric encryption to encrypt your data. The encryption is performed with an instance of `cryptography.fernet.Fernet` , using a safe, user-specific unique key generated by mortimer (**v0.4.4+**).
+* In your script.py, you can now use symmetric encryption to encrypt your data. The encryption is performed with an instance of `cryptography.fernet.Fernet` , using a safe, user-specific unique key generated by mortimer (**v0.4.4+**). 
     - **Encryption**: Encrypt data of types `str` , `int` , and `float` via `alfred.Experiment.encrypt()` . The method will return an encrypted version of your data, converted to string.
     - **Decryption**: Decrypt data of types `str` or `bytes` via `alfred.Experiment.decrypt()` . The method will return a decrypted version of your data, converted to string.
 * **NOTE** that the saving agent will automatically save all data collected by elements (after the `on_hiding()` method is executed). You will need to encrypt data **before** they are saved in order to secure your data in the database.
@@ -995,7 +995,7 @@ pip install alfred3
 
 ### Bugfixes v1.0.5
 
-* fixed #37
+* fixed #37 
 
 ### Minor changes v1.0.5
 
@@ -1174,7 +1174,7 @@ def generate_experiment(self, config=None):
 ### Deprecated v1.0
 
 | Deprecated function (alfred v0.2b5 name)  | Replaced by |
-| ------------- | ------------- |
+| ------------- | ------------- | 
 | `WebCompositeQuestion.onShowingWidget()` | `Page.on_showing()` |
 | `WebCompositeQuestion.onHidingWidget()` | `Page.on_hiding()` |
 | `WebCompositeQuestion.addElement()` | `Page.append()` |

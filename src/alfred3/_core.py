@@ -1,16 +1,20 @@
+# -*- coding:utf-8 -*-
+
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 """
 
 
-import logging
+from builtins import object
 import os.path
+import logging
 import re
-from typing import List
 from uuid import uuid4
+from typing import List
 
 from . import alfredlog
-from ._helper import _DictObj, check_name
+from ._helper import check_name
+from ._helper import _DictObj
 from .exceptions import AlfredError
 
 
@@ -25,23 +29,24 @@ class ExpMember:
             inferred from the class name and does not need to be
             defined explicitly again. If a name is defined explicitly
             as a class attribute, that name is used.
-        title (str): Title of the member. Can be defined as a class
+        title (str): Title of the member. Can be defined as a class 
             attribute.
-        subtitle (str): Subtitle of the member. Can be defined as a
+        subtitle (str): Subtitle of the member. Can be defined as a 
             class attribute.
         vargs (dict): A dictionary that can be used to pass additional
             arguments to the page. The arguments are then available as
             an instance attribute. As a special feature, the instance
             attribute allows you to access the values of the dictionary
             not only via the usual square-bracket notation, but also
-            via dot-notation.
+            via dot-notation. 
 
             This argument fulfills a similar function as ``**kwargs`` do
             sometimes, but it makes sure that user-defined additional
             arguments will not collide with inherited keywords arguments.
-
+            
             Can be defined as a class attribute.
     """
+
 
     #: Unique name of the member.
     name: str = None
@@ -50,7 +55,7 @@ class ExpMember:
     #: individually for each instance
     instance_log: bool = False
 
-    #: Name of the parent section. Used when a member is appended to
+    #: Name of the parent section. Used when a member is appended to 
     #: the :class:`.Experiment`. If *None*, a member will be appended
     #: to the "_content" section.
     parent_name = None
@@ -64,13 +69,13 @@ class ExpMember:
     ):
 
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
-
+        
         self._should_be_shown = True
 
         self._experiment = None
         self._parent_section = None
         self._section = None
-
+        
         self._title = None
         self._subtitle = None
         self._has_been_shown = False
@@ -97,10 +102,10 @@ class ExpMember:
             self._set_name(name, via="argument")
         elif self.name is not None:
             self._set_name(self.name, via="class")
-
+        
         if self.name is None:
             raise ValueError(f"{type(self).__name__} must be named!")
-
+    
     @property
     def vargs(self) -> dict:
         """
@@ -123,7 +128,7 @@ class ExpMember:
 
                     def on_exp_access(self):
                         self += al.Text(self.vargs.variable_argument)
-
+            
             Example of using the *vargs* in page instantiation::
 
                 import alfred3 as al
@@ -142,7 +147,8 @@ class ExpMember:
 
         """
         return self._vargs
-
+        
+        
     def _set_name(self, name: str, via: str):
         """
         Helps organize the different ways a name can be set.
@@ -152,7 +158,7 @@ class ExpMember:
         1. As a class variable when deriving a page as a new class
         2. As an init argument when instantiating a class
 
-        If a name was set via class variable, the init argument
+        If a name was set via class variable, the init argument 
         can override it.
 
         """
@@ -166,7 +172,7 @@ class ExpMember:
         if len(self._name_set_via) > 1:
             msg = f"Name of {self} was set via multiple methods. Current winner: '{self.name}', set via {via}."
             self.log.debug(msg)
-
+    
     def showif(self) -> bool:
         """
         Hook for controlling whether a page or section should be shown.
@@ -191,10 +197,10 @@ class ExpMember:
                 @exp.member
                 class ShowPage(al.Page):
                     title = "Showif Page"
-
+                    
                     def showif(self):
                         return self.exp.values.get("el1") == "yes"
-
+                
             In this example, the "Main" section is shown only if "yes"
             was entered on the first page::
 
@@ -213,14 +219,15 @@ class ExpMember:
 
                     def showif(self):
                         return self.exp.values.get("el1") == "yes"
-
+                    
                     def on_exp_access(self):
                         self += al.Page(title="Showif Section Page 1", name="showif_page1")
                         self += al.Page(title="Showif Section Page 2", name="showif_page2")
 
         """
         return True
-
+        
+    
     @property
     def all_input_elements(self) -> dict:
         """
@@ -251,16 +258,16 @@ class ExpMember:
         compatibility. For new code, use *name*.
         """
         return self._uid
-
+    
     def visible(self, attr: str) -> dict:
         """
         Returns the subset of members in the given attribute that should
         be shown.
-
+        
         Args:
             attr (str): Name of an attribute of the class which returns
                 a dictionary of members. For instance, sections allow
-                'all_members', 'members', 'all_pages', 'pages', and
+                'all_members', 'members', 'all_pages', 'pages', and 
                 pages allow 'elements', 'all_elements', 'input_elements',
                 'filled_input_elements'.
         """
@@ -328,37 +335,37 @@ class ExpMember:
     def _check_name_uniqueness(self, exp):
 
         if self.name in exp.root_section.all_updated_members:
-            raise AlfredError(
-                f"Name '{self.name}' is already present in the experiment."
-            )
+            raise AlfredError(f"Name '{self.name}' is already present in the experiment.")
 
         # if self.name != list(self._name_set_via.values())[-1]:
         #     raise AlfredError(f"{self}: Name must not be changed after assignment.")
 
         if self.name in dir(exp):
             raise ValueError(
-                "The experiment has an attribute of the same name as"
-                f"the page '{self}'. Please choose a different page name."
+                (
+                    "The experiment has an attribute of the same name as"
+                    f"the page '{self}'. Please choose a different page name."
+                )
             )
-
+    
     @property
     def experiment(self):
         """
         The :class:`.ExperimentSession` to which this member belongs.
         """
         return self._experiment
-
+    
     @property
     def exp(self):
         """
         The :class:`.ExperimentSession` to which this member belongs.
         """
         return self._experiment
-
+    
     @exp.setter
     def exp(self, value):
         self._experiment = value
-
+    
     @experiment.setter
     def experiment(self, value):
         self._experiment = value
@@ -376,7 +383,7 @@ class ExpMember:
         The member's parent section.
         """
         return self._section
-
+    
     @section.setter
     def section(self, section):
         if section is self._section:
@@ -390,7 +397,7 @@ class ExpMember:
         Alias for :attr:`.section`.
         """
         return self._parent_section
-
+    
     def uptree(self) -> list:
         """
         List of the parent section and the grandparent sections (recursive).
@@ -425,19 +432,21 @@ class ExpMember:
         part that is the same for all members.
         """
         return self.tree.replace("_root._content.", "")
-
+    
     def position_in_section(self) -> int:
         """
-        Returns the position of this page or section inside its parent
+        Returns the position of this page or section inside its parent 
         section, starting at 1.
 
         .. versionadded:: 2.3.0
         """
         members = [m.name for m in self.section.members.values()]
         return members.index(self.name) + 1
+    
 
     def __str__(self):
         return f"{type(self).__name__}(name='{self.name}')"
 
     def __repr__(self):
         return self.__str__()
+

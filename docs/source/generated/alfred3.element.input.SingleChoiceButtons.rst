@@ -7,56 +7,56 @@ SingleChoiceButtons
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~SingleChoiceButtons.add_css
-
-
+   
+   
       ~SingleChoiceButtons.add_js
-
-
+   
+   
       ~SingleChoiceButtons.added_to_experiment
-
-
+   
+   
       ~SingleChoiceButtons.added_to_page
-
-
+   
+   
       ~SingleChoiceButtons.define_choices
-
-
+   
+   
       ~SingleChoiceButtons.prepare_web_widget
-
-
+   
+   
       ~SingleChoiceButtons.render_inner_html
-
-
+   
+   
       ~SingleChoiceButtons.set_data
-
-
+   
+   
       ~SingleChoiceButtons.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~SingleChoiceButtons.base_template
          ~SingleChoiceButtons.bottomlab
          ~SingleChoiceButtons.button_group_class
@@ -111,3 +111,7 @@ SingleChoiceButtons
          ~SingleChoiceButtons.vertical
          ~SingleChoiceButtons.web_widget
          ~SingleChoiceButtons.width
+      
+   
+   
+   

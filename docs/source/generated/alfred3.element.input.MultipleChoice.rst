@@ -7,56 +7,56 @@ MultipleChoice
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~MultipleChoice.add_css
-
-
+   
+   
       ~MultipleChoice.add_js
-
-
+   
+   
       ~MultipleChoice.added_to_experiment
-
-
+   
+   
       ~MultipleChoice.added_to_page
-
-
+   
+   
       ~MultipleChoice.define_choices
-
-
+   
+   
       ~MultipleChoice.prepare_web_widget
-
-
+   
+   
       ~MultipleChoice.render_inner_html
-
-
+   
+   
       ~MultipleChoice.set_data
-
-
+   
+   
       ~MultipleChoice.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~MultipleChoice.base_template
          ~MultipleChoice.bottomlab
          ~MultipleChoice.choice_labels
@@ -109,3 +109,7 @@ MultipleChoice
          ~MultipleChoice.vertical
          ~MultipleChoice.web_widget
          ~MultipleChoice.width
+      
+   
+   
+   

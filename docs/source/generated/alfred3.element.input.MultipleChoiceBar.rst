@@ -7,56 +7,56 @@ MultipleChoiceBar
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~MultipleChoiceBar.add_css
-
-
+   
+   
       ~MultipleChoiceBar.add_js
-
-
+   
+   
       ~MultipleChoiceBar.added_to_experiment
-
-
+   
+   
       ~MultipleChoiceBar.added_to_page
-
-
+   
+   
       ~MultipleChoiceBar.define_choices
-
-
+   
+   
       ~MultipleChoiceBar.prepare_web_widget
-
-
+   
+   
       ~MultipleChoiceBar.render_inner_html
-
-
+   
+   
       ~MultipleChoiceBar.set_data
-
-
+   
+   
       ~MultipleChoiceBar.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~MultipleChoiceBar.base_template
          ~MultipleChoiceBar.bottomlab
          ~MultipleChoiceBar.button_group_class
@@ -113,3 +113,7 @@ MultipleChoiceBar
          ~MultipleChoiceBar.vertical
          ~MultipleChoiceBar.web_widget
          ~MultipleChoiceBar.width
+      
+   
+   
+   

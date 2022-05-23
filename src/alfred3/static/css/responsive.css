@@ -316,12 +316,12 @@ p.page-subtitle {
     .responsive .SingleChoice-element > div {
         text-align: left;
     }
-
+    
     .responsive .multiple-choice-element > div {
         text-align: left;
     }
 
-
+    
 }
 
 /* Small devices (landscape phones, 576px and up) */
@@ -331,8 +331,8 @@ p.page-subtitle {
         width: 85%;
     }
 
-
-
+    
+    
 }
 
 /* Medium devices (tablets, 768px and up) */
@@ -342,7 +342,7 @@ p.page-subtitle {
         width: 75%;
     }
 
-
+    
 
 }
 
@@ -353,7 +353,7 @@ p.page-subtitle {
         width: 65%;
     }
 
-
+    
 
 }
 
@@ -365,7 +365,7 @@ p.page-subtitle {
         max-width: 928px;
     }
 
-
+    
 }
 
 

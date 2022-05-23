@@ -7,80 +7,80 @@ HideOnForwardSection
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~HideOnForwardSection.added_to_experiment
-
-
+   
+   
       ~HideOnForwardSection.added_to_section
-
-
+   
+   
       ~HideOnForwardSection.append
-
-
+   
+   
       ~HideOnForwardSection.on_enter
-
-
+   
+   
       ~HideOnForwardSection.on_exp_access
-
-
+   
+   
       ~HideOnForwardSection.on_hand_over
-
-
+   
+   
       ~HideOnForwardSection.on_leave
-
-
+   
+   
       ~HideOnForwardSection.on_resume
-
-
+   
+   
       ~HideOnForwardSection.position_in_section
-
-
+   
+   
       ~HideOnForwardSection.showif
-
-
+   
+   
       ~HideOnForwardSection.uptree
-
-
+   
+   
       ~HideOnForwardSection.validate_on_backward
-
-
+   
+   
       ~HideOnForwardSection.validate_on_forward
-
-
+   
+   
       ~HideOnForwardSection.validate_on_jump
-
-
+   
+   
       ~HideOnForwardSection.validate_on_leave
-
-
+   
+   
       ~HideOnForwardSection.validate_on_move
-
-
+   
+   
       ~HideOnForwardSection.visible
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~HideOnForwardSection.all_closed_pages
          ~HideOnForwardSection.all_elements
          ~HideOnForwardSection.all_input_elements
@@ -123,3 +123,7 @@ HideOnForwardSection
          ~HideOnForwardSection.uid
          ~HideOnForwardSection.unlinked_data
          ~HideOnForwardSection.vargs
+      
+   
+   
+   

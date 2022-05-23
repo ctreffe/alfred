@@ -11,35 +11,23 @@ Or like this::
 
 """
 
-from datetime import datetime
 from pathlib import Path
+from datetime import datetime
 from subprocess import run
-
 import click
 
-
 @click.command()
-@click.option(
-    "-name",
-    prompt="Enter a name for the test experiment",
-    help="Name for test experiment",
-)
+@click.option("-name", prompt="Enter a name for the test experiment", help="Name for test experiment")
 def testexp(name):
     timestamp = datetime.today().strftime("%Y%m%d%H%M")
     dirname = timestamp + "-" + name
-
+    
     path = Path.cwd() / "exp" / dirname
     path = path.resolve()
 
     path.mkdir(parents=True)
 
-    run(
-        [
-            "alfred3",
-            "template",
-            f"--path={str(path)}",
-        ]
-    )
+    run(["alfred3", "template", f"--path={str(path)}", ])
 
     run(["code", path / "script.py"])
 

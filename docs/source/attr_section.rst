@@ -73,7 +73,7 @@ Development utilities (Section)
 -----------------------------------------------------
 
 These methods and attributes are most likely to be of interest to you
-only if you derive your own sections.
+only if you derive your own sections. 
 
 .. autosummary::
     ~alfred3.section.Section.added_to_experiment

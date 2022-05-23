@@ -1,25 +1,35 @@
+# -*- coding: utf-8 -*-
+
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
+from __future__ import absolute_import
 
-import copy
+import time
+import os
 import csv
 import io
 import json
-import os
 import random
-import time
-from dataclasses import asdict
+import copy
+
 from pathlib import Path
-from typing import Dict, Iterator, List, Union
+from builtins import object
+from typing import Union
+from typing import List
+from typing import Dict
+from typing import Iterator
+
+from dataclasses import asdict
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from .alfredlog import QueuedLoggingInterface
 from .config import ExperimentSecrets
-from .exceptions import AlfredError
 from .saving_agent import AutoMongoClient
-from .util import flatten_dict, prefix_keys_safely
+from .alfredlog import QueuedLoggingInterface
+from .util import flatten_dict
+from .util import prefix_keys_safely
+from .exceptions import AlfredError
 
 
 class DataManager:
@@ -103,12 +113,10 @@ class DataManager:
 
         if not len(self._metadata_keys) == len(data):
             diff = self._metadata_keys ^ set(self._metadata)
-            raise AlfredError(
-                f"Length of metadata key set and keys in metadata dict do not match. Differences: {diff}"
-            )
-
+            raise AlfredError(f"Length of metadata key set and keys in metadata dict do not match. Differences: {diff}")
+        
         return data
-
+    
     @property
     def move_history(self):
         return [asdict(move) for move in self.exp.movement_manager.history]
@@ -131,7 +139,7 @@ class DataManager:
         return d
 
     @property
-    def codebook_data(self) -> dict[str, dict]:
+    def codebook_data(self) -> Dict[str, dict]:
         """dict: Returns codebook data for the current session."""
         exp = self.extract_codebook_data(self.session_data)
         unlinked = self.extract_codebook_data(self.unlinked_data)
@@ -139,7 +147,7 @@ class DataManager:
         return {**exp, **unlinked}
 
     @staticmethod
-    def extract_codebook_data(exp_data: dict) -> dict[str, dict]:
+    def extract_codebook_data(exp_data: dict) -> Dict[str, dict]:
         """
         Extracts codebook data from a full experiment data dictionary.
 
@@ -243,7 +251,7 @@ class DataManager:
         return fieldnames
 
     @staticmethod
-    def sort_fieldnames(fieldnames: list[str], template: list[str]) -> list[str]:
+    def sort_fieldnames(fieldnames: List[str], template: List[str]) -> List[str]:
         """
         Sorts the list fieldnames according to template.
 
@@ -279,25 +287,11 @@ class DataManager:
         return sorted(fieldnames, key=find_position)
 
     @classmethod
-    def sort_codebook_fieldnames(cls, fieldnames: list[str]) -> list[str]:
+    def sort_codebook_fieldnames(cls, fieldnames: List[str]) -> List[str]:
 
         t1 = ["exp_title", "exp_author", "exp_version", "alfred_version"]
-        t2 = [
-            "element_type",
-            "name",
-            "label_top",
-            "label_left",
-            "label_right",
-            "label_bottom",
-        ]
-        t3 = [
-            "force_input",
-            "default",
-            "placeholder",
-            "prefix",
-            "suffix",
-            "description",
-        ]
+        t2 = ["element_type", "name", "label_top", "label_left", "label_right", "label_bottom"]
+        t3 = ["force_input", "default", "placeholder", "prefix", "suffix", "description"]
 
         template = t1 + t2 + t3
 
@@ -344,10 +338,7 @@ class DataManager:
 
     @property
     def unlinked_values(self):
-        return {
-            el["name"]: el["value"]
-            for el in self.exp.root_section.unlinked_data.values()
-        }
+        return {el["name"]: el["value"] for el in self.exp.root_section.unlinked_data.values()}
 
     def unlinked_data_with(self, saving_agent):
         if saving_agent.encrypt:
@@ -465,7 +456,7 @@ class DataManager:
     def iterate_local_data(
         cls,
         data_type: str,
-        directory: str | Path,
+        directory: Union[str, Path],
         exp_version: str = None,
     ) -> Iterator[dict]:
         """Generator function, iterating over experiment data .json files
@@ -497,7 +488,7 @@ class DataManager:
                 continue
 
             try:
-                with open(fp, encoding="utf-8") as f:
+                with open(fp, "r", encoding="utf-8") as f:
                     doc = json.load(f)
             except json.decoder.JSONDecodeError:
                 continue
@@ -513,8 +504,8 @@ class DataManager:
 
 
 def decrypt_recursively(
-    data: list | dict | int | float | str | bytes, key: bytes
-) -> list | dict | int | float | str | bytes:
+    data: Union[list, dict, int, float, str, bytes], key: bytes
+) -> Union[list, dict, int, float, str, bytes]:
     """
     Used mainly for decrypting encrypted values in a nested dictionary.
     Can also decrypt single values.

@@ -1,7 +1,7 @@
 """
 Command line interface for alfred3.
 
-Alfred3 offers some commands for the command line/terminal. You can see
+Alfred3 offers some commands for the command line/terminal. You can see 
 a list of all available commands by executing the following in a terminal::
 
     $ alfred3 --help
@@ -30,15 +30,13 @@ These are the currently available commands::
 
 import click
 
-from .extract import json_to_csv
-from .run_exp import run
 from .template_exp import template
-
+from .run_exp import run
+from .extract import json_to_csv
 
 @click.group()
 def cli():
     pass
-
 
 cli.add_command(template)
 cli.add_command(run)

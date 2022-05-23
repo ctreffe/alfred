@@ -7,53 +7,53 @@ RegEntry
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~RegEntry.add_css
-
-
+   
+   
       ~RegEntry.add_js
-
-
+   
+   
       ~RegEntry.added_to_experiment
-
-
+   
+   
       ~RegEntry.added_to_page
-
-
+   
+   
       ~RegEntry.prepare_web_widget
-
-
+   
+   
       ~RegEntry.render_inner_html
-
-
+   
+   
       ~RegEntry.set_data
-
-
+   
+   
       ~RegEntry.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~RegEntry.base_template
          ~RegEntry.bottomlab
          ~RegEntry.codebook_data
@@ -104,3 +104,7 @@ RegEntry
          ~RegEntry.tree
          ~RegEntry.web_widget
          ~RegEntry.width
+      
+   
+   
+   

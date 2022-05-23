@@ -7,53 +7,53 @@ EmailEntry
    :show-inheritance:
 
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-
-
-
-
+      
+   
+   
+   
       ~EmailEntry.add_css
-
-
+   
+   
       ~EmailEntry.add_js
-
-
+   
+   
       ~EmailEntry.added_to_experiment
-
-
+   
+   
       ~EmailEntry.added_to_page
-
-
+   
+   
       ~EmailEntry.prepare_web_widget
-
-
+   
+   
       ~EmailEntry.render_inner_html
-
-
+   
+   
       ~EmailEntry.set_data
-
-
+   
+   
       ~EmailEntry.validate_data
+   
 
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-
+      
          ~EmailEntry.base_template
          ~EmailEntry.bottomlab
          ~EmailEntry.codebook_data
@@ -104,3 +104,7 @@ EmailEntry
          ~EmailEntry.tree
          ~EmailEntry.web_widget
          ~EmailEntry.width
+      
+   
+   
+   

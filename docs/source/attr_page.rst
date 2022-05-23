@@ -69,7 +69,7 @@ Development utilities (Page)
 ----------------------------------------------
 
 These methods and attributes are most likely to be of interest to you
-only if you derive your own pages.
+only if you derive your own pages. 
 
 .. autosummary::
     ~alfred3.page.Page.added_to_experiment

@@ -1,35 +1,39 @@
+# -*- coding: utf-8 -*-
+
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
 Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
 """
-import importlib.resources
 import os
 import threading
 import time
+
 from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Tuple, Union
 from uuid import uuid4
+from dataclasses import dataclass
+from typing import Union, Tuple
 
+import importlib.resources
 from jinja2 import Environment, PackageLoader
 
-from . import element as elm
 from .alfredlog import QueuedLoggingInterface
-from .exceptions import AbortMove, AlfredError, MoveError, ValidationError
-from .static import css, img, js
+from .static import js
+from .static import css
+from .static import img
+from . import element as elm
+from .exceptions import AlfredError, MoveError, ValidationError, AbortMove
 from .util import icon
 
 jinja_env = Environment(loader=PackageLoader("alfred3", "templates"))
-
 
 @dataclass
 class Move:
     """
     Template for saving data about participant movements.
-
+    
     Attributes:
         exp_title: Experiment title
         exp_author: Experiment author
@@ -39,59 +43,58 @@ class Move:
 
         move_number: A continuously increasing counter of moves. Starts
             at one.
-        tree: The full hierarchy of sections, indicating the exact
+        tree: The full hierarchy of sections, indicating the exact 
             position of the Move's *page* in the experiment.
         page_name: The name of the Move's page.
-
+        
         show_time: Time when the page was shown in seconds since epoch.
         hide_time: Time when the page was hidden in seconds since epoch.
-        duration: Duration in seconds, calculated as the difference
+        duration: Duration in seconds, calculated as the difference 
             hidetime - showtime.
-
+        
         page_status_before_visit: Indicates the page's status before
-            the visit represented by the Move instance, e.g. 'open', or
+            the visit represented by the Move instance, e.g. 'open', or 
             'closed'.
         page_status_before_visit: Indicates the page's status after
-            the visit represented by the Move instance, e.g. 'open', or
+            the visit represented by the Move instance, e.g. 'open', or 
             'closed'.
-
-        leave_in_direction: Indicates the direction, in which the page
+        
+        leave_in_direction: Indicates the direction, in which the page 
             was left (e.g. 'forward', 'backward', or 'jump').
         previous_page: Name of the previous page
         target_page: Name of the next page
-
+        
         section_allows_backward: Indicates, whether participants can move
             backward from the Move's page.
         section_allows_forward: Indicates, whether participants can move
             forward from the Move's page.
-        section_allows_jumpfrom: Indicates, whether participants can
+        section_allows_jumpfrom: Indicates, whether participants can 
             jump from the Move's page.
-        section_allows_jumpto: Indicates, whether participants can
+        section_allows_jumpto: Indicates, whether participants can 
             jump to the Move's page.
-
+    
     """
-
     exp_title: str = None
     exp_author: str = None
     exp_version: str = None
     exp_id: str = None
     exp_session_id: str = None
-
+    
     move_number: int = None
     tree: str = None
     page_name: str = None
-
+    
     show_time: float = None
     hide_time: float = None
     duration: float = None
-
+    
     page_status_before_visit: str = None
     page_status_after_visit: str = None
-
+    
     leave_in_direction: str = None
     previous_page: str = None
     target_page: str = None
-
+    
     section_allows_forward: bool = None
     section_allows_backward: bool = None
     section_allows_jumpfrom: bool = None
@@ -112,52 +115,50 @@ class MovementManager:
         self.history: list = []
 
         self._current_page = None
-
+    
     @property
     def current_page(self):
         if self._current_page is not None:
             return self._current_page
         else:
             return self.exp.root_section.all_pages_list[self.current_index]
-
+    
     @current_page.setter
     def current_page(self, page):
         if not self.index_of(page) == self.current_index:
-            raise MoveError(
-                "Index of new 'current page' and 'current index' are not equal."
-            )
+            raise MoveError("Index of new 'current page' and 'current index' are not equal.")
         self._current_page = page
-
+    
     @property
     def previous_page(self):
         if self.current_page is self.first_page:
             return None
-
+        
         i = self.previous_index
         return self.exp.root_section.all_pages_list[i]
-
+    
     @property
     def next_page(self):
         if self.current_page is self.final_page:
             return None
         i = self.current_index + 1
         return self.exp.root_section.all_pages_list[i]
-
+    
     @property
     def final_page(self):
         return self.exp.final_page
-
+    
     def page_after(self, page):
         i = self.exp.root_section.all_page_names.index(page.name) + 1
         return self.exp.root_section.all_pages_list[i]
-
+    
     def page_before(self, page):
         if self.current_page is self.first_page:
             return None
         i = self.exp.root_section.all_page_names.index(page.name) - 1
         return self.exp.root_section.all_pages_list[i]
 
-    def find_page(self, query: str | int):
+    def find_page(self, query: Union[str, int]):
         """
         Find a page.
 
@@ -180,7 +181,7 @@ class MovementManager:
     @property
     def first_page(self):
         return self.exp.root_section.all_pages_list[0]
-
+    
     @property
     def first_visible_page(self):
         i = 0
@@ -188,15 +189,15 @@ class MovementManager:
         while not pages[i].should_be_shown:
             i += 1
         return pages[i]
-
+    
     @property
     def last_page(self):
         return self.exp.root_section.all_pages_list[-2]
-
-    def _skip_page(self, target_page, direction: str) -> tuple[int, int]:
+    
+    def _skip_page(self, target_page, direction: str) -> Tuple[int, int]:
         """
         Returns:
-            Tuple[int, int]: A tuple of the current page and the target
+            Tuple[int, int]: A tuple of the current page and the target 
                 page.
 
         Raises:
@@ -204,65 +205,45 @@ class MovementManager:
                 (*target_page*) should not be shown.
         """
         if direction == "forward":
-            self.log.debug(
-                f"{target_page} should not be shown. Skipping page in direction 'forward'."
-            )
-            return self._move(
-                target_page=self.page_after(target_page), direction="forward"
-            )
-
+            self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'forward'.")
+            return self._move(target_page=self.page_after(target_page), direction="forward")
+    
         elif direction == "backward":
-            self.log.debug(
-                f"{target_page} should not be shown. Skipping page in direction 'backward'."
-            )
-            return self._move(
-                target_page=self.page_before(target_page), direction="backward"
-            )
-
+            self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
+            return self._move(target_page=self.page_before(target_page), direction="backward")
+    
         elif direction == "jump":
             self.log.debug(f"{target_page} should not be shown. Aborting move.")
             if self.exp.config.getboolean("general", "debug"):
-                self.exp.message_manager.post_message(
-                    f"{target_page} should not be shown. Jump was aborted.",
-                    level="debug",
-                )
+                self.exp.message_manager.post_message(f"{target_page} should not be shown. Jump was aborted.", level="debug")
             raise AbortMove()
-
+    
     def _check_permissions(self, target_page, direction: str):
         # check section permissions for jumps
         if direction.startswith("jump"):
             jump_allowed = self._check_jump_permission(next_page=target_page)
             if not jump_allowed:
                 raise AbortMove()
-
+        
         # check section permissions for normal moves
         elif not getattr(self.current_page.section, "allow_" + direction):
-            self.log.debug(
-                f"Section of page {self.current_page} does not allow movement in direction '{direction}'"
-            )
+            self.log.debug(f"Section of page {self.current_page} does not allow movement in direction '{direction}'")
             raise AbortMove()
-
+        
         # check section permission for target section
         elif direction == "backward" and not target_page.section.allow_backward:
-            self.log.debug(
-                f"Section of page {target_page} does not allow movement in direction '{direction}'"
-            )
+            self.log.debug(f"Section of page {target_page} does not allow movement in direction '{direction}'")
             raise AbortMove()
-
+    
     def _abort_move(self):
         return self.previous_index, self.current_index
-
+    
     def target_page(self, direction: str):
         if direction == "forward":
             target_page = self.next_page
             i = self.index_of(target_page)
-            while (
-                not target_page.should_be_shown
-                or not target_page.section.should_be_shown
-            ):  # skip pages that should not be shown
-                self.log.debug(
-                    f"{target_page} should not be shown. Skipping page in direction 'forward'."
-                )
+            while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
+                self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'forward'.")
                 i += 1
                 target_page = self.find_page(i)
             return target_page
@@ -270,13 +251,8 @@ class MovementManager:
         elif direction == "backward":
             target_page = self.page_before(self.current_page)
             i = self.index_of(target_page)
-            while (
-                not target_page.should_be_shown
-                or not target_page.section.should_be_shown
-            ):  # skip pages that should not be shown
-                self.log.debug(
-                    f"{target_page} should not be shown. Skipping page in direction 'backward'."
-                )
+            while not target_page.should_be_shown or not target_page.section.should_be_shown: # skip pages that should not be shown
+                self.log.debug(f"{target_page} should not be shown. Skipping page in direction 'backward'.")
                 i -= 1
                 if i < 0:
                     raise AbortMove
@@ -285,24 +261,21 @@ class MovementManager:
 
         elif direction.startswith("jump"):
             target_page_name = direction[5:]
-            target_page = self.find_page(target_page_name)
-
+            target_page =  self.find_page(target_page_name)
+            
             if not target_page:
                 msg = self.experiment.config.get("hints", "jump_page_not_found")
                 self.experiment.message_manager.post_message(msg, level="warning")
                 raise AbortMove()
-
+            
             if not target_page.should_be_shown:
                 self.log.debug(f"{target_page} should not be shown. Aborting move.")
                 if self.exp.config.getboolean("general", "debug"):
-                    self.exp.message_manager.post_message(
-                        f"{target_page} should not be shown. Jump was aborted.",
-                        level="debug",
-                    )
+                    self.exp.message_manager.post_message(f"{target_page} should not be shown. Jump was aborted.", level="debug")
                 raise AbortMove()
 
             return target_page
-
+    
     def _direct_jump(self, to):
         """
         Bypasses the normal movement system and permissions for a
@@ -310,32 +283,26 @@ class MovementManager:
         aborted.
         """
         target_page = self.find_page(query=to)
-        self.log.debug(
-            f"Direct jump to {target_page}. Skipping all normal move function."
-        )
+        self.log.debug(f"Direct jump to {target_page}. Skipping all normal move function.")
         if not self.exp.start_time:
             pass
         elif self.exp.config.getboolean("data", "record_move_history"):
-            self.record_move(
-                self.current_page.is_closed, direction="jump", target_page=target_page
-            )
-
+                self.record_move(self.current_page.is_closed, direction="jump", target_page=target_page)
+         
         self.current_index = self.index_of(target_page)
         self.current_page = self.exp.root_section.all_pages_list[self.current_index]
 
-    def _move(self, direction: str) -> tuple[int, int]:
+    def _move(self, direction: str) -> Tuple[int, int]:
         if self.exp.session_expired:
             return self.exp.abort(
-                reason="session timed out",
+                reason="session timed out", 
                 title="Session expired",
                 icon="hourglass-end",
-                msg="Sorry! The experiment session timed out.",
-            )
-
+                msg= "Sorry! The experiment session timed out."
+                )
+        
         if self.exp.aborted:
-            self.log.debug(
-                f"A move was called, but the experiment is aborted. No move is being conducted."
-            )
+            self.log.debug(f"A move was called, but the experiment is aborted. No move is being conducted.")
             return
 
         cpage = self.current_page
@@ -352,29 +319,21 @@ class MovementManager:
         target_page = self.target_page(direction=direction)
         if not target_page is initial_target_page:
             self._check_permissions(target_page=target_page, direction=direction)
-
+        
         page_was_closed = cpage.is_closed
         cpage.section._move(direction=direction, from_page=cpage, to_page=target_page)
 
-        self.log.debug(
-            f"Moving from {cpage} to {target_page}, direction: '{direction}'."
-        )
+        self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
 
         target_page._on_showing_widget(show_time=time.time())
-        self.record_move(
-            page_was_closed=page_was_closed,
-            direction=direction,
-            target_page=target_page,
-        )
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
 
-        target_page = self._update_target_page(
-            previous_target=target_page, direction=direction
-        )
+        target_page = self._update_target_page(previous_target=target_page, direction=direction)
 
         self.previous_index = self.current_index
         self.current_index = self.index_of(target_page)
         self.current_page = self.find_page(self.current_index)
-
+    
     def _update_target_page(self, previous_target, direction: str):
         """
         In case something about the target page changes in the last steps of a movement.
@@ -382,52 +341,36 @@ class MovementManager:
         target_page = self.target_page(direction=direction)
         if target_page is previous_target:
             return target_page
-
+        
         self._check_permissions(target_page=target_page, direction=direction)
-
+        
         cpage = self.current_page
         page_was_closed = cpage.is_closed
         cpage.section._move(direction=direction, from_page=cpage, to_page=target_page)
 
-        self.log.debug(
-            f"Moving from {cpage} to {target_page}, direction: '{direction}'."
-        )
+        self.log.debug(f"Moving from {cpage} to {target_page}, direction: '{direction}'.")
 
         target_page._on_showing_widget(show_time=time.time())
-        self.record_move(
-            page_was_closed=page_was_closed,
-            direction=direction,
-            target_page=target_page,
-        )
+        self.record_move(page_was_closed=page_was_closed, direction=direction, target_page=target_page)
 
-        return self._update_target_page(
-            previous_target=target_page, direction=direction
-        )
+        return self._update_target_page(previous_target=target_page, direction=direction)
 
+        
     def _check_jump_permission(self, next_page) -> bool:
         if self.experiment.config.getboolean("general", "debug"):
             self.log.debug("Debug mode enabled. Jump permission not checked.")
-            self.experiment.message_manager.post_message(
-                "Debug mode enabled. Jump permission was not checked.", level="info"
-            )
+            self.experiment.message_manager.post_message("Debug mode enabled. Jump permission was not checked.", level="info")
             return True
 
-        elif (
-            not self.current_page is next_page
-            and not self.current_page.section.allow_jumpfrom
-        ):
-            self.log.debug(
-                f"The section of page {self.current_page} cannot be jumped from. Aborting move."
-            )
+        elif not self.current_page is next_page and not self.current_page.section.allow_jumpfrom:
+            self.log.debug(f"The section of page {self.current_page} cannot be jumped from. Aborting move.")
             msg = self.experiment.config.get("hints", "jumpfrom_forbidden")
             self.experiment.message_manager.post_message(msg, level="warning")
             return False
 
         elif not next_page.section.allow_jumpto:
             msg = self.experiment.config.get("hints", "jumpto_forbidden")
-            self.log.debug(
-                f"The section of page {next_page} cannot be jumped to. Aborting move."
-            )
+            self.log.debug(f"The section of page {next_page} cannot be jumped to. Aborting move.")
             self.experiment.message_manager.post_message(msg, level="warning")
             return False
 
@@ -436,7 +379,7 @@ class MovementManager:
 
     def record_move(self, page_was_closed: bool, direction: str, target_page):
         current_page = self.current_page
-
+        
         move = Move()
         move.exp_title = self.exp.title
         move.exp_author = self.exp.author
@@ -449,17 +392,15 @@ class MovementManager:
         move.page_status_before_visit = "closed" if page_was_closed else "open"
         move.page_status_after_visit = "closed" if current_page.is_closed else "open"
         move.show_time = current_page.show_times[-1]
-
+        
         try:
             move.hide_time = current_page.hide_times[-1]
             move.duration = move.hide_time - move.show_time
         except IndexError:
-            self.log.debug(
-                f"Hide time for {current_page} not available. This may be normal for an abort page."
-            )
+            self.log.debug(f"Hide time for {current_page} not available. This may be normal for an abort page.")
             move.hide_time = None
             move.duration = None
-
+        
         move.previous_page = self.previous_page.name if self.previous_page else None
         move.section_allows_forward = current_page.section.allow_forward
         move.section_allows_backward = current_page.section.allow_backward
@@ -473,37 +414,31 @@ class MovementManager:
 
         if self.exp.session_expired:
             return self.exp.abort(
-                reason="session timed out",
+                reason="session timed out", 
                 title="Session expired",
                 icon="hourglass-end",
-                msg="Sorry! The experiment session timed out.",
-            )
-
+                msg= "Sorry! The experiment session timed out."
+                )
+        
         proceed = self.current_page.custom_move()
-
+        
         if not proceed:
-            self.log.debug(
-                f"Page defined its own move method. Alfred's move system stands by."
-            )
+            self.log.debug(f"Page defined its own move method. Alfred's move system stands by.")
             return
-
+        
         if self.exp.aborted:
-            self.log.debug(
-                f"A move was called, but the experiment is aborted. No move is being conducted."
-            )
+            self.log.debug(f"A move was called, but the experiment is aborted. No move is being conducted.")
             return
-
+        
         if direction == "stay":
             self.log.debug("Movement direction was 'stay' - no move conducted.")
             return
-
+        
         try:
             self._move(direction=direction)
         except AbortMove:
-            self.log.debug(
-                f"Movement from {self.current_page} in direction'{direction}' was aborted."
-            )
-
+            self.log.debug(f"Movement from {self.current_page} in direction'{direction}' was aborted.")
+    
     def start(self):
 
         self.current_index = self.index_of(self.first_visible_page)
@@ -518,7 +453,7 @@ class UserInterface:
         "bootstrap-4.5.3.min.css",
         "prism.css",
         "responsive.css",
-        "range_input.css",
+        "range_input.css"
     ]
 
     _js_files = [
@@ -529,6 +464,7 @@ class UserInterface:
         "prism.js",
         "font-awesome-icons.js",
         "responsive.js",
+
     ]
 
     def __init__(self, experiment):
@@ -544,19 +480,13 @@ class UserInterface:
         self._callables = {}
 
         self.config = {}
-        self.config["responsive"] = self.experiment.config.getboolean(
-            "layout", "responsive"
-        )
-        self.config["website_title"] = self.experiment.config.get(
-            "layout", "website_title"
-        )
+        self.config["responsive"] = self.experiment.config.getboolean("layout", "responsive")
+        self.config["website_title"] = self.experiment.config.get("layout", "website_title")
         self.config["logo_text"] = self.experiment.config.get("layout", "logo_text")
         self.config["footer_text"] = self.experiment.config.get("layout", "footer_text")
 
         with importlib.resources.path(img, "alfred_logo_color.png") as p:
-            self.config["alfred_logo_url"] = self.add_static_file(
-                p, content_type="image/png"
-            )
+            self.config["alfred_logo_url"] = self.add_static_file(p, content_type="image/png")
 
         self.css_urls = []
         self.js_urls = []
@@ -564,6 +494,7 @@ class UserInterface:
         self.css_code = []
         self.js_code = []
 
+        
         self._determine_style()
 
         self.client_info_url = self.add_callable(self.save_client_info)
@@ -572,14 +503,12 @@ class UserInterface:
         self.forward_enabled = True
         self.backward_enabled = True
         self.finish_enabled = True
-
+        
         # the code block below enables the creation of standalone alfred3 html pages,
         # which don't host their own JavaScript and CSS on a localserver,
         # but instead place it directly in the html file.
         debug = self.experiment.config.getboolean("general", "debug")
-        code_in_template = self.experiment.config.getboolean(
-            "debug", "code_in_templates"
-        )
+        code_in_template = self.experiment.config.getboolean("debug", "code_in_templates")
         if debug and code_in_template:
             self._add_resources(self._js_files, "js")
             self._add_resources(self._css_files, "css")
@@ -599,9 +528,9 @@ class UserInterface:
 
     def _determine_style(self):
         """Adds .css styles and logo image to the layout.
-
-        This method manages the switch between the two builtin styles
-        'base' and 'goe', and a possible customly defined style. If
+        
+        This method manages the switch between the two builtin styles 
+        'base' and 'goe', and a possible customly defined style. If 
         reads the option "style" in the section "layout" of config.conf.
         """
         style = self.experiment.config.get("layout", "style")
@@ -610,20 +539,14 @@ class UserInterface:
             with importlib.resources.path(css, "base.css") as f:
                 url = self.add_static_file(f, content_type="text/css")
                 self.css_urls.append((5, url))
-
-            self.config["logo_text"] = self.experiment.config.get(
-                "layout_base", "logo_text"
-            )
+            
+            self.config["logo_text"] = self.experiment.config.get("layout_base", "logo_text")
             logo = self.exp.subpath(self.exp.config.get("layout_goe", "logo"))
             if logo.is_file():
-                self.config["logo_url"] = self.add_static_file(
-                    logo, content_type="image/png"
-                )
+                self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
             else:
-                with importlib.resources.path(img, "alfred_logo_color.png") as logo:
-                    self.config["logo_url"] = self.add_static_file(
-                        logo, content_type="image/png"
-                    )
+                with importlib.resources.path(img, "alfred_logo_color.png") as logo:    
+                    self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
 
         elif style == "goe":
 
@@ -634,21 +557,15 @@ class UserInterface:
             with importlib.resources.path(img, "uni_goe_logo_white_new.png") as p:
                 url = self.add_static_file(p, content_type="image/png")
                 self.config["logo_url"] = url
-
-            self.config["logo_text"] = self.experiment.config.get(
-                "layout_goe", "logo_text"
-            )
+            
+            self.config["logo_text"] = self.experiment.config.get("layout_goe", "logo_text")
 
             logo = self.exp.subpath(self.exp.config.get("layout_goe", "logo"))
             if logo.is_file():
-                self.config["logo_url"] = self.add_static_file(
-                    logo, content_type="image/png"
-                )
+                self.config["logo_url"] = self.add_static_file(logo, content_type="image/png")
         else:
-            raise ValueError(
-                f"Invalid value for option 'style' in config section 'layout': {style}"
-            )
-
+            raise ValueError(f"Invalid value for option 'style' in config section 'layout': {style}")
+        
         # read CSS files from static folder
         static_folder = self.exp.config.get("layout", "static_folder")
         static_folder = self.exp.subpath(static_folder)
@@ -659,9 +576,7 @@ class UserInterface:
                     url = self.add_static_file(path, content_type="text/css")
                     self.css_urls.append((7, url))
         except FileNotFoundError:
-            self.log.debug(
-                f"Did not find static folder {static_folder}. Passing silently."
-            )
+            self.log.debug(f"Did not find static folder {static_folder}. Passing silently.")
 
         # read custom logo
         logo = self.experiment.config.get("layout", "logo")
@@ -673,18 +588,19 @@ class UserInterface:
                 content_type = "image/jpeg"
             logo_url = self.add_static_file(logo, content_type=content_type)
             self.config["logo_url"] = logo_url
+        
 
         # read custom logo text
         logo_text = self.exp.config.get("layout", "logo_text")
         if logo_text:
             self.config["logo_text"] = logo_text
-
+        
     def _add_resource_links(self, resources: list, resource_type: str):
         """Adds resources to the UI via add_static_file.
-
+        
         Args:
             resources: A list of tuples of the form (pkg, resource).
-            resource_typetype: A string indicating the type of resource.
+            resource_typetype: A string indicating the type of resource. 
                 "js" for JavaScript, "css" for Cascading Style Sheets.
         """
         if resource_type == "js":
@@ -738,14 +654,10 @@ class UserInterface:
         # JS Code for a single data saving call upon a visit to the first page
         # This is necessary in order to also save the screen resolution
         first_page = self.exp.movement_manager.first_visible_page
-        if page is first_page and self.experiment.config.getboolean(
-            "data", "save_client_info"
-        ):
-            js = jinja_env.get_template("clientinfo.js.j2").render(
-                url=self.client_info_url
-            )
+        if page is first_page and self.experiment.config.getboolean("data", "save_client_info"):
+            js = jinja_env.get_template("clientinfo.js.j2").render(url=self.client_info_url)
             code["js_code"] += [(7, js)]
-
+        
         try:
             code["css_code"] += self.exp.progress_bar.css_code
             code["js_code"] += self.exp.progress_bar.js_code
@@ -759,18 +671,15 @@ class UserInterface:
 
         page = self.experiment.movement_manager.current_page
         d = {**self.config}
-
-        if (
-            self.exp.config.getboolean("general", "debug")
-            and not page is self.exp.final_page
-        ):
+        
+        if self.exp.config.getboolean("general", "debug") and not page is self.exp.final_page:
             d["debug"] = self.exp.config.getboolean("general", "debug")
             d["jumplist"] = page.elements[page.name + "__debug_jumplist__"]
-
+        
         if self.exp.admin_mode and page.section.name == "admin_content":
             d["jumplist"] = page.elements[page.name + "__admin_jumplist__"]
             d["admin"] = True
-
+        
         page.prepare_web_widget()
 
         d["code"] = self.code(page=page)
@@ -779,19 +688,17 @@ class UserInterface:
 
         d["title"] = page.title
         d["subtitle"] = page.subtitle
-
+        
         if self.exp.movement_manager.current_index > 0:
             try:
                 target = self.exp.movement_manager.target_page("backward")
                 previous_section = target.section
                 if previous_section.allow_backward and page.section.allow_backward:
                     self.exp.movement_manager.target_page("backward")
-                    d["backward_text"] = self.experiment.config.get(
-                        "navigation", "backward"
-                    )
+                    d["backward_text"] = self.experiment.config.get("navigation", "backward")
             except AbortMove:
                 pass
-
+        
         if page.section.allow_forward:
             if self.exp.movement_manager.next_page is self.exp.root_section.final_page:
                 d["finish_text"] = self.experiment.config.get("navigation", "finish")
@@ -803,12 +710,8 @@ class UserInterface:
             d["messages"] = messages
 
         # progress bar
-        d["show_progress"] = self.experiment.config.getboolean(
-            "layout", "show_progress"
-        )
-        d["fix_progress_top"] = self.experiment.config.getboolean(
-            "layout", "fix_progress_top"
-        )
+        d["show_progress"] = self.experiment.config.getboolean("layout", "show_progress")
+        d["fix_progress_top"] = self.experiment.config.getboolean("layout", "fix_progress_top")
         if d["show_progress"] and self.exp.progress_bar and not self.exp.admin_mode:
             self.exp.progress_bar._prepare_web_widget()
             d["progress"] = self.exp.progress_bar.web_widget
@@ -850,7 +753,7 @@ class UserInterface:
         path = Path(path)
         if not path.is_absolute():
             path = self.experiment.path / path
-
+        
         if self.experiment.config.getboolean("general", "debug"):
             identifier = str(path.name)
         else:
@@ -900,3 +803,4 @@ class UserInterface:
 
     def start(self):
         self.exp.movement_manager.start()
+
