@@ -44,7 +44,7 @@ setuptools.setup(
         "requests>=2.25",
         "bleach>=3.3",
     ],
-    extras_require={"dev": ["pytest", "pre-commit", "black", "flake8"]},
+    extras_require={"dev": ["pytest", "pre-commit", "black", "flake8", "dotenv"]},
     entry_points="""
     [console_scripts]
     alfred3=alfred3.cli:cli
