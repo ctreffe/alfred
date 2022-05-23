@@ -45,7 +45,7 @@ setuptools.setup(
         "bleach>=3.3",
     ],
     extras_require={
-        "dev": ["pytest", "pre-commit", "black", "flake8", "python-dotenv"]
+        "dev": ["pytest", "pre-commit", "black", "flake8", "python-dotenv", "bs4"]
     },
     entry_points="""
     [console_scripts]
