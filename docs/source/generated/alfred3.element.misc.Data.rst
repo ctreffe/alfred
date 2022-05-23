@@ -7,53 +7,53 @@ Data
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Data.add_css
-   
-   
+
+
       ~Data.add_js
-   
-   
+
+
       ~Data.added_to_experiment
-   
-   
+
+
       ~Data.added_to_page
-   
-   
+
+
       ~Data.prepare_web_widget
-   
-   
+
+
       ~Data.render_inner_html
-   
-   
+
+
       ~Data.set_data
-   
-   
+
+
       ~Data.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Data.base_template
          ~Data.bottomlab
          ~Data.codebook_data
@@ -101,7 +101,3 @@ Data
          ~Data.tree
          ~Data.web_widget
          ~Data.width
-      
-   
-   
-   

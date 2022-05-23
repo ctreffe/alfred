@@ -1,4 +1,5 @@
 import alfred3 as al
+
 exp = al.Experiment()
 
 rivers = ["Themse", "Rhein", "Ems"]
@@ -14,7 +15,6 @@ class Main(al.Section):
 
 
 class Task(al.Page):
-
     def on_first_show(self):
         item = self.vargs.i
         position = self.position_in_section()
@@ -22,9 +22,12 @@ class Task(al.Page):
 
         self.title = f"Task {position}"
 
-        self += al.Text("Please estimate the length of the following river:", align="center")
+        self += al.Text(
+            "Please estimate the length of the following river:", align="center"
+        )
         self += al.Text(f"**{stimulus}**", font_size="large", align="center")
-        
-        self += al.NumberEntry(placeholder="Enter a number", suffix="km", name=f"task_{position:02}")
-        self += al.Value(stimulus, name=f"item_{position:02}")
 
+        self += al.NumberEntry(
+            placeholder="Enter a number", suffix="km", name=f"task_{position:02}"
+        )
+        self += al.Value(stimulus, name=f"item_{position:02}")

@@ -7,47 +7,47 @@ Video
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Video.add_css
-   
-   
+
+
       ~Video.add_js
-   
-   
+
+
       ~Video.added_to_experiment
-   
-   
+
+
       ~Video.added_to_page
-   
-   
+
+
       ~Video.prepare_web_widget
-   
-   
+
+
       ~Video.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Video.base_template
          ~Video.bottomlab
          ~Video.converted_width
@@ -79,7 +79,3 @@ Video
          ~Video.tree
          ~Video.web_widget
          ~Video.width
-      
-   
-   
-   

@@ -1,10 +1,10 @@
-import pytest
 import threading
 import time
 
-from flask import request, Blueprint
-from selenium import webdriver
+import pytest
 from dotenv import load_dotenv
+from flask import Blueprint, request
+from selenium import webdriver
 
 from alfred3.testutil import get_app
 
@@ -13,13 +13,15 @@ load_dotenv()
 
 testing = Blueprint("test", __name__)
 
+
 @testing.route("/stop")
 def stop():
-    func = request.environ.get('werkzeug.server.shutdown')
+    func = request.environ.get("werkzeug.server.shutdown")
     if func is None:
-        raise RuntimeError('Not running with the Werkzeug Server')
+        raise RuntimeError("Not running with the Werkzeug Server")
     func()
     return "Shutting down server..."
+
 
 @pytest.fixture
 def driver():
@@ -27,6 +29,7 @@ def driver():
     yield chrome
     chrome.get("http://localhost:5000/stop")
     chrome.close()
+
 
 @pytest.fixture
 def running_app(tmp_path):

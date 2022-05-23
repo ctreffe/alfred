@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
@@ -7,99 +5,101 @@ _helper contains internal functions which are not to be called by framework user
 
 """
 
-from urllib.parse import urlparse
-from cryptography.fernet import Fernet
-from dataclasses import dataclass
-from typing import Union
+import functools
+import inspect
 import os
 import re
 import socket
-import functools
-import inspect
+from dataclasses import dataclass
+from typing import Union
+from urllib.parse import urlparse
+
+from cryptography.fernet import Fernet
+
 
 def fontsize_converter(font_argument: Union[int, str]) -> str:
-    '''
-    FontsizeConverter checks any font arguments used in alfred and 
-    returns a fontsize variable compatible with any element or page in 
+    """
+    FontsizeConverter checks any font arguments used in alfred and
+    returns a fontsize variable compatible with any element or page in
     alfred.
 
-    '''
+    """
     if font_argument is None:
         return None
 
-    elif font_argument == 'normal':
+    elif font_argument == "normal":
         return "1rem"
 
-    elif font_argument == 'big':
+    elif font_argument == "big":
         return "1.5rem"
-    
+
     elif font_argument == "small":
         return "0.75rem"
-    
+
     elif font_argument == "tiny":
         return "0.5rem"
 
-    elif font_argument == 'huge':
+    elif font_argument == "huge":
         return "2rem"
 
     elif isinstance(font_argument, int):
         return f"{font_argument}pt"
-    
+
     else:
         return font_argument
 
 
-def alignment_converter(alignment_argument, type='text'):
-    '''
+def alignment_converter(alignment_argument, type="text"):
+    """
     AlignmentConverter checks any font arguments used in alfred and returns an alignment variable compatible
     for different element types in alfred.
 
-    '''
+    """
 
-    if type == 'text':
-        if alignment_argument == 'left':
-            alignment_argument = 'pagination-left'
+    if type == "text":
+        if alignment_argument == "left":
+            alignment_argument = "pagination-left"
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'pagination-centered'
+        elif alignment_argument == "center":
+            alignment_argument = "pagination-centered"
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'pagination-right'
+        elif alignment_argument == "right":
+            alignment_argument = "pagination-right"
 
-    elif type == 'container':
-        if alignment_argument == 'left':
-            alignment_argument = 'containerpagination-left'
+    elif type == "container":
+        if alignment_argument == "left":
+            alignment_argument = "containerpagination-left"
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'containerpagination-centered'
+        elif alignment_argument == "center":
+            alignment_argument = "containerpagination-centered"
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'containerpagination-right'
+        elif alignment_argument == "right":
+            alignment_argument = "containerpagination-right"
 
-    elif type == 'both':
-        if alignment_argument == 'left':
-            alignment_argument = 'pagination-left containerpagination-left'
+    elif type == "both":
+        if alignment_argument == "left":
+            alignment_argument = "pagination-left containerpagination-left"
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'pagination-centered containerpagination-centered'
+        elif alignment_argument == "center":
+            alignment_argument = "pagination-centered containerpagination-centered"
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'pagination-right containerpagination-right'
+        elif alignment_argument == "right":
+            alignment_argument = "pagination-right containerpagination-right"
 
-    elif type == 'div':
-        if alignment_argument == 'left':
-            alignment_argument = 'text-align:left'
+    elif type == "div":
+        if alignment_argument == "left":
+            alignment_argument = "text-align:left"
 
-        elif alignment_argument == 'center':
-            alignment_argument = 'text-align:center'
+        elif alignment_argument == "center":
+            alignment_argument = "text-align:center"
 
-        elif alignment_argument == 'right':
-            alignment_argument = 'text-align:right'
+        elif alignment_argument == "right":
+            alignment_argument = "text-align:right"
 
     return alignment_argument
 
 
-class Decrypter(object):
+class Decrypter:
 
     _decrypter = None
 
@@ -115,24 +115,32 @@ class Decrypter(object):
             try:
                 self._decrypter = Fernet(key)
             except Exception:
-                RuntimeError('Unable to initialize Fernet decrypter: Secret key not found!')
+                RuntimeError(
+                    "Unable to initialize Fernet decrypter: Secret key not found!"
+                )
 
         if from_env:
             try:
-                decrypted_username = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_USER").encode()).decode()
-                decrypted_password = self._decrypter.decrypt(os.environ.get("ALFRED_MONGODB_PASSWORD").encode()).decode()
+                decrypted_username = self._decrypter.decrypt(
+                    os.environ.get("ALFRED_MONGODB_USER").encode()
+                ).decode()
+                decrypted_password = self._decrypter.decrypt(
+                    os.environ.get("ALFRED_MONGODB_PASSWORD").encode()
+                ).decode()
 
                 return (decrypted_username, decrypted_password)
 
             except (AttributeError, NameError):
-                print("Incomplete DB login data in environment variables. Now trying to decrypt login data from config.conf...")
+                print(
+                    "Incomplete DB login data in environment variables. Now trying to decrypt login data from config.conf..."
+                )
 
         decrypted_username = self._decrypter.decrypt(username.encode()).decode()
         decrypted_password = self._decrypter.decrypt(password.encode()).decode()
 
         return (decrypted_username, decrypted_password)
 
-    
+
 class _DictObj(dict):
     """
     This class allows dot notation to access dict elements
@@ -164,11 +172,9 @@ def check_name(name: str):
     if not re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
 
         raise ValueError(
-            (
-                "Name must start with a letter and can include only "
-                "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
-                f"Name '{name}' does not match this pattern."
-            )
+            "Name must start with a letter and can include only "
+            "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
+            f"Name '{name}' does not match this pattern."
         )
 
 
@@ -190,57 +196,60 @@ def sort_dict(d: dict) -> dict:
 
 
 def add_indent(inp: str, spaces: int = 8) -> str:
-        """
-        Adds indentation to all lines of a single or multiline string.
+    """
+    Adds indentation to all lines of a single or multiline string.
 
-        Args:
-            inp: Input string
-            spaces: Number of spaces to indent each line by
-        """
-        splitted = inp.split("\n")
-        indented = f"\n{' '*spaces}".join(splitted)
-        return " " * spaces + indented
+    Args:
+        inp: Input string
+        spaces: Number of spaces to indent each line by
+    """
+    splitted = inp.split("\n")
+    indented = f"\n{' '*spaces}".join(splitted)
+    return " " * spaces + indented
 
 
 def build_table(docs: dict, caption: str = "", widths: str = "20, 80") -> str:
-        """
-        Transforms a documentation dictionary into a string, representing
-        the docutils csv-table directive.
+    """
+    Transforms a documentation dictionary into a string, representing
+    the docutils csv-table directive.
 
-        Args:
-            docs: Documentation dictionary
-            caption: String to use as table caption
-            widths: String, indicating the relative widths of the table
-                columns in percent.
-        """
-        directive = f".. csv-table:: {caption}"
-        indent = " " * 3
+    Args:
+        docs: Documentation dictionary
+        caption: String to use as table caption
+        widths: String, indicating the relative widths of the table
+            columns in percent.
+    """
+    directive = f".. csv-table:: {caption}"
+    indent = " " * 3
 
-        rows = []
-        rows.append(f":widths: {widths}\n")
+    rows = []
+    rows.append(f":widths: {widths}\n")
 
-        for arg, explanation in docs.items():
-            rows.append(f"\"{arg}\", \"{explanation}\"")
+    for arg, explanation in docs.items():
+        rows.append(f'"{arg}", "{explanation}"')
 
-        built_rows = f"\n{indent}".join(rows)
-        return directive + "\n" + indent + built_rows
+    built_rows = f"\n{indent}".join(rows)
+    return directive + "\n" + indent + built_rows
 
 
-def build_kwargs(docs: dict, text: str = "Inherited keyword arguments\n", **kwargs) -> str:
-        """
-        Builds a full keyword-arguments string, ready for use in a class
-        docstring.
+def build_kwargs(
+    docs: dict, text: str = "Inherited keyword arguments\n", **kwargs
+) -> str:
+    """
+    Builds a full keyword-arguments string, ready for use in a class
+    docstring.
 
-        Args:
-            docs: Documentation dictionary
-            text: A short heading for the keyword arguments
-            **kwargs: Passed on to :meth:`.build_table`
+    Args:
+        docs: Documentation dictionary
+        text: A short heading for the keyword arguments
+        **kwargs: Passed on to :meth:`.build_table`
 
-        """
-        heading = f"\\*\\*kwargs: {text}\n"
-        body = build_table(docs=docs, **kwargs)
-        body = add_indent(body, spaces=12)
-        return heading + body
+    """
+    heading = f"\\*\\*kwargs: {text}\n"
+    body = build_table(docs=docs, **kwargs)
+    body = add_indent(body, spaces=12)
+    return heading + body
+
 
 def extract_arguments(obj) -> dict:
     """
@@ -253,7 +262,9 @@ def extract_arguments(obj) -> dict:
     args = {}
     beginning_found = False
     previous_arg = None
-    p = re.compile(r"    (?P<arg>[\w*]+[\w ,]*?) ?(\((?P<type>.+?)?\))?:(?P<description>.*)")
+    p = re.compile(
+        r"    (?P<arg>[\w*]+[\w ,]*?) ?(\((?P<type>.+?)?\))?:(?P<description>.*)"
+    )
 
     for line in inspect.getdoc(obj).split("\n"):
         if line in ["Args:", "Arguments:"]:
@@ -266,42 +277,44 @@ def extract_arguments(obj) -> dict:
                 name = m["arg"] if m["type"] is None else f"{m['arg']} ({m['type']})"
                 args[name] = [m["description"]]
                 previous_arg = name
-            elif line.startswith(" "*8):
+            elif line.startswith(" " * 8):
                 args[previous_arg].append(line)
-            
+
             elif beginning_found and line.replace(" ", "") != "":
                 break
-    
+
     def clean(lines: list) -> str:
         """
-        All occurances of single and double quotes are removed, 
+        All occurances of single and double quotes are removed,
         because otherwise they would mess up the csv table.
-            
+
         """
         joined = " ".join(lines)
         stripped = joined.strip()
         escaped1 = stripped.replace("'", "")
-        escaped2 = escaped1.replace('"', '')
+        escaped2 = escaped1.replace('"', "")
         return re.sub(r" +", " ", escaped2)
-
 
     return {arg: clean(desc) for arg, desc in args.items()}
 
+
 def extract_arguments_from_tree(obj) -> dict:
     args = {}
-    
+
     mro = list(inspect.getmro(obj))
     mro.reverse()
-    
+
     for parent in mro:
         parent_args = extract_arguments(parent)
         parent_args.pop("**kwargs", None)
         args.update(parent_args)
-    
+
     return args
 
+
 def inherit_kwargs(
-    _klass=None, *,
+    _klass=None,
+    *,
     from_: list = None,
     not_from_: list = None,
     include: list = None,
@@ -316,7 +329,7 @@ def inherit_kwargs(
 
     Args:
         ``from_`` : List of classes to inherit argument documentation from.
-        ``not_from_`` : List of classes *not* to inherit argument 
+        ``not_from_`` : List of classes *not* to inherit argument
             documentation from. Useful, if you want to include some
             specific parent or grandparent.
         include: List of keyword argument names to include
@@ -325,43 +338,43 @@ def inherit_kwargs(
             in alphabetical order. Defaults to True.
         build_function: A function that, as a minimmum, takes an argument
             of *docs*, which is the dictionary of arguments and their
-            documentation. It must return a string. Its output is 
-            inserted in the decorated class' docstring. The kwargs 
+            documentation. It must return a string. Its output is
+            inserted in the decorated class' docstring. The kwargs
             will be passed on to the build_function.
         **kwargs: Further keyword arguments. These will be passed on to
             the *build_function*.
-    
+
     Notes:
-        Replaces the placeholder ``{kwargs}`` in the docstring of the 
+        Replaces the placeholder ``{kwargs}`` in the docstring of the
         decorated object with argument documentation extracted from
         the parent classes.
 
         Further notes:
-        
-        1. The decorator can deal with classes that inherit from more 
+
+        1. The decorator can deal with classes that inherit from more
            than one class.
-        
+
         2. It is possible to use a different formatting by supplying
            a different build function.
-        
-        3. Arguments that are already part of the decorated class' 
+
+        3. Arguments that are already part of the decorated class'
            docstring will be filtered out.
-        
-        4. By using the *from_* argument, you can inherit from a 
+
+        4. By using the *from_* argument, you can inherit from a
            completely different class that is not part of the decorated
            class' hierarchy.
-        
-        5. If you are using curly braces (``{{}}``) anywhere in your 
-           docstrings, you have to escape them to let *inherit_kwargs* 
+
+        5. If you are using curly braces (``{{}}``) anywhere in your
+           docstrings, you have to escape them to let *inherit_kwargs*
            know that they are not a placeholder. Otherwise you will
            receive a somewhat cryptic error message
-           ("IndexError: Replacement index 0 out of range for positional 
+           ("IndexError: Replacement index 0 out of range for positional
            args tuple").
-    
+
     Examples:
 
         A simple example::
-            
+
             from alfred3._helper import inherit_kwargs
 
             class Parent:
@@ -375,24 +388,25 @@ def inherit_kwargs(
 
                 def __init__(self, arg1, arg2):
                     pass
-            
-            
+
+
             @inherit_kwargs
             class Child(Parent):
                 '''
                 Child docstring.
-                
+
                 Args:
                     arg3: Description
                     {kwargs}
                 '''
-                
+
                 def __init__(self, arg3, **kwargs):
                     super().__init__(**kwargs)
 
 
     """
     exclude = exclude if exclude is not None else []
+
     def build_kwargs(klass):
         @functools.wraps(klass)
         def wrapper():
@@ -407,35 +421,35 @@ def inherit_kwargs(
 
             # remove arguments that are defined in klass directly
             klass_args = extract_arguments(klass)
-            inherited_docs = {k: v for k, v in inherited_docs.items() if k not in klass_args}
+            inherited_docs = {
+                k: v for k, v in inherited_docs.items() if k not in klass_args
+            }
 
             # apply inclusion and exclusion
             for arg in list(inherited_docs.keys()):
                 for ex in exclude:
-                    ex = re.sub(r"\*", "\*", ex)
+                    ex = re.sub(r"\*", r"\*", ex)
                     m = re.match(ex + r"(\s?\(.+\))?", arg)
                     if m:
                         del inherited_docs[arg]
                 if include is not None:
                     if not re.sub(r"(\s?\(.+\))?", "", arg) in include:
                         del inherited_docs[arg]
-                    
+
             if sort_kwargs:
                 inherited_docs = sort_dict(inherited_docs)
-            
+
             doc_kwargs = build_function(docs=inherited_docs, **kwargs)
-            
+
             # replace docstring
             klass_doc = klass.__doc__.format(kwargs=doc_kwargs)
             klass.__doc__ = klass_doc
-            
+
             return klass
 
         return wrapper()
-    
+
     if _klass is None:
         return build_kwargs
     else:
         return build_kwargs(_klass)
-
-

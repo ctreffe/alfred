@@ -7,56 +7,56 @@ SingleChoiceList
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~SingleChoiceList.add_css
-   
-   
+
+
       ~SingleChoiceList.add_js
-   
-   
+
+
       ~SingleChoiceList.added_to_experiment
-   
-   
+
+
       ~SingleChoiceList.added_to_page
-   
-   
+
+
       ~SingleChoiceList.define_choices
-   
-   
+
+
       ~SingleChoiceList.prepare_web_widget
-   
-   
+
+
       ~SingleChoiceList.render_inner_html
-   
-   
+
+
       ~SingleChoiceList.set_data
-   
-   
+
+
       ~SingleChoiceList.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~SingleChoiceList.base_template
          ~SingleChoiceList.bottomlab
          ~SingleChoiceList.choice_labels
@@ -108,7 +108,3 @@ SingleChoiceList
          ~SingleChoiceList.vertical
          ~SingleChoiceList.web_widget
          ~SingleChoiceList.width
-      
-   
-   
-   

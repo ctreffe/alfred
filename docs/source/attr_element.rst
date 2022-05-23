@@ -36,7 +36,7 @@ Development utilities (Element)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These methods and attributes are most likely to be of interest to you
-only if you derive your own sections. 
+only if you derive your own sections.
 
 .. autosummary::
     ~alfred3.element.core.Element.add_css
@@ -71,7 +71,7 @@ InputElement Attributes and Methods (Element)
 Data (InputElement)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autosummary::    
+.. autosummary::
     ~alfred3.element.core.InputElement.data
     ~alfred3.element.core.InputElement.codebook_data
     ~alfred3.element.core.InputElement.input
@@ -99,7 +99,7 @@ Development utilities (InputElement)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These methods and attributes are most likely to be of interest to you
-only if you derive your own sections. 
+only if you derive your own sections.
 
 .. autosummary::
     ~alfred3.element.core.InputElement.set_data

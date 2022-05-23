@@ -3,23 +3,23 @@ alfred3.element.display
 
 .. automodule:: alfred3.element.display
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
+
+
+
    .. rubric:: Classes
 
    .. autosummary::
       :toctree:
       :template: autosummary/class.rst
       :nosignatures:
-   
+
       Alert
       Audio
       BarLabels
@@ -37,12 +37,3 @@ alfred3.element.display
       Text
       VerticalSpace
       Video
-   
-   
-
-   
-   
-   
-
-
-

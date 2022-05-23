@@ -12,20 +12,21 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../src/alfred3'))
+
+sys.path.insert(0, os.path.abspath("../../src/alfred3"))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'alfred3'
-copyright = '2020, Christian Treffenstädt, Paul Wiemann, Johannes Brachem'
-author = 'Christian Treffenstädt, Paul Wiemann, Johannes Brachem'
+project = "alfred3"
+copyright = "2020, Christian Treffenstädt, Paul Wiemann, Johannes Brachem"
+author = "Christian Treffenstädt, Paul Wiemann, Johannes Brachem"
 
 # The full version, including alpha/beta/rc tags
 # Parse version from _version.py in package directory
 # See https://packaging.python.org/guides/single-sourcing-package-version/#single-sourcing-the-version
 versiondict = {}
-with open('../../src/alfred3/_version.py') as f:
+with open("../../src/alfred3/_version.py") as f:
     exec(f.read(), versiondict)
 release = versiondict["__version__"]
 
@@ -36,23 +37,23 @@ release = versiondict["__version__"]
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.napoleon", 
-    "sphinx.ext.intersphinx", 
-    "sphinx.ext.autodoc", 
-    "sphinx.ext.todo", 
-    "sphinx.ext.doctest", 
-    "recommonmark", 
-    "sphinx.ext.autosummary", 
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.todo",
+    "sphinx.ext.doctest",
+    "recommonmark",
+    "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
-    "sphinx.ext.linkcode"
+    "sphinx.ext.linkcode",
 ]
 
 autosummary_generate = True
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -80,7 +81,7 @@ html_logo = "../../src/alfred3/static/img/alfred_logo_color.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
 master_doc = "index"
@@ -88,25 +89,23 @@ pygments_style = "sphinx"
 
 # Monkey patch for issue #2044 (None by default for instance attributes? #2044)
 # Should be resolved in next release of sphinx
-from sphinx.ext.autodoc import (
-    ClassLevelDocumenter, InstanceAttributeDocumenter)
+from sphinx.ext.autodoc import ClassLevelDocumenter, InstanceAttributeDocumenter
+
 
 def iad_add_directive_header(self, sig):
     ClassLevelDocumenter.add_directive_header(self, sig)
 
+
 InstanceAttributeDocumenter.add_directive_header = iad_add_directive_header
 
-autodoc_default_options = {
-    "member-order": "bysource",
-    "inherited-members": False
-}
+autodoc_default_options = {"member-order": "bysource", "inherited-members": False}
 
 
 def linkcode_resolve(domain, info):
-    if domain != 'py':
+    if domain != "py":
         return None
-    if not info['module']:
+    if not info["module"]:
         return None
-    filename = info['module'].replace('.', '/')
+    filename = info["module"].replace(".", "/")
 
     return f"https://github.com/ctreffe/alfred/blob/master/src/{filename}.py"

@@ -7,56 +7,56 @@ ButtonLabels
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~ButtonLabels.add_css
-   
-   
+
+
       ~ButtonLabels.add_js
-   
-   
+
+
       ~ButtonLabels.added_to_experiment
-   
-   
+
+
       ~ButtonLabels.added_to_page
-   
-   
+
+
       ~ButtonLabels.define_choices
-   
-   
+
+
       ~ButtonLabels.prepare_web_widget
-   
-   
+
+
       ~ButtonLabels.render_inner_html
-   
-   
+
+
       ~ButtonLabels.set_data
-   
-   
+
+
       ~ButtonLabels.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~ButtonLabels.base_template
          ~ButtonLabels.bottomlab
          ~ButtonLabels.button_group_class
@@ -111,7 +111,3 @@ ButtonLabels
          ~ButtonLabels.vertical
          ~ButtonLabels.web_widget
          ~ButtonLabels.width
-      
-   
-   
-   

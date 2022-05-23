@@ -4,17 +4,14 @@ Provides elements that don't fit into the other categories.
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 import time
-
 from pathlib import Path
 from typing import Union
 
 from jinja2 import Template
 
-from .core import Element
-from .core import InputElement
-from .core import jinja_env
-
 from .._helper import inherit_kwargs
+from .core import Element, InputElement, jinja_env
+
 
 class Style(Element):
     """
@@ -29,7 +26,7 @@ class Style(Element):
         path: Path to a .css file.
         priority: Controls the order in which CSS files are placed on a
             page. Lower numbers are included first. Can be useful, if
-            you have trouble with overriding rules. In everyday use, 
+            you have trouble with overriding rules. In everyday use,
             it's fine to stick with the default.
 
     Notes:
@@ -48,7 +45,7 @@ class Style(Element):
           to a specific element.
 
     Examples:
-        Minimal example, turning the color of a specific text element 
+        Minimal example, turning the color of a specific text element
         red. The element is selected by its id::
 
             import alfred3 as al
@@ -84,7 +81,9 @@ class Style(Element):
     web_widget = None
     should_be_shown = False
 
-    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+    def __init__(
+        self, code: str = None, url: str = None, path: str = None, priority: int = 10
+    ):
         """Constructor method"""
         super().__init__()
         self.priority = priority
@@ -94,9 +93,12 @@ class Style(Element):
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
-            raise ValueError(
-                "You can only specify one of 'code', 'url', or 'path'.")
+        if (
+            (self.code and self.path)
+            or (self.code and self.url)
+            or (self.path and self.url)
+        ):
+            raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property
     def css_code(self):
@@ -126,7 +128,7 @@ class HideNavigation(Style):
 
     See Also:
 
-        * With :class:`.NoNavigationPage`, you can achieve the same 
+        * With :class:`.NoNavigationPage`, you can achieve the same
           result. As a rule of thump, use the HideNavigation element,
           if you want to affect the display of navigation elements
           dynamically, and the NoNavigationPage, if the page in question
@@ -170,9 +172,9 @@ class JavaScript(Element):
         code: Javascript code.
         url: Url to Javascript code.
         path: Path to a .js file.
-        priority: Controls the order in which Javascript code is placed 
-            on a page. Lower numbers are included first. Can be useful, 
-            if you have trouble with overriding code. In everyday use, 
+        priority: Controls the order in which Javascript code is placed
+            on a page. Lower numbers are included first. Can be useful,
+            if you have trouble with overriding code. In everyday use,
             it's fine to stick with the default.
 
     Notes:
@@ -214,7 +216,9 @@ class JavaScript(Element):
     web_widget = None
     should_be_shown = False
 
-    def __init__(self, code: str = None, url: str = None, path: str = None, priority: int = 10):
+    def __init__(
+        self, code: str = None, url: str = None, path: str = None, priority: int = 10
+    ):
         """Constructor method"""
         super().__init__()
         self.priority = priority
@@ -224,9 +228,12 @@ class JavaScript(Element):
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-        if (self.code and self.path) or (self.code and self.url) or (self.path and self.url):
-            raise ValueError(
-                "You can only specify one of 'code', 'url', or 'path'.")
+        if (
+            (self.code and self.path)
+            or (self.code and self.url)
+            or (self.path and self.url)
+        ):
+            raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property
     def js_code(self):
@@ -316,6 +323,7 @@ class Value(InputElement):
 
 class Data(Value):
     """Alias for :class:`.Value`."""
+
     pass
 
 
@@ -325,11 +333,11 @@ class Callback(Element):
 
     Args:
         func (callable): Python function to be called on button click.
-            The function must take zero arguments, but it can be a 
+            The function must take zero arguments, but it can be a
             method of a class or instance.
 
         followup (str): What to do after the python function was called.
-            Can take the following values: 
+            Can take the following values:
 
             - ``refresh`` submits and reloads the current page (default),
             - ``none`` does nothing,
@@ -337,21 +345,21 @@ class Callback(Element):
             - ``backward`` submits the current page and moves backward,
             - ``jump>page_name`` submits the current page and triggers
               a jump to a page with the name 'page_name'
-            - ``custom`` executes custom JavaScript. If you choose this 
+            - ``custom`` executes custom JavaScript. If you choose this
               option, you must supply your custom JavaScript through the
               argument *custom_js*.
 
         submit_first (bool): If True, the current values of all input
             elements on the current page will be saved on button click,
             before *func* is called. This way, these values will be
-            available in *func* through :attr:`.ExperimentSession.values`, 
+            available in *func* through :attr:`.ExperimentSession.values`,
             if func has access to the ExperimentSession object.
             See Example 3. Defaults to True.
 
         delay (int): Number of seconds to wait before the callback is
             triggered. Defaults to 0.
 
-        reset_delay (bool): If *True*, the delay will start from the 
+        reset_delay (bool): If *True*, the delay will start from the
             beginning every time the page is reloaded, refreshed, or
             revisited. Defaults to *False*.
 
@@ -360,8 +368,8 @@ class Callback(Element):
             if *followup* is set to 'custom'.
 
     Examples:
-        
-        The callback on the first page will trigger after a delay of 10 
+
+        The callback on the first page will trigger after a delay of 10
         seconds. It will print the experiment id to the terminal::
 
             import alfred3 as al
@@ -383,7 +391,15 @@ class Callback(Element):
     #: Javascript template
     js_template = jinja_env.get_template("js/callback.js.j2")
 
-    def __init__(self, func: callable, followup: str = "refresh", submit_first: bool = True, delay: int = 0, reset_delay: bool = False, custom_js: str = ""):
+    def __init__(
+        self,
+        func: callable,
+        followup: str = "refresh",
+        submit_first: bool = True,
+        delay: int = 0,
+        reset_delay: bool = False,
+        custom_js: str = "",
+    ):
         super().__init__()
         self.func = func
         self.followup = followup
@@ -404,7 +420,13 @@ class Callback(Element):
 
     @followup.setter
     def followup(self, value):
-        if value not in {"refresh", "forward", "backward", "none", "custom"} and not value.startswith("jump>"):
+        if value not in {
+            "refresh",
+            "forward",
+            "backward",
+            "none",
+            "custom",
+        } and not value.startswith("jump>"):
             raise ValueError(f"Invalid value for 'followup': {value}")
         self._followup = value
 
@@ -443,14 +465,14 @@ class RepeatedCallback(Element):
 
     Args:
         func (callable): Python function to be called on button click.
-            The function must take zero arguments, but it can be a 
+            The function must take zero arguments, but it can be a
             method of a class or instance.
 
         interval (int): Number of seconds to wait between two calls to
             *func*.
 
         followup (str): What to do after the python function was called.
-            Can take the following values: 
+            Can take the following values:
 
             - ``refresh`` submits and reloads the current page (default),
             - ``none`` does nothing,
@@ -458,25 +480,25 @@ class RepeatedCallback(Element):
             - ``backward`` submits the current page and moves backward,
             - ``jump>page_name`` submits the current page and triggers
               a jump to a page with the name 'page_name'
-            - ``custom`` executes custom JavaScript. If you choose this 
+            - ``custom`` executes custom JavaScript. If you choose this
               option, you must supply your custom JavaScript through the
               argument *custom_js*.
 
         submit_first (bool): If True, the current values of all input
             elements on the current page will be saved on button click,
             before *func* is called. This way, these values will be
-            available in *func* through :attr:`.ExperimentSession.values`, 
+            available in *func* through :attr:`.ExperimentSession.values`,
             if func has access to the ExperimentSession object.
             See Example 3. Defaults to True.
 
-        reset_delay (bool): If *True*, the delay will start from the 
+        reset_delay (bool): If *True*, the delay will start from the
             beginning every time the page is reloaded, refreshed, or
             revisited. Defaults to *False*.
 
         custom_js (str): Custom JavaScript to execute after the python
             function specified in *func* was called. Only takes effect,
             if *followup* is set to 'custom'.
-    
+
     Examples:
 
         The callback on the first page will trigger every 10 seconds.
@@ -501,7 +523,14 @@ class RepeatedCallback(Element):
     #: Javascript template
     js_template = jinja_env.get_template("js/repeatedcallback.js.j2")
 
-    def __init__(self, func: callable, interval: int, followup: str = "none", submit_first: bool = True, custom_js: str = ""):
+    def __init__(
+        self,
+        func: callable,
+        interval: int,
+        followup: str = "none",
+        submit_first: bool = True,
+        custom_js: str = "",
+    ):
         super().__init__()
         self.func = func
         self.interval = interval
@@ -526,7 +555,6 @@ class RepeatedCallback(Element):
 
         js = self.js_template.render(d)
         self.add_js(js)
-
 
 
 @inherit_kwargs

@@ -7,56 +7,56 @@ SubmittingButtons
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~SubmittingButtons.add_css
-   
-   
+
+
       ~SubmittingButtons.add_js
-   
-   
+
+
       ~SubmittingButtons.added_to_experiment
-   
-   
+
+
       ~SubmittingButtons.added_to_page
-   
-   
+
+
       ~SubmittingButtons.define_choices
-   
-   
+
+
       ~SubmittingButtons.prepare_web_widget
-   
-   
+
+
       ~SubmittingButtons.render_inner_html
-   
-   
+
+
       ~SubmittingButtons.set_data
-   
-   
+
+
       ~SubmittingButtons.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~SubmittingButtons.base_template
          ~SubmittingButtons.bottomlab
          ~SubmittingButtons.button_group_class
@@ -112,7 +112,3 @@ SubmittingButtons
          ~SubmittingButtons.vertical
          ~SubmittingButtons.web_widget
          ~SubmittingButtons.width
-      
-   
-   
-   

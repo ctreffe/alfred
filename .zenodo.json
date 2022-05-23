@@ -1,20 +1,20 @@
 {
     "creators": [
-        {   
+        {
             "orcid": "0000-0001-5394-0379",
             "affiliation": "Georg-August-University Göttingen",
             "name": "Treffenstädt, Christian"
         },
-        {   
+        {
             "affiliation": "Georg-August-University Göttingen",
             "name": "Brachem, Johannes",
             "orcid": "0000-0001-7884-4631"
         },
-        {   
+        {
             "affiliation": "Georg-August-University Göttingen",
             "name": "Wiemann, Paul"
         }
-    ],    
+    ],
 
     "license": "MIT",
 

@@ -1,35 +1,25 @@
-# -*- coding: utf-8 -*-
-
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
-from __future__ import absolute_import
 
-import time
-import os
+import copy
 import csv
 import io
 import json
+import os
 import random
-import copy
-
-from pathlib import Path
-from builtins import object
-from typing import Union
-from typing import List
-from typing import Dict
-from typing import Iterator
-
+import time
 from dataclasses import asdict
+from pathlib import Path
+from typing import Dict, Iterator, List, Union
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from .config import ExperimentSecrets
-from .saving_agent import AutoMongoClient
 from .alfredlog import QueuedLoggingInterface
-from .util import flatten_dict
-from .util import prefix_keys_safely
+from .config import ExperimentSecrets
 from .exceptions import AlfredError
+from .saving_agent import AutoMongoClient
+from .util import flatten_dict, prefix_keys_safely
 
 
 class DataManager:
@@ -113,10 +103,12 @@ class DataManager:
 
         if not len(self._metadata_keys) == len(data):
             diff = self._metadata_keys ^ set(self._metadata)
-            raise AlfredError(f"Length of metadata key set and keys in metadata dict do not match. Differences: {diff}")
-        
+            raise AlfredError(
+                f"Length of metadata key set and keys in metadata dict do not match. Differences: {diff}"
+            )
+
         return data
-    
+
     @property
     def move_history(self):
         return [asdict(move) for move in self.exp.movement_manager.history]
@@ -290,8 +282,22 @@ class DataManager:
     def sort_codebook_fieldnames(cls, fieldnames: List[str]) -> List[str]:
 
         t1 = ["exp_title", "exp_author", "exp_version", "alfred_version"]
-        t2 = ["element_type", "name", "label_top", "label_left", "label_right", "label_bottom"]
-        t3 = ["force_input", "default", "placeholder", "prefix", "suffix", "description"]
+        t2 = [
+            "element_type",
+            "name",
+            "label_top",
+            "label_left",
+            "label_right",
+            "label_bottom",
+        ]
+        t3 = [
+            "force_input",
+            "default",
+            "placeholder",
+            "prefix",
+            "suffix",
+            "description",
+        ]
 
         template = t1 + t2 + t3
 
@@ -338,7 +344,10 @@ class DataManager:
 
     @property
     def unlinked_values(self):
-        return {el["name"]: el["value"] for el in self.exp.root_section.unlinked_data.values()}
+        return {
+            el["name"]: el["value"]
+            for el in self.exp.root_section.unlinked_data.values()
+        }
 
     def unlinked_data_with(self, saving_agent):
         if saving_agent.encrypt:
@@ -488,7 +497,7 @@ class DataManager:
                 continue
 
             try:
-                with open(fp, "r", encoding="utf-8") as f:
+                with open(fp, encoding="utf-8") as f:
                     doc = json.load(f)
             except json.decoder.JSONDecodeError:
                 continue

@@ -3,22 +3,21 @@ Functionality associated with alfred3's admin mode.
 """
 
 import typing as t
-from enum import Enum
 from abc import ABC, abstractproperty
+from enum import Enum
 from functools import total_ordering
+
 from jinja2 import Template
 
+from ._helper import inherit_kwargs
+from .element.action import JumpList
 from .element.core import Element
 from .element.display import Text, VerticalSpace
-from .element.action import JumpList
 from .element.misc import WebExitEnabler
-from .page import Page
-from .page import PasswordPage
-from .section import Section
-from .section import ForwardOnlySection
-from .exceptions import AbortMove
-from .exceptions import AlfredError
-from ._helper import inherit_kwargs
+from .exceptions import AbortMove, AlfredError
+from .page import Page, PasswordPage
+from .section import ForwardOnlySection, Section
+
 
 @total_ordering
 class AdminAccess(Enum):
@@ -27,28 +26,28 @@ class AdminAccess(Enum):
 
     The levels are:
 
-    - :attr:`.LEVEL1`: Lowest clearance. This level should be granted to 
-      pages that display additional information but do not allow active 
+    - :attr:`.LEVEL1`: Lowest clearance. This level should be granted to
+      pages that display additional information but do not allow active
       intervention. Used by :class:`.SpectatorPage`.
     - :attr:`.LEVEL2`: Medium clearance. This level should be granted to
       pages that allow non-critical actions like exporting data or sending
       emails.
-    - :attr:`.LEVEL3`: Highest clearance. This level should be granted to 
-      pages that allow the most critical actions, e.g. permanent data 
-      deletion. As a rule of thumb, only one person should have level 3 
+    - :attr:`.LEVEL3`: Highest clearance. This level should be granted to
+      pages that allow the most critical actions, e.g. permanent data
+      deletion. As a rule of thumb, only one person should have level 3
       access for an experiment.
-    
+
     If you use the admin mode, you always have to specify passwords for
     all three levels in *secrets.conf*, section *general*::
-        
+
         # secrets.conf
         [general]
         adminpass_lvl1 = demo
         adminpass_lvl2 = use-better-passwords
         adminpass_lvl3 = to-protect-access
-    
+
     You can specficy multiple passwords for the same level to enable
-    a token-like authentication management. To specifiy multiple passwords, 
+    a token-like authentication management. To specifiy multiple passwords,
     simply separate them by ``|``::
 
         # secrets.conf
@@ -56,20 +55,22 @@ class AdminAccess(Enum):
         adminpass_lvl1 = demo|demopass-2
         adminpass_lvl2 = use-better-passwords
         adminpass_lvl3 = to-protect-access
-    
+
 
     .. note:: Because of its special meaning for the separation of multiple
         passwords, the character ``|`` cannot be part of a password.
 
     """
+
     LEVEL1 = 1
     LEVEL2 = 2
     LEVEL3 = 3
 
     def __lt__(self, other):
         if self.__class__ is other.__class__:
-          return self.value < other.value
+            return self.value < other.value
         return NotImplemented
+
 
 @inherit_kwargs
 class AdminPage(Page, ABC):
@@ -110,12 +111,12 @@ class AdminPage(Page, ABC):
     """
 
     responsive_width = "85%, 75%, 75%, 70%"
-    
 
     def added_to_experiment(self, experiment):
-        self += Text(f"{experiment.content.access_level}", align="center", font_size="small")
+        self += Text(
+            f"{experiment.content.access_level}", align="center", font_size="small"
+        )
         super().added_to_experiment(experiment)
-        
 
     @abstractproperty
     def access_level(self):
@@ -125,11 +126,10 @@ class AdminPage(Page, ABC):
         """
         pass
 
-
     def _on_showing_widget(self, show_time):
         if not self.access_level <= self.exp.content.access_level:
             raise AbortMove
-        
+
         if not self._has_been_shown:
             self += WebExitEnabler()
             name = self.name + "__admin_jumplist__"
@@ -139,12 +139,12 @@ class AdminPage(Page, ABC):
                 check_jumpfrom=False,
                 name=name,
                 debugmode=True,
-                display_page_name=False
+                display_page_name=False,
             )
             jumplist.should_be_shown = False
             self += jumplist
         super()._on_showing_widget(show_time)
-        
+
 
 @inherit_kwargs
 class SpectatorPage(AdminPage):
@@ -153,8 +153,8 @@ class SpectatorPage(AdminPage):
 
     Args:
         {kwargs}
-    
-    A SpectatorPage has access level :class:`.AdminAccess.LEVEL1` 
+
+    A SpectatorPage has access level :class:`.AdminAccess.LEVEL1`
     This means that it can be accessed with the password defined
     by the option *adminpass_lvl1* in section *general* of *secrets.conf*
 
@@ -165,16 +165,16 @@ class SpectatorPage(AdminPage):
         The individual levels are described in :class:`.AdminAccess`. If
         you are uncertain about the correct level for your admin page,
         check this page out.
-    
+
     Examples:
         A basic admin page that shows the number of datasets associated
         with the experiment. First we define the class, then we add it
         to the experiment's admin mode. Note that the *admin* module has
         to be imported individually::
-            
+
             import alfred3 as al
             from alfred3 import admin
-            
+
             exp = al.Experiment()
 
             @exp.member(admin=True)
@@ -182,10 +182,11 @@ class SpectatorPage(AdminPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
-            
+
     """
 
     access_level = AdminAccess.LEVEL1
+
 
 @inherit_kwargs
 class OperatorPage(AdminPage):
@@ -194,8 +195,8 @@ class OperatorPage(AdminPage):
 
     Args:
         {kwargs}
-    
-    A monitoring page has access level :class:`.AdminAccess.LEVEL1` 
+
+    A monitoring page has access level :class:`.AdminAccess.LEVEL1`
     This means that it can be accessed with the password defined
     by the option *adminpass_lvl2* in section *general* of *secrets.conf*
 
@@ -206,13 +207,13 @@ class OperatorPage(AdminPage):
         The individual levels are described in :class:`.AdminAccess`. If
         you are uncertain about the correct level for your admin page,
         check this page out.
-    
+
     Examples:
         A basic admin page that shows the number of datasets associated
         with the experiment. First we define the class, then we add it
         to the experiment's admin mode. Note that the *admin* module has
         to be imported individually::
-            
+
             import alfred3 as al
             from alfred3 import admin
 
@@ -223,8 +224,9 @@ class OperatorPage(AdminPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
-            
+
     """
+
     access_level = AdminAccess.LEVEL2
 
 
@@ -235,8 +237,8 @@ class ManagerPage(AdminPage):
 
     Args:
         {kwargs}
-    
-    A monitoring page has access level :class:`.AdminAccess.LEVEL1` 
+
+    A monitoring page has access level :class:`.AdminAccess.LEVEL1`
     This means that it can be accessed with the password defined
     by the option *adminpass_lvl3* in section *general* of *secrets.conf*
 
@@ -247,16 +249,16 @@ class ManagerPage(AdminPage):
         The individual levels are described in :class:`.AdminAccess`. If
         you are uncertain about the correct level for your admin page,
         check this page out.
-    
+
     Examples:
         A basic admin page that shows the number of datasets associated
         with the experiment. First we define the class, then we add it
         to the experiment's admin mode. Note that the *admin* module has
         to be imported individually::
-            
+
             import alfred3 as al
             from alfred3 import admin
-            
+
             exp = al.Experiment()
 
             @exp.member(admin=True)
@@ -264,13 +266,13 @@ class ManagerPage(AdminPage):
                 def on_exp_access(self):
                     n = len(self.exp.all_exp_data)
                     self += al.Text(f"Number of data sets: {{n}}")
-            
+
     """
+
     access_level = AdminAccess.LEVEL3
 
 
 class _AuthPage(PasswordPage):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.admin_members = None
@@ -283,7 +285,7 @@ class _AuthPage(PasswordPage):
         # currently do not allow adding pages directly behind the current
         # one on moving forward
         if not self._validate_elements():
-            
+
             # prevent double match hint
             [m for m in self.pw.hint_manager.get_messages()]
             return True
@@ -294,7 +296,7 @@ class _AuthPage(PasswordPage):
             # exp.content is the admin section in admin mode
             if member.access_level <= self.exp.content.access_level:
                 admin_content += member
-        
+
         self.exp += admin_content
         self.admin_members = None
 
@@ -302,16 +304,15 @@ class _AuthPage(PasswordPage):
 
 
 class _AdminSection(Section):
-
     def added_to_experiment(self, exp):
         auth_section = ForwardOnlySection(name="admin_auth")
 
         self.passwords = self.process_passwords(exp)
 
         auth_section += _AuthPage(
-            password=self.password_list, 
-            name="_admin_auth_page_", 
-            title="alfred3 Admin Mode"
+            password=self.password_list,
+            name="_admin_auth_page_",
+            title="alfred3 Admin Mode",
         )
         self += auth_section
         super().added_to_experiment(exp)
@@ -328,12 +329,12 @@ class _AdminSection(Section):
 
         self.validate_passwords(pws)
         return pws
-    
+
     @property
     def password_list(self) -> t.List[str]:
         pws = self.passwords
         return pws["lvl1"] + pws["lvl2"] + pws["lvl3"]
-    
+
     @staticmethod
     def validate_passwords(passwords):
         missing_passwords = []
@@ -341,9 +342,11 @@ class _AdminSection(Section):
             pw = passwords[lvl]
             if (len(pw) == 1 and pw[0] == "") or not pw:
                 missing_passwords.append(lvl)
-        
+
         if missing_passwords:
-            raise AlfredError(f"To activate the admin mode, you must define passwords for all three levels in secrets.conf. Passwords are missing for levels: {', '.join(missing_passwords)}.")
+            raise AlfredError(
+                f"To activate the admin mode, you must define passwords for all three levels in secrets.conf. Passwords are missing for levels: {', '.join(missing_passwords)}."
+            )
 
         comparisons = []
         for pw1 in passwords["lvl1"]:
@@ -355,10 +358,8 @@ class _AdminSection(Section):
 
         if any(comparisons):
             raise AlfredError(
-                (
-                    "Two equal passwords for two different admin levels found."
-                    " Passwords must be unique to a level. Please change one of the passwords."
-                )
+                "Two equal passwords for two different admin levels found."
+                " Passwords must be unique to a level. Please change one of the passwords."
             )
 
     @property
@@ -379,14 +380,12 @@ class _AdminSection(Section):
             raise AlfredError("Invalid password.")
 
 
-
-
 DELETE_UNLINKED_HTML = """
 <!-- Button trigger modal -->
-<button 
-    type="button" 
-    class="btn btn-danger {{ css_class_element }}" 
-    data-toggle="modal" 
+<button
+    type="button"
+    class="btn btn-danger {{ css_class_element }}"
+    data-toggle="modal"
     data-target="#{{ name }}-modal"
     id="{{ name }}"
     style="{{ fontsize }}"
@@ -395,13 +394,13 @@ DELETE_UNLINKED_HTML = """
 </button>
 
 <!-- Modal -->
-<div 
-    class="modal fade" 
-    id="{{ name }}-modal" 
-    tabindex="-1" 
-    aria-labelledby="{{ name}}-modal-label" 
+<div
+    class="modal fade"
+    id="{{ name }}-modal"
+    tabindex="-1"
+    aria-labelledby="{{ name}}-modal-label"
     aria-hidden="true">
-  
+
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -414,7 +413,7 @@ DELETE_UNLINKED_HTML = """
       <div class="mb-3">
       This action cannot be undone!
       </div>
-      
+
 
         <div class="form-group">
             <label for="{{ name }}-confirm">Enter experiment title: <b>{{ exptitle }}</b></label>
@@ -428,7 +427,7 @@ DELETE_UNLINKED_HTML = """
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-danger" id="{{ name }}-delete"><i class="fas fa-trash-alt mr-2"></i>DELETE</button>
-        
+
       </div>
     </div>
   </div>
@@ -440,7 +439,7 @@ $(document).ready(function() {
     $( "#{{ name }}-delete" ).click(function() {
         value = $( "#{{ name }}-confirm" ).val()
         console.log(value)
-        
+
         if (value == "{{ exptitle }}") {
             $( "#{{ name }}-spinner" ).html("<div class='spinner-border' role='status'><span class='sr-only'>Loading...</span></div>")
             $.get("{{ url }}", function(data){
@@ -450,13 +449,14 @@ $(document).ready(function() {
                 $( "#{{ name }}-feedback" ).html(data)
             }, 2000)
             })
-            
+
         } else {
             alert("Wrong input")
         }
     })
 })
 """
+
 
 class DeleteUnlinkedButton(Element):
     element_template = Template(DELETE_UNLINKED_HTML)
@@ -477,9 +477,9 @@ class DeleteUnlinkedButton(Element):
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self.url = self.exp.ui.add_callable(self.delete)
-    
+
     def prepare_web_widget(self):
-        
+
         self._js_code = []
         d = {}
         d["url"] = self.url
@@ -487,7 +487,7 @@ class DeleteUnlinkedButton(Element):
         d["exptitle"] = self.exp.title
         js = self.js_template.render(d)
         self.add_js(js)
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -504,7 +504,7 @@ class DeleteUnlinkedPage(ManagerPage):
 
     Args:
         {kwargs}
-    
+
     Examples:
         Minimal Example::
 
@@ -519,15 +519,17 @@ class DeleteUnlinkedPage(ManagerPage):
 
             @exp.member
             class TestUnlink(al.UnlinkedDataPage):
-                
+
                 def on_exp_access(self):
                     self += al.TextEntry(name="test")
     """
-
 
     title = "Delete Unlinked Data"
 
     def on_exp_access(self):
         self += VerticalSpace("150px")
-        self += Text("By clicking on this button, you can delete all unlinked data", align="center")
+        self += Text(
+            "By clicking on this button, you can delete all unlinked data",
+            align="center",
+        )
         self += DeleteUnlinkedButton(font_size="14pt", align="center")

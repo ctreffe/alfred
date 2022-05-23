@@ -2,17 +2,17 @@
 Module for randomizing functionality.
 """
 
-import random
 import json
+import random
 import time
-from typing import List, Tuple
-from itertools import product
 from collections import Counter
+from itertools import product
+from typing import List, Tuple
 
-from .quota import SessionQuota, QuotaData, QuotaIO
-from .exceptions import ConditionInconsistency
-from .data_manager import saving_method
 from .compatibility.condition import ListRandomizer as OldListRandomizer
+from .data_manager import saving_method
+from .exceptions import ConditionInconsistency
+from .quota import QuotaData, QuotaIO, SessionQuota
 
 
 class ListRandomizer(SessionQuota):
@@ -44,12 +44,12 @@ class ListRandomizer(SessionQuota):
             Setting *respect_version* to True can fix such issues.
             Defaults to True.
 
-        inclusive (bool): If *False* (default), the randomizer will only 
-            assign a condition slot, if there are no pending sessions for 
-            that slot. It will not assign a condition slot, if a session 
-            in that slot is finished, or if there is an ongoing session 
-            in that slot that has not yet timed out. You will end up with 
-            exactly as many participants in each condition as specified 
+        inclusive (bool): If *False* (default), the randomizer will only
+            assign a condition slot, if there are no pending sessions for
+            that slot. It will not assign a condition slot, if a session
+            in that slot is finished, or if there is an ongoing session
+            in that slot that has not yet timed out. You will end up with
+            exactly as many participants in each condition as specified
             in the target size.
 
             If *True*, the randomizer will assign a condition slot,
@@ -85,14 +85,14 @@ class ListRandomizer(SessionQuota):
             parameter *session_ids* instead. If you use the 'id'
             parameter, the ListRandomizer will start in compatibility
             mode.
-        
+
         mode (str): Deprecated in favor of *inclusive*. Please use
             the argument *inclusive* instead.
 
     The ListRandomizer is used by initializing it (either directly
     or via the convenience method :meth:`.balanced`) and using the
     method :meth:`.get_condition` to receive a condition. By default,
-    the ListRandomizer will automatically abort sessions if the 
+    the ListRandomizer will automatically abort sessions if the
     experiment is full when *get_condition* is called and display
     an information page for participants. This
     behavior can be customized (see :meth:`.get_condition`).
@@ -108,15 +108,15 @@ class ListRandomizer(SessionQuota):
         run into an error, if you change anything about the conditions.
 
     .. versionchanged:: 2.2.0
-       - Deprecated the parameter *session_ids* without replacement. The 
+       - Deprecated the parameter *session_ids* without replacement. The
          ListRandomizer is now aimed exclusively at allocating one session
          at a time.
-       - Removed the method *abort_if_full*. Instead, you can check 
+       - Removed the method *abort_if_full*. Instead, you can check
          the randomizer's status with the attributes :attr:`.full`,
-         :attr:`.allfinished`, :attr:`.nopen`, :attr:`.npending`, and 
-         :attr:`.nfinished` and call :meth:`.ExperimentSession.abort` 
+         :attr:`.allfinished`, :attr:`.nopen`, :attr:`.npending`, and
+         :attr:`.nfinished` and call :meth:`.ExperimentSession.abort`
          directly.
-    
+
     .. versionchanged:: 2.1.7
        New parameters *session_ids* and *name*, new alternative
        constructor :meth:`.factors`. Deprecated the parameter *id*.
@@ -227,7 +227,11 @@ class ListRandomizer(SessionQuota):
         version = exp.version if respect_version else ""
 
         if method == "mongo":
-            query = {"exp_id": exp.exp_id, "exp_version": version, "type": "condition_data"}
+            query = {
+                "exp_id": exp.exp_id,
+                "exp_version": version,
+                "type": "condition_data",
+            }
             data = exp.db_misc.find_one(query)
         elif method == "local":
             directory = exp.config.get("data", "save_directory")
@@ -236,7 +240,7 @@ class ListRandomizer(SessionQuota):
             if not path.exists():
                 return False
 
-            with open(path, "r", encoding="utf-8") as fp:
+            with open(path, encoding="utf-8") as fp:
                 data = json.load(fp)
 
         if data:
@@ -282,11 +286,14 @@ class ListRandomizer(SessionQuota):
         self.io = QuotaIO(self)
         self._initialize_slots()
         self._nslots = None
-        
+
         if mode in ["strict", "inclusive"]:
-            self.exp.log.warning(("Argument 'mode' is deprecated. Please use 'inclusive=True' or 'inclusive=False'  "f"instead. Using 'mode={mode}' for now for compatibility."))
+            self.exp.log.warning(
+                "Argument 'mode' is deprecated. Please use 'inclusive=True' or 'inclusive=False'  "
+                f"instead. Using 'mode={mode}' for now for compatibility."
+            )
             self.inclusive = mode == "inclusive"
-        
+
         self.exp.append_plugin_data_query(self._plugin_data_query)
 
     @classmethod
@@ -374,7 +381,7 @@ class ListRandomizer(SessionQuota):
         Examples:
 
             Use the :meth:`.factors` constructor to create conditions::
-                
+
                 import alfred3 as al
 
                 exp = al.Experiment()
@@ -432,16 +439,16 @@ class ListRandomizer(SessionQuota):
         q["encrypted"] = False
 
         return q
-    
+
     @property
     def nslots(self) -> int:
         if not self._nslots:
             nslots = 0
             for _, n in self.conditions:
                 nslots += n
-            
+
             self._nslots = nslots
-        
+
         return self._nslots
 
     @property
@@ -452,7 +459,7 @@ class ListRandomizer(SessionQuota):
             exp_version=self.exp_version,
             inclusive=self.inclusive,
             type=self.DATA_TYPE,
-            additional_info={"random_seed": self.random_seed}
+            additional_info={"random_seed": self.random_seed},
         )
 
         return data
@@ -608,7 +615,9 @@ class ListRandomizer(SessionQuota):
         instance = dict(self.conditions)
 
         msg = "Condition data is inconsistent with randomizer specification. "
-        what_to_do = "You can set 'respect_version' to True and increase the experiment version."
+        what_to_do = (
+            "You can set 'respect_version' to True and increase the experiment version."
+        )
         if not counted == instance:
             raise ConditionInconsistency(msg + what_to_do)
 

@@ -7,80 +7,80 @@ RevisitSection
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~RevisitSection.added_to_experiment
-   
-   
+
+
       ~RevisitSection.added_to_section
-   
-   
+
+
       ~RevisitSection.append
-   
-   
+
+
       ~RevisitSection.on_enter
-   
-   
+
+
       ~RevisitSection.on_exp_access
-   
-   
+
+
       ~RevisitSection.on_hand_over
-   
-   
+
+
       ~RevisitSection.on_leave
-   
-   
+
+
       ~RevisitSection.on_resume
-   
-   
+
+
       ~RevisitSection.position_in_section
-   
-   
+
+
       ~RevisitSection.showif
-   
-   
+
+
       ~RevisitSection.uptree
-   
-   
+
+
       ~RevisitSection.validate_on_backward
-   
-   
+
+
       ~RevisitSection.validate_on_forward
-   
-   
+
+
       ~RevisitSection.validate_on_jump
-   
-   
+
+
       ~RevisitSection.validate_on_leave
-   
-   
+
+
       ~RevisitSection.validate_on_move
-   
-   
+
+
       ~RevisitSection.visible
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~RevisitSection.all_closed_pages
          ~RevisitSection.all_elements
          ~RevisitSection.all_input_elements
@@ -123,7 +123,3 @@ RevisitSection
          ~RevisitSection.uid
          ~RevisitSection.unlinked_data
          ~RevisitSection.vargs
-      
-   
-   
-   

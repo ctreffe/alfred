@@ -37,8 +37,10 @@ The current version offers the following options::
     --help                          Show this message and exit.
 
 """
-import click
 from pathlib import Path
+
+import click
+
 from alfred3.run import ExperimentRunner
 
 
@@ -50,9 +52,10 @@ from alfred3.run import ExperimentRunner
     help="If this flag is set to '-a', the experiment will open a browser window automatically. [default: '-a']",
 )
 @click.option(
-    "--path", 
+    "--path",
     default=Path.cwd(),
-    help="Path to experiment directory. [default: current working directory]")
+    help="Path to experiment directory. [default: current working directory]",
+)
 @click.option(
     "-debug/-production",
     "--debug/--production",
