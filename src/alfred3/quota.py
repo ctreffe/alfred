@@ -76,22 +76,26 @@ class SessionGroup:
 
     def expired(self, exp, data: List[dict] = None) -> bool:
         if not data:
-            data = self._get_fields(exp, ["exp_start_time"])
+            data = self._get_fields(exp, ["exp_start_time", "exp_session_timeout"])
         now = time.time()
-        start_time = [session["exp_start_time"] for session in data]
+        start_time = [
+            (session["exp_start_time"], session["exp_session_timeout"])
+            for session in data
+        ]
         if not start_time:
             raise ValueError("Session not found.")
 
         expired = []
 
-        for t in start_time:
+        for t, timeout in start_time:
             if t is None:
-                tolerance_exceeded = time.time() - self.most_recent_save(exp) > 60
-                expired.append(tolerance_exceeded)
-                continue
+                t = self.most_recent_save(exp)
+                # tolerance_exceeded = time.time() - self.most_recent_save(exp) > 60
+                # expired.append(tolerance_exceeded)
+                # continue
 
             passed_time = now - t
-            expired.append(passed_time > exp.session_timeout)
+            expired.append(passed_time > timeout)
 
         return any(expired)
 
@@ -124,7 +128,13 @@ class SessionGroup:
         return oldest
 
     def pending(self, exp) -> bool:
-        fields = ["exp_start_time", "exp_finished", "exp_aborted", "exp_save_time"]
+        fields = [
+            "exp_start_time",
+            "exp_finished",
+            "exp_aborted",
+            "exp_save_time",
+            "exp_session_timeout",
+        ]
         data = list(self._get_fields(exp, fields))
 
         finished = self.finished(exp, data)
