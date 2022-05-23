@@ -1,29 +1,24 @@
-# -*- coding:utf-8 -*-
-
 """
 Pages hold and organize elements.
 
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
-import time
 import logging
 import string
+import time
 import typing as t
-from abc import ABCMeta, abstractproperty, abstractmethod, ABC
-from builtins import object, str
+from abc import ABC, ABCMeta, abstractmethod, abstractproperty
 from functools import reduce
 from pathlib import Path
-from typing import Union
-from typing import Iterator
+from typing import Iterator, Union
 
 from . import alfredlog
 from . import element as elm
-from .element.misc import Style, HideNavigation
 from . import saving_agent
 from ._core import ExpMember
-from ._helper import _DictObj
-from ._helper import inherit_kwargs
-from .exceptions import AlfredError, ValidationError, AbortMove
+from ._helper import _DictObj, inherit_kwargs
+from .element.misc import HideNavigation, Style
+from .exceptions import AbortMove, AlfredError, ValidationError
 
 
 @inherit_kwargs
@@ -32,20 +27,20 @@ class _PageCore(ExpMember):
     Provides core functionality for pages.
 
     Args:
-        prefix_element_names (bool): If True, the names of all input 
+        prefix_element_names (bool): If True, the names of all input
             elements on this page will be prefixed with the page name.
             Defaults to None. Can be defined as a class attribute.
         minimum_display_time (str): The minimal amount of time that the page
             must be displayed, before participants can move to the next
-            page. Must be specified as a string with a unit of 's' 
-            (for seconds), or 'm' (for minutes), for instance '30s'. 
+            page. Must be specified as a string with a unit of 's'
+            (for seconds), or 'm' (for minutes), for instance '30s'.
             Defaults to None. Can be defined as a class attribute.
         minimum_display_time_msg (str): A page-specific message to be displayed,
             if participants try to move forward before the minimum
             display time has expired. Defaults to None, which means that
             the default message defined in config.conf will be used.
             Can be defined as a class attribute.
-        progress (int, float): Can be used to manually determine the 
+        progress (int, float): Can be used to manually determine the
             level of experiment progress displayed in the experiment's
             progress bar. Can be an int or float between 0 and 100.
             Defaults to 'None', which means that the experiment-wide
@@ -58,7 +53,7 @@ class _PageCore(ExpMember):
     #: receive a prefix of the page's name.
     prefix_element_names: bool = False
 
-    #: Can be used to manually determine to 
+    #: Can be used to manually determine to
     #: level of experiment progress displayed in the experiment's
     #: progress bar. Can be an int or float between 0 and 100.
     #: Defaults to 'None', which means that the experiment-wide
@@ -70,11 +65,11 @@ class _PageCore(ExpMember):
         prefix_element_names: bool = None,
         minimum_display_time: str = None,
         minimum_display_time_msg: str = None,
-        progress: Union[int, float] = None,
+        progress: int | float = None,
         **kwargs,
     ):
         self._minimum_display_time = "0s"
-        
+
         if minimum_display_time is not None:
             self.minimum_display_time = minimum_display_time
 
@@ -82,10 +77,10 @@ class _PageCore(ExpMember):
             self._minimum_display_time_msg = minimum_display_time_msg
         else:
             self._minimum_display_time_msg = None
-        
+
         if prefix_element_names is not None:
             self.prefix_element_names = prefix_element_names
-        
+
         if progress is not None:
             self.progress = progress
 
@@ -106,7 +101,7 @@ class _PageCore(ExpMember):
         Dictionary of elements belonging to this page.
         """
         return self._elements
-    
+
     @elements.setter
     def elements(self, value):
         self._elements = value
@@ -121,7 +116,7 @@ class _PageCore(ExpMember):
         or 'm' (for minutes).
         """
         return self._minimum_display_time
-    
+
     @property
     def _mdt(self) -> float:
         mdt = self.minimum_display_time
@@ -146,7 +141,9 @@ class _PageCore(ExpMember):
 
         debug = self.experiment.config.getboolean("general", "debug")
         if debug and not self._mdt == 0:
-            if self.experiment.config.getboolean("debug", "disable_minimum_display_time"):
+            if self.experiment.config.getboolean(
+                "debug", "disable_minimum_display_time"
+            ):
                 self.log.debug("Minimum display time disabled (debug mode).")
                 self.minimum_display_time = "0s"
 
@@ -239,7 +236,10 @@ class _PageCore(ExpMember):
         if not has_been_shown:
             self.on_first_show()
 
-            if self.exp.config.getboolean("general", "debug") and self is not self.exp.final_page:
+            if (
+                self.exp.config.getboolean("general", "debug")
+                and self is not self.exp.final_page
+            ):
                 name = self.name + "__debug_jumplist__"
                 jumplist = elm.action.JumpList(
                     scope="exp",
@@ -403,7 +403,7 @@ class _PageCore(ExpMember):
 
         Notes:
             Note that this function will be called automatically on every
-            move in the experiment. Only call it yourself if it is 
+            move in the experiment. Only call it yourself if it is
             really necessary.
         """
         if not self.exp.data_saver.main.agents and not self.exp.config.getboolean(
@@ -508,7 +508,7 @@ class _CoreCompositePage(_PageCore):
     @property
     def updated_elements(self) -> dict:
         """
-        Returns a dict of all elements on the page that already have 
+        Returns a dict of all elements on the page that already have
         access to the experiment session.
         """
         return {name: elm for name, elm in self.elements.items() if elm.exp is not None}
@@ -516,7 +516,7 @@ class _CoreCompositePage(_PageCore):
     @property
     def filled_input_elements(self) -> dict:
         """
-        Dict of all input elements on this page with non-empty data 
+        Dict of all input elements on this page with non-empty data
         attribute. This includes elements that hav received participant
         input and elements with default values.
         """
@@ -532,15 +532,21 @@ class _CoreCompositePage(_PageCore):
         """
         for elmnt in elements:
             if not isinstance(elmnt, (elm.core.Element)):
-                raise TypeError(f"Can only append elements to pages, not '{type(elmnt).__name__}'")
+                raise TypeError(
+                    f"Can only append elements to pages, not '{type(elmnt).__name__}'"
+                )
 
             elmnt.added_to_page(self)
 
             if elmnt.name in dir(self):
-                raise ValueError(f"Element name '{elmnt.name}' is also an attribute of {self}.")
+                raise ValueError(
+                    f"Element name '{elmnt.name}' is also an attribute of {self}."
+                )
 
             if elmnt.name in self.elements:
-                raise AlfredError(f"{self} already has an element of name '{elmnt.name}'.")
+                raise AlfredError(
+                    f"{self} already has an element of name '{elmnt.name}'."
+                )
 
             if self.exp is not None and elmnt.exp is None:
                 elmnt.added_to_experiment(self.exp)
@@ -557,7 +563,6 @@ class _CoreCompositePage(_PageCore):
     def __iadd__(self, other):
         self.append(other)
         return self
-
 
     def added_to_experiment(self, experiment):
         # docstring inherited
@@ -595,7 +600,7 @@ class _CoreCompositePage(_PageCore):
     @property
     def data(self) -> dict:
         """
-        Returns a dict of data for all input elements on the page. 
+        Returns a dict of data for all input elements on the page.
 
         If the page has not been shown yet, an empty dict is returned.
         """
@@ -687,11 +692,11 @@ class _CoreCompositePage(_PageCore):
 
     def durations(self) -> Iterator[float]:
         """
-        Iterates over the visit durations for this page. 
-        
+        Iterates over the visit durations for this page.
+
         Yields:
             float: Duration of a visit in seconds.
-        
+
         """
 
         if not self.has_been_shown:
@@ -700,14 +705,16 @@ class _CoreCompositePage(_PageCore):
         if len(self.show_times) > len(self.hide_times):
             now = time.time()
         elif len(self.show_times) < len(self.hide_times):
-            self.log.error(f"{self} has fewer entries in show_times than in hide_times.")
+            self.log.error(
+                f"{self} has fewer entries in show_times than in hide_times."
+            )
 
         for show, hide in zip(self.show_times, self.hide_times + [now]):
             yield hide - show
 
     def last_duration(self) -> float:
         """
-        Returns the duration of the last visit to this page in the 
+        Returns the duration of the last visit to this page in the
         current session in seconds.
         """
         *_, last_duration = self.durations()
@@ -715,7 +722,7 @@ class _CoreCompositePage(_PageCore):
 
     def first_duration(self) -> float:
         """
-        Returns the duration of the last visit to this page in the 
+        Returns the duration of the last visit to this page in the
         current session in seconds.
         """
         first_duration, *_ = self.durations()
@@ -724,15 +731,15 @@ class _CoreCompositePage(_PageCore):
     def validate(self) -> bool:
         """
         Returns *True*, if the validation checks pass, *False* otherwise.
-        
+
         Can be overloaded for custom validation behavior.
 
         Returns:
             bool: A boolean, indicating whether validation was successful.
 
         Notes:
-            The method *must* return *True* if validation is OK and 
-            *False* if validation fails. You can use 
+            The method *must* return *True* if validation is OK and
+            *False* if validation fails. You can use
             :meth:`.ExperimentSession.post_message` to post a message for
             participants that will be displayed if validation fails.
 
@@ -748,18 +755,18 @@ class _CoreCompositePage(_PageCore):
                     def on_exp_access(self):
                         self += al.NumberEntry(name="e1", force_input=True)
                         self += al.NumberEntry(name="e2", force_input=True)
-                    
+
                     def validate(self):
                         e1 = int(self.exp.values.get("e1"))
                         e2 = int(self.exp.values.get("e2"))
-                        
+
                         if not (e1 + e2) > 10:
                             self.exp.post_message(
                                 msg="The sum of your input values must be >10",
                                 level="danger"
                                 )
                             return False
-                        
+
                         return True
 
 
@@ -767,7 +774,6 @@ class _CoreCompositePage(_PageCore):
         return True
 
     def _validate(self):
-
 
         if not self.has_been_shown:
             if self.must_be_shown:
@@ -821,8 +827,8 @@ class Page(_CoreCompositePage):
             The sizes are taken from Bootstrap and correspond to the
             five width attributes of a :class:`.RowLayout`.
 
-            By default, responsive widths are 
-            
+            By default, responsive widths are
+
             - 100% on extra small screens (below 576px, not modifiable)
             - 85% on small screens (576-767px, think of tablets)
             - 75% on medium screens (768-991px, think of small laptops)
@@ -845,10 +851,10 @@ class Page(_CoreCompositePage):
 
     Notes:
 
-        .. note:: In class style, you can use the initialization 
+        .. note:: In class style, you can use the initialization
            arguments of a page by defining them as class attributes.
            See "How to use pages" for details.
-    
+
     Examples:
 
         Basic example for adding a page with a single element in
@@ -863,11 +869,11 @@ class Page(_CoreCompositePage):
 
                 def on_exp_access(self):
                     self += al.Text("This is demo text.")
-            
 
-        Example for customly defining a set of relative widths. The 
-        following page will take up 80 % of available space on extra 
-        small screens, 70 % on small screens, and 60 % on medium, large 
+
+        Example for customly defining a set of relative widths. The
+        following page will take up 80 % of available space on extra
+        small screens, 70 % on small screens, and 60 % on medium, large
         and extra large screens::
 
             import alfred3 as al
@@ -981,7 +987,9 @@ class Page(_CoreCompositePage):
 
     def _responsive_media_query(self, width):
         if len(width) > 4:
-            raise ValueError("The option 'responsive_width' can only define up to four widths.")
+            raise ValueError(
+                "The option 'responsive_width' can only define up to four widths."
+            )
 
         if len(width) < 4:
             for _ in range(4 - len(width)):
@@ -1045,19 +1053,28 @@ class Page(_CoreCompositePage):
 
     @property
     def _css_code(self):
-        return reduce(lambda l, element: l + element.css_code, self.elements.values(), [])
+        return reduce(
+            lambda l, element: l + element.css_code, self.elements.values(), []
+        )
 
     @property
     def _css_urls(self):
-        return reduce(lambda l, element: l + element.css_urls, self.elements.values(), [])
+        return reduce(
+            lambda l, element: l + element.css_urls, self.elements.values(), []
+        )
 
     @property
     def _js_code(self):
-        return reduce(lambda l, element: l + element.js_code, self.elements.values(), [])
+        return reduce(
+            lambda l, element: l + element.js_code, self.elements.values(), []
+        )
 
     @property
     def _js_urls(self):
-        return reduce(lambda l, element: l + element.js_urls, self.elements.values(), [])
+        return reduce(
+            lambda l, element: l + element.js_urls, self.elements.values(), []
+        )
+
 
 @inherit_kwargs
 class WidePage(Page):
@@ -1070,11 +1087,11 @@ class WidePage(Page):
     Notes:
         The width of this page is only customized for responsive layouts.
         If you disabled responsive layout, it will have default width.
-    
+
     Examples:
         A minimal experiment with a single wide page, holding a text
         element::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
@@ -1084,23 +1101,24 @@ class WidePage(Page):
 
                 def on_exp_access(self):
                     self += al.Text("This is demo text.")
-    
+
     """
 
     responsive_width = "85%, 75%, 75%, 70%"
+
 
 @inherit_kwargs
 class NoNavigationPage(Page):
     """
     A page without navigation buttons.
-    
+
     Args:
         {kwargs}
-    
+
     Examples:
         A minimal experiment with a single NoNavigationPage, from which
         participants can move forward via the SubmittingButtons::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
@@ -1109,9 +1127,9 @@ class NoNavigationPage(Page):
                 title = "This is a demo"
 
                 def on_exp_access(self):
-                    
+
                     self += al.SubmittingButtons(
-                        "Yes", "No", 
+                        "Yes", "No",
                         toplab="Do you agree to this statement?",
                         name="submit1"
                         )
@@ -1126,42 +1144,42 @@ class NoNavigationPage(Page):
 class TimeoutPage(Page):
     """
     A page with an additional hook that gets triggered after a timeout.
-    
+
     The timeout starts when the page is shown for the first time. If a
     page is shown for a second time, the timeout will not run again.
 
     Args:
         timeout (str, int): Length of the timeout. Specify it as an integer,
-            indicating the number of seconds to wait, or as a string 
-            with a unit of "s" for seconds, and "m" for minutes, 
+            indicating the number of seconds to wait, or as a string
+            with a unit of "s" for seconds, and "m" for minutes,
             for example "10s". Can be specified as a class attribute.
-        callbackargs (dict): Dictionary of keyword arguments to be 
+        callbackargs (dict): Dictionary of keyword arguments to be
             passed on to the :class:`.Callback` element that internally
             handles the call to the *on_timeout* method. You can specifiy
             things like *followup* behavior and determine whether data
             on the page should be submitted before calling *on_timeout*.
             Refer to the :class:`.Callback` documentation for a full
             view of the possibilities. You cannot specify the *func*
-            argument in *callbackargs*, since this is fixed to 
+            argument in *callbackargs*, since this is fixed to
             :meth:`.on_timeout`. You can also not specify the *delay*
             argument, since this is fixed to the page's own argument
             *timeout*. Defaults to *None*. Can be specified
             as a class attribute.
-        
+
         {kwargs}
-    
+
     See Also:
         Timeout hook: :meth:`~.Page.on_timeout`
-    
+
     Examples:
         A minimal experiment with a single TimeoutPage, holding a text
-        element. The navigating buttons are hidden through the 
+        element. The navigating buttons are hidden through the
         :class:`.HideNavigation` element.
-        
+
         The *on_timeout* hook shows the implementation of the
         :class:`.AutoForwardPage`. The page will move forward after the
         timeout of 5 seconds expires::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
@@ -1173,7 +1191,7 @@ class TimeoutPage(Page):
                 def on_exp_access(self):
                     self += al.Text("This is demo text.")
                     self += al.HideNavigation()
-                
+
                 def on_timeout(self):
                     self.exp.forward()
     """
@@ -1181,7 +1199,7 @@ class TimeoutPage(Page):
     timeout = None
     callbackargs = None
 
-    def __init__(self, timeout: Union[str, int] = None, callbackargs: dict = None, **kwargs):
+    def __init__(self, timeout: str | int = None, callbackargs: dict = None, **kwargs):
         super().__init__(**kwargs)
 
         if callbackargs is not None:
@@ -1197,9 +1215,11 @@ class TimeoutPage(Page):
 
         if not isinstance(self.timeout, int):
             self.timeout = self._format_timeout()
-        
-        self += elm.misc.Callback(func=self.on_timeout, delay=self.timeout, **self.callbackargs)
-    
+
+        self += elm.misc.Callback(
+            func=self.on_timeout, delay=self.timeout, **self.callbackargs
+        )
+
     def _format_timeout(self) -> int:
         unit = self.timeout[-1]
         if unit == "s":
@@ -1211,7 +1231,7 @@ class TimeoutPage(Page):
                 "You must specify the unit of your timeout ('s' - seconds, or 'm' - minutes)"
             )
         return timeout
-    
+
     def on_timeout(self):
         """
         Executed *once*, after the timeout of the page runs out.
@@ -1290,19 +1310,19 @@ class NoDataPage(Page):
 
     Args:
         {kwargs}
-    
+
     Notes:
         This page *will* still trigger a saving event upon moving,
-        so that, for example, updates to the :attr:`.ExperimentSession.adata` 
+        so that, for example, updates to the :attr:`.ExperimentSession.adata`
         dictionary will be saved. It just does not save any data itself,
         i.e. input elements on this page will not appear in the data.
-    
+
     See Also:
         See :class:`.NoSavingPage` for a page that does not trigger a
         saving event, but still collects data.
-    
+
     Examples:
-    
+
         A simple NoDataPage::
 
             import alfred3 as al
@@ -1320,6 +1340,7 @@ class NoDataPage(Page):
 
     data = {}
 
+
 @inherit_kwargs
 class NoSavingPage(Page):
     """
@@ -1327,29 +1348,29 @@ class NoSavingPage(Page):
 
     Args:
         {kwargs}
-    
+
     Notes:
         This page will not trigger any saving action on its own. But if
         experiment data is saved at another point of the experiment, data
-        collected on a NoSavingPage *will* be saved. You can switch off 
+        collected on a NoSavingPage *will* be saved. You can switch off
         this behavior by overriding the *data* attribute, effectively
         creating a NoDataNoSavingPage (see Example 2).
 
         Note also that upon finishing, the experiment will always trigger
         a saving event, even if you only have NoSavingPages in your
-        experiment. To prevent this, you can switch the option 
+        experiment. To prevent this, you can switch the option
         'save_data' in section 'data' of config.conf to 'false'.
 
-    .. warning:: Note that a NoSavingPage does not trigger a saving 
-        event, but it does collect data! If a later page triggers a 
-        saving event, data from the NoSavingPage will be saved to the 
+    .. warning:: Note that a NoSavingPage does not trigger a saving
+        event, but it does collect data! If a later page triggers a
+        saving event, data from the NoSavingPage will be saved to the
         experiment data! To prevent this behavior, use a :class:`.NoDataPage`
         instead of NoSavingPage.
 
     See Also:
         See :class:`.NoDataPage` for a page that does not collect any
         data.
-    
+
     Examples:
 
         Example 1, simple usage::
@@ -1363,7 +1384,7 @@ class NoSavingPage(Page):
 
                 def on_exp_access(self):
                     self += al.TextEntry(placeholder="Enter something", name="el1")
-            
+
 
             @exp.member
             class DemoPage2(al.Page):
@@ -1385,7 +1406,7 @@ class NoSavingPage(Page):
             class NoDataNoSavingPage(al.NoSavingPage):
 
                 data = {{}}
-            
+
     """
 
     def save_data(self, *args, **kwargs):
@@ -1456,7 +1477,7 @@ class UnlinkedDataPage(NoDataPage):
 
     def __init__(self, encrypt: str = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         if encrypt is not None:
             self.encrypt = encrypt
 
@@ -1564,14 +1585,16 @@ class _CustomSavingPage(Page, ABC):
 
     def __init__(self, save_to_main: bool = None, **kwargs):
         super().__init__(**kwargs)
-        
+
         if save_to_main is not None:
             self.save_to_main = save_to_main
 
     def added_to_experiment(self, experiment):
         if not self._experiment:
             super().added_to_experiment(experiment=experiment)
-            self.saving_agent_controller = saving_agent.SavingAgentController(self._experiment)
+            self.saving_agent_controller = saving_agent.SavingAgentController(
+                self._experiment
+            )
         self._check_for_duplicate_agents()
 
     def _check_for_duplicate_agents(self):
@@ -1594,7 +1617,9 @@ class _CustomSavingPage(Page, ABC):
     def _check_one_duplicate(agent, agents_list):
         for ag in agents_list:
             if ag == agent:
-                raise ValueError("A SavingAgent added to a CustomSavingPage must be unique")
+                raise ValueError(
+                    "A SavingAgent added to a CustomSavingPage must be unique"
+                )
 
     def append_saving_agents(self, *args):
         """
@@ -1617,10 +1642,14 @@ class _CustomSavingPage(Page, ABC):
     def save_data(self, level=1, sync=False):
 
         if not isinstance(self.custom_save_data, dict):
-            raise ValueError("The porperty 'custom_page_data' must return a dictionary.")
+            raise ValueError(
+                "The porperty 'custom_page_data' must return a dictionary."
+            )
 
         if self.save_to_main:
-            self._experiment.data_saver.main.save_with_all_agents(level=level, sync=sync)
+            self._experiment.data_saver.main.save_with_all_agents(
+                level=level, sync=sync
+            )
 
         self.saving_agent_controller.save_with_all_agents(
             data=self.custom_save_data, level=level, sync=sync
@@ -1655,12 +1684,12 @@ class _NothingHerePage(Page):
 class PasswordPage(WidePage):
     """
     A wide page that requires the input of a password for continuation.
-    
+
     Args:
         password: A string, or a tuple of strings. Those are the accepted
             passwords.
         {kwargs}
-    
+
     Examples:
 
         A minimal experiment with a password page::
@@ -1673,6 +1702,7 @@ class PasswordPage(WidePage):
                 password = "test"
 
     """
+
     password = None
     title = "Password required"
 
@@ -1682,9 +1712,11 @@ class PasswordPage(WidePage):
             self.password = password
         if self.password is None or not len(self.password):
             raise ValueError("PasswordPage must have at least one password.")
-        
+
         if not isinstance(self.password, (str, list, tuple)):
-            raise ValueError(f"Argument 'password' of {type(self).__name__} must be a string, list, or tuple.")
+            raise ValueError(
+                f"Argument 'password' of {type(self).__name__} must be a string, list, or tuple."
+            )
 
     def on_exp_access(self):
         self += HideNavigation()
@@ -1692,14 +1724,24 @@ class PasswordPage(WidePage):
         self += elm.display.VerticalSpace("20px")
 
         # use single password or multiple password element depending on input
-        pwargs = dict(toplab="Please enter the password to continue", width="wide", name="pw", align="center", force_input=True)
+        pwargs = dict(
+            toplab="Please enter the password to continue",
+            width="wide",
+            name="pw",
+            align="center",
+            force_input=True,
+        )
         if isinstance(self.password, str):
             self += elm.input.PasswordEntry(password=self.password, **pwargs)
         else:
             self += elm.input.MultiplePasswordEntry(passwords=self.password, **pwargs)
 
         self += elm.action.SubmittingButtons(
-            "Submit", align="center", name="pw_submit", width="narrow", button_style="btn-primary"
+            "Submit",
+            align="center",
+            name="pw_submit",
+            width="narrow",
+            button_style="btn-primary",
         )
 
         # enables submit via enter-press for password field
@@ -1711,5 +1753,3 @@ class PasswordPage(WidePage):
             $("#form").submit();
             }});"""
         )
-
-

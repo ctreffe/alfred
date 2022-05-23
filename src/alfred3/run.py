@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 """Run an alfred experiment.
 
-You can either use the command line interface via 
-``python3 -m alfred3.run`` from within your experiment directory, or 
-import the `run_experiment` function into your own `run.py` and run it 
+You can either use the command line interface via
+``python3 -m alfred3.run`` from within your experiment directory, or
+import the `run_experiment` function into your own `run.py` and run it
 from there.
 
 Example for importing and running the `run_experiment` function:
@@ -37,24 +36,23 @@ with arguments of your choice.
 """
 
 import importlib
-import sys
-import webbrowser
-import os
-import threading
 import logging
+import os
 import platform
 import subprocess
+import sys
+import threading
+import webbrowser
 from pathlib import Path
 from uuid import uuid4
 
 import click
 from thesmuggler import smuggle
 
+from alfred3 import alfredlog, localserver
 from alfred3._helper import socket_checker
-from alfred3 import localserver
-from alfred3 import alfredlog
-from alfred3.config import ExperimentConfig
-from alfred3.config import ExperimentSecrets
+from alfred3.config import ExperimentConfig, ExperimentSecrets
+
 
 class ExperimentRunner:
     def __init__(self, path: str = None):
@@ -94,13 +92,13 @@ class ExperimentRunner:
         self.config.read_dict({"metadata": {"session_id": "sid-" + session_id}})
 
     def configure_logging(self):
-        """Sets some sensible logging configuration for local 
+        """Sets some sensible logging configuration for local
         experiments.
 
         * Base logger gets turned off to avoid doubled logging messages
             (we don't want to turn the queue_logger off, because that
             way usage is completely the same between local and web exp.)
-        
+
         * Queue logger gets configured using settings from config.conf
         """
         config = self.config
@@ -140,16 +138,17 @@ class ExperimentRunner:
 
     def create_experiment_app(self):
         script = smuggle(str(self.expdir / "script.py"))
-        
+
         localserver.Script.expdir = self.expdir
         localserver.Script.config = self.config
         localserver.Script.secrets = self.secrets
         localserver.Script.exp = script.exp
-        
+
         self.app = localserver.app
         secret_key = self.secrets.get("flask", "secret_key", fallback=None)
         if not secret_key:
             import secrets
+
             secret_key = secrets.token_urlsafe(16)
         self.app.secret_key = secret_key
 
@@ -163,15 +162,21 @@ class ExperimentRunner:
 
     def print_startup_message(self):
 
-        msg_startup = f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"
-        msg_admin = f" * Start admin mode using http://127.0.0.1:{self.port}/start?admin=true\n"
-        msg_test = f" * Start test mode using http://127.0.0.1:{self.port}/start?test=true\n"
+        msg_startup = (
+            f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"
+        )
+        msg_admin = (
+            f" * Start admin mode using http://127.0.0.1:{self.port}/start?admin=true\n"
+        )
+        msg_test = (
+            f" * Start test mode using http://127.0.0.1:{self.port}/start?test=true\n"
+        )
         sys.stderr.writelines([msg_startup, msg_admin, msg_test])
 
     def _open_browser(self):
 
         # generate url
-        expurl = "http://127.0.0.1:{port}/start".format(port=self.port)
+        expurl = f"http://127.0.0.1:{self.port}/start"
         expurl = expurl + "?" if self.debug_mode or self.test_mode else expurl
         expurl = expurl + "test=true" if self.test_mode else expurl
         expurl = expurl + "debug=true" if self.debug_mode else expurl
@@ -207,7 +212,11 @@ class ExperimentRunner:
         self.create_experiment_app()
         self.set_port()
 
-        open_browser = self.config.getboolean("general", "open_browser") if open_browser is None else open_browser
+        open_browser = (
+            self.config.getboolean("general", "open_browser")
+            if open_browser is None
+            else open_browser
+        )
         if open_browser:
             self.start_browser_thread()
         self.print_startup_message()
@@ -215,8 +224,7 @@ class ExperimentRunner:
 
 
 class ChromeKiosk:
-    """Open a Chrome window in kiosk mode.
-    """
+    """Open a Chrome window in kiosk mode."""
 
     @classmethod
     def open(cls, url: str, path: str = None):
@@ -231,7 +239,9 @@ class ChromeKiosk:
         current_os = platform.system()
 
         if not url.startswith("http"):
-            raise ValueError("Parameter 'url' needs to start with 'http://' or 'https://'.")
+            raise ValueError(
+                "Parameter 'url' needs to start with 'http://' or 'https://'."
+            )
 
         if current_os == "Windows":
             cls.open_windows(url=url, path=path)
@@ -247,8 +257,12 @@ class ChromeKiosk:
         """Open url in Chrome in kiosk mode on Windows."""
 
         paths = []
-        paths.append(Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
-        paths.append(Path.home().joinpath("AppData/Local/Google/Chrome/Application/chrome.exe"))
+        paths.append(
+            Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
+        )
+        paths.append(
+            Path.home().joinpath("AppData/Local/Google/Chrome/Application/chrome.exe")
+        )
         paths.append(Path("C:/Program Files (x86)/Google/Application/chrome.exe"))
 
         existing_paths = [p for p in paths if p is not None and p.exists()]
@@ -270,4 +284,3 @@ class ChromeKiosk:
         """Open url in Chrome in kisok mode on MacOS."""
 
         subprocess.run(["open", "-a", "Google Chrome", url, "--args", "--kiosk"])
-

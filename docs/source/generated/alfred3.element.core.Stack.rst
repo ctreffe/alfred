@@ -7,47 +7,47 @@ Stack
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Stack.add_css
-   
-   
+
+
       ~Stack.add_js
-   
-   
+
+
       ~Stack.added_to_experiment
-   
-   
+
+
       ~Stack.added_to_page
-   
-   
+
+
       ~Stack.prepare_web_widget
-   
-   
+
+
       ~Stack.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Stack.base_template
          ~Stack.converted_width
          ~Stack.css_class_container
@@ -76,7 +76,3 @@ Stack
          ~Stack.tree
          ~Stack.web_widget
          ~Stack.width
-      
-   
-   
-   

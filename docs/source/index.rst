@@ -35,7 +35,7 @@ Documentation content
    howto_hooks
    howto_admin
 
-.. 
+..
    howto_elements_derivation
 
 API Reference Overview

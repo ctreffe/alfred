@@ -6,7 +6,7 @@ $( "#{{ name }}" ).click(function() {
     {% endif %}
 
     $.get( "{{ url }}", function(data) {
-    
+
         if ("{{ followup }}" == "refresh") {
             move(direction="stay");
         } else if ("{{ followup }}" == "custom") {

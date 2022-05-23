@@ -2,17 +2,17 @@
 Provides utility functionality for testing.
 """
 
-import os
 import json
+import os
 from pathlib import Path
 from uuid import uuid4
-
-from alfred3.run import ExperimentRunner
-from alfred3.config import ExperimentConfig, ExperimentSecrets
 
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from thesmuggler import smuggle
+
+from alfred3.config import ExperimentConfig, ExperimentSecrets
+from alfred3.run import ExperimentRunner
 
 
 def prepare_script(tmp_path, script_path: str):
@@ -48,7 +48,7 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
     """
     if not secrets_path:
         return
-    
+
     SECRETS = Path(secrets_path).read_text(encoding="utf-8")
     secrets = SECRETS.format(
         host=os.getenv("MONGODB_HOST"),
@@ -65,6 +65,7 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
 
     return ExperimentSecrets(expdir=tmp_path, config_objects=[secrets])
 
+
 def get_db():
     """
     Returns the mongoDB database specified via credentials in .env.
@@ -74,9 +75,10 @@ def get_db():
         port=int(os.getenv("MONGODB_PORT")),
         username=os.getenv("MONGODB_USERNAME"),
         password=os.getenv("MONGODB_PASSWORD"),
-        )
+    )
     db = os.getenv("MONGODB_DATABASE")
     return mc[db]
+
 
 def get_alfred_collection():
     """
@@ -86,6 +88,7 @@ def get_alfred_collection():
     col = os.getenv("MONGODB_COLLECTION")
     return db[col]
 
+
 def get_misc_collection():
     """
     Returns the misc mongoDB collection
@@ -93,6 +96,7 @@ def get_misc_collection():
     db = get_db()
     col = os.getenv("MONGODB_MISC_COLLECTION")
     return db[col]
+
 
 def clear_db():
     """
@@ -118,7 +122,8 @@ def get_exp_session(
     config_path: str = "",
     secrets_path: str = "tests/res/secrets-default.conf",
     sid: str = None,
-    **urlargs
+    timeout=None,
+    **urlargs,
 ):
     """
     Returns an alfred3.experiment.ExperimentSession object based on the
@@ -131,8 +136,10 @@ def get_exp_session(
     script = smuggle(tmp_path / "script.py")
     exp = script.exp
     sid = uuid4().hex if sid is None else sid
-    
-    session = exp.create_session(session_id=sid, config=config, secrets=secrets, **urlargs)
+
+    session = exp.create_session(
+        session_id=sid, config=config, secrets=secrets, timeout=timeout, **urlargs
+    )
     return session
 
 
@@ -143,7 +150,7 @@ def get_app(
     secrets_path: str = "tests/res/secrets-default.conf",
 ):
     """
-    Returns an alfred3 experiment flask app with a running mongo saving 
+    Returns an alfred3 experiment flask app with a running mongo saving
     agent, based on the given script. The app is returned in testing mode.
     """
     prepare_script(tmp_path, script_path)
@@ -161,8 +168,8 @@ def get_app(
 
 def move(client, direction: str, data: dict, **kwargs):
     """
-    Conducts a movement on a alfred3 test experiment in the specified 
-    direction, i.e. simulates a click on a forward, backward, finish, 
+    Conducts a movement on a alfred3 test experiment in the specified
+    direction, i.e. simulates a click on a forward, backward, finish,
     or jump button.
 
     Args:
@@ -171,7 +178,7 @@ def move(client, direction: str, data: dict, **kwargs):
             or 'jump>page_name' (replace *page_name* with the name of
             the page that should be jumped to).
         **kwargs: Keyword arguments passed on to the client.post method.
-    
+
     By default, the method follows redirects.
 
     Returns:
@@ -181,7 +188,7 @@ def move(client, direction: str, data: dict, **kwargs):
     rv = client.get("/experiment")
     bs = BeautifulSoup(rv.data.decode(), "html.parser")
     token = bs.find("input", {"name": "page_token"})
-    
+
     data = data if data is not None else {}
 
     d = {}
@@ -194,17 +201,21 @@ def move(client, direction: str, data: dict, **kwargs):
 
     return client.post("/experiment", data=d, **kwargs)
 
+
 def forward(client, data: dict = None, **kwargs):
     """Shortcut for a forward move"""
     return move(client, direction="forward", data=data, **kwargs)
+
 
 def backward(client, data: dict = None, **kwargs):
     """Shortcut for a backward move"""
     return move(client, direction="backward", data=data, **kwargs)
 
+
 def jump(client, to: str, data: dict = None, **kwargs):
     """Shortcut for a jump"""
     return move(client, direction=f"jump>{to}", data=data, **kwargs)
+
 
 def first_subpath(path: str) -> Path:
     """
@@ -212,14 +223,16 @@ def first_subpath(path: str) -> Path:
     """
     return next(path.iterdir(), None)
 
+
 def get_json(path: str):
     """
     Iterates over all json files in the directory.
     """
     for p in path.iterdir():
         if p.suffix == ".json":
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 yield json.load(f)
+
 
 def get_alfred_docs():
     """
@@ -227,6 +240,7 @@ def get_alfred_docs():
     """
     col = get_alfred_collection()
     return col.find()
+
 
 def get_misc_docs():
     """

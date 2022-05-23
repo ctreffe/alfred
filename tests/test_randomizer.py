@@ -1,17 +1,15 @@
 import random
-from typing import Counter
-import pytest
 import time
+from typing import Counter
+
+import pytest
+from dotenv import load_dotenv
 
 import alfred3 as al
-from alfred3.quota import SlotManager
-from alfred3.randomizer import ConditionInconsistency
 import alfred3.randomizer as rdmzr
-from alfred3.quota import SessionQuota
-
-from alfred3.testutil import get_exp_session, clear_db
-
-from dotenv import load_dotenv
+from alfred3.quota import SessionQuota, SlotManager
+from alfred3.randomizer import ConditionInconsistency
+from alfred3.testutil import clear_db, get_exp_session
 
 load_dotenv()
 
@@ -62,7 +60,6 @@ def test_clear(exp):
 
 
 class TestConditionValidation:
-
     def test_pass_validation(self, strict_exp):
         rd = al.ListRandomizer(("a", 10), ("b", 10), exp=strict_exp)
         assert rd.get_condition()
@@ -130,7 +127,6 @@ def slots(*conditions, seed):
     random.seed(seed)
     random.shuffle(slots)
     return slots
-
 
 
 class TestConditionShuffle:
@@ -328,12 +324,12 @@ class TestConditionAllocation:
         for exp in (exp1, exp3):
             exp._save_data()
             exp.finish()
-        
+
         for rd in (rd1, rd2):
             assert rd.nopen == 0
             assert rd.nfinished == 1
             assert rd.npending == 1
-            assert not rd.allfinished 
+            assert not rd.allfinished
 
     def test_slots_full_inclusive(self, exp_factory):
         exp1 = exp_factory()
@@ -437,14 +433,14 @@ class TestConditionAllocation:
         assert c1 != c2
 
         c3 = rd3.get_condition()
-        
+
         assert c1 == c3
         assert rd4.npending == 2
 
         c4 = rd4.get_condition()
 
         assert c4 == c2
-    
+
     def test_inclusive_next_pending_oldest(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
@@ -463,7 +459,7 @@ class TestConditionAllocation:
 
         assert rd3.npending == 2
         c3 = rd3.get_condition()
-        
+
         assert c2 == c3
 
 
@@ -485,7 +481,9 @@ class TestConstructors:
     def test_factors_simple(self, exp_factory):
         exp = exp_factory()
         seed = 12348
-        rd = al.ListRandomizer.factors(["a1", "a2"], "b", n=10, exp=exp, random_seed=seed)
+        rd = al.ListRandomizer.factors(
+            ["a1", "a2"], "b", n=10, exp=exp, random_seed=seed
+        )
         assert rd.conditions == (("a1.b", 10), ("a2.b", 10))
 
     def test_factors_complex(self, exp_factory):
@@ -552,8 +550,12 @@ class TestSessionGroup:
         exp1._save_data(sync=True)
         exp2._save_data(sync=True)
 
-        rd1 = al.ListRandomizer.balanced("a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp1)
-        rd2 = al.ListRandomizer.balanced("a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp2)
+        rd1 = al.ListRandomizer.balanced(
+            "a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp1
+        )
+        rd2 = al.ListRandomizer.balanced(
+            "a", "b", n=10, session_ids=["exp1", "exp2"], exp=exp2
+        )
 
         c1 = rd1.get_condition()
         c2 = rd2.get_condition()

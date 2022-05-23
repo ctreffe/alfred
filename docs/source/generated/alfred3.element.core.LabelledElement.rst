@@ -7,47 +7,47 @@ LabelledElement
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~LabelledElement.add_css
-   
-   
+
+
       ~LabelledElement.add_js
-   
-   
+
+
       ~LabelledElement.added_to_experiment
-   
-   
+
+
       ~LabelledElement.added_to_page
-   
-   
+
+
       ~LabelledElement.prepare_web_widget
-   
-   
+
+
       ~LabelledElement.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~LabelledElement.base_template
          ~LabelledElement.bottomlab
          ~LabelledElement.converted_width
@@ -79,7 +79,3 @@ LabelledElement
          ~LabelledElement.tree
          ~LabelledElement.web_widget
          ~LabelledElement.width
-      
-   
-   
-   

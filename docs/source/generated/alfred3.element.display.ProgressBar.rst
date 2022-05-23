@@ -7,47 +7,47 @@ ProgressBar
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~ProgressBar.add_css
-   
-   
+
+
       ~ProgressBar.add_js
-   
-   
+
+
       ~ProgressBar.added_to_experiment
-   
-   
+
+
       ~ProgressBar.added_to_page
-   
-   
+
+
       ~ProgressBar.prepare_web_widget
-   
-   
+
+
       ~ProgressBar.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~ProgressBar.base_template
          ~ProgressBar.bottomlab
          ~ProgressBar.converted_width
@@ -84,7 +84,3 @@ ProgressBar
          ~ProgressBar.tree
          ~ProgressBar.web_widget
          ~ProgressBar.width
-      
-   
-   
-   

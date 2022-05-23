@@ -7,56 +7,56 @@ MultipleChoiceButtons
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~MultipleChoiceButtons.add_css
-   
-   
+
+
       ~MultipleChoiceButtons.add_js
-   
-   
+
+
       ~MultipleChoiceButtons.added_to_experiment
-   
-   
+
+
       ~MultipleChoiceButtons.added_to_page
-   
-   
+
+
       ~MultipleChoiceButtons.define_choices
-   
-   
+
+
       ~MultipleChoiceButtons.prepare_web_widget
-   
-   
+
+
       ~MultipleChoiceButtons.render_inner_html
-   
-   
+
+
       ~MultipleChoiceButtons.set_data
-   
-   
+
+
       ~MultipleChoiceButtons.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~MultipleChoiceButtons.base_template
          ~MultipleChoiceButtons.bottomlab
          ~MultipleChoiceButtons.button_group_class
@@ -112,7 +112,3 @@ MultipleChoiceButtons
          ~MultipleChoiceButtons.vertical
          ~MultipleChoiceButtons.web_widget
          ~MultipleChoiceButtons.width
-      
-   
-   
-   

@@ -4,66 +4,66 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Changelog &mdash; alfred3 1.4.0.a1 documentation</title>
-  
 
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Changelog &mdash; alfred3 1.4.0.a1 documentation</title>
+
+
+
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
 
-  
-  
-  
-  
 
-  
+
+
+
+
+
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
+
+
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-    
+
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
-    
+
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation for Beginners" href="installation.html" />
-    <link rel="prev" title="Welcome to alfred3" href="index.html" /> 
+    <link rel="prev" title="Welcome to alfred3" href="index.html" />
 </head>
 
 <body class="wy-body-for-nav">
 
-   
+
   <div class="wy-grid-for-nav">
-    
+
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
-          
+
+
             <a href="index.html" class="icon icon-home" alt="Documentation Home"> alfred3
-          
 
-          
+
+
           </a>
 
-          
-            
-            
-          
 
-          
+
+
+
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -72,17 +72,17 @@
   </form>
 </div>
 
-          
+
         </div>
 
-        
+
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+
+
+
+
+
+
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">[Unreleased]</a><ul>
@@ -227,29 +227,29 @@
 <li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation Guidelines</a></li>
 </ul>
 
-            
-          
+
+
         </div>
-        
+
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-      
+
       <nav class="wy-nav-top" aria-label="top navigation">
-        
+
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">alfred3</a>
-        
+
       </nav>
 
 
       <div class="wy-nav-content">
-        
+
         <div class="rst-content">
-        
-          
+
+
 
 
 
@@ -268,28 +268,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    
+
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
+
       <li>Changelog</li>
-    
-    
+
+
       <li class="wy-breadcrumbs-aside">
-        
-            
+
+
             <a href="_sources/CHANGELOG.md.txt" rel="nofollow"> View page source</a>
-          
-        
+
+
       </li>
-    
+
   </ul>
 
-  
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <p>All notable changes to this project will be documented in this file.</p>
@@ -491,7 +491,7 @@
 <span class="k">class</span> <span class="nc">Welcome</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span> <span class="o">+=</span> <span class="n">TextElement</span><span class="p">(</span><span class="s2">&quot;This code is executed upon adding the page to the experiment.&quot;</span><span class="p">)</span>
-    
+
     <span class="k">def</span> <span class="nf">on_first_show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span> <span class="o">+=</span> <span class="n">TextElement</span><span class="p">(</span><span class="s2">&quot;This code is executed right before showing the page for the first time&quot;</span><span class="p">)</span>
 </pre></div>
@@ -512,7 +512,7 @@
 <span class="k">class</span> <span class="nc">Main</span><span class="p">(</span><span class="n">Section</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">on_exp_access</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span> <span class="o">+=</span> <span class="n">Page</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Demo Page, added upon adding the section to the experiment.&quot;</span><span class="p">)</span>
-    
+
     <span class="k">def</span> <span class="nf">on_enter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Code executed upon entering the section.&quot;</span><span class="p">)</span>
 </pre></div>
@@ -686,7 +686,7 @@ Options:
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">runner</span> <span class="o">=</span> <span class="n">ExperimentRunner</span><span class="p">()</span>
-    <span class="n">runner</span><span class="o">.</span><span class="n">auto_run</span><span class="p">()</span> 
+    <span class="n">runner</span><span class="o">.</span><span class="n">auto_run</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>This feature eliminates the need for a <code class="docutils literal notranslate"><span class="pre">run.py</span></code> file in your experiment directory. The API might still change in the future, so this feature is considered experimental.</p>
@@ -766,10 +766,10 @@ Options:
     <span class="n">exp</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 
     <span class="n">welcome</span> <span class="o">=</span> <span class="n">Welcome</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Welcome page&quot;</span><span class="p">)</span>
-    
+
     <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s2">&quot;my_section&quot;</span><span class="p">,</span> <span class="s2">&quot;my_bool&quot;</span><span class="p">):</span>
         <span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">welcome</span><span class="p">)</span>
-    
+
     <span class="k">return</span> <span class="n">exp</span>
 </pre></div>
 </div>
@@ -795,11 +795,11 @@ Options:
     <span class="n">exp</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;This message will be logged after initialization of the experiment.&quot;</span><span class="p">)</span>
 
     <span class="n">welcome</span> <span class="o">=</span> <span class="n">Welcome</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Welcome page&quot;</span><span class="p">)</span>
-    
+
     <span class="c1"># Sets the log level to &#39;WARNING&#39;</span>
     <span class="c1"># The message logged above in the &#39;on_showing&#39; definition will therefore</span>
     <span class="c1"># not be logged, as it is of level &#39;info&#39;</span>
-    <span class="n">welcome</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">)</span> 
+    <span class="n">welcome</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">)</span>
 
     <span class="n">exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">welcome</span><span class="p">)</span>
 </pre></div>
@@ -1174,37 +1174,37 @@ Options:
 
 
            </div>
-           
+
           </div>
           <footer>
-  
+
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation for Beginners" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
+
+
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to alfred3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+
     </div>
-  
+
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
+
         &copy; Copyright 2020, Christian Treffenstädt, Paul Wiemann, Johannes Brachem
 
     </p>
   </div>
-    
-    
-    
+
+
+
     Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
+
     <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
 </footer>
 
@@ -1214,7 +1214,7 @@ Options:
     </section>
 
   </div>
-  
+
 
   <script type="text/javascript">
       jQuery(function () {
@@ -1222,10 +1222,10 @@ Options:
       });
   </script>
 
-  
-  
-    
-   
+
+
+
+
 
 </body>
 </html>

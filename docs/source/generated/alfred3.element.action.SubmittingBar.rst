@@ -7,56 +7,56 @@ SubmittingBar
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~SubmittingBar.add_css
-   
-   
+
+
       ~SubmittingBar.add_js
-   
-   
+
+
       ~SubmittingBar.added_to_experiment
-   
-   
+
+
       ~SubmittingBar.added_to_page
-   
-   
+
+
       ~SubmittingBar.define_choices
-   
-   
+
+
       ~SubmittingBar.prepare_web_widget
-   
-   
+
+
       ~SubmittingBar.render_inner_html
-   
-   
+
+
       ~SubmittingBar.set_data
-   
-   
+
+
       ~SubmittingBar.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~SubmittingBar.base_template
          ~SubmittingBar.bottomlab
          ~SubmittingBar.button_group_class
@@ -112,7 +112,3 @@ SubmittingBar
          ~SubmittingBar.vertical
          ~SubmittingBar.web_widget
          ~SubmittingBar.width
-      
-   
-   
-   

@@ -5,24 +5,16 @@ Provides fundamental element classes.
 
 """
 
-from abc import ABC, abstractproperty, abstractmethod
-from typing import List
-from typing import Tuple
-from typing import Union
-from typing import Iterator
+from abc import ABC, abstractmethod, abstractproperty
 from dataclasses import dataclass
+from typing import Iterator, List, Tuple, Union
 
-from jinja2 import Environment
-from jinja2 import PackageLoader
-from jinja2 import Template
+from jinja2 import Environment, PackageLoader, Template
 
 from .. import alfredlog
-from ..messages import MessageManager
+from .._helper import check_name, fontsize_converter, inherit_kwargs
 from ..exceptions import AlfredError
-from .._helper import fontsize_converter
-from .._helper import check_name
-from .._helper import inherit_kwargs
-
+from ..messages import MessageManager
 
 #: jinja Environment giving access to included jinja-templates.
 jinja_env = Environment(loader=PackageLoader("alfred3", "element/templates"))
@@ -36,8 +28,8 @@ class Element:
         name: Name of the element. This should be a unique identifier.
             It will be used to identify the corresponding data in the
             final data set.
-        font_size: Font size for text in the element. You can use a 
-            keyword or an exact specification. The available keywords 
+        font_size: Font size for text in the element. You can use a
+            keyword or an exact specification. The available keywords
             are *tiny*, *small*, *normal*, *big*, and *huge*. The exact
             specification shoul ideally include a unit, such as *1rem*,
             or *12pt*. If you supply an integer without a unit, a unit
@@ -92,7 +84,7 @@ class Element:
     def __init__(
         self,
         name: str = None,
-        font_size: Union[str, int] = None,
+        font_size: str | int = None,
         align: str = "left",
         width: str = "full",
         height: str = None,
@@ -146,10 +138,8 @@ class Element:
 
         if position != "center" and width == "full":
             self.log.warning(
-                (
-                    "You have changed the value of 'position' on a full-width element. "
-                    "That will most likely not have an effect. Did you mean to change 'align'?"
-                )
+                "You have changed the value of 'position' on a full-width element. "
+                "That will most likely not have an effect. Did you mean to change 'align'?"
             )
 
     @property
@@ -189,7 +179,7 @@ class Element:
     @property
     def display_standalone(self):
         """
-        bool: If *True* (default), the element will be displayed as 
+        bool: If *True* (default), the element will be displayed as
         usual on its own. If *False*, the element will not be displayed
         unless you incorporate its :attr:`.Element.web_widget` in some
         other way.
@@ -198,14 +188,14 @@ class Element:
             An element with ``display_standalone = False`` will still be validated.
 
         See Also:
-            Similar to :attr:`.Element.should_be_shown`. The main 
-            difference is that an element with 
+            Similar to :attr:`.Element.should_be_shown`. The main
+            difference is that an element with
             ``display_standalone = False`` will still be validated, while an
-            element with ``should_be_shown = False`` will never be 
+            element with ``should_be_shown = False`` will never be
             validated.
         """
         return self._display_standalone
-    
+
     @display_standalone.setter
     def display_standalone(self, value):
         self._display_standalone = value
@@ -289,7 +279,7 @@ class Element:
         self._showif = value
 
     @property
-    def converted_width(self) -> List[str]:
+    def converted_width(self) -> list[str]:
         """
         list: List of bootstrap column widths at different screen sizes.
 
@@ -392,7 +382,7 @@ class Element:
             return width[0]
 
     @element_width.setter
-    def element_width(self, value: List[int]):
+    def element_width(self, value: list[int]):
         try:
             for v in value:
                 if not isinstance(v, int):
@@ -474,23 +464,23 @@ class Element:
         return self.tree.replace("_root.", "")
 
     @property
-    def css_code(self) -> List[Tuple[int, str]]:
+    def css_code(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and CSS code."""
         return self._css_code
 
     @property
-    def css_urls(self) -> List[Tuple[int, str]]:
+    def css_urls(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and an url pointing
         to CSS code."""
         return self._css_urls
 
     @property
-    def js_code(self) -> List[Tuple[int, str]]:
+    def js_code(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and Javascript."""
         return self._js_code
 
     @property
-    def js_urls(self) -> List[Tuple[int, str]]:
+    def js_urls(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and an url pointing
         to JavaScript."""
         return self._js_urls
@@ -533,14 +523,16 @@ class Element:
         d["hide"] = "hide" if self._showif_on_current_page is True else ""
         d["align"] = f"text-{self.align}"
         d["align_raw"] = self.align
-        d["fontsize"] = f"font-size: {self.font_size};" if self.font_size is not None else ""
+        d["fontsize"] = (
+            f"font-size: {self.font_size};" if self.font_size is not None else ""
+        )
         d["height"] = f"height: {self.height};" if self.height is not None else ""
         d["responsive"] = self.experiment.config.getboolean("layout", "responsive")
         return d
 
     # Private methods start here ---------------------------------------
 
-    def _evaluate_showif(self) -> List[bool]:
+    def _evaluate_showif(self) -> list[bool]:
         """Checks the showif conditions that refer to previous pages.
 
         Returns:
@@ -595,10 +587,14 @@ class Element:
         """
 
         if self.name in experiment.root_section.all_updated_elements:
-            raise AlfredError(f"Element name '{self.name}' is already present in the experiment.")
+            raise AlfredError(
+                f"Element name '{self.name}' is already present in the experiment."
+            )
 
         if self.name in experiment.data_manager.flat_session_data:
-            raise AlfredError(f"Element name '{self.name}' conflicts with a protected name.")
+            raise AlfredError(
+                f"Element name '{self.name}' conflicts with a protected name."
+            )
 
         self.experiment = experiment
         self.exp = experiment
@@ -851,17 +847,19 @@ class RowLayout:
 
     """
 
-    def __init__(self, ncols: int, valign_cols: List[str] = None, responsive: bool = True):
+    def __init__(
+        self, ncols: int, valign_cols: list[str] = None, responsive: bool = True
+    ):
         """Constructor method."""
         self.ncols: int = ncols
         self._valign_cols = valign_cols if valign_cols is not None else []
         self.responsive: bool = responsive  # documented in getter
 
-        self._width_xs: List[int] = None  # documented in getter
-        self._width_sm: List[int] = None  # documented in getter
-        self._width_md: List[int] = None  # documented in getter
-        self._width_lg: List[int] = None  # documented in getter
-        self._width_xl: List[int] = None  # documented in getter
+        self._width_xs: list[int] = None  # documented in getter
+        self._width_sm: list[int] = None  # documented in getter
+        self._width_md: list[int] = None  # documented in getter
+        self._width_lg: list[int] = None  # documented in getter
+        self._width_xl: list[int] = None  # documented in getter
 
     @property
     def ncols(self):
@@ -899,11 +897,13 @@ class RowLayout:
             assert isinstance(value[0], int)
         except (AssertionError, TypeError):
             raise ValueError("width must be a list of integers")
-        
+
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
+            raise ValueError(
+                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+            )
 
         self._width_xs = value
 
@@ -925,7 +925,9 @@ class RowLayout:
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
+            raise ValueError(
+                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+            )
 
         self._width_sm = value
 
@@ -943,11 +945,13 @@ class RowLayout:
             assert isinstance(value[0], int)
         except AssertionError:
             raise ValueError("width must be a list of integers")
-        
+
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
+            raise ValueError(
+                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+            )
 
         self._width_md = value
 
@@ -965,11 +969,13 @@ class RowLayout:
             assert isinstance(value[0], int)
         except AssertionError:
             raise ValueError("width must be a list of integers")
-        
+
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
+            raise ValueError(
+                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+            )
 
         self._width_lg = value
 
@@ -987,11 +993,13 @@ class RowLayout:
             assert isinstance(value[0], int)
         except AssertionError:
             raise ValueError("width must be a list of integers")
-        
+
         try:
             assert len(value) <= self.ncols
         except AssertionError:
-            raise ValueError(f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}.")
+            raise ValueError(
+                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+            )
 
         self._width_xl = value
 
@@ -1023,7 +1031,7 @@ class RowLayout:
             out = breaks if breaks != "" else "col"
             return out
 
-    def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
+    def format_breaks(self, breaks: list[int], bp: str) -> list[str]:
         """
         Takes a list of column sizes (in integers from 1 to 12) and
         returns a corresponding list of formatted Bootstrap column
@@ -1064,7 +1072,7 @@ class RowLayout:
         return out
 
     @property
-    def valign_cols(self) -> List[str]:
+    def valign_cols(self) -> list[str]:
         """
         List[str]: Vertical column alignments.
 
@@ -1114,12 +1122,14 @@ class RowLayout:
             elif n == "bottom":
                 out.append("align-self-end")
             else:
-                raise ValueError("Valign allowed values: 'auto', 'top', 'center', and 'bottom'.")
+                raise ValueError(
+                    "Valign allowed values: 'auto', 'top', 'center', and 'bottom'."
+                )
 
         return out
 
     @valign_cols.setter
-    def valign_cols(self, value: List[str]):
+    def valign_cols(self, value: list[str]):
         if len(value) > self.ncols:
             raise ValueError("Col position list length must be <= number of elements.")
         self._valign_cols = value
@@ -1160,7 +1170,7 @@ class Row(Element):
             are 'auto' (default), 'top', 'center', and 'bottom'. The
             elements of the list correspond to the row's columns. See
             :attr:`.RowLayout.valign_cols`. This argument is overridden
-            if you use a custom :class:`.RowLayout` instance for the 
+            if you use a custom :class:`.RowLayout` instance for the
             *layout* argument.
         elements_full_width: A switch, telling the row whether you wish
             it to resize all elements in it to full-width (default: True).
@@ -1168,12 +1178,12 @@ class Row(Element):
             a smaller width, but when using them in a Row, you usually
             want them to span the full width of their column.
         layout: Can be one of the following: 1) An instance of
-            :class:`.RowLayout`, or 2) a tuple of integers, specifying 
+            :class:`.RowLayout`, or 2) a tuple of integers, specifying
             the allocation of horizontal space between the columns
-            on small screens upwards (using bootstraps 12-column grid). 
+            on small screens upwards (using bootstraps 12-column grid).
 
             Option 1) offers fine-tuned flexibility, 2) uses a default
-            RowLayout and changes the :attr:`.RowLayout.width_sm` 
+            RowLayout and changes the :attr:`.RowLayout.width_sm`
             attribute.
 
             By default, the layout is set automatically.
@@ -1251,12 +1261,12 @@ class Row(Element):
     def __init__(
         self,
         *elements: Element,
-        valign_cols: List[str] = None,
+        valign_cols: list[str] = None,
         elements_full_width: bool = True,
         height: str = "auto",
         name: str = None,
         showif: dict = None,
-        layout: Union[RowLayout, Tuple[int]] = None,
+        layout: RowLayout | tuple[int] = None,
         **kwargs,
     ):
         """Constructor method."""
@@ -1411,12 +1421,12 @@ class LabelledElement(Element):
             and right of the element.
 
         layout: Can be one of the following: 1) An instance of
-            :class:`.RowLayout`, or 2) a tuple of integers, specifying 
-            the allocation of horizontal space between leftlab, main 
-            element widget and rightlab on small screens upwards. 
+            :class:`.RowLayout`, or 2) a tuple of integers, specifying
+            the allocation of horizontal space between leftlab, main
+            element widget and rightlab on small screens upwards.
 
             Option 1) offers fine-tuned flexibility, 2) uses a default
-            RowLayout and changes the :attr:`.RowLayout.width_sm` 
+            RowLayout and changes the :attr:`.RowLayout.width_sm`
             attribute.
 
             By default, the layout is set automatically depending on the
@@ -1439,7 +1449,7 @@ class LabelledElement(Element):
         leftlab: str = None,
         rightlab: str = None,
         bottomlab: str = None,
-        layout: Union[RowLayout, Tuple[int]] = None,
+        layout: RowLayout | tuple[int] = None,
         **kwargs,
     ):
         """Constructor method."""
@@ -1483,15 +1493,12 @@ class LabelledElement(Element):
         try:
             if not value.ncols == self._ncols:
                 raise AlfredError(
-                    (
-                        "The number of layout columns must match the specification of "
-                        f"left and right labels. In this case, you need {self._ncols} columns."
-                    )
+                    "The number of layout columns must match the specification of "
+                    f"left and right labels. In this case, you need {self._ncols} columns."
                 )
             self._layout = value
         except AttributeError:
             raise TypeError("Layout must be an instance of 'alfred3.RowLayout'.")
-
 
     def added_to_page(self, page):
 
@@ -1504,7 +1511,9 @@ class LabelledElement(Element):
     def added_to_experiment(self, experiment):
 
         super().added_to_experiment(experiment)
-        self._layout.responsive = self.experiment.config.getboolean("layout", "responsive")
+        self._layout.responsive = self.experiment.config.getboolean(
+            "layout", "responsive"
+        )
 
         if self.toplab:
             self.toplab.added_to_experiment(experiment)
@@ -1546,7 +1555,9 @@ class LabelledElement(Element):
         if isinstance(value, Label):
             self._bottomlab = value
         elif isinstance(value, str):
-            self._bottomlab = Label(text=value, align="center", name=f"{self.name}_bottomlab")
+            self._bottomlab = Label(
+                text=value, align="center", name=f"{self.name}_bottomlab"
+            )
         else:
             self._bottomlab = None
 
@@ -1564,7 +1575,9 @@ class LabelledElement(Element):
             self._leftlab.layout = self._layout
             self._leftlab.layout_col = 0
         elif isinstance(value, str):
-            self._leftlab = Label(text=value, align="right", name=f"{self.name}_leftlab")
+            self._leftlab = Label(
+                text=value, align="right", name=f"{self.name}_leftlab"
+            )
             self._leftlab.layout = self._layout
             self._leftlab.layout_col = 0
         else:
@@ -1584,7 +1597,9 @@ class LabelledElement(Element):
             self._rightlab.layout = self._layout
             self._rightlab.layout_col = self._input_col + 1
         elif isinstance(value, str):
-            self._rightlab = Label(text=value, align="left", name=f"{self.name}_rightlab")
+            self._rightlab = Label(
+                text=value, align="left", name=f"{self.name}_rightlab"
+            )
             self._rightlab.layout = self._layout
             self._rightlab.layout_col = self._input_col + 1
         else:
@@ -1665,9 +1680,9 @@ class InputElement(LabelledElement):
         self,
         toplab: str = None,
         force_input: bool = None,
-        default: Union[str, int, float] = None,
-        prefix: Union[str, Element] = None,
-        suffix: Union[str, Element] = None,
+        default: str | int | float = None,
+        prefix: str | Element = None,
+        suffix: str | Element = None,
         description: str = None,
         disabled: bool = False,
         no_input_hint: str = None,
@@ -1684,7 +1699,9 @@ class InputElement(LabelledElement):
         self._prefix = prefix  # documented in getter property
         self._suffix = suffix  # documented in getter property
         self.show_hints: bool = True
-        self._hint_manager = MessageManager(default_level="danger")  # documented in getter
+        self._hint_manager = MessageManager(
+            default_level="danger"
+        )  # documented in getter
         self.disabled: bool = disabled  # documented in getter
         self.save_data = save_data
 
@@ -1692,7 +1709,9 @@ class InputElement(LabelledElement):
             self.input = default
 
         if self._force_input and (self._showif_on_current_page or self.showif):
-            raise ValueError(f"Elements with 'showif's can't be 'force_input' ({self}).")
+            raise ValueError(
+                f"Elements with 'showif's can't be 'force_input' ({self})."
+            )
 
     @property
     def show_hints(self):
@@ -1764,7 +1783,7 @@ class InputElement(LabelledElement):
         return self.hint_manager.get_messages()
 
     @property
-    def debug_value(self) -> Union[str, None]:
+    def debug_value(self) -> str | None:
         """
         Union[str, None]: Value to be used as a default in debug mode.
 
@@ -1792,7 +1811,7 @@ class InputElement(LabelledElement):
         return False
 
     @property
-    def default(self) -> Union[str, int, float]:
+    def default(self) -> str | int | float:
         """
         Union[str, int, float]: Default value of this element.
 
@@ -1887,7 +1906,9 @@ class InputElement(LabelledElement):
             "You need to enter something".
         """
         name = f"no_input{type(self).__name__}"
-        return self.experiment.config.get("hints", name, fallback="You need to enter something.")
+        return self.experiment.config.get(
+            "hints", name, fallback="You need to enter something."
+        )
 
     @property
     def prefix(self):
@@ -1916,14 +1937,14 @@ class InputElement(LabelledElement):
             return self._suffix._inner_html
         except AttributeError:
             return self._render_input_group_text(self._suffix)
-    
+
     @property
     def _codebook_suffix(self):
         try:
             return self._suffix._inner_html
         except AttributeError:
             return self._suffix
-    
+
     @property
     def _codebook_prefix(self):
         try:
@@ -1959,7 +1980,7 @@ class InputElement(LabelledElement):
         """
         if not self.save_data:
             return {}
-        
+
         data = {}
         data["value"] = self.input
         data.update(self.codebook_data)
@@ -1980,7 +2001,9 @@ class InputElement(LabelledElement):
             try:
                 self.input = d[self.name]
             except KeyError:
-                self.log.debug(f"No data for {self} found in data dictionary. Moving on.")
+                self.log.debug(
+                    f"No data for {self} found in data dictionary. Moving on."
+                )
                 pass
 
     @property
@@ -2004,8 +2027,12 @@ class InputElement(LabelledElement):
         data["prefix"] = self._codebook_prefix
         data["suffix"] = self._codebook_suffix
         data["default"] = self.default
-        data["description"] = " ".join(self.description.splitlines()) if self.description else None
-        data["unlinked"] = True if isinstance(self.page, page.UnlinkedDataPage) else False
+        data["description"] = (
+            " ".join(self.description.splitlines()) if self.description else None
+        )
+        data["unlinked"] = (
+            True if isinstance(self.page, page.UnlinkedDataPage) else False
+        )
         return data
 
     def added_to_page(self, page):
@@ -2086,7 +2113,7 @@ class ChoiceElement(InputElement, ABC):
 
     def __init__(
         self,
-        *choice_labels: Union[str, Element],
+        *choice_labels: str | Element,
         vertical: bool = False,
         align: str = "center",
         **kwargs,
@@ -2097,7 +2124,7 @@ class ChoiceElement(InputElement, ABC):
         self.vertical = vertical  # documented in getter
 
         #: List of choices that belong to this element.
-        self.choices: List[_Choice] = None
+        self.choices: list[_Choice] = None
 
     @property
     def vertical(self):
@@ -2134,7 +2161,9 @@ class ChoiceElement(InputElement, ABC):
             if isinstance(label, Element):
                 label.added_to_page(page)
                 label.should_be_shown = False
-                label.width = "full"  # in case of TextElement, b/c its default is a special width
+                label.width = (
+                    "full"  # in case of TextElement, b/c its default is a special width
+                )
 
     def prepare_web_widget(self):
 
@@ -2150,7 +2179,7 @@ class ChoiceElement(InputElement, ABC):
         return d
 
     @abstractmethod
-    def define_choices(self) -> List[_Choice]:
+    def define_choices(self) -> list[_Choice]:
         """
         Abstract method for the definition of the individual choices
         belonging to this element.
@@ -2169,7 +2198,9 @@ class ChoiceElement(InputElement, ABC):
 
         for i, lab in enumerate(self.choice_labels, start=1):
             try:
-                d.update({f"choice{i}": lab.text})  # if there is a text attribute, we use it.
+                d.update(
+                    {f"choice{i}": lab.text}
+                )  # if there is a text attribute, we use it.
             except AttributeError:
                 d.update({f"choice{i}": str(lab)})  # otherwise __str__
 

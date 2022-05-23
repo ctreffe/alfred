@@ -7,53 +7,53 @@ TextArea
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~TextArea.add_css
-   
-   
+
+
       ~TextArea.add_js
-   
-   
+
+
       ~TextArea.added_to_experiment
-   
-   
+
+
       ~TextArea.added_to_page
-   
-   
+
+
       ~TextArea.prepare_web_widget
-   
-   
+
+
       ~TextArea.render_inner_html
-   
-   
+
+
       ~TextArea.set_data
-   
-   
+
+
       ~TextArea.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~TextArea.base_template
          ~TextArea.bottomlab
          ~TextArea.codebook_data
@@ -102,7 +102,3 @@ TextArea
          ~TextArea.tree
          ~TextArea.web_widget
          ~TextArea.width
-      
-   
-   
-   

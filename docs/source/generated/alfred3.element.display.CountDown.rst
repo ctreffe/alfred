@@ -7,53 +7,53 @@ CountDown
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~CountDown.add_css
-   
-   
+
+
       ~CountDown.add_js
-   
-   
+
+
       ~CountDown.added_to_experiment
-   
-   
+
+
       ~CountDown.added_to_page
-   
-   
+
+
       ~CountDown.prepare_web_widget
-   
-   
+
+
       ~CountDown.render_inner_html
-   
-   
+
+
       ~CountDown.tilldate
-   
-   
+
+
       ~CountDown.tilltime
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~CountDown.base_template
          ~CountDown.converted_width
          ~CountDown.counter_js
@@ -80,7 +80,3 @@ CountDown
          ~CountDown.tree
          ~CountDown.web_widget
          ~CountDown.width
-      
-   
-   
-   

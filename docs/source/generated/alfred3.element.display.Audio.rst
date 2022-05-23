@@ -7,47 +7,47 @@ Audio
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Audio.add_css
-   
-   
+
+
       ~Audio.add_js
-   
-   
+
+
       ~Audio.added_to_experiment
-   
-   
+
+
       ~Audio.added_to_page
-   
-   
+
+
       ~Audio.prepare_web_widget
-   
-   
+
+
       ~Audio.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Audio.base_template
          ~Audio.bottomlab
          ~Audio.converted_width
@@ -79,7 +79,3 @@ Audio
          ~Audio.tree
          ~Audio.web_widget
          ~Audio.width
-      
-   
-   
-   

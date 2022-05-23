@@ -3,25 +3,23 @@
 
 """
 
-import queue
+import copy
+import json
 import logging
+import os
+import queue
+import re
 import threading
 import time
-import os
-import json
-import copy
-import re
-
 from abc import ABC, abstractmethod
-from configparser import ConfigParser, SectionProxy
+from configparser import ConfigParser, NoSectionError, SectionProxy
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Tuple, Union
 from uuid import uuid4
-from configparser import NoSectionError
 
+import bson
 import pymongo
 from pymongo.collection import ReturnDocument
-import bson
 
 from . import alfredlog
 from .config import ExperimentConfig
@@ -52,11 +50,15 @@ def _save_worker():
                 ) = _queue.get_nowait()
             except queue.Empty:
                 break
-            sa_controller._do_saving(data=data, agent_name=agent_name, level=lvl, data_time=t)
+            sa_controller._do_saving(
+                data=data, agent_name=agent_name, level=lvl, data_time=t
+            )
             event.set()
             _queue.task_done()
     except Exception as e:
-        _logger.critical("CRITICAL ERROR: Exception occured during save worker execution.")
+        _logger.critical(
+            "CRITICAL ERROR: Exception occured during save worker execution."
+        )
         _logger.exception("")
         raise e
 
@@ -91,7 +93,7 @@ _thread = threading.Thread(target=_save_looper, name="DataSaver")
 """Thread for executing the :func:`_save_looper` in the background."""
 
 _thread.daemon = True
-"""The entire Python program exits 
+"""The entire Python program exits
 when only daemon threads are left. (From threading documentation)"""
 
 _thread.start()
@@ -131,7 +133,11 @@ class SavingAgent(ABC):
     instance_log = False
 
     def __init__(
-        self, activation_level: int = 10, experiment=None, name: str = None, encrypt: bool = False
+        self,
+        activation_level: int = 10,
+        experiment=None,
+        name: str = None,
+        encrypt: bool = False,
     ):
         """Constructor method."""
 
@@ -146,16 +152,18 @@ class SavingAgent(ABC):
         self.name = name
         if name is None or name == "auto" or name == "":
             self.name = (
-                type(self).__name__ + "_" + time.strftime("%Y-%m-%d_t%H%M%S") + "_" + uuid4().hex
+                type(self).__name__
+                + "_"
+                + time.strftime("%Y-%m-%d_t%H%M%S")
+                + "_"
+                + uuid4().hex
             )
             self.log.debug(f"The name {self.name} was assigned automatically.")
         if name is None or name == "":
             self.log.warning(
-                (
-                    "No name provided for saving agent. Please provide a name via the 'name' argument. "
-                    f"The name {self.name} was assigned automatically. If you want to assign the "
-                    "name automatically, instantiate the SavingAgent with *name='auto'."
-                )
+                "No name provided for saving agent. Please provide a name via the 'name' argument. "
+                f"The name {self.name} was assigned automatically. If you want to assign the "
+                "name automatically, instantiate the SavingAgent with *name='auto'."
             )
 
         self.log.add_queue_logger(self, __name__)
@@ -165,7 +173,7 @@ class SavingAgent(ABC):
         self.encrypt = encrypt
 
         if self.encrypt and not self._experiment.secrets.get("encryption", "key"):
-            
+
             raise ValueError(
                 f"Encryption was turned on for {self}, but the experiment does not have an encryption key. Turn encryption off in the saving agent configuration, or provide an encryption key in secrets.conf."
             )
@@ -238,9 +246,14 @@ class SavingAgent(ABC):
             msg = f"No data_time provided in save_data call to {self}. Inserting current time."
             self.log.debug(msg)
 
-        data_is_newer_than_previous = self._latest_save_time is None or self._latest_save_time < data_time
+        data_is_newer_than_previous = (
+            self._latest_save_time is None or self._latest_save_time < data_time
+        )
         if not data_is_newer_than_previous:
-            if self.exp.movement_manager.current_page is not self.exp.movement_manager.last_page:
+            if (
+                self.exp.movement_manager.current_page
+                is not self.exp.movement_manager.last_page
+            ):
                 msg = f"Data snapshot from {data_time} was not saved, because there was a newer one."
                 self.log.info(msg)
             self._lock.release()
@@ -291,9 +304,11 @@ class SavingAgent(ABC):
         by all children of :class:`SavingAgent`.
         """
         pass
-    
+
     def __str__(self):
-        return f"{type(self).__name__}(name='{self.name}', level={self.activation_level})"
+        return (
+            f"{type(self).__name__}(name='{self.name}', level={self.activation_level})"
+        )
 
 
 class LocalSavingAgent(SavingAgent):
@@ -337,7 +352,7 @@ class LocalSavingAgent(SavingAgent):
     def __init__(
         self,
         filename: str,
-        directory: Union[str, Path],
+        directory: str | Path,
         activation_level: int = 1,
         experiment=None,
         name: str = None,
@@ -354,7 +369,7 @@ class LocalSavingAgent(SavingAgent):
         return self._filename
 
     @filename.setter
-    def filename(self, filename: Union[str, Path]):
+    def filename(self, filename: str | Path):
         f = Path(filename)
         if not f.suffix:
             f = Path(filename + ".json")
@@ -366,7 +381,7 @@ class LocalSavingAgent(SavingAgent):
         return self._directory
 
     @directory.setter
-    def directory(self, path: Union[str, Path]):
+    def directory(self, path: str | Path):
         directory = Path(path)
         if not directory.is_absolute():
             directory = Path(self._experiment.path) / directory
@@ -392,7 +407,7 @@ class LocalSavingAgent(SavingAgent):
     @property
     def file(self):
         return self.directory / self.filename
-    
+
     def __str__(self):
         return f"{type(self).__name__}(name='{self.name}', level={self.activation_level}, path='{self.directory.parent.name}/{self.directory.name}')"
 
@@ -485,7 +500,10 @@ class MongoSavingAgent(SavingAgent):
     ):
         """Constructor method."""
         super().__init__(
-            activation_level=activation_level, experiment=experiment, name=name, encrypt=encrypt
+            activation_level=activation_level,
+            experiment=experiment,
+            name=name,
+            encrypt=encrypt,
         )
         self._mc = client
         self._db = self._mc[database]
@@ -511,7 +529,12 @@ class MongoSavingAgent(SavingAgent):
         data.update(f)
         data["_id"] = self.doc_id
 
-        check = self._col.find_one_and_replace(filter=f, replacement=data, upsert=True, return_document=ReturnDocument.AFTER)
+        check = self._col.find_one_and_replace(
+            filter=f,
+            replacement=data,
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
 
         if not check.get("exp_session_id") == data.get("exp_session_id"):
             raise SavingAgentRunException("Failed to validate data saving.")
@@ -533,12 +556,12 @@ class MongoSavingAgent(SavingAgent):
     def col(self):
         """The agent's :class:`pymongo.collection.Collection`."""
         return self._col
-    
+
     @property
     def misc_col(self):
         """
         The miscellaneous collection associated with this saving agent.
-        
+
         If no miscellaneous collection was specified, the main collection
         will be returned.
         """
@@ -621,7 +644,9 @@ class AutoMongoSavingAgent(MongoSavingAgent):
             client = AutoMongoClient(config=config)
 
         if not self.validate_client(client, config):
-            raise ValueError("The client and configuration contain different values for 'host'.")
+            raise ValueError(
+                "The client and configuration contain different values for 'host'."
+            )
 
         super().__init__(
             client=client,
@@ -631,7 +656,7 @@ class AutoMongoSavingAgent(MongoSavingAgent):
             experiment=experiment,
             name=config.get("name"),
             encrypt=config.getboolean("encrypt", fallback=False),
-            misc_collection=config.get("misc_collection")
+            misc_collection=config.get("misc_collection"),
         )
 
 
@@ -708,7 +733,9 @@ class MongoManager:
             for fb_section_name in fallbacks:
                 if parser.getboolean(fb_section_name, "use"):
                     fb_agent = self.init_agent(
-                        agent_class=agent_class, section=fb_section_name, config_name=config_name
+                        agent_class=agent_class,
+                        section=fb_section_name,
+                        config_name=config_name,
                     )
                     agent.append_fallback(fb_agent)
 
@@ -830,11 +857,20 @@ class SavingAgentController:
         """
         for agent in self.agents.values():
             self._queue_task(
-                data=data, level=level, agent_name=agent.name, sync=sync, data_time=data_time
+                data=data,
+                level=level,
+                agent_name=agent.name,
+                sync=sync,
+                data_time=data_time,
             )
 
     def save_with_agent(
-        self, data: dict, name: str, level: int, sync: bool = False, data_time: float = None
+        self,
+        data: dict,
+        name: str,
+        level: int,
+        sync: bool = False,
+        data_time: float = None,
     ):
         """Puts a saving task in to the app-wide saving queue for the
         agent *name*.
@@ -849,10 +885,17 @@ class SavingAgentController:
                 True, the experiment will continue only after the task
                 was completed. Defaults to False.
         """
-        self._queue_task(data=data, level=level, agent_name=name, sync=sync, data_time=data_time)
+        self._queue_task(
+            data=data, level=level, agent_name=name, sync=sync, data_time=data_time
+        )
 
     def _queue_task(
-        self, data: dict, level: int, agent_name: str, sync: bool = False, data_time: float = None
+        self,
+        data: dict,
+        level: int,
+        agent_name: str,
+        sync: bool = False,
+        data_time: float = None,
     ):
         """Puts a saving task into the app-wide saving queue.
 
@@ -875,7 +918,7 @@ class SavingAgentController:
 
         task = (priority, save_time, level, task_id, e, data, self, agent_name)
         _queue.put(task)
-        
+
         if sync:
             e.wait()
 
@@ -973,21 +1016,31 @@ class DataSaver:
         # local saving agent
         if exp.config.getboolean(self._LSA, "use"):
             # init agent
-            agent_local = AutoLocalSavingAgent(config=exp.config[self._LSA], experiment=exp)
-            agent_local.filename = f"{init_time}_{agent_local.name}_{exp.session_id}.json"
+            agent_local = AutoLocalSavingAgent(
+                config=exp.config[self._LSA], experiment=exp
+            )
+            agent_local.filename = (
+                f"{init_time}_{agent_local.name}_{exp.session_id}.json"
+            )
 
             # append fallbacks to saving agent
             for fb in self._LSA_FB:
                 if exp.config.getboolean(fb, "use"):
-                    fb_agent = AutoLocalSavingAgent(config=exp.config[fb], experiment=exp)
-                    fb_agent.filename = f"{init_time}_{fb_agent.name}_{exp.session_id}.json"
+                    fb_agent = AutoLocalSavingAgent(
+                        config=exp.config[fb], experiment=exp
+                    )
+                    fb_agent.filename = (
+                        f"{init_time}_{fb_agent.name}_{exp.session_id}.json"
+                    )
                     agent_local.append_fallback(fb_agent)
 
             sac_main.append(agent_local)
 
         # failure local saving agent
         if exp.config.getboolean(self._F_LSA, "use"):
-            agent_fail = AutoLocalSavingAgent(config=exp.config[self._F_LSA], experiment=exp)
+            agent_fail = AutoLocalSavingAgent(
+                config=exp.config[self._F_LSA], experiment=exp
+            )
             agent_fail.filename = f"{init_time}_{agent_fail.name}_{exp.session_id}.json"
 
             sac_main.append_failure_agent(agent_fail)
@@ -1000,7 +1053,9 @@ class DataSaver:
 
         # mongo saving agent from secrets.conf
         if exp.secrets.getboolean(self._MSA, "use"):
-            agent_mongo = self.mongo_manager.init_agent(section=self._MSA, fallbacks=self._MSA_FB)
+            agent_mongo = self.mongo_manager.init_agent(
+                section=self._MSA, fallbacks=self._MSA_FB
+            )
             agent_mongo.identifier = mongodb_filter
 
             # append fallback mongo agent
@@ -1018,8 +1073,12 @@ class DataSaver:
         sac_unlinked = SavingAgentController(exp)
 
         if exp.config.getboolean(self._LSA_U, "use"):
-            agent_loc_unlnkd = AutoLocalSavingAgent(config=exp.config[self._LSA_U], experiment=exp)
-            agent_loc_unlnkd.filename = f"unlinked_{self._unlinked_random_name_part}.json"
+            agent_loc_unlnkd = AutoLocalSavingAgent(
+                config=exp.config[self._LSA_U], experiment=exp
+            )
+            agent_loc_unlnkd.filename = (
+                f"unlinked_{self._unlinked_random_name_part}.json"
+            )
             sac_unlinked.append(agent_loc_unlnkd)
 
         if exp.secrets.getboolean(self._MSA_U, "use"):

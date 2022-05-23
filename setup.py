@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 # Parse version from _version.py in package directory
@@ -28,7 +28,7 @@ setuptools.setup(
             "templates/*",
             "element/templates/*",
             "element/templates/html/*",
-            "element/templates/js/*"
+            "element/templates/js/*",
         ]
     },
     package_dir={"": "src"},
@@ -42,7 +42,7 @@ setuptools.setup(
         "emoji>=1.2",
         "cmarkgfm>=0.5",
         "requests>=2.25",
-        "bleach>=3.3"
+        "bleach>=3.3",
     ],
     entry_points="""
     [console_scripts]

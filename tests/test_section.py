@@ -1,7 +1,10 @@
-import pytest
 import random
+
+import pytest
+
 import alfred3 as al
-from alfred3.testutil import get_exp_session, clear_db
+from alfred3.testutil import clear_db, get_exp_session
+
 
 @pytest.fixture
 def exp_shuffle(tmp_path):
@@ -12,6 +15,7 @@ def exp_shuffle(tmp_path):
     yield exp
 
     clear_db()
+
 
 @pytest.fixture
 def exp(tmp_path):
@@ -25,25 +29,23 @@ def exp(tmp_path):
 
 
 class TestSection:
-
     def test_shuffle1(self, exp_shuffle):
         exp = exp_shuffle
 
         assert exp.movement_manager.first_page.name == "p01"
         random.seed(1)
         exp.start()
-        
+
         page_names = [p.name for p in exp.Main.members.values()]
         assert page_names == ["p02", "p03", "p01"]
 
         exp.forward()
         exp.forward()
-        
+
         pages = list(exp.Main.members.values())
         assert pages[0].input_elements["task_01"]
         assert pages[1].input_elements["task_02"]
         assert pages[2].input_elements["task_03"]
-    
 
     def test_shuffle2(self, exp_shuffle):
         exp = exp_shuffle
@@ -51,18 +53,18 @@ class TestSection:
         assert exp.movement_manager.first_page.name == "p01"
         random.seed(123123)
         exp.start()
-        
+
         page_names = [p.name for p in exp.Main.members.values()]
         assert page_names == ["p03", "p02", "p01"]
 
         exp.forward()
         exp.forward()
-        
+
         pages = list(exp.Main.members.values())
         assert pages[0].input_elements["task_01"]
         assert pages[1].input_elements["task_02"]
         assert pages[2].input_elements["task_03"]
-    
+
     def test_first_page(self):
         main = al.Section(name="main")
 
@@ -71,7 +73,7 @@ class TestSection:
 
         assert main.p1 is main.first_page
         assert main.p2 is not main.first_page
-    
+
     def test_last_page(self):
         main = al.Section(name="main")
 
@@ -83,7 +85,6 @@ class TestSection:
 
 
 class TestHideOnForwardSection:
-
     def test_jump_backwards(self, exp):
         main = al.Section(name="main")
         smart = al.HideOnForwardSection(name="smart")

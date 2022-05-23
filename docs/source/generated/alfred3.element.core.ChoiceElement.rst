@@ -7,56 +7,56 @@ ChoiceElement
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~ChoiceElement.add_css
-   
-   
+
+
       ~ChoiceElement.add_js
-   
-   
+
+
       ~ChoiceElement.added_to_experiment
-   
-   
+
+
       ~ChoiceElement.added_to_page
-   
-   
+
+
       ~ChoiceElement.define_choices
-   
-   
+
+
       ~ChoiceElement.prepare_web_widget
-   
-   
+
+
       ~ChoiceElement.render_inner_html
-   
-   
+
+
       ~ChoiceElement.set_data
-   
-   
+
+
       ~ChoiceElement.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~ChoiceElement.base_template
          ~ChoiceElement.bottomlab
          ~ChoiceElement.choice_labels
@@ -108,7 +108,3 @@ ChoiceElement
          ~ChoiceElement.vertical
          ~ChoiceElement.web_widget
          ~ChoiceElement.width
-      
-   
-   
-   

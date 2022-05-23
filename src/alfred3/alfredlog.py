@@ -3,21 +3,21 @@
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
-from builtins import object
-import logging
-import sys
-import os
-import traceback
-import queue
-import threading
 import copy
+import logging
+import os
+import queue
 import re
+import sys
+import threading
+import traceback
 from pathlib import Path
 from typing import Union
 
 from .config import ExperimentConfig
 
-def prepare_file_handler(filepath: Union[str, Path]) -> logging.FileHandler:
+
+def prepare_file_handler(filepath: str | Path) -> logging.FileHandler:
     """Returns a :class:`~logging.FileHandler` and creates the necessary
     directories on the fly, if needed.
 
@@ -44,7 +44,8 @@ def prepare_alfred_formatter(exp_id: str) -> logging.Formatter:
     """
 
     formatter = logging.Formatter(
-        ("%(asctime)s - %(name)s - %(levelname)s - " f"experiment id={exp_id} - %(message)s")
+        "%(asctime)s - %(name)s - %(levelname)s - "
+        f"experiment id={exp_id} - %(message)s"
     )
 
     return formatter
@@ -69,35 +70,35 @@ class QueuedLoggingInterface:
     * We want logging messages to contain experiment information
         (exp_id and session_id) and we want logfiles to potentially be
         experiment specific.
-    
+
     * The necessary information only becomes available to pages and elements
-        once the page or its parent section get appended to the 
+        once the page or its parent section get appended to the
         experiment.
-    
-    * So, logged messages are collected in a queue and logged as soon 
+
+    * So, logged messages are collected in a queue and logged as soon
         as the experiment becomes available.
-    
+
     * In order to not lose information in between their queueing
         and their eventual logging with the queue logger, all messages
         get also logged immediately using the base logger to a general
         "admin" log (this is turned off through configuration
         in run.py for local experiments by default, to avoid doubling
         log messages in a single file).
-    
+
     Args:
         base_logger: Name of the base logger.
         queue_logger: Name of the queue logger.
 
     Attributes:
-        use_base_logger (bool): Indicates, whether the base logger 
+        use_base_logger (bool): Indicates, whether the base logger
             should be used. Defaults to *True*, if a *base_logger* is
             defined upon initialization and to *False*, if *base_logger*
             is *None*. You can use this to turn off base logger usage.
-        
+
         queue_logger (logging.Logger): The queue logger object. You
-            can acces the logger this way to apply advanced 
+            can acces the logger this way to apply advanced
             configuration.
-        
+
         session_id (str): Allows you to set a session ID that will be
             included in logged messages. (Defaults to "NA".)
     """
@@ -105,9 +106,13 @@ class QueuedLoggingInterface:
     def __init__(self, base_logger: str = None, queue_logger: str = None):
         """Constructor method."""
         self.use_base_logger = True if base_logger is not None else False
-        self._base_logger = logging.getLogger(base_logger) if base_logger is not None else None
+        self._base_logger = (
+            logging.getLogger(base_logger) if base_logger is not None else None
+        )
         self._base_logger_storage = None
-        self._queue_logger = logging.getLogger(queue_logger) if queue_logger is not None else None
+        self._queue_logger = (
+            logging.getLogger(queue_logger) if queue_logger is not None else None
+        )
         self._queue = queue.Queue()
         self._level = None
         self.session_id = "NA"
@@ -115,18 +120,16 @@ class QueuedLoggingInterface:
     @property
     def queue_logger(self):
         return self._queue_logger
-    
+
     @queue_logger.setter
     def queue_logger(self, logger):
 
         if self.queue_logger is not None:
             self.warning(
-                (
-                    "Queue logger already present. Overriding queue logger "
-                    f"{self.queue_logger} with {logger}."
-                )
+                "Queue logger already present. Overriding queue logger "
+                f"{self.queue_logger} with {logger}."
             )
-        
+
         self._queue_logger = logger
 
     def add_queue_logger(self, obj, module: str):
@@ -146,12 +149,12 @@ class QueuedLoggingInterface:
         The name has the following format::
 
             exp.exp_id.module_name.class_name.object_identifier
-        
+
         The identifier is only added if the object has an attribute
         *instance_log* that is set to *True*. If the object
         has a *name* attribute, that is used as the identifier. Else,
         the object's *uid* is used.
-        
+
         Args:
             obj: The object for which a logger name should be generated.
         """
@@ -168,7 +171,6 @@ class QueuedLoggingInterface:
         else:
             name.append(obj.experiment.exp_id)
 
-        
         name.append(".".join(module_name))
         name.append(type(obj).__name__)
 
@@ -266,7 +268,7 @@ class QueuedLoggingInterface:
 
 class BWCompatibleLogger(QueuedLoggingInterface):
     """Offers backwards compatibility for logging.
-    
+
     This class accepts an *experiment* parameter in its logging methods.
     """
 
@@ -406,4 +408,3 @@ class BWCompatibleLogger(QueuedLoggingInterface):
             super().exception(msg=msg, *args, **kwargs)
         except TypeError:
             super().exception(msg=msg)
-

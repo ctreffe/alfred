@@ -7,56 +7,56 @@ SingleChoiceBar
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~SingleChoiceBar.add_css
-   
-   
+
+
       ~SingleChoiceBar.add_js
-   
-   
+
+
       ~SingleChoiceBar.added_to_experiment
-   
-   
+
+
       ~SingleChoiceBar.added_to_page
-   
-   
+
+
       ~SingleChoiceBar.define_choices
-   
-   
+
+
       ~SingleChoiceBar.prepare_web_widget
-   
-   
+
+
       ~SingleChoiceBar.render_inner_html
-   
-   
+
+
       ~SingleChoiceBar.set_data
-   
-   
+
+
       ~SingleChoiceBar.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~SingleChoiceBar.base_template
          ~SingleChoiceBar.bottomlab
          ~SingleChoiceBar.button_group_class
@@ -111,7 +111,3 @@ SingleChoiceBar
          ~SingleChoiceBar.vertical
          ~SingleChoiceBar.web_widget
          ~SingleChoiceBar.width
-      
-   
-   
-   

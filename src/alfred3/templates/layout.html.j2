@@ -33,7 +33,7 @@
 
 <body class="line-numbers{% if responsive %} responsive{% endif %}" id="main-body">
 
-    
+
     <div class="container-fluid d-flex justify-content-center logo-bg {% if not responsive %} min-width {% endif %}" id="logo-container">
         <div class="logo-content {% if responsive %} responsive-width {% else %} fixed-width {% endif %}">
             {% if logo_url %}
@@ -47,12 +47,12 @@
             </div>
     </div>
 
-    
-    
+
+
     {% block page %}
     {% endblock page %}
 
-    
+
     {% if debug or admin %}
     <div class="container-fluid {% if responsive %} responsive-width {% else %} fixed-width {% endif %} mt-4" id="jumplist">
     <div class="jumplist-container">
@@ -64,18 +64,18 @@
     </div>
     </div>
     {% endif %}
-    
+
 
     <div class="footer-container d-flex justify-content-center {% if not responsive %} min-width {% endif %}" id="footer-container">
-    
+
             <div class="footer text-center small text-dark mt-1">
                 {% if footer_text %}
                 <p class="footer-text mt-1">{{ footer_text }}</p>
                 {% endif %}
-                
+
                 <div class="footer-brand"> <a href="https://github.com/ctreffe/alfred" class="brand-link text-dark" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" title="<img src='{{ alfred_logo_url }}' class='alfred-logo mr-1' alt='Alfred logo'>alfred3<br>Developed by Christian Treffenstädt, Johannes Brachem, and Paul Wiemann">
                 <i class="fab fa-github mr-1"></i>
-                alfred3</a></div> 
+                alfred3</a></div>
             </div>
 
         </div>
@@ -92,7 +92,7 @@
             {{ js }}
         </script>
         {% endfor %}
-        
+
         {% for _, url in code.get("js_urls") %}
         <script type="text/javascript" src="{{ url }}"></script>
         {% endfor %}

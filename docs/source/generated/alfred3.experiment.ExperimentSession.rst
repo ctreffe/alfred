@@ -7,77 +7,77 @@ ExperimentSession
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~ExperimentSession.abort
-   
-   
+
+
       ~ExperimentSession.append
-   
-   
+
+
       ~ExperimentSession.append_plugin_data_query
-   
-   
+
+
       ~ExperimentSession.backward
-   
-   
+
+
       ~ExperimentSession.decrypt
-   
-   
+
+
       ~ExperimentSession.encrypt
-   
-   
+
+
       ~ExperimentSession.finish
-   
-   
+
+
       ~ExperimentSession.forward
-   
-   
+
+
       ~ExperimentSession.get_page_data
-   
-   
+
+
       ~ExperimentSession.get_section_data
-   
-   
+
+
       ~ExperimentSession.jump
-   
-   
+
+
       ~ExperimentSession.post_message
-   
-   
+
+
       ~ExperimentSession.read_csv_todict
-   
-   
+
+
       ~ExperimentSession.read_csv_tolist
-   
-   
+
+
       ~ExperimentSession.start
-   
-   
+
+
       ~ExperimentSession.subpath
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~ExperimentSession.abort_functions
          ~ExperimentSession.aborted
          ~ExperimentSession.adata
@@ -125,7 +125,3 @@ ExperimentSession
          ~ExperimentSession.urlargs
          ~ExperimentSession.values
          ~ExperimentSession.version
-      
-   
-   
-   

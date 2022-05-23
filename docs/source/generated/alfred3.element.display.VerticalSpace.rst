@@ -7,47 +7,47 @@ VerticalSpace
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~VerticalSpace.add_css
-   
-   
+
+
       ~VerticalSpace.add_js
-   
-   
+
+
       ~VerticalSpace.added_to_experiment
-   
-   
+
+
       ~VerticalSpace.added_to_page
-   
-   
+
+
       ~VerticalSpace.prepare_web_widget
-   
-   
+
+
       ~VerticalSpace.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~VerticalSpace.base_template
          ~VerticalSpace.converted_width
          ~VerticalSpace.css_class_container
@@ -73,7 +73,3 @@ VerticalSpace
          ~VerticalSpace.tree
          ~VerticalSpace.web_widget
          ~VerticalSpace.width
-      
-   
-   
-   
