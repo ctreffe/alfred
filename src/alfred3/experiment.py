@@ -96,7 +96,8 @@ class Experiment:
 
     """
 
-    def __init__(self):
+    def __init__(self, session_timeout: int = 60 * 60 * 24):
+        self.session_timeout = session_timeout
         self._final_page = None
 
         #: A dictionary of all pages and sections added to the experiment.
@@ -410,6 +411,7 @@ class Experiment:
         session_id: str,
         config: ExperimentConfig,
         secrets: ExperimentSecrets,
+        timeout: int = None,
         **urlargs,
     ):
         """
@@ -439,8 +441,9 @@ class Experiment:
         if urlargs.get("debug") in ["true", "True", "TRUE"]:
             config.read_dict({"general": {"debug": True}})
 
+        timeout = timeout if timeout is not None else self.session_timeout
         exp_session = ExperimentSession(
-            session_id=session_id, config=config, secrets=secrets, **urlargs
+            session_id=session_id, config=config, secrets=secrets, timeout=timeout, **urlargs
         )
 
         for fun in self.setup_functions:
@@ -702,7 +705,7 @@ class ExperimentSession:
         self._condition = ""  # docs in getter
         self._session = ""  # docs in getter
 
-        self.session_timeout = 60 * 60 * 24  # docs in getter
+        self.session_timeout = timeout  # docs in getter
         self.finished: bool = False  # docs in getter
         self.aborted: bool = False  # docs in getter
 
@@ -2223,7 +2226,7 @@ class ExperimentSession:
 
     @session_timeout.setter
     def session_timeout(self, value):
-        if value is not None and not isinstance(value, int):
+        if value is not None and not isinstance(value, (int, float)):
             raise TypeError
         self._session_timeout = value
 
