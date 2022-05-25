@@ -8,7 +8,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
-from mongomock import MongoClient
+import mongomock
+import pymongo
 from thesmuggler import smuggle
 
 from alfred3.config import ExperimentConfig, ExperimentSecrets
@@ -66,47 +67,55 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
     return ExperimentSecrets(expdir=tmp_path, config_objects=[secrets])
 
 
-def get_db():
+def get_db(mock: bool = True):
     """
     Returns the mongoDB database specified via credentials in .env.
     """
-    mc = MongoClient(
-        host=os.getenv("MONGODB_HOST", "localhost"),
-        port=int(os.getenv("MONGODB_PORT", 27017)),
-        username=os.getenv("MONGODB_USERNAME", "user"),
-        password=os.getenv("MONGODB_PASSWORD", "pass"),
-    )
+    if mock:
+        mc = mongomock.MongoClient(
+            host=os.getenv("MONGODB_HOST", "localhost"),
+            port=int(os.getenv("MONGODB_PORT", 27017)),
+            username=os.getenv("MONGODB_USERNAME", "user"),
+            password=os.getenv("MONGODB_PASSWORD", "pass"),
+        )
+    else:
+        mc = pymongo.MongoClient(
+            host=os.getenv("MONGODB_HOST", "localhost"),
+            port=int(os.getenv("MONGODB_PORT", 27017)),
+            # username=os.getenv("MONGODB_USERNAME", "user"),
+            # password=os.getenv("MONGODB_PASSWORD", "pass"),
+        )
     db = os.getenv("MONGODB_DATABASE", "alfred")
     return mc[db]
 
 
-def get_alfred_collection():
+def get_alfred_collection(mock: bool = True):
     """
     Returns the alfred mongoDB collection.
     """
-    db = get_db()
+    db = get_db(mock)
     col = os.getenv("MONGODB_COLLECTION", "alfred")
     return db[col]
 
 
-def get_misc_collection():
+def get_misc_collection(mock: bool = True):
     """
     Returns the misc mongoDB collection
     """
-    db = get_db()
+    db = get_db(mock)
     col = os.getenv("MONGODB_MISC_COLLECTION", "misc")
     return db[col]
 
 
-def clear_db():
+def clear_db(mock: bool = True):
     """
     Deletes all documents in the testing collection of the mongoDB
     accessed through environment variables.
 
     Intended for cleanup after testing.
     """
-    col = get_alfred_collection()
-    misc_col = get_misc_collection()
+    col = get_alfred_collection(mock)
+    misc_col = get_misc_collection(mock)
     delete_count_col = col.delete_many({}).deleted_count
     delete_count_misc = misc_col.delete_many({}).deleted_count
     print(
