@@ -761,7 +761,8 @@ class ExperimentSession:
             f"Experiment title: {self.title}, "
             f"Experiment version: {self.version}"
         )
-        if not self.admin_mode:
+        mock = self.secrets.getboolean("mongo_saving_agent", "mock")
+        if not self.admin_mode and not mock:
             self._save_data(sync=True)
 
     def append_plugin_data_query(self, query: dict):

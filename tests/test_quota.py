@@ -19,6 +19,7 @@ def exp(tmp_path, mongo_client):
     secrets = "tests/res/secrets-default.conf"
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
     exp.data_saver.main.agents["mongo"]._mc = mongo_client
+    exp._save_data(ysnc=True)
 
     yield exp
 
@@ -32,6 +33,7 @@ def exp_factory(tmp_path, mongo_client):
         secrets = "tests/res/secrets-default.conf"
         exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
         exp.data_saver.main.agents["mongo"]._mc = mongo_client
+        exp._save_data(ysnc=True)
         return exp
 
     yield expf
@@ -60,10 +62,6 @@ class TestQuota:
     def test_count_pending_abort(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
-
-        for exp in (exp1, exp2):
-            # exp.start()
-            exp._save_data(sync=True)
 
         quota1 = SessionQuota(1, exp1)
         quota1.count()
@@ -108,10 +106,6 @@ class TestQuota:
     def test_count_abort(self, exp_factory):
         exp1 = exp_factory()
         exp2 = exp_factory()
-
-        for exp in (exp1, exp2):
-            # exp.start()
-            exp._save_data(sync=True)
 
         quota1 = SessionQuota(1, exp1)
         quota1.count()
