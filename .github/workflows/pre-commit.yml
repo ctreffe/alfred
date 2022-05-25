@@ -1,0 +1,28 @@
+name: pre-commit
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.7"
+
+      - name: Install alfred
+        run: |
+          pip install .[dev]
+          pip list
+      - name: Run pre-commit
+        run: pre-commit run -a
