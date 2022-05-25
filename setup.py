@@ -39,7 +39,7 @@ setuptools.setup(
         "Flask>=1.1",
         "thesmuggler>=1.0",
         "Click>=7.1",
-        "emoji>=1.2",
+        "emoji>=1.2,<=1.6.3",
         "cmarkgfm>=0.5",
         "requests>=2.25",
         "bleach>=3.3",
