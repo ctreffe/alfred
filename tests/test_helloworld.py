@@ -25,6 +25,7 @@ def client(tmp_path):
     clear_db()
 
 
+@pytest.mark.skip
 class TestHelloWorld:
     def test_start(self, client):
         rv = client.get("/start", follow_redirects=True)

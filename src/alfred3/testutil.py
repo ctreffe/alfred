@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
+from mongomock import MongoClient
 from thesmuggler import smuggle
 
 from alfred3.config import ExperimentConfig, ExperimentSecrets
@@ -51,13 +51,13 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
 
     SECRETS = Path(secrets_path).read_text(encoding="utf-8")
     secrets = SECRETS.format(
-        host=os.getenv("MONGODB_HOST"),
-        port=os.getenv("MONGODB_PORT"),
-        db=os.getenv("MONGODB_DATABASE"),
-        usr=os.getenv("MONGODB_USERNAME"),
-        pw=os.getenv("MONGODB_PASSWORD"),
-        col=os.getenv("MONGODB_COLLECTION"),
-        misc_collection=os.getenv("MONGODB_MISC_COLLECTION"),
+        host=os.getenv("MONGODB_HOST", "localhost"),
+        port=os.getenv("MONGODB_PORT", 27017),
+        db=os.getenv("MONGODB_DATABASE", "alfred"),
+        usr=os.getenv("MONGODB_USERNAME", "user"),
+        pw=os.getenv("MONGODB_PASSWORD", "pass"),
+        col=os.getenv("MONGODB_COLLECTION", "alfred"),
+        misc_collection=os.getenv("MONGODB_MISC_COLLECTION", "misc"),
     )
 
     tmp_secrets = Path(tmp_path) / "secrets.conf"
@@ -71,12 +71,12 @@ def get_db():
     Returns the mongoDB database specified via credentials in .env.
     """
     mc = MongoClient(
-        host=os.getenv("MONGODB_HOST"),
-        port=int(os.getenv("MONGODB_PORT")),
-        username=os.getenv("MONGODB_USERNAME"),
-        password=os.getenv("MONGODB_PASSWORD"),
+        host=os.getenv("MONGODB_HOST", "localhost"),
+        port=int(os.getenv("MONGODB_PORT", 27017)),
+        username=os.getenv("MONGODB_USERNAME", "user"),
+        password=os.getenv("MONGODB_PASSWORD", "pass"),
     )
-    db = os.getenv("MONGODB_DATABASE")
+    db = os.getenv("MONGODB_DATABASE", "alfred")
     return mc[db]
 
 
@@ -85,7 +85,7 @@ def get_alfred_collection():
     Returns the alfred mongoDB collection.
     """
     db = get_db()
-    col = os.getenv("MONGODB_COLLECTION")
+    col = os.getenv("MONGODB_COLLECTION", "alfred")
     return db[col]
 
 
@@ -94,7 +94,7 @@ def get_misc_collection():
     Returns the misc mongoDB collection
     """
     db = get_db()
-    col = os.getenv("MONGODB_MISC_COLLECTION")
+    col = os.getenv("MONGODB_MISC_COLLECTION", "misc")
     return db[col]
 
 

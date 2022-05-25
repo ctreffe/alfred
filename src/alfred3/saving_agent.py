@@ -18,6 +18,7 @@ from typing import Tuple, Union
 from uuid import uuid4
 
 import bson
+import mongomock
 import pymongo
 from pymongo.collection import ReturnDocument
 
@@ -506,8 +507,8 @@ class MongoSavingAgent(SavingAgent):
             encrypt=encrypt,
         )
         self._mc = client
-        self._db = self._mc[database]
-        self._col = self._db[collection]
+        self._database = database
+        self._collection = collection
         self._misc_col = misc_collection
         self.doc_id = uuid4().hex
 
@@ -529,7 +530,7 @@ class MongoSavingAgent(SavingAgent):
         data.update(f)
         data["_id"] = self.doc_id
 
-        check = self._col.find_one_and_replace(
+        check = self.col.find_one_and_replace(
             filter=f,
             replacement=data,
             upsert=True,
@@ -550,12 +551,12 @@ class MongoSavingAgent(SavingAgent):
     @property
     def db(self):
         """The agent's :class:`pymongo.database.Database`."""
-        return self._db
+        return self.client[self._database]
 
     @property
     def col(self):
         """The agent's :class:`pymongo.collection.Collection`."""
-        return self._col
+        return self.db[self._collection]
 
     @property
     def misc_col(self):
@@ -585,7 +586,11 @@ class MongoSavingAgent(SavingAgent):
 
     @classmethod
     def validate_client(cls, client, config=None, host=None, port=None):
-        chost, cport = cls.client_info(client)
+        try:
+            chost, cport = cls.client_info(client)
+        except AttributeError:
+            if isinstance(client, mongomock.MongoClient):
+                return True
 
         if config:
             if not (config.get("host") == chost and config.get("port") == cport):
@@ -601,7 +606,7 @@ class MongoSavingAgent(SavingAgent):
             raise ValueError("Both port and host are needed for comparison.")
 
     def __str__(self):
-        return f"{type(self).__name__}(name='{self.name}', level='{self.activation_level}', collection='{self._col.name}')"
+        return f"{type(self).__name__}(name='{self.name}', level='{self.activation_level}', collection='{self._collection}')"
 
 
 class AutoMongoSavingAgent(MongoSavingAgent):
@@ -675,6 +680,10 @@ class MongoManager:
 
     def _init_client(self, config: SectionProxy):
         ca_file = config.get("ca_file_path") if config.getboolean("use_ssl") else None
+
+        if config.getboolean("mock", False):
+            return mongomock.MongoClient()
+
         client = pymongo.MongoClient(
             host=config.get("host"),
             port=config.getint("port"),
@@ -1100,6 +1109,12 @@ class AutoMongoClient(pymongo.MongoClient):
     configuration section.
 
     """
+
+    def __new__(cls, config: SectionProxy, **kwargs):
+        if config.getboolean("mock", False):
+            return mongomock.MongoClient()
+
+        return cls(config=config, **kwargs)
 
     def __init__(self, config: SectionProxy, **kwargs):
         host = config.get("host")

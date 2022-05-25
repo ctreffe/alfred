@@ -2,6 +2,7 @@ import random
 import time
 from typing import Counter
 
+import mongomock
 import pytest
 from dotenv import load_dotenv
 
@@ -15,10 +16,17 @@ load_dotenv()
 
 
 @pytest.fixture
-def exp(tmp_path):
+def mongo_client():
+    yield mongomock.MongoClient()
+
+
+@pytest.fixture
+def exp(tmp_path, mongo_client):
     script = "tests/res/script-hello_world.py"
     secrets = "tests/res/secrets-default.conf"
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
+
+    exp.data_saver.main.agents["mongo"]._mc = mongo_client
 
     yield exp
 
@@ -26,11 +34,12 @@ def exp(tmp_path):
 
 
 @pytest.fixture
-def exp_factory(tmp_path):
+def exp_factory(tmp_path, mongo_client):
     def expf():
         script = "tests/res/script-hello_world.py"
         secrets = "tests/res/secrets-default.conf"
         exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
+        exp.data_saver.main.agents["mongo"]._mc = mongo_client
         return exp
 
     yield expf
@@ -57,6 +66,19 @@ def test_clear(exp):
     Just for clearing the database in case a test breaks down with an error.
     """
     print(exp)
+
+
+def test_fixture(exp_factory):
+    exp1 = exp_factory()
+    exp2 = exp_factory()
+
+    c1 = exp1.data_saver.main.agents["mongo"].client
+    c2 = exp2.data_saver.main.agents["mongo"].client
+
+    assert c1 is c2
+
+    exp1.db_main.insert_one({"test": 1})
+    assert exp2.db_main.find_one({"test": 1}) is not None
 
 
 class TestConditionValidation:
@@ -314,6 +336,10 @@ class TestConditionAllocation:
         rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, inclusive=True)
         rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, inclusive=True)
 
+        for exp in (exp1, exp2, exp3):
+            exp.start()
+            exp._save_data(sync=True)
+
         c1 = rd1.get_condition()
         c2 = rd2.get_condition()
         c3 = rd3.get_condition()
@@ -427,6 +453,10 @@ class TestConditionAllocation:
         rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, inclusive=True)
         rd4 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp4, inclusive=True)
 
+        for exp in (exp1, exp2, exp3, exp4):
+            exp.start()
+            exp._save_data(sync=True)
+
         c1 = rd1.get_condition()
         c2 = rd2.get_condition()
 
@@ -449,6 +479,10 @@ class TestConditionAllocation:
         rd1 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp1, inclusive=True)
         rd2 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp2, inclusive=True)
         rd3 = al.ListRandomizer.balanced("a", "b", n=1, exp=exp3, inclusive=True)
+
+        for exp in (exp1, exp2, exp3):
+            exp.start()
+            exp._save_data(sync=True)
 
         c1 = rd1.get_condition()
         c2 = rd2.get_condition()
