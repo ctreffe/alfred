@@ -97,6 +97,7 @@ class TestUsageRaw:
         assert session.admin_mode
 
 
+@pytest.mark.skip("Should be run manually")
 class TestUsageOnSever:
     def test_admin_exp(self, client):
         rv = client.get("/start?admin=true", follow_redirects=True)
