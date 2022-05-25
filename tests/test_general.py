@@ -6,8 +6,7 @@ modules.
 import pytest
 from dotenv import load_dotenv
 
-import alfred3 as al
-from alfred3.testutil import *
+from alfred3.testutil import clear_db, get_exp_session
 
 load_dotenv()
 

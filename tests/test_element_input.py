@@ -2,7 +2,6 @@ import pytest
 
 import alfred3 as al
 import alfred3.element.input as inp
-from alfred3.exceptions import AlfredError
 from alfred3.testutil import clear_db, get_exp_session
 
 
@@ -137,9 +136,9 @@ class TestMultipleChoiceElement:
         exp.start()
         exp.forward()
         exp.testpage.prepare_web_widget()
-        exp.testpage._set_data({f"test_choice1": "1"})
+        exp.testpage._set_data({"test_choice1": "1"})
 
-        assert exp.values["test"]["choice1"] == True
+        assert exp.values["test"]["choice1"] is True
 
 
 class TestMultipleButtons:
@@ -151,7 +150,7 @@ class TestMultipleButtons:
         exp.testpage.prepare_web_widget()
         exp.testpage._set_data({"test_choice1": "1"})
 
-        assert exp.values["test"]["choice1"] == True
+        assert exp.values["test"]["choice1"] is True
 
 
 class TestMultipleChoiceBar:
@@ -161,9 +160,9 @@ class TestMultipleChoiceBar:
         exp.start()
         exp.forward()
         exp.testpage.prepare_web_widget()
-        exp.testpage._set_data({f"test_choice1": "1"})
+        exp.testpage._set_data({"test_choice1": "1"})
 
-        assert exp.values["test"]["choice1"] == True
+        assert exp.values["test"]["choice1"] is True
 
 
 class TestEmailEntry:

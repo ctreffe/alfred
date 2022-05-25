@@ -1,14 +1,12 @@
 import random
 import time
-from typing import Counter
 
 import mongomock
 import pytest
 from dotenv import load_dotenv
 
 import alfred3 as al
-import alfred3.randomizer as rdmzr
-from alfred3.quota import SessionQuota, SlotManager
+from alfred3.quota import SlotManager
 from alfred3.randomizer import ConditionInconsistency
 from alfred3.testutil import clear_db, get_exp_session
 
@@ -27,7 +25,7 @@ def exp(tmp_path, mongo_client):
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
 
     exp.data_saver.main.agents["mongo"]._mc = mongo_client
-    exp._save_data(ysnc=True)
+    exp._save_data(sync=True)
 
     yield exp
 
@@ -41,7 +39,7 @@ def exp_factory(tmp_path, mongo_client):
         secrets = "tests/res/secrets-default.conf"
         exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
         exp.data_saver.main.agents["mongo"]._mc = mongo_client
-        exp._save_data(ysnc=True)
+        exp._save_data(sync=True)
         return exp
 
     yield expf

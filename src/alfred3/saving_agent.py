@@ -3,7 +3,6 @@
 
 """
 
-import copy
 import json
 import logging
 import os
@@ -12,12 +11,11 @@ import re
 import threading
 import time
 from abc import ABC, abstractmethod
-from configparser import ConfigParser, NoSectionError, SectionProxy
+from configparser import SectionProxy
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Union
 from uuid import uuid4
 
-import bson
 import mongomock
 import pymongo
 from pymongo.collection import ReturnDocument
@@ -152,19 +150,15 @@ class SavingAgent(ABC):
 
         self.name = name
         if name is None or name == "auto" or name == "":
-            self.name = (
-                type(self).__name__
-                + "_"
-                + time.strftime("%Y-%m-%d_t%H%M%S")
-                + "_"
-                + uuid4().hex
-            )
+            timestamp = time.strftime("%Y-%m-%d_t%H%M%S")
+            self.name = f"{type(self).__name__}_{timestamp}_{uuid4().hex}"
             self.log.debug(f"The name {self.name} was assigned automatically.")
         if name is None or name == "":
             self.log.warning(
-                "No name provided for saving agent. Please provide a name via the 'name' argument. "
-                f"The name {self.name} was assigned automatically. If you want to assign the "
-                "name automatically, instantiate the SavingAgent with *name='auto'."
+                "No name provided for saving agent. Please provide a name via the"
+                f" 'name' argument. The name {self.name} was assigned automatically. If"
+                " you want to assign the name automatically, instantiate the"
+                " SavingAgent with *name='auto'."
             )
 
         self.log.add_queue_logger(self, __name__)
@@ -176,7 +170,9 @@ class SavingAgent(ABC):
         if self.encrypt and not self._experiment.secrets.get("encryption", "key"):
 
             raise ValueError(
-                f"Encryption was turned on for {self}, but the experiment does not have an encryption key. Turn encryption off in the saving agent configuration, or provide an encryption key in secrets.conf."
+                f"Encryption was turned on for {self}, but the experiment does not have"
+                " an encryption key. Turn encryption off in the saving agent"
+                " configuration, or provide an encryption key in secrets.conf."
             )
 
     @property
@@ -236,7 +232,8 @@ class SavingAgent(ABC):
         if self._experiment.config.getboolean("general", "debug"):
             if self._experiment.config.getboolean("debug", "disable_saving"):
                 self.log.debug(
-                    f"Saving disabled. 'save_data' was called on {self}, but not executed."
+                    f"Saving disabled. 'save_data' was called on {self}, but not"
+                    " executed."
                 )
                 return (True, "success")
 
@@ -244,7 +241,10 @@ class SavingAgent(ABC):
 
         if data_time is None:
             data_time = time.time()
-            msg = f"No data_time provided in save_data call to {self}. Inserting current time."
+            msg = (
+                f"No data_time provided in save_data call to {self}. Inserting current"
+                " time."
+            )
             self.log.debug(msg)
 
         data_is_newer_than_previous = (
@@ -255,7 +255,10 @@ class SavingAgent(ABC):
                 self.exp.movement_manager.current_page
                 is not self.exp.movement_manager.last_page
             ):
-                msg = f"Data snapshot from {data_time} was not saved, because there was a newer one."
+                msg = (
+                    f"Data snapshot from {data_time} was not saved, because there was a"
+                    " newer one."
+                )
                 self.log.info(msg)
             self._lock.release()
             return (False, "time")
@@ -410,7 +413,10 @@ class LocalSavingAgent(SavingAgent):
         return self.directory / self.filename
 
     def __str__(self):
-        return f"{type(self).__name__}(name='{self.name}', level={self.activation_level}, path='{self.directory.parent.name}/{self.directory.name}')"
+        return (
+            f"{type(self).__name__}(name='{self.name}', level={self.activation_level},"
+            f" path='{self.directory.parent.name}/{self.directory.name}')"
+        )
 
 
 class AutoLocalSavingAgent(LocalSavingAgent):
@@ -606,7 +612,10 @@ class MongoSavingAgent(SavingAgent):
             raise ValueError("Both port and host are needed for comparison.")
 
     def __str__(self):
-        return f"{type(self).__name__}(name='{self.name}', level='{self.activation_level}', collection='{self._collection}')"
+        return (
+            f"{type(self).__name__}(name='{self.name}',"
+            f" level='{self.activation_level}', collection='{self._collection}')"
+        )
 
 
 class AutoMongoSavingAgent(MongoSavingAgent):
@@ -950,7 +959,8 @@ class SavingAgentController:
 
         if not saved and not reason == "time":
             self.log.warning(
-                f"Saving with {agent} failed. Attempting to save with failure saving agent now."
+                f"Saving with {agent} failed. Attempting to save with failure saving"
+                " agent now."
             )
 
             any_failure_saved = False
@@ -963,8 +973,8 @@ class SavingAgentController:
 
             if not any_failure_saved:
                 msg = (
-                    "CRITICAL ERROR. SAVING FAILED. "
-                    "No failure SavingAgent succeeded in saving. Saving task was not completed."
+                    "CRITICAL ERROR. SAVING FAILED. No failure SavingAgent succeeded in"
+                    " saving. Saving task was not completed."
                 )
                 self.log.critical(msg)
 

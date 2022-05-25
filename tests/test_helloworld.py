@@ -6,8 +6,7 @@ data saving work.
 import pytest
 from dotenv import load_dotenv
 
-import alfred3 as al
-from alfred3.testutil import *
+from alfred3.testutil import clear_db, forward, get_alfred_docs, get_app, get_json
 
 load_dotenv()
 

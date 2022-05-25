@@ -289,8 +289,9 @@ class ListRandomizer(SessionQuota):
 
         if mode in ["strict", "inclusive"]:
             self.exp.log.warning(
-                "Argument 'mode' is deprecated. Please use 'inclusive=True' or 'inclusive=False'  "
-                f"instead. Using 'mode={mode}' for now for compatibility."
+                "Argument 'mode' is deprecated. Please use 'inclusive=True' or"
+                f" 'inclusive=False'  instead. Using 'mode={mode}' for now for"
+                " compatibility."
             )
             self.inclusive = mode == "inclusive"
 

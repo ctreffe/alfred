@@ -35,9 +35,7 @@ with arguments of your choice.
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
-import importlib
 import logging
-import os
 import platform
 import subprocess
 import sys
@@ -46,7 +44,6 @@ import webbrowser
 from pathlib import Path
 from uuid import uuid4
 
-import click
 from thesmuggler import smuggle
 
 from alfred3 import alfredlog, localserver

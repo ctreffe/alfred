@@ -5,7 +5,6 @@ import mongomock
 import pytest
 from dotenv import load_dotenv
 
-import alfred3 as al
 import alfred3.compatibility.condition as cond
 from alfred3.compatibility.condition import ConditionInconsistency
 from alfred3.testutil import clear_db, get_exp_session

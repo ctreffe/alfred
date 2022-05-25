@@ -345,7 +345,9 @@ class _AdminSection(Section):
 
         if missing_passwords:
             raise AlfredError(
-                f"To activate the admin mode, you must define passwords for all three levels in secrets.conf. Passwords are missing for levels: {', '.join(missing_passwords)}."
+                "To activate the admin mode, you must define passwords for all three"
+                " levels in secrets.conf. Passwords are missing for levels:"
+                f" {', '.join(missing_passwords)}."
             )
 
         comparisons = []
@@ -358,8 +360,8 @@ class _AdminSection(Section):
 
         if any(comparisons):
             raise AlfredError(
-                "Two equal passwords for two different admin levels found."
-                " Passwords must be unique to a level. Please change one of the passwords."
+                "Two equal passwords for two different admin levels found. Passwords"
+                " must be unique to a level. Please change one of the passwords."
             )
 
     @property
@@ -470,7 +472,10 @@ class DeleteUnlinkedButton(Element):
         query = {"exp_id": self.exp.exp_id, "type": self.exp.data_manager.UNLINKED_DATA}
         count = self.exp.db_unlinked.count_documents(query)
         result = self.exp.db_unlinked.delete_many(query)
-        msg = f"Deleted {result.deleted_count} of {count} documents in unlinked data collection."
+        msg = (
+            f"Deleted {result.deleted_count} of {count} documents in unlinked data"
+            " collection."
+        )
         self.exp.log.info(msg)
         return msg
 

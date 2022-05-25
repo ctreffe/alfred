@@ -28,20 +28,14 @@ For more detailed usage information, see::
 
 
 import csv
-import io
-import json
 import os
 import random
 from itertools import chain
 from pathlib import Path
-from pprint import pprint
 from typing import Iterator, List, Union
 
-import click
-
-from .config import ExperimentConfig, ExperimentSecrets
+from .config import ExperimentConfig
 from .data_manager import DataManager, decrypt_recursively
-from .saving_agent import AutoMongoClient
 
 
 class Exporter:
@@ -145,8 +139,8 @@ class Exporter:
             element_names = []
             for row in alldata:
                 for colname in row:
-                    if not colname in metadata + client_info:
-                        if not colname in element_names:
+                    if colname not in metadata + client_info:
+                        if colname not in element_names:
                             element_names.append(colname)
             fieldnames = metadata + client_info + sorted(element_names)
         else:
@@ -247,10 +241,11 @@ class Exporter:
                     newlab = new.get(lab, "") if new else ""
                     if not new or (not oldlab == newlab):
                         self.exp.log.warning(
-                            f"{lab} of '{name}' has changed from '{oldlab}' to '{newlab}'. "
-                            "This introduces inconsistencies into the codebook. "
-                            "Do you have dynamic labels that do not match their elements' names? "
-                            "To change a label, increase the experiment version."
+                            f"{lab} of '{name}' has changed from '{oldlab}' to"
+                            f" '{newlab}'. This introduces inconsistencies into the"
+                            " codebook. Do you have dynamic labels that do not match"
+                            " their elements' names? To change a label, increase the"
+                            " experiment version."
                         )
 
             existing_codebook.update(data)
@@ -271,9 +266,9 @@ def find_unique_name(directory, filename, exp_version=None, index: int = 1):
     normal_name = name + exp_version + ext
     idx_name = name + exp_version + f"_{index}" + ext
 
-    if not normal_name in os.listdir(directory):
+    if normal_name not in os.listdir(directory):
         return normal_name
-    elif not idx_name in os.listdir(directory):
+    elif idx_name not in os.listdir(directory):
         return idx_name
     else:
         i = index + 1

@@ -388,7 +388,7 @@ class QuotaIO:
             self.exp.abort(reason="quota_error")
             tb = "".join(format_exception(exc_type, exc_value, traceback))
             self.exp.log.error(
-                f"There was an error in a locked operation."
+                "There was an error in a locked operation."
                 "I aborted the experiment and released the lock."
                 f"{tb}"
             )

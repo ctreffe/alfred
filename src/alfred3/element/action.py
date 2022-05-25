@@ -4,7 +4,7 @@ Provides elements that make stuff happen.
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
-from typing import List, Union
+from typing import Union
 from uuid import uuid4
 
 import cmarkgfm
@@ -12,15 +12,8 @@ from cmarkgfm.cmark import Options as cmarkgfmOptions
 from emoji import emojize
 
 from .._helper import inherit_kwargs
-from ..exceptions import AlfredError
-from .core import Element, Row, _Choice, jinja_env
-from .input import (
-    SelectPageList,
-    SingleChoiceBar,
-    SingleChoiceButtons,
-    SingleChoiceList,
-)
-from .misc import JavaScript
+from .core import Element, Row, jinja_env
+from .input import SelectPageList, SingleChoiceBar, SingleChoiceButtons
 
 
 @inherit_kwargs
@@ -555,7 +548,7 @@ class Button(Element):
         self.text = text
         self.custom_js = custom_js
 
-        if not followup in {
+        if followup not in {
             "refresh",
             "forward",
             "backward",
@@ -566,7 +559,8 @@ class Button(Element):
 
         if self.followup == "custom" and not self.custom_js:
             raise ValueError(
-                "If you set 'followup' to 'custom', you must specify custom Javascript to run."
+                "If you set 'followup' to 'custom', you must specify custom Javascript"
+                " to run."
             )
 
         self.button_style = button_style

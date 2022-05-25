@@ -10,7 +10,6 @@ import inspect
 import os
 import re
 import socket
-from dataclasses import dataclass
 from typing import Union
 from urllib.parse import urlparse
 
@@ -132,7 +131,8 @@ class Decrypter:
 
             except (AttributeError, NameError):
                 print(
-                    "Incomplete DB login data in environment variables. Now trying to decrypt login data from config.conf..."
+                    "Incomplete DB login data in environment variables. Now trying to"
+                    " decrypt login data from config.conf..."
                 )
 
         decrypted_username = self._decrypter.decrypt(username.encode()).decode()

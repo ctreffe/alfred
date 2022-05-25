@@ -275,23 +275,35 @@ class Extractor:
 @click.option(
     "--dtype",
     default="exp_data",
-    help="The data type to extratct form .json files. Can be 'exp_data', 'codebook', 'move_history', and 'unlinked_data'.",
+    help=(
+        "The data type to extratct form .json files. Can be 'exp_data', 'codebook',"
+        " 'move_history', and 'unlinked_data'."
+    ),
     show_default=True,
 )
 @click.option(
     "--in_path",
     default=None,
-    help="Path to directory containing json files. If None (default), the current working directory will be used.",
+    help=(
+        "Path to directory containing json files. If None (default), the current"
+        " working directory will be used."
+    ),
 )
 @click.option(
     "--out_path",
     default=None,
-    help="Path to directory in which the output csv file will be place. If None (default), the current working directory will be used.",
+    help=(
+        "Path to directory in which the output csv file will be place. If None"
+        " (default), the current working directory will be used."
+    ),
 )
 @click.option(
     "--exp_version",
     default=None,
-    help="The experiment version for which codebook data should be extracted. Only relevant for codebook data.",
+    help=(
+        "The experiment version for which codebook data should be extracted. Only"
+        " relevant for codebook data."
+    ),
 )
 @click.option(
     "--delimiter",
@@ -307,7 +319,8 @@ def json_to_csv(dtype, in_path, out_path, exp_version, delimiter):
     elif dtype == "codebook":
         if exp_version is None:
             raise ValueError(
-                "You must specify an experiment version for codebook extraction. See 'alfred3 json-to-csv --help' for more."
+                "You must specify an experiment version for codebook extraction. See"
+                " 'alfred3 json-to-csv --help' for more."
             )
         csvname = extractor.extract_codebook(exp_version=exp_version)
 
@@ -318,8 +331,14 @@ def json_to_csv(dtype, in_path, out_path, exp_version, delimiter):
         csvname = extractor.extract_unlinked_data()
 
     else:
-        msg = f"Value {dtype} for option '--dtype' is not valid. See 'alfred3 json-to-csv --help' for more."
+        msg = (
+            f"Value {dtype} for option '--dtype' is not valid. See 'alfred3 json-to-csv"
+            " --help' for more."
+        )
         raise ValueError(msg)
 
-    msg = f"Data transformed to csv. File '{csvname}' was placed in directory '{extractor.out_path}'"
+    msg = (
+        f"Data transformed to csv. File '{csvname}' was placed in directory"
+        f" '{extractor.out_path}'"
+    )
     click.echo(msg)

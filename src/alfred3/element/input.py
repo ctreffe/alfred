@@ -5,9 +5,7 @@ Provides elements that allow participant input.
 """
 
 import re
-import string
 from datetime import datetime
-from pathlib import Path
 from typing import List, Tuple, Union
 
 import bleach
@@ -322,7 +320,8 @@ class PasswordEntry(RegEntry):
 
         if not isinstance(password, str):
             raise ValueError(
-                f"Argument 'password' in {type(self).__name__} element '{self.name}' must be a string."
+                f"Argument 'password' in {type(self).__name__} element '{self.name}'"
+                " must be a string."
             )
 
     def validate_data(self, silent: bool = False) -> bool:
@@ -392,13 +391,15 @@ class MultiplePasswordEntry(RegEntry):
 
         if not isinstance(passwords, (list, tuple)):
             raise ValueError(
-                f"Argument 'passwords' in {type(self).__name__} element '{self.name}' must be a list or a tuple."
+                f"Argument 'passwords' in {type(self).__name__} element '{self.name}'"
+                " must be a list or a tuple."
             )
 
         for pw in passwords:
             if not isinstance(pw, str):
                 raise ValueError(
-                    f"All elements of the sequence 'passwords' in {type(self).__name__} must be strings."
+                    "All elements of the sequence 'passwords' in"
+                    f" {type(self).__name__} must be strings."
                 )
 
     def validate_data(self, silent: bool = False) -> bool:
@@ -414,7 +415,7 @@ class MultiplePasswordEntry(RegEntry):
                 self.hint_manager.post_message(self.no_input_hint)
             return False
 
-        elif not self.input in self.passwords:
+        elif self.input not in self.passwords:
             self.hint_manager.post_message(self.match_hint)
             return False
 
@@ -738,7 +739,8 @@ class RangeInput(InputElement):
         super().__init__(align=align, **kwargs)
         if display_position not in ["top", "bottom"]:
             raise ValueError(
-                f"{self} accepts only 'top' and 'bottom' for argument 'display_position'. You gave '{display_position}'."
+                f"{self} accepts only 'top' and 'bottom' for argument"
+                f" 'display_position'. You gave '{display_position}'."
             )
 
         self.min = min
@@ -944,9 +946,9 @@ class SingleChoice(ChoiceElement):
             choice.id = f"{self.name}_choice{i}"
             if choice.id in self.exp.root_section.all_elements:
                 msg = (
-                    f"You have a SingleChoice-type element of name {self.name}, which means "
-                    f"that the name '{choice.id}' must be reserved. Please check if you are using "
-                    "it for any other element."
+                    f"You have a SingleChoice-type element of name {self.name}, which"
+                    f" means that the name '{choice.id}' must be reserved. Please check"
+                    " if you are using it for any other element."
                 )
                 raise AlfredError(msg)
 
@@ -975,7 +977,7 @@ class SingleChoice(ChoiceElement):
         # any other name in the experiment.
         # For this element, we implement it in the *define_choices*
         # method.
-        if not self.name in d:
+        if self.name not in d:
             return
         else:
             self.input = d[self.name]
@@ -1093,7 +1095,8 @@ class MultipleChoice(ChoiceElement):
             self.default = [default]
         elif default is not None and not isinstance(default, list):
             raise ValueError(
-                "Default for MultipleChoice must be a list of integers, indicating the default choices."
+                "Default for MultipleChoice must be a list of integers, indicating the"
+                " default choices."
             )
         else:
             self.default = default
@@ -1160,9 +1163,9 @@ class MultipleChoice(ChoiceElement):
 
             if choice.id in self.exp.root_section.all_elements:
                 msg = (
-                    f"You have a MultipleChoice-type element of name {self.name}, which means "
-                    f"that the name '{choice.id}' must be reserved. Please check if you are using "
-                    "it for any other element."
+                    f"You have a MultipleChoice-type element of name {self.name}, which"
+                    f" means that the name '{choice.id}' must be reserved. Please check"
+                    " if you are using it for any other element."
                 )
                 raise AlfredError(msg)
 
@@ -1313,7 +1316,8 @@ class SingleChoiceList(SingleChoice):
 
             if not isinstance(label, str):
                 raise TypeError(
-                    f"Choice label in {type(self).__name__} must be string, not {type(label)}."
+                    f"Choice label in {type(self).__name__} must be string, not"
+                    f" {type(label)}."
                 )
 
             choice.label = label
@@ -1323,9 +1327,9 @@ class SingleChoiceList(SingleChoice):
             choice.id = f"{self.name}_choice{i}"
             if choice.id in self.exp.root_section.all_elements:
                 msg = (
-                    f"You have a SingleChoice-type element of name {self.name}, which means "
-                    f"that the name '{choice.id}' must be reserved. Please check if you are using "
-                    "it for any other element."
+                    f"You have a SingleChoice-type element of name {self.name}, which"
+                    f" means that the name '{choice.id}' must be reserved. Please check"
+                    " if you are using it for any other element."
                 )
                 raise AlfredError(msg)
 
@@ -1586,19 +1590,28 @@ class SingleChoiceButtons(SingleChoice):
             else:
                 css = []
             # full-width buttons on small screens
-            css += f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
+            css += (
+                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width:"
+                " 100%;}} "
+            )
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, str):
             # the group needs to be switched to growing with its member buttons
             css = f"#{self.name} {{width: auto;}} "
             # and return to 100% with on small screens
-            css += f"@media (max-width: 576px) {{#{self.name} {{width: 100%!important;}}}} "
+            css += (
+                f"@media (max-width: 576px) {{#{self.name} {{width:"
+                " 100%!important;}} "
+            )
 
             # now the width of the individual button has an effect
             css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
             # and it, too returns to full width on small screens
-            css += f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
+            css += (
+                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width:"
+                " 100%;}} "
+            )
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, list):
@@ -1618,7 +1631,10 @@ class SingleChoiceButtons(SingleChoice):
             # set width for each individual button
             for w, c in zip(self.button_width, self.choices):
                 css = f"#{c.label_id} {{width: {w};}} "
-                css += f"@media (max-width: 576px) {{#{c.label_id} {{width: 100%!important;}}}} "
+                css += (
+                    f"@media (max-width: 576px) {{#{c.label_id} {{width:"
+                    " 100%!important;}} "
+                )
                 self._css_code += [(7, css)]
 
     def _round_corners(self):
@@ -1643,7 +1659,10 @@ class SingleChoiceButtons(SingleChoice):
             spec = f"margin-{m}: {n}; "
             spec += f"border-top-{m}-radius: 0; "
             spec += f"border-bottom-{m}-radius: 0;"
-            css = f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
+            css = (
+                f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child)"
+                f" {{{spec}}}"
+            )
             self._css_code += [(7, css)]
 
     def _convert_alignment(self):
@@ -1993,7 +2012,8 @@ class SelectPageList(SingleChoiceList):
                 choice_labels.remove(self.name)
             except ValueError:
                 self.log.debug(
-                    "ValueError ignored in PageList while trying to remove self from the list of choice labels."
+                    "ValueError ignored in PageList while trying to remove self from"
+                    " the list of choice labels."
                 )
                 pass
 

@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-import pytest
-
 
 class TestTemplate:
     def test_basic_template(self, tmp_path):

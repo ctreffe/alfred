@@ -2,8 +2,7 @@ import pytest
 from dotenv import load_dotenv
 
 import alfred3 as al
-import alfred3.element.core as elm
-from alfred3.testutil import clear_db, forward, get_app, get_exp_session
+from alfred3.testutil import clear_db, get_app, get_exp_session
 
 load_dotenv()
 

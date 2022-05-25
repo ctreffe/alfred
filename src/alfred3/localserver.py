@@ -1,9 +1,5 @@
 import logging
 import os
-import re
-import traceback
-from builtins import callable as builtins_callable
-from pathlib import Path
 from uuid import uuid4
 
 from flask import (
@@ -20,7 +16,6 @@ from flask import (
 )
 
 from . import alfredlog
-from .config import ExperimentConfig, ExperimentSecrets
 
 # def process_multiple_choice_lists(data: dict) -> dict:
 #     multiple_choice_lists = [name.replace("__multiple_", "")  for name in data if name.startswith("__multiple_")]
@@ -53,7 +48,7 @@ def start():
         )
         return redirect(url_for("experiment"))
 
-    logger = logging.getLogger(f"alfred3")
+    logger = logging.getLogger("alfred3")
     logger.info("Starting experiment initialization.")
 
     # Try-except block for compatibility with alfred3 previous to v1.2.0

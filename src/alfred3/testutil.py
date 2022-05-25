@@ -196,7 +196,7 @@ def move(client, direction: str, data: dict, **kwargs):
     d["page_token"] = token.get("value")
     d.update(data)
 
-    if not "follow_redirects" in kwargs:
+    if "follow_redirects" not in kwargs:
         kwargs["follow_redirects"] = True
 
     return client.post("/experiment", data=d, **kwargs)

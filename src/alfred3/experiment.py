@@ -20,36 +20,28 @@ ExperimentSession?**
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
-import copy
 import functools
-import json
 import logging
 import os
-import random
 import smtplib
-import sys
-import threading
 import time
-from configparser import NoOptionError
 from email.message import EmailMessage
 from email.utils import formataddr
 from inspect import isclass
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple, Union
+from typing import Iterator, List, Union
 from uuid import uuid4
 
-import pymongo
 from cryptography.fernet import Fernet
 
-from . import alfredlog
 from . import element as elm
-from . import messages, page, saving_agent, section, util
+from . import messages, page, util
 from ._helper import _DictObj
 from ._version import __version__
 from .alfredlog import QueuedLoggingInterface
 from .config import ExperimentConfig, ExperimentSecrets
 from .data_manager import DataManager
-from .exceptions import AbortMove, AlfredError, SavingAgentException
+from .exceptions import AbortMove, AlfredError
 from .export import Exporter
 from .page import Page, _NothingHerePage
 from .saving_agent import DataSaver, MongoSavingAgent
@@ -443,7 +435,11 @@ class Experiment:
 
         timeout = timeout if timeout is not None else self.session_timeout
         exp_session = ExperimentSession(
-            session_id=session_id, config=config, secrets=secrets, timeout=timeout, **urlargs
+            session_id=session_id,
+            config=config,
+            secrets=secrets,
+            timeout=timeout,
+            **urlargs,
         )
 
         for fun in self.setup_functions:
@@ -794,16 +790,16 @@ class ExperimentSession:
         if query in self._plugin_data_queries:
             return
 
-        elif not "title" in query:
+        elif "title" not in query:
             raise ValueError("Query must contain field 'title'.")
 
-        elif not "type" in query:
+        elif "type" not in query:
             raise ValueError("Query must contain field 'filename'.")
 
-        elif not "query" in query:
+        elif "query" not in query:
             raise ValueError("Query must contain field 'query'.")
 
-        elif not "filter" in query["query"]:
+        elif "filter" not in query["query"]:
             raise ValueError("Field 'query' must contain subfield 'filter'.")
 
         self._plugin_data_queries.append(query)
@@ -875,7 +871,8 @@ class ExperimentSession:
             return
         if bar.name is not None:
             raise AlfredError(
-                "If you redefine the progress bar, you can't set a custom name. It is fixed to 'progress_bar_'."
+                "If you redefine the progress bar, you can't set a custom name. It is"
+                " fixed to 'progress_bar_'."
             )
         bar.name = "progress_bar_"
         bar.added_to_experiment(self)
@@ -928,7 +925,10 @@ class ExperimentSession:
             raise AlfredError("There are no pages in your experiment.")
 
         if self.start_time:
-            msg = "ExperimentSession._start() was called. The experiment was already running. Leaving method."
+            msg = (
+                "ExperimentSession._start() was called. The experiment was already"
+                " running. Leaving method."
+            )
             self.log.warning(msg)
             return
 
@@ -997,7 +997,8 @@ class ExperimentSession:
         """
         if self.aborted:
             self.log.debug(
-                f"ExperimentSession.abort() called, but it was already aborted. New Reason: {reason}, Old Reason: {self._aborted_because}"
+                "ExperimentSession.abort() called, but it was already aborted. New"
+                f" Reason: {reason}, Old Reason: {self._aborted_because}"
             )
             return
 
@@ -1080,8 +1081,9 @@ class ExperimentSession:
         """
         if self.aborted:
             msg = (
-                "ExperimentSession.finish() called, but the experiment was already aborted. "
-                "Cancelling ExperimentSession.finish() - the experiment is not finished."
+                "ExperimentSession.finish() called, but the experiment was already"
+                " aborted. Cancelling ExperimentSession.finish() - the experiment is"
+                " not finished."
             )
             self.log.warning(msg)
             return
@@ -1090,7 +1092,10 @@ class ExperimentSession:
             func(self)
 
         if self.finished:
-            msg = "ExperimentSession.finish() called. Experiment was already finished. Finishing again."
+            msg = (
+                "ExperimentSession.finish() called. Experiment was already finished."
+                " Finishing again."
+            )
         else:
             msg = "ExperimentSession.finish() called. Session is finishing."
 
@@ -1101,11 +1106,11 @@ class ExperimentSession:
         self._export_data()
 
     def _close_previous_pages(self):
-        for i, page in enumerate(self.root_section.all_pages.values()):
+        for i, pg in enumerate(self.root_section.all_pages.values()):
             if i > self.movement_manager.current_index:
                 break
-            if not page.is_closed:
-                page.close()
+            if not pg.is_closed:
+                pg.close()
 
     def _export_data(self):
 
@@ -1584,10 +1589,9 @@ class ExperimentSession:
 
     def __contains__(self, key):
         try:
-            return (
-                key.name in self.all_members
-                or key.name in self.root_section.all_elements
-            )
+            name_in_members = key.name in self.all_members
+            name_in_elements = key.name in self.root_section.all_elements
+            return name_in_members or name_in_elements
         except AttributeError:
             return key in self.all_members or key in self.root_section.all_elements
 
@@ -1675,7 +1679,8 @@ class ExperimentSession:
         """
         if not self._encryptor:
             raise AlfredError(
-                "For encryption to work, you must set an encryption key in secrets.conf."
+                "For encryption to work, you must set an encryption key in"
+                " secrets.conf."
             )
 
         if data is None:
@@ -1799,7 +1804,8 @@ class ExperimentSession:
             self.movement_manager._move(direction="backward")
         except AbortMove:
             self.log.debug(
-                f"Movement from {self.current_page} in direction 'backward' was aborted."
+                f"Movement from {self.current_page} in direction 'backward' was"
+                " aborted."
             )
 
     def jump(self, to: Union[str, int]):

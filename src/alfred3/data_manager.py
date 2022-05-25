@@ -3,11 +3,7 @@
 """
 
 import copy
-import csv
-import io
 import json
-import os
-import random
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -104,7 +100,8 @@ class DataManager:
         if not len(self._metadata_keys) == len(data):
             diff = self._metadata_keys ^ set(self._metadata)
             raise AlfredError(
-                f"Length of metadata key set and keys in metadata dict do not match. Differences: {diff}"
+                "Length of metadata key set and keys in metadata dict do not match."
+                f" Differences: {diff}"
             )
 
         return data

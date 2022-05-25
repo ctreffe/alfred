@@ -19,7 +19,7 @@ def exp(tmp_path, mongo_client):
     secrets = "tests/res/secrets-default.conf"
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
     exp.data_saver.main.agents["mongo"]._mc = mongo_client
-    exp._save_data(ysnc=True)
+    exp._save_data(sync=True)
 
     yield exp
 
@@ -33,7 +33,7 @@ def exp_factory(tmp_path, mongo_client):
         secrets = "tests/res/secrets-default.conf"
         exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
         exp.data_saver.main.agents["mongo"]._mc = mongo_client
-        exp._save_data(ysnc=True)
+        exp._save_data(sync=True)
         return exp
 
     yield expf
