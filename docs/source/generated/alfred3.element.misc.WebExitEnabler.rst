@@ -7,47 +7,47 @@ WebExitEnabler
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~WebExitEnabler.add_css
-   
-   
+
+
       ~WebExitEnabler.add_js
-   
-   
+
+
       ~WebExitEnabler.added_to_experiment
-   
-   
+
+
       ~WebExitEnabler.added_to_page
-   
-   
+
+
       ~WebExitEnabler.prepare_web_widget
-   
-   
+
+
       ~WebExitEnabler.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~WebExitEnabler.base_template
          ~WebExitEnabler.converted_width
          ~WebExitEnabler.css_class_container
@@ -73,7 +73,3 @@ WebExitEnabler
          ~WebExitEnabler.tree
          ~WebExitEnabler.web_widget
          ~WebExitEnabler.width
-      
-   
-   
-   

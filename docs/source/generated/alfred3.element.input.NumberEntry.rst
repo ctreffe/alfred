@@ -7,53 +7,53 @@ NumberEntry
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~NumberEntry.add_css
-   
-   
+
+
       ~NumberEntry.add_js
-   
-   
+
+
       ~NumberEntry.added_to_experiment
-   
-   
+
+
       ~NumberEntry.added_to_page
-   
-   
+
+
       ~NumberEntry.prepare_web_widget
-   
-   
+
+
       ~NumberEntry.render_inner_html
-   
-   
+
+
       ~NumberEntry.set_data
-   
-   
+
+
       ~NumberEntry.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~NumberEntry.base_template
          ~NumberEntry.bottomlab
          ~NumberEntry.codebook_data
@@ -108,7 +108,3 @@ NumberEntry
          ~NumberEntry.tree
          ~NumberEntry.web_widget
          ~NumberEntry.width
-      
-   
-   
-   

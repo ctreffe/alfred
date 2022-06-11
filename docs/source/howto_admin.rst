@@ -3,9 +3,9 @@ How to use the admin mode
 
 Your alfred3 experiments are not limited to the pages that participants
 see. You can add an administrative layer of pages that make organizational
-tasks around the experiment easier. This how-to covers 1) how to activate 
-the admin mode, 2) how to add admin pages to an existing experiment, 
-3) how to access the admin mode, 4) how to distinguish the access levels 
+tasks around the experiment easier. This how-to covers 1) how to activate
+the admin mode, 2) how to add admin pages to an existing experiment,
+3) how to access the admin mode, 4) how to distinguish the access levels
 of the admin mode, and 5) how to write your own admin pages.
 
 
@@ -45,7 +45,7 @@ experiment. We start with the "hello world" setup::
 
     import alfred3 as al
     exp = al.Experiment()
-    exp += al.Page("Hello, world!", name="hello_world") 
+    exp += al.Page("Hello, world!", name="hello_world")
 
 To have access to a basic admin page, we now import the base class
 :class:`.SpectatorPage`. This step is not always strictly necessary,
@@ -55,7 +55,7 @@ because you may possibly get your admin page from elsewhere::
     from alfred3.admin import SpectatorPage
 
     exp = al.Experiment()
-    exp += al.Page("Hello, world!", name="hello_world") 
+    exp += al.Page("Hello, world!", name="hello_world")
 
 Next, we add the page to the experiment's admin attribute::
 
@@ -65,7 +65,7 @@ Next, we add the page to the experiment's admin attribute::
     exp = al.Experiment()
     exp.admin += SpectatorPage(title="My monitoring page", name="monitoring")
 
-    exp += al.Page("Hello, world!", name="hello_world") 
+    exp += al.Page("Hello, world!", name="hello_world")
 
 
 Add pages by decorating classes
@@ -74,7 +74,7 @@ Add pages by decorating classes
 You can also use the :meth:`.Experiment.member` decorator to add pages
 to your admin mode. This works just like adding ordinary pages through
 the decorator, you just need to add ``admin=True``::
-    
+
     import alfred3 as al
     from alfred3.admin import SpectatorPage
 
@@ -86,9 +86,9 @@ the decorator, you just need to add ``admin=True``::
 
         def on_exp_access(self):
             self += al.Text("My admin page")
-    
 
-    exp += al.Page("Hello, world!", name="hello_world") 
+
+    exp += al.Page("Hello, world!", name="hello_world")
 
 
 How to access the admin mode
@@ -100,7 +100,7 @@ can use::
 
     http://127.0.0.1:5000/start?admin=true
 
-Note that the question mark only signals the beginning of additional 
+Note that the question mark only signals the beginning of additional
 url arguments. If you use multiple url arguments, they are chained via
 ``&``. For example, the following url would *also* start the experiment
 in admin mode::
@@ -114,7 +114,7 @@ check the log - you may have forgotten to specify all necessary passwords.
 If you enter a correct password, you can move on to the admin pages. Based
 on your password, you may see only a subset of all possibly available pages.
 With the level 1 password, you can only see level 1 pages. With the level 2
-password, you can see level 1 and level 2 pages. And with the level 3 
+password, you can see level 1 and level 2 pages. And with the level 3
 password, you have full access to pages of all three levels.
 
 
@@ -128,19 +128,19 @@ flexibility in this regard.
 
 The levels are defined by :class:`.AdminAccess`. They are:
 
-- Level 1: Lowest clearance. This level should be granted to 
-  pages that display additional information but do not allow active 
+- Level 1: Lowest clearance. This level should be granted to
+  pages that display additional information but do not allow active
   intervention. Used by :class:`.SpectatorPage`.
 - Level 2: Medium clearance. This level should be granted to
   pages that allow non-critical actions like exporting data or sending
   emails.
-- Level 3: Highest clearance. This level should be granted to 
-  pages that allow the most critical actions, e.g. permanent data 
-  deletion. As a rule of thumb, only one person should have level 3 
+- Level 3: Highest clearance. This level should be granted to
+  pages that allow the most critical actions, e.g. permanent data
+  deletion. As a rule of thumb, only one person should have level 3
   access for an experiment.
 
 By the way: you can specficy multiple passwords for the same level to enable
-a token-like authentication management. To specifiy multiple passwords, 
+a token-like authentication management. To specifiy multiple passwords,
 simply separate them by ``|``::
 
     # secrets.conf
@@ -176,10 +176,10 @@ associated with the experiment::
             self += al.Text(f"Number of data sets: {n}")
 
 You have access to alfred3's full functionality in admin mode. Useful
-attributes may be the ones that grant access to experiment data through 
+attributes may be the ones that grant access to experiment data through
 :attr:`.ExperimentSession.all_exp_data`, or the :class:`.Button` element
 for triggering the execution of Python code on the click of a button. But
-always take care! 
+always take care!
 
 
 

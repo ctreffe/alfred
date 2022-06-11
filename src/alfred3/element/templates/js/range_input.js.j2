@@ -1,7 +1,7 @@
 $(document).ready(function() {
     var value = $("#{{ name }}").val();
     var displayValue = parseFloat(value).toLocaleString(
-        "{{ display_locale }}", 
+        "{{ display_locale }}",
         {"maximumFractionDigits": {{ maxdecimals }},
         "minimumFractionDigits": {{ mindecimals }}}
     )
@@ -13,7 +13,7 @@ $(document).ready(function() {
     var apply_display_height_offset = function() {
         var range = document.getElementById("{{ name }}");
         var h = document.getElementById("{{ name }}-display").offsetHeight;
-        
+
         {% if display_position == "top" %}
             range.style.marginBottom = h + "px";
         {% else %}
@@ -26,16 +26,16 @@ $(document).ready(function() {
     if (offset_display_height == "true") {
         apply_display_height_offset()
     }
-    
+
 })
 
 
 $("#{{ name }}").on("input change", function() {
     var value = parseFloat($("#{{ name }}").val())
-    var displayValue = value.toLocaleString("{{ display_locale }}", 
+    var displayValue = value.toLocaleString("{{ display_locale }}",
         {"maximumFractionDigits": {{ maxdecimals }},
         "minimumFractionDigits": {{ mindecimals }}}
     )
-    
+
     $("#{{ name }}-display").text(displayValue + "{{ display_suffix }}");
 })

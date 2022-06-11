@@ -7,53 +7,53 @@ MultiplePasswordEntry
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~MultiplePasswordEntry.add_css
-   
-   
+
+
       ~MultiplePasswordEntry.add_js
-   
-   
+
+
       ~MultiplePasswordEntry.added_to_experiment
-   
-   
+
+
       ~MultiplePasswordEntry.added_to_page
-   
-   
+
+
       ~MultiplePasswordEntry.prepare_web_widget
-   
-   
+
+
       ~MultiplePasswordEntry.render_inner_html
-   
-   
+
+
       ~MultiplePasswordEntry.set_data
-   
-   
+
+
       ~MultiplePasswordEntry.validate_data
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~MultiplePasswordEntry.base_template
          ~MultiplePasswordEntry.bottomlab
          ~MultiplePasswordEntry.codebook_data
@@ -104,7 +104,3 @@ MultiplePasswordEntry
          ~MultiplePasswordEntry.tree
          ~MultiplePasswordEntry.web_widget
          ~MultiplePasswordEntry.width
-      
-   
-   
-   

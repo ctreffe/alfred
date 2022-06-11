@@ -4,6 +4,3 @@ Experiment
 .. automodule:: alfred3.experiment
    :members:
    :show-inheritance:
-
-
-

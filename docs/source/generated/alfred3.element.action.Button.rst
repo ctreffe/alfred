@@ -7,47 +7,47 @@ Button
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Button.add_css
-   
-   
+
+
       ~Button.add_js
-   
-   
+
+
       ~Button.added_to_experiment
-   
-   
+
+
       ~Button.added_to_page
-   
-   
+
+
       ~Button.prepare_web_widget
-   
-   
+
+
       ~Button.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Button.base_template
          ~Button.converted_width
          ~Button.css_class_container
@@ -74,7 +74,3 @@ Button
          ~Button.tree
          ~Button.web_widget
          ~Button.width
-      
-   
-   
-   

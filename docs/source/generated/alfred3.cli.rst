@@ -3,21 +3,21 @@
 
 .. automodule:: alfred3.cli
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -30,4 +30,3 @@
    alfred3.cli.extract
    alfred3.cli.run_exp
    alfred3.cli.template_exp
-

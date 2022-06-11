@@ -4,15 +4,16 @@ Module for quota functionality.
 
 import json
 import time
-from dataclasses import dataclass, asdict, field
-from typing import List, Iterator
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from traceback import format_exception
+from typing import Iterator, List
 
 from pymongo.collection import ReturnDocument
 
-from .exceptions import AllSlotsFull, SlotInconsistency
 from .data_manager import DataManager, saving_method
+from .exceptions import AllSlotsFull, SlotInconsistency
+
 
 @dataclass
 class SessionGroup:
@@ -111,7 +112,7 @@ class SessionGroup:
             raise ValueError("Session not found.")
         most_recent = max(save_time)
         return most_recent
-    
+
     def oldest_save(self, exp, data: List[dict] = None) -> float:
         if not data:
             data = self._get_fields(exp, ["exp_save_time"])
@@ -125,7 +126,7 @@ class SessionGroup:
     def pending(self, exp) -> bool:
         fields = ["exp_start_time", "exp_finished", "exp_aborted", "exp_save_time"]
         data = list(self._get_fields(exp, fields))
-        
+
         finished = self.finished(exp, data)
         aborted = self.aborted(exp, data)
         expired = self.expired(exp, data)
@@ -169,7 +170,9 @@ class Slot:
         return not self.finished(exp) and not self.pending(exp)
 
     def __contains__(self, session_ids: List[str]) -> bool:
-        group_contains_session = (session_ids == group.sessions for group in self.session_groups)
+        group_contains_session = (
+            session_ids == group.sessions for group in self.session_groups
+        )
         return any(group_contains_session)
 
 
@@ -193,27 +196,24 @@ class SlotManager:
 
     def next_pending(self, exp) -> Slot:
         slots = list(self.pending_slots(exp))
-        
+
         if len(slots) == 1:
             return slots[0]
-        
+
         slots = self._sparsest_slots(slots, exp)
 
         if len(slots) == 1:
             return slots[0]
-        
+
         return self._oldest_slot(slots, exp)
-    
+
     def _sparsest_slots(self, slots, exp) -> List[Slot]:
 
         npending = [slot.npending(exp) for slot in slots]
         n = min(npending)
         minimal_pending = [slot for slot in slots if slot.npending(exp) == n]
-        if len(minimal_pending) == 1:
-            return minimal_pending
-        else:
-            return minimal_pending
-    
+        return minimal_pending
+
     def _oldest_slot(self, slots, exp) -> Slot:
         most_recent_save = [slot.most_recent_save(exp) for slot in slots]
         oldest = min(most_recent_save)
@@ -281,7 +281,7 @@ class QuotaIO:
             self.save_local(asdict(insert))
 
         else:
-            with open(self.path, "r", encoding="utf-8") as fp:
+            with open(self.path, encoding="utf-8") as fp:
                 data = json.load(fp)
 
             return QuotaData(**data)
@@ -313,7 +313,7 @@ class QuotaIO:
         if not self.path.exists():
             data = asdict(self.rand.data)
 
-        with open(self.path, "r", encoding="utf-8") as fp:
+        with open(self.path, encoding="utf-8") as fp:
             data = json.load(fp)
 
         if data["busy"]:
@@ -355,7 +355,7 @@ class QuotaIO:
         self.db.find_one_and_update(filter=q, update=u)
 
     def release_local(self):
-        with open(self.path, "r", encoding="utf-8") as fp:
+        with open(self.path, encoding="utf-8") as fp:
             data = json.load(fp)
 
         data["busy"] = False
@@ -368,7 +368,7 @@ class QuotaIO:
             time.sleep(1)
             data = self.load_markbusy()
             if time.time() - start > 10:
-                raise IOError("Could not load data.")
+                raise OSError("Could not load data.")
         return data
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -378,23 +378,20 @@ class QuotaIO:
             self.exp.abort(reason="quota_error")
             tb = "".join(format_exception(exc_type, exc_value, traceback))
             self.exp.log.error(
-                (
-                    f"There was an error in a locked operation."
-                    "I aborted the experiment and released the lock."
-                    f"{tb}"
-                )
+                f"There was an error in a locked operation."
+                "I aborted the experiment and released the lock."
+                f"{tb}"
             )
 
         else:
             self.release()
 
 
-
 class SessionQuota:
     """
     A quota for experiment sessions.
 
-    The quota allows you to enforce an upper limit on the number of 
+    The quota allows you to enforce an upper limit on the number of
     participants in your experiment.
 
     Args:
@@ -419,14 +416,14 @@ class SessionQuota:
             may lead to more data being collected than necessary.
 
             Defaults to *False*.
-        name (str): 
+        name (str):
             An identifier for the quota. If you
             give this a custom value, you can use multiple quotas
             in the same experiment. Defaults to 'quota'.
         abort_page (alfred3.Page): You can reference a custom
                 page to be displayed to new participants, if the
                 quota is full.
-    
+
     .. versionadded:: 2.2.0
 
     Examples:
@@ -439,14 +436,22 @@ class SessionQuota:
             def setup(exp):
                 quota = al.SessionQuota(10, exp)
                 quota.count()
-            
+
             exp += al.Page(title = "Hello, World!", name="hello_world")
 
     """
 
     DATA_TYPE = "quota_data"
 
-    def __init__(self, nslots: int, exp, respect_version: bool = True, inclusive: bool = False, name: str = "quota", abort_page=None):
+    def __init__(
+        self,
+        nslots: int,
+        exp,
+        respect_version: bool = True,
+        inclusive: bool = False,
+        name: str = "quota",
+        abort_page=None,
+    ):
         self.nslots = nslots
         self.slot_label = "slot"
         self.exp = exp
@@ -459,7 +464,7 @@ class SessionQuota:
         self.abort_page = abort_page
 
         self._initialize_slots()
-    
+
     @property
     def _insert(self) -> QuotaData:
         data = QuotaData(
@@ -467,11 +472,11 @@ class SessionQuota:
             exp_id=self.exp.exp_id,
             exp_version=self.exp_version,
             inclusive=self.inclusive,
-            type=self.DATA_TYPE
+            type=self.DATA_TYPE,
         )
 
         return data
-    
+
     def _initialize_slots(self):
         self.io.load()
 
@@ -483,7 +488,7 @@ class SessionQuota:
     def _generate_slots(self) -> List[dict]:
         slots = [{"label": self.slot_label}] * self.nslots
         return slots
-    
+
     @property
     def nopen(self) -> int:
         """
@@ -491,12 +496,12 @@ class SessionQuota:
         """
         with self.io as data:
             return self._nopen(data)
-    
+
     def _nopen(self, data) -> int:
         slot_manager = self._slot_manager(data)
         open_slots = list(slot_manager.open_slots(self.exp))
         return len(open_slots)
-    
+
     @property
     def npending(self) -> int:
         """
@@ -504,12 +509,12 @@ class SessionQuota:
         """
         with self.io as data:
             return self._npending(data)
-    
+
     def _npending(self, data) -> int:
         slot_manager = self._slot_manager(data)
         pending_slots = list(slot_manager.pending_slots(self.exp))
         return len(pending_slots)
-    
+
     @property
     def full(self) -> bool:
         """
@@ -529,19 +534,19 @@ class SessionQuota:
             nopen = self._nopen(data)
             npending = self._npending(data)
             return self.nslots - (nopen + npending)
-        
+
     @property
     def allfinished(self) -> bool:
         """
         bool: Indicates, whether all slots in the quota are finished.
         """
         return self.nfinished == self.nslots
-    
+
     def _accepts_sessions(self, data) -> bool:
         """
         bool: *True*, if all slots are full. In 'strict' mode,
-        unfinished but pending experiment sessions ('pending' sessions) 
-        are counted. In 'inclusive' mode, only sessions that are fully 
+        unfinished but pending experiment sessions ('pending' sessions)
+        are counted. In 'inclusive' mode, only sessions that are fully
         finished are counted.
         """
         if self.inclusive:
@@ -549,10 +554,10 @@ class SessionQuota:
             npending = self._npending(data)
             n_unfinished = nopen + npending
             return not n_unfinished == 0
-        
+
         else:
             return self._nopen(data) > 0
-    
+
     def count(self, raise_exception: bool = False) -> str:
         """
         Counts the experiment session associated with the quota.
@@ -563,7 +568,7 @@ class SessionQuota:
                 automatically aborting the experiment if all slots
                 are full. This allows you to catch the exception and
                 customize the experiment's behavior in this case.
-        
+
         Returns:
             str: The slot label.
 
@@ -571,7 +576,7 @@ class SessionQuota:
             AllSlotsFull: If raise_exception is True and
             all slots are full.
             SlotInconsistency: If slot validation fails.
-        
+
         Examples:
             A simple example on how to use the quota::
 
@@ -582,7 +587,7 @@ class SessionQuota:
                 def setup(exp):
                     quota = al.SessionQuota(10, exp)
                     quota.count()
-                
+
                 exp += al.Page(title = "Hello, World!", name="hello_world")
         """
         with self.io as data:
@@ -590,17 +595,17 @@ class SessionQuota:
 
             slot_manager = self._slot_manager(data)
             slot = self._own_slot(data)
-            
+
             if slot:
                 return slot.label
-            
+
             full = not self._accepts_sessions(data)
             if full and raise_exception:
                 raise AllSlotsFull
             elif full:
                 self._abort_exp()
                 return "__ABORTED__"
-            
+
             slot = next(slot_manager.open_slots(self.exp), None)
 
             if slot is None and self.inclusive:
@@ -615,23 +620,23 @@ class SessionQuota:
             data.slots = asdict(slot_manager)["slots"]
             self.io.save(data)
             return slot.label
-    
+
     def _update_slot(self, slot):
         group = SessionGroup(self.session_ids)
         slot.session_groups.append(group)
-    
+
     def _slot_manager(self, data: QuotaData) -> SlotManager:
         return SlotManager(data.slots)
-    
+
     def next(self) -> Slot:
         """
         Returns the next open slot.
         """
         with self.io as data:
             open_slots = self._slot_manager(data).open_slots(self.exp)
-        
+
         return next(open_slots)
-    
+
     def _own_slot(self, data: QuotaData) -> Slot:
         slot_manager = self._slot_manager(data)
         slot = slot_manager.find_slot(self.session_ids)

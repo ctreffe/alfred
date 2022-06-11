@@ -4,26 +4,24 @@ Provides elements that make stuff happen.
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
-from typing import Union
-from typing import List
+from typing import List, Union
 from uuid import uuid4
 
 import cmarkgfm
 from cmarkgfm.cmark import Options as cmarkgfmOptions
 from emoji import emojize
 
-from ..exceptions import AlfredError
 from .._helper import inherit_kwargs
-
-from .core import jinja_env
-from .core import _Choice
-from .core import Row
-from .core import Element
+from ..exceptions import AlfredError
+from .core import Element, Row, _Choice, jinja_env
+from .input import (
+    SelectPageList,
+    SingleChoiceBar,
+    SingleChoiceButtons,
+    SingleChoiceList,
+)
 from .misc import JavaScript
-from .input import SingleChoiceButtons
-from .input import SingleChoiceBar
-from .input import SingleChoiceList
-from .input import SelectPageList
+
 
 @inherit_kwargs
 class SubmittingButtons(SingleChoiceButtons):
@@ -58,7 +56,7 @@ class SubmittingButtons(SingleChoiceButtons):
 
     def __init__(self, *choice_labels, **kwargs):
         super().__init__(*choice_labels, **kwargs)
-    
+
     def prepare_web_widget(self):
         super().prepare_web_widget()
 
@@ -100,7 +98,7 @@ class SubmittingBar(SingleChoiceBar):
 
     def __init__(self, *choice_labels, **kwargs):
         super().__init__(*choice_labels, **kwargs)
-    
+
     def prepare_web_widget(self):
         super().prepare_web_widget()
 
@@ -182,12 +180,14 @@ class JumpButtons(SingleChoiceButtons):
     #: JavaScript template for the code that submits the form on click
     js_template = jinja_env.get_template("js/jumpbuttons.js.j2")
 
-    def __init__(self, *choice_labels, button_style: Union[str, list] = "btn-primary", **kwargs):
+    def __init__(
+        self, *choice_labels, button_style: Union[str, list] = "btn-primary", **kwargs
+    ):
         super().__init__(*choice_labels, button_style=button_style, **kwargs)
         self.choice_labels, self.targets = map(list, zip(*choice_labels))
 
     def prepare_web_widget(self):
-        
+
         super().prepare_web_widget()
 
         if self.page.prefix_element_names and not self.page.has_been_shown:
@@ -202,9 +202,10 @@ class JumpButtons(SingleChoiceButtons):
     def validate_data(self):
         if not self.should_be_shown:
             return True
-        
+
         cond1 = bool(self.input) if self.force_input else True
         return cond1
+
 
 @inherit_kwargs
 class DynamicJumpButtons(JumpButtons):
@@ -252,7 +253,7 @@ class DynamicJumpButtons(JumpButtons):
     js_template = jinja_env.get_template("js/dynamic_jumpbuttons.js.j2")
 
     def validate_data(self):
-        
+
         return True
         # cond1 = bool(self.data) if self.force_input else True
 
@@ -297,10 +298,10 @@ class JumpList(Row):
         button_round_corners: Boolean, determining whether the button
             should have rounded corners.
         debugmode: Boolean switch, telling the JumpList whether it
-            should operate in debug mode. In debugmode, *save_data* 
+            should operate in debug mode. In debugmode, *save_data*
             defaults to *False*, i.e. the JumpList will not save any
             data.
-        
+
         {kwargs}
 
     Notes:
@@ -354,14 +355,14 @@ class JumpList(Row):
             check_jumpfrom=check_jumpfrom,
             show_all_in_scope=show_all_in_scope,
             display_page_name=display_page_name,
-            save_data=save_data
+            save_data=save_data,
         )
         btn = DynamicJumpButtons(
             (label, select.name),
             name=btn_name,
             button_style=button_style,
             button_round_corners=button_round_corners,
-            save_data=save_data
+            save_data=save_data,
         )
         super().__init__(select, btn, **kwargs)
 
@@ -369,7 +370,7 @@ class JumpList(Row):
         self.debugmode = debugmode
 
     def prepare_web_widget(self):
-        
+
         super().prepare_web_widget()
 
         if not self.page.section.allow_jumpfrom:
@@ -379,40 +380,40 @@ class JumpList(Row):
         if self.debugmode:
             for el in self.elements:
                 el.disabled = False
-        
+
 
 @inherit_kwargs
 class Button(Element):
     """
     A button that triggers execution of a python function on click.
-    
+
     Args:
         text (str): Button text
 
         func (callable): Python function to be called on button click.
-            The function must take zero arguments, but it can be a 
+            The function must take zero arguments, but it can be a
             method of a class or instance.
-        
+
         followup (str): What to do after the python function was called.
-            Can take the following values: 
-            
+            Can take the following values:
+
             - ``refresh`` submits and reloads the current page (default),
             - ``none`` does nothing,
             - ``forward`` submits the current page and moves forward,
             - ``backward`` submits the current page and moves backward,
             - ``jump>page_name`` submits the current page and triggers
               a jump to a page with the name 'page_name'
-            - ``custom`` executes custom JavaScript. If you choose this 
+            - ``custom`` executes custom JavaScript. If you choose this
               option, you must supply your custom JavaScript through the
               argument *custom_js*.
-        
+
         submit_first (bool): If True, the current values of all input
             elements on the current page will be saved on button click,
             before *func* is called. This way, these values will be
-            available in *func* through :attr:`.ExperimentSession.values`, 
+            available in *func* through :attr:`.ExperimentSession.values`,
             if func has access to the ExperimentSession object.
             See Example 3. Defaults to True.
-        
+
         button_style (str): Can be used for quick color-styling, using
             Bootstraps default color keywords: btn-primary, btn-secondary,
             btn-success, btn-info, btn-warning, btn-danger, btn-light,
@@ -420,22 +421,22 @@ class Button(Element):
             outlined buttons (eg. "btn-outline-secondary"). Advanced users can
             supply their own CSS classes for button-styling. Defaults
             to "btn-primary".
-        
-        button_round_corners (bool): A boolean switch to toggle whether 
-            the button should be displayed with rounded corners. Defaults 
-            to False. 
-        
+
+        button_round_corners (bool): A boolean switch to toggle whether
+            the button should be displayed with rounded corners. Defaults
+            to False.
+
         button_block (bool): A boolean switch to toggle whether the button
             should take up all horizontal space that is available. Can be
-            quite useful when arranging buttons in :class:`.Row`. 
+            quite useful when arranging buttons in :class:`.Row`.
             Defaults to False.
-        
+
         custom_js (str): Custom JavaScript to execute after the python
             function specified in *func* was called. Only takes effect,
             if *followup* is set to 'custom'.
 
         {kwargs}
-    
+
     Notes:
 
         Note that by default, the Button will not save data itself. If
@@ -446,7 +447,7 @@ class Button(Element):
         .. warning:: This element is very powerful. Remember that with great
             power comes great responsibility. Be aware that the callable
             *func* will be executed *every time* the button is clicked.
-    
+
     Examples:
 
         Example 1: A minimal example that will print some text to your terminal
@@ -460,12 +461,12 @@ class Button(Element):
 
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function)
-                
+
                 def demo_function(self):
                     print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
                     print("\\n")
-        
+
         Example 2: An example with a jump after the function call::
 
             import alfred3 as al
@@ -476,7 +477,7 @@ class Button(Element):
 
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3")
-            
+
                 def demo_function(self):
                     print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
@@ -485,16 +486,16 @@ class Button(Element):
             exp += al.Page(title="Page 2", name="page2")
             exp += al.Page(title="Page 3", name="page3")
 
-        
+
         Example 3: An example that uses values entered on the current page::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
 
             @exp.member
             class Demo(al.Page):
-                
+
                 def on_exp_access(self):
                     self += al.TextEntry(leftlab="Enter", name="entry1")
                     self += al.Button("Demo Button", func=self.demo_function)
@@ -504,47 +505,49 @@ class Button(Element):
                     print(self.exp.exp_id)
                     print(self.exp.values["entry1"])
                     print("\\n")
-        
+
         Example 4: An example that saves a count of how often the button
         was clicked::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
             @exp.member
             class Demo(al.Page):
-                
+
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function)
 
                 def demo_function(self):
                     print("\\nThis is a demonstration")
-                    
+
                     if "demo_button" in self.exp.adata:
                         self.exp.adata["demo_button"] += 1
                     else:
                         self.exp.adata["demo_button"] = 1
-                        
+
                     print("\\n")
 
 
     """
+
     element_template = jinja_env.get_template("html/ActionButtonElement.html.j2")
     js_template = jinja_env.get_template("js/actionbutton.js.j2")
 
     def __init__(
-        self, 
-        text: str, 
-        func: callable, 
+        self,
+        text: str,
+        func: callable,
         followup: str = "refresh",
         submit_first: bool = True,
         button_style: str = "btn-primary",
-        button_round_corners: bool = False, 
+        button_round_corners: bool = False,
         button_block: bool = False,
         custom_js: str = "",
-        **kwargs):
+        **kwargs,
+    ):
         super().__init__(**kwargs)
-        
+
         self.func = func
         self.submit_first = submit_first
         self.followup = followup
@@ -552,32 +555,42 @@ class Button(Element):
         self.text = text
         self.custom_js = custom_js
 
-        if not followup in {"refresh", "forward", "backward", "none", "custom"} and not followup.startswith("jump>"):
+        if not followup in {
+            "refresh",
+            "forward",
+            "backward",
+            "none",
+            "custom",
+        } and not followup.startswith("jump>"):
             raise ValueError(f"{followup} is an inappropriate value for 'followup'.")
 
         if self.followup == "custom" and not self.custom_js:
-            raise ValueError("If you set 'followup' to 'custom', you must specify custom Javascript to run.")
+            raise ValueError(
+                "If you set 'followup' to 'custom', you must specify custom Javascript to run."
+            )
 
         self.button_style = button_style
         self.button_round_corners = button_round_corners
         self.button_block = button_block
-    
+
     @property
     def template_data(self):
         d = super().template_data
         text = emojize(self.text, use_aliases=True)
-        text = cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE)
+        text = cmarkgfm.github_flavored_markdown_to_html(
+            text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+        )
         d["text"] = text
         d["button_block"] = "btn-block" if self.button_block else ""
         d["button_style"] = self.button_style
         return d
-    
+
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
         self.url = self.exp.ui.add_callable(self.func)
 
     def prepare_web_widget(self):
-        
+
         self._js_code = []
         d = {}
         d["url"] = self.url
@@ -606,7 +619,7 @@ class BackButton(Button):
         text (str, optional): Button text. If *None* (default), alfred3
             uses the default text for backward buttons from config.conf.
         {kwargs}
-    
+
     Examples:
         Simple usage::
 
@@ -619,24 +632,35 @@ class BackButton(Button):
 
                 def on_exp_access(self):
                     self += al.BackButton()
-    
-    """
-    
 
-    def __init__(self, 
-        text: str = None, 
+    """
+
+    def __init__(
+        self,
+        text: str = None,
         button_style: str = "btn-dark",
-        button_round_corners: bool = False, 
+        button_round_corners: bool = False,
         button_block: bool = False,
-        **kwargs):
-        
+        **kwargs,
+    ):
+
         for arg in ["func", "submit_first", "custom_js"]:
             val = kwargs.pop(arg, None)
             if val is not None:
-                raise TypeError(f"{type(self).__name__} got an unexpected keyword argument '{arg}'")
+                raise TypeError(
+                    f"{type(self).__name__} got an unexpected keyword argument '{arg}'"
+                )
 
-        super().__init__(text=text, button_style=button_style, button_round_corners=button_round_corners, button_block=button_block, followup= "backward", func=lambda: None, **kwargs)
-    
+        super().__init__(
+            text=text,
+            button_style=button_style,
+            button_round_corners=button_round_corners,
+            button_block=button_block,
+            followup="backward",
+            func=lambda: None,
+            **kwargs,
+        )
+
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
 
@@ -653,7 +677,7 @@ class ForwardButton(Button):
         text (str, optional): Button text. If *None* (default), alfred3
             uses the default text for forward buttons from config.conf.
         {kwargs}
-    
+
     Examples:
         Simple usage::
 
@@ -666,23 +690,35 @@ class ForwardButton(Button):
 
                 def on_exp_access(self):
                     self += al.ForwardButton()
-    
+
     """
 
-    def __init__(self, 
-        text: str = None, 
+    def __init__(
+        self,
+        text: str = None,
         button_style: str = "btn-dark",
-        button_round_corners: bool = False, 
+        button_round_corners: bool = False,
         button_block: bool = False,
-        **kwargs):
-        
+        **kwargs,
+    ):
+
         for arg in ["func", "submit_first", "custom_js"]:
             val = kwargs.pop(arg, None)
             if val is not None:
-                raise TypeError(f"{type(self).__name__} got an unexpected keyword argument '{arg}'")
+                raise TypeError(
+                    f"{type(self).__name__} got an unexpected keyword argument '{arg}'"
+                )
 
-        super().__init__(text=text, button_style=button_style, button_round_corners=button_round_corners, button_block=button_block, followup= "forward", func=lambda: None, **kwargs)
-    
+        super().__init__(
+            text=text,
+            button_style=button_style,
+            button_round_corners=button_round_corners,
+            button_block=button_block,
+            followup="forward",
+            func=lambda: None,
+            **kwargs,
+        )
+
     def added_to_experiment(self, experiment):
         super().added_to_experiment(experiment)
 

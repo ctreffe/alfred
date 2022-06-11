@@ -7,80 +7,80 @@ Section
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Section.added_to_experiment
-   
-   
+
+
       ~Section.added_to_section
-   
-   
+
+
       ~Section.append
-   
-   
+
+
       ~Section.on_enter
-   
-   
+
+
       ~Section.on_exp_access
-   
-   
+
+
       ~Section.on_hand_over
-   
-   
+
+
       ~Section.on_leave
-   
-   
+
+
       ~Section.on_resume
-   
-   
+
+
       ~Section.position_in_section
-   
-   
+
+
       ~Section.showif
-   
-   
+
+
       ~Section.uptree
-   
-   
+
+
       ~Section.validate_on_backward
-   
-   
+
+
       ~Section.validate_on_forward
-   
-   
+
+
       ~Section.validate_on_jump
-   
-   
+
+
       ~Section.validate_on_leave
-   
-   
+
+
       ~Section.validate_on_move
-   
-   
+
+
       ~Section.visible
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Section.all_closed_pages
          ~Section.all_elements
          ~Section.all_input_elements
@@ -123,7 +123,3 @@ Section
          ~Section.uid
          ~Section.unlinked_data
          ~Section.vargs
-      
-   
-   
-   

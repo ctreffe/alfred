@@ -12,7 +12,7 @@ function countdown( elementName, duration, msg)
     function updateTimer()
     {
         msToGo = targetTime - Date.now();
-       
+
         if (msToGo < 500) {
             // if time is up
             element.innerHTML = msg;

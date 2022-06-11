@@ -7,25 +7,17 @@ Provides elements that allow participant input.
 import re
 import string
 from datetime import datetime
-
-from typing import Union
-from typing import Tuple
-from typing import List
 from pathlib import Path
+from typing import List, Tuple, Union
 
 import bleach
-from emoji import emojize
 import cmarkgfm
 from cmarkgfm.cmark import Options as cmarkgfmOptions
+from emoji import emojize
 
-from ..exceptions import AlfredError
 from .._helper import inherit_kwargs
-
-from .core import jinja_env
-from .core import Element
-from .core import InputElement
-from .core import _Choice
-from .core import ChoiceElement
+from ..exceptions import AlfredError
+from .core import ChoiceElement, Element, InputElement, _Choice, jinja_env
 
 
 @inherit_kwargs
@@ -290,7 +282,9 @@ class EmailEntry(MatchEntry):
 
     """
 
-    def __init__(self, pattern=r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", **kwargs):
+    def __init__(
+        self, pattern=r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", **kwargs
+    ):
         super().__init__(pattern=pattern, **kwargs)
 
 
@@ -319,7 +313,9 @@ class PasswordEntry(RegEntry):
 
     element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
 
-    def __init__(self, password: str, force_input: bool = True, match_hint: str = None, **kwargs):
+    def __init__(
+        self, password: str, force_input: bool = True, match_hint: str = None, **kwargs
+    ):
         super(RegEntry, self).__init__(force_input=force_input, **kwargs)
         self.password = password
         self._match_hint = match_hint  # documented in getter property
@@ -384,7 +380,11 @@ class MultiplePasswordEntry(RegEntry):
     element_template = jinja_env.get_template("html/PasswordEntry.html.j2")
 
     def __init__(
-        self, passwords: List[str], force_input: bool = True, match_hint: str = None, **kwargs
+        self,
+        passwords: List[str],
+        force_input: bool = True,
+        match_hint: str = None,
+        **kwargs,
     ):
         super(RegEntry, self).__init__(force_input=force_input, **kwargs)
         self.passwords = passwords
@@ -435,9 +435,9 @@ class NumberEntry(TextEntry):
 
     Args:
         ndecimals (int): Accepted number of decimals. Defaults to 0.
-        min (int, float): Minimum accepted entry value. If *None* 
+        min (int, float): Minimum accepted entry value. If *None*
             (default), no minimum value is enforced.
-        max (int, float): Maximum accepted entry value. If *None* 
+        max (int, float): Maximum accepted entry value. If *None*
             (default), no maximum value is enforced.
         decimal_signs (tuple): Tuple of accepted decimal signs. Defaults to
             ``(",", ".")``, i.e. by default, **both** a comma and a dot are
@@ -663,7 +663,7 @@ class NumberEntry(TextEntry):
         d = super().template_data
         d["input"] = self._original_input
         return d
-    
+
 
 @inherit_kwargs(exclude=["height"])
 class RangeInput(InputElement):
@@ -671,31 +671,31 @@ class RangeInput(InputElement):
     Range input slider for numerical input.
 
     Args:
-        min (float, int): The value won't be less than min. The default 
+        min (float, int): The value won't be less than min. The default
             is 0.
-        max (float, int): The value won't be greater than max. The default 
+        max (float, int): The value won't be greater than max. The default
             is 100.
-        step (float, int): The value will be a multiple of step. The 
+        step (float, int): The value will be a multiple of step. The
             default is 1.
-        display_input (bool): If *True*, the current input value will be 
+        display_input (bool): If *True*, the current input value will be
             displayed alongside the element.
         display_position (str): Position of the input value display.
             Can be *top* or *bottom*. Defaults to *top*.
         align (str): Horizontal alignment of input value display. Can
             be *left*, *right*, and *center*. Defaults to *center*.
-        font_size (str, int): Font size for value display. You can use a 
-            keyword or an exact specification. The available keywords 
+        font_size (str, int): Font size for value display. You can use a
+            keyword or an exact specification. The available keywords
             are *tiny*, *small*, *normal*, *big*, and *huge*. The exact
             specification shoul ideally include a unit, such as *1rem*,
             or *12pt*. If you supply an integer without a unit, a unit
             of *pt* will be assumed. Defaults to *normal*.
-        display_locale (str): A locale specification for 
+        display_locale (str): A locale specification for
             displaying the current input value in an appropriate format.
             The default is *en-GB*, which uses a dot as a decimal sign.
             Use *de-DE* for german display with a comma as the decimal
             sign. Other possible values can be taken from
             https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Intl#locale_identification_and_negotiation
-        display_suffix (str): A suffix for the display of the 
+        display_suffix (str): A suffix for the display of the
             current input value. Can be used, for example, to add a
             unit to the display. Defaults to an empty string.
         mindecimals (int): Minimum number of decimals to display.
@@ -703,7 +703,7 @@ class RangeInput(InputElement):
         maxdecimals (int): Maximum number of decimals to display.
             Defaults to 2.
         {kwargs}
-    
+
     Examples:
         Basic example::
 
@@ -713,7 +713,7 @@ class RangeInput(InputElement):
 
             @exp.member
             class Demo(al.Page):
-                
+
                 def on_exp_access(self):
                     self += al.RangeInput(name="range_demo")
     """
@@ -750,15 +750,15 @@ class RangeInput(InputElement):
         self.mindecimals = mindecimals
         self.maxdecimals = maxdecimals
         self.display_input = display_input
-        self.offset_display_height = "true" if self.leftlab or self.rightlab else "false" # for javascript
-        
-    
+        self.offset_display_height = (
+            "true" if self.leftlab or self.rightlab else "false"
+        )  # for javascript
+
     def added_to_page(self, page):
         super().added_to_page(page)
         if self.display_input:
             js = self.js_template.render(self.js_template_data)
             self.add_js(js)
-
 
     @property
     def js_template_data(self):
@@ -771,7 +771,7 @@ class RangeInput(InputElement):
         d["mindecimals"] = self.mindecimals
         d["maxdecimals"] = self.maxdecimals
         return d
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -792,21 +792,21 @@ class RangeInput(InputElement):
         data["max"] = self.max
 
         return data
-    
+
     @property
     def no_input_hint(self) -> str:
         """
         RangeInput always has an input.
         """
         return "No Input to RangeInput"
-    
+
     @property
     def match_hint(self):
         """
         Should never be needed for RangeInput
         """
         return "No match for RangeInput"
-    
+
     @property
     def input(self) -> float:
         # docstring inherited
@@ -1248,7 +1248,7 @@ class SingleChoiceList(SingleChoice):
                         "-no selection-", "choi1", "choi2", "choi3",
                          name="sel1"
                          )
-        
+
 
         A single choice list with a no-choice option as first option that
         still enforces force-input. This works, because the empty string
@@ -1300,7 +1300,9 @@ class SingleChoiceList(SingleChoice):
 
     def __init__(self, *choice_labels, default: int = 1, **kwargs):
         if "align" in kwargs:
-            raise ValueError(f"Argument 'align' is not supported for {type(self).__name__}")
+            raise ValueError(
+                f"Argument 'align' is not supported for {type(self).__name__}"
+            )
         super().__init__(*choice_labels, default=default, **kwargs)
 
     def define_choices(self) -> List[_Choice]:
@@ -1561,7 +1563,9 @@ class SingleChoiceButtons(SingleChoice):
                     self._button_style.append(value[-1])
 
         elif isinstance(value, list) and len(value) > len(self.choice_labels):
-            raise ValueError("List of button styles cannot be longer than list of button labels.")
+            raise ValueError(
+                "List of button styles cannot be longer than list of button labels."
+            )
 
     @property
     def template_data(self) -> dict:
@@ -1582,9 +1586,7 @@ class SingleChoiceButtons(SingleChoice):
             else:
                 css = []
             # full-width buttons on small screens
-            css += (
-                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
-            )
+            css += f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, str):
@@ -1596,9 +1598,7 @@ class SingleChoiceButtons(SingleChoice):
             # now the width of the individual button has an effect
             css += f".btn.choice-button-{self.name} {{width: {self.button_width};}} "
             # and it, too returns to full width on small screens
-            css += (
-                f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
-            )
+            css += f"@media (max-width: 576px) {{.btn.choice-button-{self.name} {{width: 100%;}}}} "
             self._css_code += [(7, css)]
 
         elif isinstance(self.button_width, list):
@@ -1610,7 +1610,9 @@ class SingleChoiceButtons(SingleChoice):
             # the group needs to be switched to growing with its member buttons
             css = f"#{self.name} {{width: auto;}} "
             # and return to 100% with on small screens
-            css += f"@media (max-width: 576px) {{#{self.name} {{width: 100%!important;}}}}"
+            css += (
+                f"@media (max-width: 576px) {{#{self.name} {{width: 100%!important;}}}}"
+            )
             self._css_code += [(7, css)]
 
             # set width for each individual button
@@ -1624,7 +1626,9 @@ class SingleChoiceButtons(SingleChoice):
 
         spec = "border-radius: 1rem;"
         css1 = f"div#{ self.name }.btn-group>label.btn.choice-button {{{spec}}}"
-        css2 = f"div#{ self.name }.btn-group-vertical>label.btn.choice-button {{{spec}}}"
+        css2 = (
+            f"div#{ self.name }.btn-group-vertical>label.btn.choice-button {{{spec}}}"
+        )
         self.add_css(css1)
         self.add_css(css2)
 
@@ -1639,9 +1643,7 @@ class SingleChoiceButtons(SingleChoice):
             spec = f"margin-{m}: {n}; "
             spec += f"border-top-{m}-radius: 0; "
             spec += f"border-bottom-{m}-radius: 0;"
-            css = (
-                f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
-            )
+            css = f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child) {{{spec}}}"
             self._css_code += [(7, css)]
 
     def _convert_alignment(self):
@@ -1813,7 +1815,9 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
     """
 
     def __init__(self, *choice_labels, button_round_corners: bool = False, **kwargs):
-        super().__init__(*choice_labels, button_round_corners=button_round_corners, **kwargs)
+        super().__init__(
+            *choice_labels, button_round_corners=button_round_corners, **kwargs
+        )
 
 
 @inherit_kwargs
@@ -1964,10 +1968,14 @@ class SelectPageList(SingleChoiceList):
         """
 
         if self.scope in ["experiment", "exp"]:
-            scope = list(self.experiment.root_section.members["_content"].all_pages.values())
+            scope = list(
+                self.experiment.root_section.members["_content"].all_pages.values()
+            )
         else:
             try:
-                target_section = self.experiment.root_section.all_subsections[self.scope]
+                target_section = self.experiment.root_section.all_subsections[
+                    self.scope
+                ]
                 scope = list(target_section.all_pages.values())
             except AttributeError:
                 raise AlfredError("Parameter 'scope' must be a section name or 'exp'.")
@@ -2096,7 +2104,7 @@ class HiddenInput(InputElement):
 
     Examples:
         Minimum example::
-        
+
             import alfred3 as al
             exp = al.Experiment()
 
@@ -2126,10 +2134,10 @@ class DateEntry(InputElement):
         max (str): Maximum date, provided as a string in YYYY-MM-DD
             format.
         {kwargs}
-    
+
     Examples:
         Minimum example::
-            
+
             import alfred3 as al
             exp = al.Experiment()
 
@@ -2140,6 +2148,7 @@ class DateEntry(InputElement):
                 def on_exp_access(self):
                     self += al.DateEntry(default="2022-01-17", name="demo_date")
     """
+
     element_template = jinja_env.get_template("html/DateEntryElement.html.j2")
 
     def __init__(self, default: str = None, min: str = None, max: str = None, **kwargs):
@@ -2147,12 +2156,12 @@ class DateEntry(InputElement):
         self.default = self.validate_date(default) if default is not None else ""
         self.min = self.validate_date(min) if min is not None else ""
         self.max = self.validate_date(max) if max is not None else ""
-    
+
     @staticmethod
     def validate_date(date: str):
         datetime.strptime(date, "%Y-%m-%d")
         return date
-    
+
     @property
     def template_data(self):
         d = super().template_data
@@ -2160,7 +2169,6 @@ class DateEntry(InputElement):
         d["max"] = self.max
         d["default"] = self.default
         return d
-
 
 
 @inherit_kwargs
@@ -2177,7 +2185,7 @@ class TimeEntry(InputElement):
         max (str): Maximum time, provided as a string in HH:MM
             format.
         {kwargs}
-    
+
     Examples:
         Minimum example::
 
@@ -2197,12 +2205,12 @@ class TimeEntry(InputElement):
         self.default = self.validate_time(default) if default is not None else ""
         self.min = self.validate_time(min) if min is not None else ""
         self.max = self.validate_time(max) if max is not None else ""
-    
+
     @staticmethod
     def validate_time(time: str):
         datetime.strptime(time, "%H:%M")
         return time
-    
+
     @property
     def template_data(self):
         d = super().template_data

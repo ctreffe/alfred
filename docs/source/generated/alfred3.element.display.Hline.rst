@@ -7,47 +7,47 @@ Hline
    :show-inheritance:
 
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
       :toctree:
-      
-   
-   
-   
+
+
+
+
       ~Hline.add_css
-   
-   
+
+
       ~Hline.add_js
-   
-   
+
+
       ~Hline.added_to_experiment
-   
-   
+
+
       ~Hline.added_to_page
-   
-   
+
+
       ~Hline.prepare_web_widget
-   
-   
+
+
       ~Hline.render_inner_html
-   
 
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
       :template: autosummary/attribute.rst
       :toctree:
 
-      
+
          ~Hline.base_template
          ~Hline.converted_width
          ~Hline.css_class_container
@@ -73,7 +73,3 @@ Hline
          ~Hline.tree
          ~Hline.web_widget
          ~Hline.width
-      
-   
-   
-   

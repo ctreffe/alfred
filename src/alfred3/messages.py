@@ -1,9 +1,10 @@
-from builtins import object
-import threading
-import cmarkgfm
 import queue
-from emoji import emojize
+import threading
+
+import cmarkgfm
 from cmarkgfm.cmark import Options as cmarkgfmOptions
+from emoji import emojize
+
 
 class MessageManager:
     """
@@ -18,7 +19,7 @@ class MessageManager:
         self._queue = queue.Queue()
         self._lock = threading.Lock()
 
-    def post_message(self, msg: str, title: str = '', level: str = None):
+    def post_message(self, msg: str, title: str = "", level: str = None):
         if level is None:
             level = self._default_level
         msg = Message(msg, title, level)
@@ -32,8 +33,8 @@ class MessageManager:
                 break
 
 
-class Message(object):
-    def __init__(self, msg, title='', level=''):
+class Message:
+    def __init__(self, msg, title="", level=""):
         self._msg = msg
         self._title = title
         self._level = level
@@ -41,7 +42,9 @@ class Message(object):
     @property
     def msg(self):
         text = emojize(self._msg)
-        return cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE) 
+        return cmarkgfm.github_flavored_markdown_to_html(
+            text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+        )
 
     @property
     def level(self):
@@ -54,7 +57,9 @@ class Message(object):
     @property
     def title(self):
         text = emojize(self._title)
-        return cmarkgfm.github_flavored_markdown_to_html(text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE) 
+        return cmarkgfm.github_flavored_markdown_to_html(
+            text, options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+        )
 
     def __unicode__(self):
         return self.msg

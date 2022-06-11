@@ -5,9 +5,9 @@ How to use hooks
 
 .. rubric:: What are hooks for?
 
-Hooks are special functions ("methods", because they always belong to 
+Hooks are special functions ("methods", because they always belong to
 classes in alfred3), that will be executed by alfred3 at fixed moments
-in the experiment. Their purpose is to be redefined by you, when you 
+in the experiment. Their purpose is to be redefined by you, when you
 write an experiment – and that can be really powerful. Here are a few
 things that you can accomplish through hooks:
 
@@ -21,18 +21,18 @@ things that you can accomplish through hooks:
 .. rubric:: How do hooks work?
 
 Most hooks (with very few exceptions) can be recognized by the fact that
-they strat with *on_*. We aim to name the hooks in a way that will tell 
-you, at which moment in the experiment they will be executed. That's 
+they strat with *on_*. We aim to name the hooks in a way that will tell
+you, at which moment in the experiment they will be executed. That's
 usually the second part of the hook.
 
 You can use a hook by defining a page or section in class style (see
 :ref:`page-class-style`) and redefining the hook methods that can help
-you. 
+you.
 
 .. rubric:: Example – A dynamic page
 
-Let's say, we wish to do a calculation with a number that a 
-participant entered on the first page of our experiment, and show the 
+Let's say, we wish to do a calculation with a number that a
+participant entered on the first page of our experiment, and show the
 result to her on the following page. If we use the *instance style*, we
 can't do it - because pages that are created in instance style get
 filled right at the start of an experiment. At that time, our participant
@@ -40,8 +40,8 @@ has obviously not yet filled in her number.
 
 We also can't use the *on_exp_access* hook - because that one only makes
 shure that we can access the experiment session object from our page.
-So, instead we utilize the *on_first_show* hook, which will only get 
-executed when a page is shown for the first time. A minimal experiment 
+So, instead we utilize the *on_first_show* hook, which will only get
+executed when a page is shown for the first time. A minimal experiment
 would look like this::
 
    import alfred3 as al
@@ -50,7 +50,7 @@ would look like this::
    exp += al.Page(name="page1")
    exp.page1 += al.NumberEntry(toplab="Enter a number", name="n1")
 
-   
+
    @exp.member
    class Page2(al.Page):
 
@@ -60,7 +60,7 @@ would look like this::
          self += al.Text(f"The result of our calculation is: {calculated_number}")
 
 
-In the sections below, you find a list of all available hooks - their 
+In the sections below, you find a list of all available hooks - their
 documentation will contain further examples.
 
 Page Hooks
@@ -90,7 +90,7 @@ You can also use a hook to define custom page-specific validation:
 
    ~alfred3.page.Page.validate
 
-There is also an additional hook that is defined by 
+There is also an additional hook that is defined by
 :class:`.alfred3.page.TimeoutPage`:
 
 .. autosummary::
@@ -102,14 +102,14 @@ Section Hooks
 -------------
 
 .. warning:: We are currently questioning the four section hooks *on_enter*,
-   *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish 
+   *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish
    to accomplish with these hooks can be done in page hooks. The section
    versions have some caveats that make them a bit tougher
    to use correctly. So, for the meantime, please avoid these hooks and
    use page hooks instead. The attributes :attr:`.Section.first_page`
    and :attr:`.Section.last_page` may be useful for you in this regard.
 
-   The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may 
+   The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may
    at some point decide to introduce an alternative name for it in order
    to avoid confusion with :meth:`.Page.on_exp_access`.
 
@@ -122,7 +122,7 @@ Section Hooks
    ~alfred3.section.Section.on_resume
    ~alfred3.section.Section.on_leave
 
-A section's validation methods can also be used like hooks. Refer to 
+A section's validation methods can also be used like hooks. Refer to
 :ref:`How to customize validation behavior` and the docs for these
 methods for more information.
 
@@ -148,4 +148,3 @@ in the table below to get to their documentation, including examples.
 
    ~alfred3.experiment.Experiment.setup
    ~alfred3.experiment.Experiment.finish
-

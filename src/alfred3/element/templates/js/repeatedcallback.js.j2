@@ -5,7 +5,7 @@ function alertOnFail() {
 }
 
 setInterval(function() {
-            
+
 {% if submit_first %}
     var data = $("#form").serializeArray();
     $.post("{{ set_data_url }}", data)
@@ -15,7 +15,7 @@ setInterval(function() {
 {% endif %}
 
 $.get( "{{ url }}", function(data) {
-    
+
     if ("{{ followup }}" == "refresh") {
         move(direction="stay");
     } else if ("{{ followup }}" == "custom") {
@@ -28,6 +28,6 @@ $.get( "{{ url }}", function(data) {
 // .fail(alertOnFail)
 // .always(function() {console.log("always")})
 ;
-}, 
+},
 {{ interval }} * 1000)
 });
