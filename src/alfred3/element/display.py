@@ -1357,14 +1357,6 @@ class Card(Element):
             except AttributeError:
                 pass
     
-    def added_to_experiment(self, experiment):
-        super().added_to_experiment(experiment)
-        for part in ["header", "title", "subtitle", "body", "footer"]:
-            try:
-                getattr(self, "_" + part).added_to_experiment(experiment)
-            except AttributeError:
-                pass
-
     @property
     def template_data(self):
         d = super().template_data
