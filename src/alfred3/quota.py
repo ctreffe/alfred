@@ -3,6 +3,7 @@ Module for quota functionality.
 """
 
 import json
+import random
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -364,11 +365,13 @@ class QuotaIO:
     def __enter__(self):
         data = self.load_markbusy()
         start = time.time()
+        wait = 15
         while not data:
-            time.sleep(1)
+            self.exp.log.debug("Could not load non-busy randomizer data. Trying again after waiting for a short time.")
+            time.sleep(random.random())
             data = self.load_markbusy()
-            if time.time() - start > 10:
-                raise OSError("Could not load data.")
+            if time.time() - start > wait:
+                raise RuntimeError(f"Tried to load randomizer data for {wait} seconds. Could not load a data, since it was busy.")
         return data
 
     def __exit__(self, exc_type, exc_value, traceback):
