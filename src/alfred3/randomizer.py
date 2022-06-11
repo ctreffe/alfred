@@ -580,6 +580,7 @@ class ListRandomizer(SessionQuota):
 
 
         """
+        self.exp.log.info("ListRandomizer is starting condition slot allocation.")
         return super().count(raise_exception=raise_exception)
 
     def _initialize_slots(self):
