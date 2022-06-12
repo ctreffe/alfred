@@ -1,22 +1,15 @@
-name: pytest
+name: pre-commit
 
 on:
   push:
-    branches: [jb-develop]
+    branches: [master]
   pull_request:
-    branches: [jb-develop]
+    branches: [master]
 
 jobs:
-  pytest:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          # - macOS-latest
+  pre-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
@@ -31,5 +24,5 @@ jobs:
         run: |
           pip install .[dev]
           pip list
-      - name: Run pytest
-        run: pytest
+      - name: Run pre-commit
+        run: pre-commit run -a

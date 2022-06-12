@@ -3,6 +3,7 @@ Module for quota functionality.
 """
 
 import json
+import random
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -374,11 +375,13 @@ class QuotaIO:
     def __enter__(self):
         data = self.load_markbusy()
         start = time.time()
+        wait = 15
         while not data:
-            time.sleep(1)
+            self.exp.log.debug("Could not load non-busy randomizer data. Trying again after waiting for a short time.")
+            time.sleep(random.random())
             data = self.load_markbusy()
-            if time.time() - start > 10:
-                raise OSError("Could not load data.")
+            if time.time() - start > wait:
+                raise RuntimeError(f"Tried to load randomizer data for {wait} seconds. Could not load a data, since it was busy.")
         return data
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -601,34 +604,41 @@ class SessionQuota:
                 exp += al.Page(title = "Hello, World!", name="hello_world")
         """
         with self.io as data:
+            self.exp.log.debug("Loaded quota data. Starting to count.")
             self._validate(data)
 
             slot_manager = self._slot_manager(data)
             slot = self._own_slot(data)
 
             if slot:
+                self.exp.log.debug("This session was already assigned to a slot. Returning its slot label.")
                 return slot.label
 
             full = not self._accepts_sessions(data)
             if full and raise_exception:
+                self.exp.log.info("The quota is full. Aborting count with an exception.")
                 raise AllSlotsFull
             elif full:
+                self.exp.log.info("The quota is full. Aborting count by aborting the experiment.")
                 self._abort_exp()
                 return "__ABORTED__"
 
             slot = next(slot_manager.open_slots(self.exp), None)
 
             if slot is None and self.inclusive:
+                self.exp.log.info("Found no open slot. Searching for a pending slot next, since the quota is inclusive.")
                 slot = slot_manager.next_pending(self.exp)
 
             if slot is None:
                 msg = "No slot found, even though the quota does not appear to be full."
                 raise SlotInconsistency(msg)
 
+            self.exp.log.info("The quota found a slot for the current session. Starting to update the database representations.")
             self._update_slot(slot)
 
             data.slots = asdict(slot_manager)["slots"]
             self.io.save(data)
+            self.exp.log.debug("The quota has finished to update the database representations. Returning the slot label now.")
             return slot.label
 
     def _update_slot(self, slot):
@@ -660,6 +670,7 @@ class SessionQuota:
                 )
 
     def _abort_exp(self):
+        self.exp.log.info("The quota starts to abort the experiment.")
         full_page_title = "Experiment closed"
         full_page_text = (
             "Sorry, the experiment currently does not accept any further participants."
