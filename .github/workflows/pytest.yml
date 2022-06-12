@@ -2,9 +2,9 @@ name: pytest
 
 on:
   push:
-    branches: [jb-develop]
+    branches: [master, develop]
   pull_request:
-    branches: [jb-develop]
+    branches: [master, develop]
 
 jobs:
   pytest:
