@@ -7,9 +7,9 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-from bs4 import BeautifulSoup
 import mongomock
 import pymongo
+from bs4 import BeautifulSoup
 from thesmuggler import smuggle
 
 from alfred3.config import ExperimentConfig, ExperimentSecrets
