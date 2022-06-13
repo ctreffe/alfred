@@ -757,7 +757,7 @@ class ExperimentSession:
             f"Experiment title: {self.title}, "
             f"Experiment version: {self.version}"
         )
-        mock = self.secrets.getboolean("mongo_saving_agent", "mock")
+        mock = self.secrets.getboolean("mongo_saving_agent", "mock", fallback=False)
         if not self.admin_mode and not mock:
             self._save_data(sync=True)
 

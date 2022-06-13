@@ -1124,7 +1124,7 @@ class AutoMongoClient(pymongo.MongoClient):
         if config.getboolean("mock", False):
             return mongomock.MongoClient()
 
-        return cls(config=config, **kwargs)
+        return super().__new__(cls)
 
     def __init__(self, config: SectionProxy, **kwargs):
         host = config.get("host")
