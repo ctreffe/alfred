@@ -71,7 +71,7 @@ class SessionGroup:
                 self.sessions.remove(sid)
             except ValueError:
                 pass
-    
+
     def finished(self, exp, data: List[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_finished"])
@@ -81,32 +81,32 @@ class SessionGroup:
     def aborted(self, exp, data: List[dict] = None) -> bool:
         if self.aborted_sessions:
             return True
-        
-        
+
         if not data:
             data = self._get_fields(exp, ["exp_aborted"])
 
-        
         aborted = []
         aborted_sessions = []
         for session in data:
             aborted.append(session["exp_aborted"])
             if session["exp_aborted"]:
                 aborted_sessions.append(session)
-        
+
         any_aborted = any(aborted)
         if any_aborted:
             self._remove_inactive_sessions(aborted_sessions, self.aborted_sessions)
-        
+
         return any_aborted
 
     def expired(self, exp, data: List[dict] = None) -> bool:
         if self.expired_sessions:
             return True
-        
+
         if not data:
-            data = self._get_fields(exp, ["exp_start_time", "exp_session_timeout", "exp_save_time"])
-        
+            data = self._get_fields(
+                exp, ["exp_start_time", "exp_session_timeout", "exp_save_time"]
+            )
+
         data = list(data)
         now = time.time()
 
@@ -114,18 +114,18 @@ class SessionGroup:
         for session in data:
             t = session["exp_start_time"]
             timeout = session["exp_session_timeout"]
-            
+
             if t is None:
                 t = self.most_recent_save(exp, data)
-            
+
             passed_time = now - t
             is_expired = passed_time > timeout
             if is_expired:
                 expired_sessions.append(session)
-        
+
         if expired_sessions:
             self._remove_inactive_sessions(expired_sessions, self.expired_sessions)
-        
+
         return bool(expired_sessions)
 
     def started(self, exp, data: List[dict] = None) -> bool:
@@ -210,7 +210,7 @@ class Slot:
                 self.finished_sessions.append(s)
             else:
                 session_groups.append(s)
-        
+
         self.session_groups = session_groups
 
         return bool(self.finished_sessions)
@@ -229,10 +229,10 @@ class Slot:
                     self.expired_sessions.append(s)
             else:
                 pending.append(s)
-        
+
         self.session_groups = pending
         return bool(pending)
-    
+
     def conduct_maintenance(self, exp):
         self.pending(exp)
 
@@ -716,8 +716,8 @@ class SessionQuota:
                 " database representations."
             )
             self._update_slot(slot)
-            
-            try: # for compatibility with alfred3-interact
+
+            try:  # for compatibility with alfred3-interact
                 slot_manager.conduct_maintenance(self.exp)
             except AttributeError:
                 pass

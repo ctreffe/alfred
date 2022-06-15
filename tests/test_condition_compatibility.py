@@ -398,7 +398,7 @@ class TestSession:
     def test_init(self):
         s1 = cond._Session(id="abc")
         s2 = cond._Session(id="abc")
-        assert s2.timestamp 
+        assert s2.timestamp
         assert s1.timestamp
 
     def test_active(self, exp):

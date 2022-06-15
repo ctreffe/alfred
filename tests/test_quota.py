@@ -2,7 +2,7 @@ import mongomock
 import pytest
 from dotenv import load_dotenv
 
-from alfred3.quota import SessionQuota, SessionGroup
+from alfred3.quota import SessionGroup, SessionQuota
 from alfred3.testutil import clear_db, get_exp_session
 
 load_dotenv()
@@ -31,7 +31,9 @@ def exp_factory(tmp_path, mongo_client):
     def expf(sid: str = None):
         script = "tests/res/script-hello_world.py"
         secrets = "tests/res/secrets-default.conf"
-        exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets, sid=sid)
+        exp = get_exp_session(
+            tmp_path, script_path=script, secrets_path=secrets, sid=sid
+        )
         exp.data_saver.main.agents["mongo"]._mc = mongo_client
         exp._save_data(sync=True)
         return exp
@@ -41,9 +43,7 @@ def exp_factory(tmp_path, mongo_client):
     clear_db()
 
 
-
 class TestSessionGroup:
-
     def test_remove_aborted(self, exp_factory):
         exp1 = exp_factory("s1")
         exp2 = exp_factory("s2")
@@ -67,7 +67,7 @@ class TestSessionGroup:
     def test_remove_expired(self, exp_factory):
         exp1 = exp_factory("s1")
         exp2 = exp_factory("s2")
-        
+
         exp1.start()
         exp2.start()
 
@@ -79,11 +79,10 @@ class TestSessionGroup:
         exp1.session_timeout = 0.1
         exp1._save_data(sync=True)
         assert exp1.session_expired
-        
+
         assert session_group.expired(exp1)
         assert session_group.sessions == ["s2"]
         assert session_group.expired_sessions == ["s1"]
-
 
 
 class TestQuota:
@@ -186,12 +185,11 @@ class TestQuota:
         label = quota2.count()
 
         assert label == quota2.slot_label
-    
 
     def test_remove_aborted(self, exp_factory):
         exp1 = exp_factory("s1")
         exp2 = exp_factory("s2")
-        
+
         quota1 = SessionQuota(1, exp1)
         quota1.count()
 
