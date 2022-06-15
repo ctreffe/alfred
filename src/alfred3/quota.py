@@ -105,8 +105,9 @@ class SessionGroup:
             return True
         
         if not data:
-            data = self._get_fields(exp, ["exp_start_time", "exp_session_timeout"])
+            data = self._get_fields(exp, ["exp_start_time", "exp_session_timeout", "exp_save_time"])
         
+        data = list(data)
         now = time.time()
 
         expired_sessions = []
@@ -115,7 +116,7 @@ class SessionGroup:
             timeout = session["exp_session_timeout"]
             
             if t is None:
-                t = self.most_recent_save(exp)
+                t = self.most_recent_save(exp, data)
             
             passed_time = now - t
             is_expired = passed_time > timeout
@@ -715,8 +716,11 @@ class SessionQuota:
                 " database representations."
             )
             self._update_slot(slot)
-
-            slot_manager.conduct_maintenance(self.exp)
+            
+            try: # for compatibility with alfred3-interact
+                slot_manager.conduct_maintenance(self.exp)
+            except AttributeError:
+                pass
             data.slots = asdict(slot_manager)["slots"]
             self.io.save(data)
             self.exp.log.debug(
