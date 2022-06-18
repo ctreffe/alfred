@@ -116,7 +116,7 @@ class SessionGroup:
             timeout = session["exp_session_timeout"]
 
             if t is None:
-                t = self.most_recent_save(exp, data)
+                t = session["exp_save_time"]
 
             passed_time = now - t
             is_expired = passed_time > timeout
