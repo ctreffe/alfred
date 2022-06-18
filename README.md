@@ -1,5 +1,6 @@
-![GitHub](https://img.shields.io/github/license/ctreffe/alfred) [![zenodo](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371) [![pytest](https://github.com/ctreffe/alfred/actions/workflows/pytest.yml/badge.svg)](https://github.com/ctreffe/alfred/actions/workflows/pytest.yml) [![pre-commit](https://github.com/ctreffe/alfred/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/ctreffe/alfred/actions/workflows/pre-commit.yml)
 # Welcome to alfred3
+
+![GitHub](https://img.shields.io/github/license/ctreffe/alfred) [![zenodo](https://zenodo.org/badge/150700371.svg)](https://zenodo.org/badge/latestdoi/150700371) [![pytest](https://github.com/ctreffe/alfred/actions/workflows/pytest.yml/badge.svg)](https://github.com/ctreffe/alfred/actions/workflows/pytest.yml) [![pre-commit](https://github.com/ctreffe/alfred/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/ctreffe/alfred/actions/workflows/pre-commit.yml)
 
 Alfred3 is a package for Python 3 offering an easy way to create
 computer experiments that meet the highest standards of Open Science.
