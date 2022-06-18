@@ -192,6 +192,9 @@ class Text(Element):
 
         self._text = text if text is not None else ""
 
+        if not isinstance(self._text, str):
+            raise ValueError(f"Text element requires string input, got input '{self._text}' of type {type(self._text).__name__}.")
+
         #: pathlib.Path: Path to a textfile, if specified in the init
         self.path: Path = Path(path) if path is not None else path
 
