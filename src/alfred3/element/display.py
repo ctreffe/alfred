@@ -684,6 +684,12 @@ class ProgressBar(LabelledElement):
             try to infer the number of pages automatically, which may
             not always find the correct result. Defaults to *None*.
 
+        increments_of_five (bool): If *True* (default), the progress text
+            activated by setting ``show_text=True`` will be displayed in
+            increments of five. This can lead to a more consistent user
+            experience, because the visual display updates in increments
+            of five as well.
+
         {kwargs}
 
     See Also:
@@ -752,6 +758,7 @@ class ProgressBar(LabelledElement):
         progress_base: str = "pages_elements",
         n_elements: int = None,
         n_pages: int = None,
+        increments_of_five: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -769,6 +776,7 @@ class ProgressBar(LabelledElement):
         self._striped: bool = striped
         self._bar_style: str = style
         self._animated: bool = animated
+        self.increments_of_five = increments_of_five
         self._round_corners: bool = (
             "border-radius: 0;" if round_corners is False else ""
         )
@@ -807,6 +815,8 @@ class ProgressBar(LabelledElement):
 
         else:  # calculate automatically
             exact_progress = (self.numerator / self.denominator) * 100
+            if self.increments_of_five:
+                exact_progress = int(exact_progress / 5) * 5
 
             if not self.experiment.finished and not self.experiment.aborted:
 
