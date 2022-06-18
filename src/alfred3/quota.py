@@ -3,6 +3,7 @@ Module for quota functionality.
 """
 
 import json
+import random
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -19,6 +20,8 @@ from .exceptions import AllSlotsFull, SlotInconsistency
 class SessionGroup:
 
     sessions: List[str]
+    aborted_sessions: List[str] = field(default_factory=list)
+    expired_sessions: List[str] = field(default_factory=list)
 
     def query(self, expid) -> dict:
         d = {}
@@ -39,6 +42,8 @@ class SessionGroup:
 
     def _get_fields(self, exp, fields: List[str]) -> list:
         method = saving_method(exp)
+        if "exp_session_id" not in fields:
+            fields.append("exp_session_id")
         if method == "mongo":
             data = self._get_fields_mongo(exp, fields)
         elif method == "local":
@@ -58,42 +63,70 @@ class SessionGroup:
         for sessiondata in cursor:
             yield {key: value for key, value in sessiondata.items() if key in fields}
 
+    def _remove_inactive_sessions(self, data: List[dict], move_to: List[str]) -> None:
+        for session in data:
+            sid = session["exp_session_id"]
+            move_to.append(sid)
+            try:
+                self.sessions.remove(sid)
+            except ValueError:
+                pass
+
     def finished(self, exp, data: List[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_finished"])
         finished = [session["exp_finished"] for session in data]
-        if not finished:
-            raise ValueError("Session not found.")
-        return all(finished)
+        return bool(finished) and all(finished)
 
     def aborted(self, exp, data: List[dict] = None) -> bool:
+        if self.aborted_sessions:
+            return True
+
         if not data:
             data = self._get_fields(exp, ["exp_aborted"])
-        aborted = [session["exp_aborted"] for session in data]
-        if not aborted:
-            raise ValueError("Session not found.")
-        return any(aborted)
+
+        aborted = []
+        aborted_sessions = []
+        for session in data:
+            aborted.append(session["exp_aborted"])
+            if session["exp_aborted"]:
+                aborted_sessions.append(session)
+
+        any_aborted = any(aborted)
+        if any_aborted:
+            self._remove_inactive_sessions(aborted_sessions, self.aborted_sessions)
+
+        return any_aborted
 
     def expired(self, exp, data: List[dict] = None) -> bool:
+        if self.expired_sessions:
+            return True
+
         if not data:
-            data = self._get_fields(exp, ["exp_start_time"])
+            data = self._get_fields(
+                exp, ["exp_start_time", "exp_session_timeout", "exp_save_time"]
+            )
+
+        data = list(data)
         now = time.time()
-        start_time = [session["exp_start_time"] for session in data]
-        if not start_time:
-            raise ValueError("Session not found.")
 
-        expired = []
+        expired_sessions = []
+        for session in data:
+            t = session["exp_start_time"]
+            timeout = session["exp_session_timeout"]
 
-        for t in start_time:
             if t is None:
-                tolerance_exceeded = time.time() - self.most_recent_save(exp) > 60
-                expired.append(tolerance_exceeded)
-                continue
+                t = session["exp_save_time"]
 
             passed_time = now - t
-            expired.append(passed_time > exp.session_timeout)
+            is_expired = passed_time > timeout
+            if is_expired:
+                expired_sessions.append(session)
 
-        return any(expired)
+        if expired_sessions:
+            self._remove_inactive_sessions(expired_sessions, self.expired_sessions)
+
+        return bool(expired_sessions)
 
     def started(self, exp, data: List[dict] = None) -> bool:
         if not data:
@@ -124,7 +157,13 @@ class SessionGroup:
         return oldest
 
     def pending(self, exp) -> bool:
-        fields = ["exp_start_time", "exp_finished", "exp_aborted", "exp_save_time"]
+        fields = [
+            "exp_start_time",
+            "exp_finished",
+            "exp_aborted",
+            "exp_save_time",
+            "exp_session_timeout",
+        ]
         data = list(self._get_fields(exp, fields))
 
         finished = self.finished(exp, data)
@@ -146,6 +185,9 @@ class Slot:
 
     label: str
     session_groups: List[SessionGroup] = field(default_factory=list)
+    finished_sessions: List[str] = field(default_factory=list)
+    aborted_sessions: List[str] = field(default_factory=list)
+    expired_sessions: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.session_groups = [SessionGroup(**sdata) for sdata in self.session_groups]
@@ -159,12 +201,40 @@ class Slot:
         return len(pending)
 
     def finished(self, exp) -> bool:
-        finished = [s.finished(exp) for s in self.session_groups]
-        return any(finished)
+        if self.finished_sessions:
+            return True
+
+        session_groups = []
+        for s in self.session_groups:
+            if s.finished(exp):
+                self.finished_sessions.append(s)
+            else:
+                session_groups.append(s)
+
+        self.session_groups = session_groups
+
+        return bool(self.finished_sessions)
 
     def pending(self, exp) -> bool:
-        pending = [s.pending(exp) for s in self.session_groups]
-        return any(pending)
+        pending = []
+        for s in self.session_groups:
+            if s.finished(exp):
+                if s not in self.finished_sessions:
+                    self.finished_sessions.append(s)
+            elif s.aborted(exp):
+                if s not in self.aborted_sessions:
+                    self.aborted_sessions.append(s)
+            elif s.expired(exp):
+                if s not in self.expired_sessions:
+                    self.expired_sessions.append(s)
+            else:
+                pending.append(s)
+
+        self.session_groups = pending
+        return bool(pending)
+
+    def conduct_maintenance(self, exp):
+        self.pending(exp)
 
     def open(self, exp) -> bool:
         return not self.finished(exp) and not self.pending(exp)
@@ -193,6 +263,9 @@ class SlotManager:
         for slot in self.slots:
             if session_ids in slot:
                 return slot
+
+    def conduct_maintenance(self, exp):
+        [slot.conduct_maintenance(exp) for slot in self.slots]
 
     def next_pending(self, exp) -> Slot:
         slots = list(self.pending_slots(exp))
@@ -364,11 +437,19 @@ class QuotaIO:
     def __enter__(self):
         data = self.load_markbusy()
         start = time.time()
+        wait = 15
         while not data:
-            time.sleep(1)
+            self.exp.log.debug(
+                "Could not load non-busy randomizer data. Trying again after waiting"
+                " for a short time."
+            )
+            time.sleep(random.random())
             data = self.load_markbusy()
-            if time.time() - start > 10:
-                raise OSError("Could not load data.")
+            if time.time() - start > wait:
+                raise RuntimeError(
+                    f"Tried to load randomizer data for {wait} seconds. Could not load"
+                    " a data, since it was busy."
+                )
         return data
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -378,7 +459,7 @@ class QuotaIO:
             self.exp.abort(reason="quota_error")
             tb = "".join(format_exception(exc_type, exc_value, traceback))
             self.exp.log.error(
-                f"There was an error in a locked operation."
+                "There was an error in a locked operation."
                 "I aborted the experiment and released the lock."
                 f"{tb}"
             )
@@ -591,34 +672,61 @@ class SessionQuota:
                 exp += al.Page(title = "Hello, World!", name="hello_world")
         """
         with self.io as data:
+            self.exp.log.debug("Loaded quota data. Starting to count.")
             self._validate(data)
 
             slot_manager = self._slot_manager(data)
             slot = self._own_slot(data)
 
             if slot:
+                self.exp.log.debug(
+                    "This session was already assigned to a slot. Returning its slot"
+                    " label."
+                )
                 return slot.label
 
             full = not self._accepts_sessions(data)
             if full and raise_exception:
+                self.exp.log.info(
+                    "The quota is full. Aborting count with an exception."
+                )
                 raise AllSlotsFull
             elif full:
+                self.exp.log.info(
+                    "The quota is full. Aborting count by aborting the experiment."
+                )
                 self._abort_exp()
                 return "__ABORTED__"
 
             slot = next(slot_manager.open_slots(self.exp), None)
 
             if slot is None and self.inclusive:
+                self.exp.log.info(
+                    "Found no open slot. Searching for a pending slot next, since the"
+                    " quota is inclusive."
+                )
                 slot = slot_manager.next_pending(self.exp)
 
             if slot is None:
                 msg = "No slot found, even though the quota does not appear to be full."
                 raise SlotInconsistency(msg)
 
+            self.exp.log.info(
+                "The quota found a slot for the current session. Starting to update the"
+                " database representations."
+            )
             self._update_slot(slot)
 
+            try:  # for compatibility with alfred3-interact
+                slot_manager.conduct_maintenance(self.exp)
+            except AttributeError:
+                pass
             data.slots = asdict(slot_manager)["slots"]
             self.io.save(data)
+            self.exp.log.debug(
+                "The quota has finished to update the database representations."
+                " Returning the slot label now."
+            )
             return slot.label
 
     def _update_slot(self, slot):
@@ -650,6 +758,7 @@ class SessionQuota:
                 )
 
     def _abort_exp(self):
+        self.exp.log.info("The quota starts to abort the experiment.")
         full_page_title = "Experiment closed"
         full_page_text = (
             "Sorry, the experiment currently does not accept any further participants."

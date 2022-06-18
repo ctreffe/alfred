@@ -7,8 +7,9 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
+import mongomock
+import pymongo
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
 from thesmuggler import smuggle
 
 from alfred3.config import ExperimentConfig, ExperimentSecrets
@@ -51,13 +52,13 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
 
     SECRETS = Path(secrets_path).read_text(encoding="utf-8")
     secrets = SECRETS.format(
-        host=os.getenv("MONGODB_HOST"),
-        port=os.getenv("MONGODB_PORT"),
-        db=os.getenv("MONGODB_DATABASE"),
-        usr=os.getenv("MONGODB_USERNAME"),
-        pw=os.getenv("MONGODB_PASSWORD"),
-        col=os.getenv("MONGODB_COLLECTION"),
-        misc_collection=os.getenv("MONGODB_MISC_COLLECTION"),
+        host=os.getenv("MONGODB_HOST", "localhost"),
+        port=os.getenv("MONGODB_PORT", 27017),
+        db=os.getenv("MONGODB_DATABASE", "alfred"),
+        usr=os.getenv("MONGODB_USERNAME", "user"),
+        pw=os.getenv("MONGODB_PASSWORD", "pass"),
+        col=os.getenv("MONGODB_COLLECTION", "alfred"),
+        misc_collection=os.getenv("MONGODB_MISC_COLLECTION", "misc"),
     )
 
     tmp_secrets = Path(tmp_path) / "secrets.conf"
@@ -66,47 +67,55 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
     return ExperimentSecrets(expdir=tmp_path, config_objects=[secrets])
 
 
-def get_db():
+def get_db(mock: bool = True):
     """
     Returns the mongoDB database specified via credentials in .env.
     """
-    mc = MongoClient(
-        host=os.getenv("MONGODB_HOST"),
-        port=int(os.getenv("MONGODB_PORT")),
-        username=os.getenv("MONGODB_USERNAME"),
-        password=os.getenv("MONGODB_PASSWORD"),
-    )
-    db = os.getenv("MONGODB_DATABASE")
+    if mock:
+        mc = mongomock.MongoClient(
+            host=os.getenv("MONGODB_HOST", "localhost"),
+            port=int(os.getenv("MONGODB_PORT", 27017)),
+            username=os.getenv("MONGODB_USERNAME", "user"),
+            password=os.getenv("MONGODB_PASSWORD", "pass"),
+        )
+    else:
+        mc = pymongo.MongoClient(
+            host=os.getenv("MONGODB_HOST", "localhost"),
+            port=int(os.getenv("MONGODB_PORT", 27017)),
+            # username=os.getenv("MONGODB_USERNAME", "user"),
+            # password=os.getenv("MONGODB_PASSWORD", "pass"),
+        )
+    db = os.getenv("MONGODB_DATABASE", "alfred")
     return mc[db]
 
 
-def get_alfred_collection():
+def get_alfred_collection(mock: bool = True):
     """
     Returns the alfred mongoDB collection.
     """
-    db = get_db()
-    col = os.getenv("MONGODB_COLLECTION")
+    db = get_db(mock)
+    col = os.getenv("MONGODB_COLLECTION", "alfred")
     return db[col]
 
 
-def get_misc_collection():
+def get_misc_collection(mock: bool = True):
     """
     Returns the misc mongoDB collection
     """
-    db = get_db()
-    col = os.getenv("MONGODB_MISC_COLLECTION")
+    db = get_db(mock)
+    col = os.getenv("MONGODB_MISC_COLLECTION", "misc")
     return db[col]
 
 
-def clear_db():
+def clear_db(mock: bool = True):
     """
     Deletes all documents in the testing collection of the mongoDB
     accessed through environment variables.
 
     Intended for cleanup after testing.
     """
-    col = get_alfred_collection()
-    misc_col = get_misc_collection()
+    col = get_alfred_collection(mock)
+    misc_col = get_misc_collection(mock)
     delete_count_col = col.delete_many({}).deleted_count
     delete_count_misc = misc_col.delete_many({}).deleted_count
     print(
@@ -122,6 +131,7 @@ def get_exp_session(
     config_path: str = "",
     secrets_path: str = "tests/res/secrets-default.conf",
     sid: str = None,
+    timeout: int = None,
     **urlargs,
 ):
     """
@@ -137,7 +147,7 @@ def get_exp_session(
     sid = uuid4().hex if sid is None else sid
 
     session = exp.create_session(
-        session_id=sid, config=config, secrets=secrets, **urlargs
+        session_id=sid, config=config, secrets=secrets, timeout=timeout, **urlargs
     )
     return session
 
@@ -195,7 +205,7 @@ def move(client, direction: str, data: dict, **kwargs):
     d["page_token"] = token.get("value")
     d.update(data)
 
-    if not "follow_redirects" in kwargs:
+    if "follow_redirects" not in kwargs:
         kwargs["follow_redirects"] = True
 
     return client.post("/experiment", data=d, **kwargs)

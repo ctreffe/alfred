@@ -8,13 +8,10 @@ Provides configuration handling for alfred3 experiments.
 import importlib
 import os
 import platform
-import sys
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
-from typing import Union
 
 from . import files
-from ._helper import inherit_kwargs
 
 
 class ExperimentConfig(ConfigParser):
@@ -56,7 +53,7 @@ class ExperimentConfig(ConfigParser):
         self,
         expdir: str = None,
         config_objects: list = None,
-        inline_comment_prefixes: str = ("#"),
+        inline_comment_prefixes: str = "#",
         **kwargs
     ):
         super().__init__(inline_comment_prefixes=inline_comment_prefixes, **kwargs)

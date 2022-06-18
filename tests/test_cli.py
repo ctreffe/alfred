@@ -12,6 +12,7 @@ class TestTemplate:
         assert "script.py" in files
         assert "config.conf" in files
 
+    @pytest.mark.skip(reason="Run manually")
     def test_big_template(self, tmp_path):
         cmd = ["alfred3", "template", f"--path={tmp_path}", "-b"]
         subprocess.run(cmd)

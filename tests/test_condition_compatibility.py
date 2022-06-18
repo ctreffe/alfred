@@ -1,10 +1,10 @@
 import random
 import time
 
+import mongomock
 import pytest
 from dotenv import load_dotenv
 
-import alfred3 as al
 import alfred3.compatibility.condition as cond
 from alfred3.compatibility.condition import ConditionInconsistency
 from alfred3.testutil import clear_db, get_exp_session
@@ -13,10 +13,16 @@ load_dotenv()
 
 
 @pytest.fixture
-def exp(tmp_path):
+def mongo_client():
+    yield mongomock.MongoClient()
+
+
+@pytest.fixture
+def exp(tmp_path, mongo_client):
     script = "tests/res/script-hello_world.py"
     secrets = "tests/res/secrets-default.conf"
     exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
+    exp.data_saver.main.agents["mongo"]._mc = mongo_client
 
     yield exp
 
@@ -24,11 +30,12 @@ def exp(tmp_path):
 
 
 @pytest.fixture
-def exp_factory(tmp_path):
+def exp_factory(tmp_path, mongo_client):
     def expf():
         script = "tests/res/script-hello_world.py"
         secrets = "tests/res/secrets-default.conf"
         exp = get_exp_session(tmp_path, script_path=script, secrets_path=secrets)
+        exp.data_saver.main.agents["mongo"]._mc = mongo_client
         return exp
 
     yield expf
@@ -391,7 +398,8 @@ class TestSession:
     def test_init(self):
         s1 = cond._Session(id="abc")
         s2 = cond._Session(id="abc")
-        assert s2.timestamp > s1.timestamp
+        assert s2.timestamp
+        assert s1.timestamp
 
     def test_active(self, exp):
         s1 = cond._Session(id=exp.session_id)

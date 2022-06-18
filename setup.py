@@ -14,7 +14,10 @@ setuptools.setup(
     version=version["__version__"],
     author="Christian Treffenstädt, Johannes Brachem, Paul Wiemann",
     author_email="treffenstaedt@psych.uni-goettingen.de",
-    description="A library for rapid development of dynamic and interactive online experiments in the social sciences.",
+    description=(
+        "A library for rapid development of dynamic and interactive online experiments"
+        " in the social sciences."
+    ),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ctreffe/alfred",
@@ -39,13 +42,22 @@ setuptools.setup(
         "Flask>=1.1",
         "thesmuggler>=1.0",
         "Click>=7.1",
-        "emoji>=1.2",
+        "emoji>=1.2,<=1.6.3",
         "cmarkgfm>=0.5",
         "requests>=2.25",
         "bleach>=3.3",
     ],
     extras_require={
-        "dev": ["pytest", "pre-commit", "black", "flake8", "python-dotenv", "bs4", "selenium"]
+        "dev": [
+            "pytest",
+            "pre-commit",
+            "black",
+            "flake8",
+            "python-dotenv",
+            "bs4",
+            "selenium",
+            "mongomock",
+        ]
     },
     entry_points="""
     [console_scripts]

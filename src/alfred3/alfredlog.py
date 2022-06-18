@@ -3,18 +3,11 @@
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
-import copy
 import logging
-import os
 import queue
-import re
-import sys
 import threading
-import traceback
 from pathlib import Path
 from typing import Union
-
-from .config import ExperimentConfig
 
 
 def prepare_file_handler(filepath: Union[str, Path]) -> logging.FileHandler:
@@ -44,8 +37,7 @@ def prepare_alfred_formatter(exp_id: str) -> logging.Formatter:
     """
 
     formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - "
-        f"experiment id={exp_id} - %(message)s"
+        f"%(asctime)s - %(name)s - %(levelname)s - experiment id={exp_id} - %(message)s"
     )
 
     return formatter
@@ -210,7 +202,8 @@ class QueuedLoggingInterface:
 
         if level.upper() not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             raise ValueError(
-                "Level must be one of 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'."
+                "Level must be one of 'DEBUG', 'INFO', 'WARNING', 'ERROR', or"
+                " 'CRITICAL'."
             )
 
         self._level = getattr(logging, level.upper())

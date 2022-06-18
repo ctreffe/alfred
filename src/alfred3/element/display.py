@@ -55,7 +55,10 @@ class VerticalSpace(Element):
     def web_widget(self):
 
         # documented at baseclass
-        return f"<div class='vertical-space-element' style='margin-bottom: {self.space};'></div>"
+        return (
+            "<div class='vertical-space-element' style='margin-bottom:"
+            f" {self.space};'></div>"
+        )
 
 
 @inherit_kwargs
@@ -767,14 +770,17 @@ class ProgressBar(LabelledElement):
         self._bar_style: str = style
         self._animated: bool = animated
         self._round_corners: bool = (
-            "border-radius: 0;" if round_corners == False else ""
+            "border-radius: 0;" if round_corners is False else ""
         )
 
     def added_to_experiment(self, exp):
 
         super().added_to_experiment(exp)
 
-        css = f".progress#{self.name}  {{height: {self._bar_height}; {self._round_corners}}}"
+        css = (
+            f".progress#{self.name}  {{height: {self._bar_height};"
+            f" {self._round_corners}}}"
+        )
         self.add_css(code=css)
 
     def _prepare_web_widget(self):
@@ -1180,7 +1186,8 @@ class CountDown(CountUp):
         """
         if "end_after" in kwargs:
             raise TypeError(
-                "'end_after' is an invalid keyword argument for the 'tilltime' constructor."
+                "'end_after' is an invalid keyword argument for the 'tilltime'"
+                " constructor."
             )
 
         now = time.time()
@@ -1234,7 +1241,8 @@ class CountDown(CountUp):
         """
         if "end_after" in kwargs:
             raise TypeError(
-                "'end_after' is an invalid keyword argument for the 'tilldate' constructor."
+                "'end_after' is an invalid keyword argument for the 'tilldate'"
+                " constructor."
             )
 
         dargs = {}

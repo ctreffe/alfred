@@ -7,8 +7,6 @@ import time
 from pathlib import Path
 from typing import Union
 
-from jinja2 import Template
-
 from .._helper import inherit_kwargs
 from .core import Element, InputElement, jinja_env
 
@@ -93,11 +91,10 @@ class Style(Element):
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-        if (
-            (self.code and self.path)
-            or (self.code and self.url)
-            or (self.path and self.url)
-        ):
+        code_and_path = self.code and self.path
+        code_and_url = self.code and self.url
+        path_and_url = self.path and self.url
+        if any([code_and_path, code_and_url, path_and_url]):
             raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property
@@ -228,11 +225,10 @@ class JavaScript(Element):
         self.path = Path(path) if path is not None else None
         self.should_be_shown = False
 
-        if (
-            (self.code and self.path)
-            or (self.code and self.url)
-            or (self.path and self.url)
-        ):
+        code_and_path = self.code and self.path
+        code_and_url = self.code and self.url
+        path_and_url = self.path and self.url
+        if any([code_and_path, code_and_url, path_and_url]):
             raise ValueError("You can only specify one of 'code', 'url', or 'path'.")
 
     @property

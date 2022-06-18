@@ -124,10 +124,10 @@ class TestBasicMovement:
 
         exp.forward()
         assert exp.finished
-        assert not "Page2: on_first_show executed" in caplog.text
-        assert not "Page2: on_each_show executed" in caplog.text
-        assert not "Page2: on_first_hide executed" in caplog.text
-        assert not "Page2: on_each_show executed" in caplog.text
+        assert "Page2: on_first_show executed" not in caplog.text
+        assert "Page2: on_each_show executed" not in caplog.text
+        assert "Page2: on_first_hide executed" not in caplog.text
+        assert "Page2: on_each_show executed" not in caplog.text
 
     def test_skip_on_hiding(self, blank_exp, caplog):
         caplog.set_level(logging.DEBUG)
@@ -146,10 +146,10 @@ class TestBasicMovement:
 
         exp.forward()
         assert exp.finished
-        assert not "my_target_test_page: on_first_show executed" in caplog.text
-        assert not "my_target_test_page: on_each_show executed" in caplog.text
-        assert not "my_target_test_page: on_first_hide executed" in caplog.text
-        assert not "my_target_test_page: on_each_show executed" in caplog.text
+        assert "my_target_test_page: on_first_show executed" not in caplog.text
+        assert "my_target_test_page: on_each_show executed" not in caplog.text
+        assert "my_target_test_page: on_first_hide executed" not in caplog.text
+        assert "my_target_test_page: on_each_show executed" not in caplog.text
 
     def test_skip_two_pages(self, blank_exp, caplog):
         caplog.set_level(logging.DEBUG)
@@ -169,15 +169,15 @@ class TestBasicMovement:
         exp.forward()
         assert exp.finished
 
-        assert not "test1: on_first_show executed" in caplog.text
-        assert not "test1: on_each_show executed" in caplog.text
-        assert not "test1: on_first_hide executed" in caplog.text
-        assert not "test1: on_each_show executed" in caplog.text
+        assert "test1: on_first_show executed" not in caplog.text
+        assert "test1: on_each_show executed" not in caplog.text
+        assert "test1: on_first_hide executed" not in caplog.text
+        assert "test1: on_each_show executed" not in caplog.text
 
-        assert not "test2: on_first_show executed" in caplog.text
-        assert not "test2: on_each_show executed" in caplog.text
-        assert not "test2: on_first_hide executed" in caplog.text
-        assert not "test2: on_each_show executed" in caplog.text
+        assert "test2: on_first_show executed" not in caplog.text
+        assert "test2: on_each_show executed" not in caplog.text
+        assert "test2: on_first_hide executed" not in caplog.text
+        assert "test2: on_each_show executed" not in caplog.text
 
 
 class TestCustomMove:
@@ -564,19 +564,19 @@ class TestNestedMovement:
         exp.start()
 
         assert "parent_section: on_enter" in caplog.text
-        assert not "parent_section: on_hand_over" in caplog.text
-        assert not "parent_section: on_leave" in caplog.text
-        assert not "child_section: on_enter" in caplog.text
+        assert "parent_section: on_hand_over" not in caplog.text
+        assert "parent_section: on_leave" not in caplog.text
+        assert "child_section: on_enter" not in caplog.text
 
         exp.forward()
         assert exp.current_page.name == "child_page"
         assert "parent_section: on_hand_over" in caplog.text
         assert "child_section: on_enter" in caplog.text
-        assert not "parent_section: on_leave" in caplog.text
-        assert not "parent_section: validate_on_leave" in caplog.text
+        assert "parent_section: on_leave" not in caplog.text
+        assert "parent_section: validate_on_leave" not in caplog.text
 
         exp.forward()
-        assert not "parent_section: on_resume" in caplog.text
+        assert "parent_section: on_resume" not in caplog.text
         assert "child_section: on_leave" in caplog.text
         assert "parent_section: on_leave" in caplog.text
 
@@ -598,12 +598,12 @@ class TestNestedMovement:
         assert "parent_section: on_enter" in caplog.text
         assert "parent_section: on_hand_over" in caplog.text
         assert "child_section: on_enter" in caplog.text
-        assert not "parent_section: on_leave" in caplog.text
+        assert "parent_section: on_leave" not in caplog.text
 
         exp.forward()
         assert "parent_section: on_resume" in caplog.text
         assert "child_section: on_leave" in caplog.text
-        assert not "parent_section: on_leave" in caplog.text
+        assert "parent_section: on_leave" not in caplog.text
 
         exp.forward()
         assert "parent_section: on_leave" in caplog.text

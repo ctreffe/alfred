@@ -5,7 +5,7 @@ Provides fundamental element classes.
 
 """
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Iterator, List, Tuple, Union
 
@@ -138,8 +138,8 @@ class Element:
 
         if position != "center" and width == "full":
             self.log.warning(
-                "You have changed the value of 'position' on a full-width element. "
-                "That will most likely not have an effect. Did you mean to change 'align'?"
+                "You have changed the value of 'position' on a full-width element. That"
+                " will most likely not have an effect. Did you mean to change 'align'?"
             )
 
     @property
@@ -902,7 +902,8 @@ class RowLayout:
             assert len(value) <= self.ncols
         except AssertionError:
             raise ValueError(
-                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+                "Number of widths must be smaller or equal to the number of columns"
+                f" ({self.ncols}), not {len(value)}."
             )
 
         self._width_xs = value
@@ -926,7 +927,8 @@ class RowLayout:
             assert len(value) <= self.ncols
         except AssertionError:
             raise ValueError(
-                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+                "Number of widths must be smaller or equal to the number of columns"
+                f" ({self.ncols}), not {len(value)}."
             )
 
         self._width_sm = value
@@ -950,7 +952,8 @@ class RowLayout:
             assert len(value) <= self.ncols
         except AssertionError:
             raise ValueError(
-                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+                "Number of widths must be smaller or equal to the number of columns"
+                f" ({self.ncols}), not {len(value)}."
             )
 
         self._width_md = value
@@ -974,7 +977,8 @@ class RowLayout:
             assert len(value) <= self.ncols
         except AssertionError:
             raise ValueError(
-                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+                "Number of widths must be smaller or equal to the number of columns"
+                f" ({self.ncols}), not {len(value)}."
             )
 
         self._width_lg = value
@@ -998,7 +1002,8 @@ class RowLayout:
             assert len(value) <= self.ncols
         except AssertionError:
             raise ValueError(
-                f"Number of widths must be smaller or equal to the number of columns ({self.ncols}), not {len(value)}."
+                "Number of widths must be smaller or equal to the number of columns"
+                f" ({self.ncols}), not {len(value)}."
             )
 
         self._width_xl = value
@@ -1493,8 +1498,8 @@ class LabelledElement(Element):
         try:
             if not value.ncols == self._ncols:
                 raise AlfredError(
-                    "The number of layout columns must match the specification of "
-                    f"left and right labels. In this case, you need {self._ncols} columns."
+                    "The number of layout columns must match the specification of left"
+                    f" and right labels. In this case, you need {self._ncols} columns."
                 )
             self._layout = value
         except AttributeError:
@@ -2061,7 +2066,7 @@ class InputElement(LabelledElement):
             try:
                 fix.should_be_shown = False
                 self.page += fix
-            except AttributeError as e:
+            except AttributeError:
                 pass
 
 
@@ -2161,8 +2166,8 @@ class ChoiceElement(InputElement, ABC):
             if isinstance(label, Element):
                 label.added_to_page(page)
                 label.should_be_shown = False
-                label.width = (
-                    "full"  # in case of TextElement, b/c its default is a special width
+                label.width = (  # in case of TextElement, b/c its default is a special width
+                    "full"
                 )
 
     def prepare_web_widget(self):

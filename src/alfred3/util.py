@@ -33,7 +33,10 @@ def icon(
 
     """
     spin = "fa-spin" if spin else ""
-    return f"<i class='fas fa-{name} {spin} ml-{ml} mr-{mr}' style='font-size: {size};'></i>"
+    return (
+        f"<i class='fas fa-{name} {spin} ml-{ml} mr-{mr}' style='font-size:"
+        f" {size};'></i>"
+    )
 
 
 def emoji(text: str, size: str = "1rem") -> str:

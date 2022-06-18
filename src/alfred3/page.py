@@ -3,22 +3,19 @@ Pages hold and organize elements.
 
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
-import logging
 import string
 import time
 import typing as t
-from abc import ABC, ABCMeta, abstractmethod, abstractproperty
+from abc import ABC, abstractproperty
 from functools import reduce
-from pathlib import Path
 from typing import Iterator, Union
 
-from . import alfredlog
 from . import element as elm
 from . import saving_agent
 from ._core import ExpMember
-from ._helper import _DictObj, inherit_kwargs
+from ._helper import inherit_kwargs
 from .element.misc import HideNavigation, Style
-from .exceptions import AbortMove, AlfredError, ValidationError
+from .exceptions import AbortMove, AlfredError
 
 
 @inherit_kwargs
@@ -127,7 +124,8 @@ class _PageCore(ExpMember):
             return float(mdt[:-1]) * 60
         else:
             raise ValueError(
-                "Please specify minimum display time with a unit ('s' - seconds, 'm' - minutes)."
+                "Please specify minimum display time with a unit ('s' - seconds, 'm' -"
+                " minutes)."
             )
 
     @minimum_display_time.setter
@@ -236,10 +234,8 @@ class _PageCore(ExpMember):
         if not has_been_shown:
             self.on_first_show()
 
-            if (
-                self.exp.config.getboolean("general", "debug")
-                and self is not self.exp.final_page
-            ):
+            debug_enabled = self.exp.config.getboolean("general", "debug")
+            if debug_enabled and self is not self.exp.final_page:
                 name = self.name + "__debug_jumplist__"
                 jumplist = elm.action.JumpList(
                     scope="exp",
@@ -997,7 +993,8 @@ class Page(_CoreCompositePage):
 
         screen_size = [576, 768, 992, 1200]
         t = string.Template(
-            "@media (min-width: ${screen}px) {.responsive-width { width: ${w}%; max-width: none;}}"
+            "@media (min-width: ${screen}px) {.responsive-width { width: ${w}%;"
+            " max-width: none;}}"
         )
         out = []
         for i, w in enumerate(width):
@@ -1230,7 +1227,8 @@ class TimeoutPage(Page):
             timeout = int(self.timeout[:-1]) * 60
         else:
             raise ValueError(
-                "You must specify the unit of your timeout ('s' - seconds, or 'm' - minutes)"
+                "You must specify the unit of your timeout ('s' - seconds, or 'm' -"
+                " minutes)"
             )
         return timeout
 
@@ -1485,7 +1483,8 @@ class UnlinkedDataPage(NoDataPage):
 
         if self.encrypt not in ["agent", "always", "never"]:
             raise ValueError(
-                "The argument 'encrypt' must take one of the following values: 'agent', 'always', 'never'."
+                "The argument 'encrypt' must take one of the following values: 'agent',"
+                " 'always', 'never'."
             )
 
     @property
@@ -1516,10 +1515,9 @@ class UnlinkedDataPage(NoDataPage):
                 experiment will pause until the task was fully completed.
                 Should be used carefully. Defaults to False.
         """
-        if (
-            not self._experiment.data_saver.unlinked.agents
-            and not self._experiment.config.getboolean("general", "debug")
-        ):
+        unlinked_agents = self._experiment.data_saver.unlinked.agents
+        debug_enabled = self._experiment.config.getboolean("general", "debug")
+        if not unlinked_agents and not debug_enabled:
             self.log.warning("No saving agent for unlinked data available.")
 
         for agent in self._experiment.data_saver.unlinked.agents.values():
@@ -1717,7 +1715,8 @@ class PasswordPage(WidePage):
 
         if not isinstance(self.password, (str, list, tuple)):
             raise ValueError(
-                f"Argument 'password' of {type(self).__name__} must be a string, list, or tuple."
+                f"Argument 'password' of {type(self).__name__} must be a string, list,"
+                " or tuple."
             )
 
     def on_exp_access(self):

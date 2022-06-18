@@ -6,8 +6,7 @@ data saving work.
 import pytest
 from dotenv import load_dotenv
 
-import alfred3 as al
-from alfred3.testutil import *
+from alfred3.testutil import clear_db, forward, get_alfred_docs, get_app, get_json
 
 load_dotenv()
 
@@ -25,6 +24,7 @@ def client(tmp_path):
     clear_db()
 
 
+@pytest.mark.skip
 class TestHelloWorld:
     def test_start(self, client):
         rv = client.get("/start", follow_redirects=True)

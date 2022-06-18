@@ -8,9 +8,7 @@ import time
 import warnings
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from pathlib import Path
 from typing import Iterator, List, Tuple
-from uuid import uuid4
 
 from ..data_manager import get_data_of_session
 
@@ -146,12 +144,11 @@ class _ConditionIO:
 
         elif self.exp.config.get("local_saving_agent", "use"):
             self.method = "local"
-            self.path = (
-                self.exp.subpath(
-                    self.exp.config.get("exp_condition", "path", fallback="save")
-                )
-                / f"randomization{self.version}.json"
+            condition_path = self.exp.config.get(
+                "exp_condition", "path", fallback="save"
             )
+            full_condition_path = self.exp.subpath(condition_path)
+            self.path = full_condition_path / f"randomization{self.version}.json"
             self.path.parent.mkdir(exist_ok=True, parents=True)
 
     def load(self, atomic: bool = True) -> dict:
@@ -376,16 +373,17 @@ class ListRandomizer:
         self.slotlist = None
 
         msg = (
-            "The ListRandomizer is operating in compatibility "
-            "mode. Please switch to the updated version by using the 'session_ids' parameter "
-            "instead of 'id' and increasing your experiment version."
+            "The ListRandomizer is operating in compatibility mode. Please switch to"
+            " the updated version by using the 'session_ids' parameter instead of 'id'"
+            " and increasing your experiment version."
         )
         self.exp.log.warning(msg)
         warnings.warn(msg, FutureWarning)
 
         if not respect_version:
             raise ValueError(
-                "In comptibility mode, the ListRandomizer must be used with 'respect_version=True'"
+                "In comptibility mode, the ListRandomizer must be used with"
+                " 'respect_version=True'"
             )
 
         if kwargs:
@@ -598,12 +596,9 @@ class ListRandomizer:
 
         instance = dict(self.conditions)
 
-        what_to_do = (
-            "You can set 'respect_version' to True and increase the experiment version."
-        )
         msg = (
-            "Condition data is inconsistent with randomizer specification. "
-            + what_to_do
+            "Condition data is inconsistent with randomizer specification. You can set"
+            " 'respect_version' to True and increase the experiment version."
         )
         if not counted == instance:
             raise ConditionInconsistency(msg)

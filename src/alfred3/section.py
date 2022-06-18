@@ -3,8 +3,6 @@ Sections organize movement between pages in an experiment.
 
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
-import time
-import typing as t
 from random import shuffle
 
 from ._core import ExpMember
@@ -116,9 +114,9 @@ class Section(ExpMember):
                 )
         else:
             raise KeyError(
-                f"{name} not found in members of {self}. "
-                "You can use square bracket syntax only for changing existing pages, not for adding "
-                "new ones. Please use the augmented assignment operator '+=' for this purpose."
+                f"{name} not found in members of {self}. You can use square bracket"
+                " syntax only for changing existing pages, not for adding new ones."
+                " Please use the augmented assignment operator '+=' for this purpose."
             )
 
     def __getattr__(self, name):
@@ -653,7 +651,7 @@ class Section(ExpMember):
 
         if to_page.section.name in self.all_members:
             self._hand_over()
-        elif not to_page.section is self:
+        elif to_page.section is not self:
             self._leave()
 
         if direction.startswith("jump"):
@@ -661,7 +659,7 @@ class Section(ExpMember):
 
         if self.name in to_page.section.all_members:
             to_page.section._resume()
-        elif not to_page.section is self:
+        elif to_page.section is not self:
             to_page.section._enter()
 
         if self.exp.aborted:
@@ -778,28 +776,40 @@ class Section(ExpMember):
 
         try:
             self.on_first_show()
-            msg = f"You tried to use the page-only hook method 'on_first_show' on the section {self}."
+            msg = (
+                "You tried to use the page-only hook method 'on_first_show' on the"
+                f" section {self}."
+            )
             raise AlfredError(msg + explanation)
         except AttributeError:
             pass
 
         try:
             self.on_each_show()
-            msg = f"You tried to use the page-only hook method 'on_each_show' on the section {self}."
+            msg = (
+                "You tried to use the page-only hook method 'on_each_show' on the"
+                f" section {self}."
+            )
             raise AlfredError(msg + explanation)
         except AttributeError:
             pass
 
         try:
             self.on_each_hide()
-            msg = f"You tried to use the page-only hook method 'on_each_hide' on the section {self}."
+            msg = (
+                "You tried to use the page-only hook method 'on_each_hide' on the"
+                f" section {self}."
+            )
             raise AlfredError(msg + explanation)
         except AttributeError:
             pass
 
         try:
             self.on_first_hide()
-            msg = f"You tried to use the page-only hook method 'on_first_hide' on the section {self}."
+            msg = (
+                "You tried to use the page-only hook method 'on_first_hide' on the"
+                f" section {self}."
+            )
             raise AlfredError(msg + explanation)
         except AttributeError:
             pass

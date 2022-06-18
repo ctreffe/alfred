@@ -59,8 +59,10 @@ def _write(filename: str, out_filename: str = None, path: Path = None):
     "big",
     default=False,
     is_flag=True,
-    help="If '-b' is given, a more extensive template will be loaded, \
-        including, for instance, a secrets.conf and a .gitignore file.",
+    help=(
+        "If '-b' is given, a more extensive template will be loaded,         including,"
+        " for instance, a secrets.conf and a .gitignore file."
+    ),
 )
 @click.option(
     "--path",

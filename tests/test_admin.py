@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 import alfred3 as al
 from alfred3.config import ExperimentConfig, ExperimentSecrets
-from alfred3.exceptions import AbortMove, AlfredError
+from alfred3.exceptions import AlfredError
 from alfred3.testutil import clear_db, forward, get_app
 
 load_dotenv()
@@ -48,7 +48,7 @@ class TestValidation:
             exp.create_session("sid1", config, secrets, **urlargs)
 
         msg = str(excinfo.value)
-        assert "lvl1" in msg and "lvl3" in msg and not "lvl2" in msg
+        assert "lvl1" in msg and "lvl3" in msg and "lvl2" not in msg
 
     def test_admin_equal_passwords(self, tmp_path):
         exp = al.Experiment()
@@ -97,6 +97,7 @@ class TestUsageRaw:
         assert session.admin_mode
 
 
+@pytest.mark.skip("Should be run manually")
 class TestUsageOnSever:
     def test_admin_exp(self, client):
         rv = client.get("/start?admin=true", follow_redirects=True)
@@ -106,8 +107,8 @@ class TestUsageOnSever:
         rv = client.get("/start?admin=true", follow_redirects=True)
         rv = forward(client, data={"pw": "test1"})
         assert b"Spectator" in rv.data
-        assert not b"Bitte geben Sie etwas ein." in rv.data
-        assert not b"Weiter" in rv.data
+        assert b"Bitte geben Sie etwas ein." not in rv.data
+        assert b"Weiter" not in rv.data
 
         rv = forward(client)
         assert b"There's nothing here" in rv.data
@@ -121,7 +122,7 @@ class TestUsageOnSever:
 
         rv = forward(client)
         assert b"Operator" in rv.data
-        assert not b"Weiter" in rv.data
+        assert b"Weiter" not in rv.data
 
         rv = forward(client)
         assert b"There's nothing here" in rv.data
@@ -139,7 +140,7 @@ class TestUsageOnSever:
 
         rv = forward(client)
         assert b"Manager" in rv.data
-        assert not b"Weiter" in rv.data
+        assert b"Weiter" not in rv.data
 
         rv = forward(client)
         assert b"There's nothing here" in rv.data

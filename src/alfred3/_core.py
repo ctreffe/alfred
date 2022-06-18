@@ -3,12 +3,6 @@
 """
 
 
-import logging
-import os.path
-import re
-from typing import List
-from uuid import uuid4
-
 from . import alfredlog
 from ._helper import _DictObj, check_name
 from .exceptions import AlfredError
@@ -164,7 +158,10 @@ class ExpMember:
         self._name_set_via[via] = self.name
 
         if len(self._name_set_via) > 1:
-            msg = f"Name of {self} was set via multiple methods. Current winner: '{self.name}', set via {via}."
+            msg = (
+                f"Name of {self} was set via multiple methods. Current winner:"
+                f" '{self.name}', set via {via}."
+            )
             self.log.debug(msg)
 
     def showif(self) -> bool:

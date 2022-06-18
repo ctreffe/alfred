@@ -26,6 +26,16 @@ Types of changes
 6. Security in case of vulnerabilities.
 -->
 
+## alfred3 v2.3.3 (Released 2022-06-18)
+
+### Changed v2.3.3
+
+- Improved efficiency of the ListRandomizer
+
+### Fixed v2.3.3
+
+- Fixed buggy recognition of expired sessions in the ListRandomizer
+
 ## alfred3 v2.3.2 (Released 2022-05-05)
 
 ### Added v2.3.2
