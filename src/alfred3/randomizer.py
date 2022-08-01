@@ -274,7 +274,7 @@ class ListRandomizer(SessionQuota):
         self.exp_version = self.exp.version if respect_version else ""
         self.inclusive = inclusive
         self.random_seed = random_seed if random_seed is not None else time.time()
-        self.conditions = conditions
+        self.conditions = [cond for cond in conditions if cond[1] > 0]
         self.abort_page = abort_page
         self.name = name
         self.session_ids = session_ids if session_ids is not None else [exp.session_id]
