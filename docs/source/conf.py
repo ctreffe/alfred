@@ -46,6 +46,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.linkcode",
+    "sphinx_remove_toctrees",  # speeds up build with many stub pages
 ]
 
 autosummary_generate = True
@@ -109,3 +110,16 @@ def linkcode_resolve(domain, info):
     filename = info["module"].replace(".", "/")
 
     return f"https://github.com/ctreffe/alfred/blob/master/src/{filename}.py"
+
+
+# Remove auto-generated API docs from sidebars. They take too long to build.
+remove_from_toctrees = [
+    "generated/alfred3.page.*.rst",
+    "generated/alfred3.section.*.rst",
+    "generated/alfred3.randomizer.*.rst",
+    "generated/alfred3.experiment.*.rst",
+    "generated/alfred3.cli.*.rst",
+    "generated/alfred3.util.*.rst",
+    "generated/alfred3.admin.*.rst",
+    "generated/alfred3.element.*.*.rst",
+]
