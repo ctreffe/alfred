@@ -16,7 +16,6 @@ from pathlib import Path
 from typing import Union
 from uuid import uuid4
 
-import mongomock
 import pymongo
 from pymongo.collection import ReturnDocument
 
@@ -595,8 +594,16 @@ class MongoSavingAgent(SavingAgent):
         try:
             chost, cport = cls.client_info(client)
         except AttributeError:
-            if isinstance(client, mongomock.MongoClient):
-                return True
+            try:
+                import mongomock
+
+                if isinstance(client, mongomock.MongoClient):
+                    return True
+            except ImportError:
+                raise ImportError(
+                    "Running alfred3 tests requires mongomock. Please install mongomock"
+                    " and try again."
+                )
 
         if config:
             if not (config.get("host") == chost and config.get("port") == cport):
@@ -691,7 +698,15 @@ class MongoManager:
         ca_file = config.get("ca_file_path") if config.getboolean("use_ssl") else None
 
         if config.getboolean("mock", False):
-            return mongomock.MongoClient()
+            try:
+                import mongomock
+
+                return mongomock.MongoClient()
+            except ImportError:
+                raise ImportError(
+                    "Running alfred3 tests requires mongomock. Please install mongomock"
+                    " and try again."
+                )
 
         client = pymongo.MongoClient(
             host=config.get("host"),
@@ -1122,7 +1137,15 @@ class AutoMongoClient(pymongo.MongoClient):
 
     def __new__(cls, config: SectionProxy, **kwargs):
         if config.getboolean("mock", False):
-            return mongomock.MongoClient()
+            try:
+                import mongomock
+
+                return mongomock.MongoClient()
+            except ImportError:
+                raise ImportError(
+                    "Running alfred3 tests requires mongomock. Please install mongomock"
+                    " and try again."
+                )
 
         return super().__new__(cls)
 
