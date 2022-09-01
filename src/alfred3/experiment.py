@@ -527,7 +527,8 @@ class Experiment:
                 run in debug mode. Defaults to None, which leads to
                 taking the value from option 'open_browser' in section
                 'general' of config.conf.
-            test: If true, the experiment is started in test mode.
+            test: If true, the experiment is started in test mode. Session IDs
+                and the experiment version receive a prefix of "test-".
 
         .. versionchanged:: 2.3.0
             Added parameter *test*.
@@ -1456,7 +1457,10 @@ class ExperimentSession:
     @property
     def version(self) -> str:
         """str: Experiment version"""
-        return self.config.get("metadata", "version")
+        version = self.config.get("metadata", "version")
+        if self.test_mode:
+            version = "test-" + version
+        return version
 
     @property
     def title(self) -> str:
