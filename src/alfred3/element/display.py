@@ -956,6 +956,7 @@ class Alert(Text):
         return d
 
 
+@inherit_kwargs
 class ButtonLabels(SingleChoiceButtons):
     """
     Disabled buttons to use for labelling.
