@@ -789,6 +789,7 @@ class UserInterface:
 
         d["title"] = page.title
         d["subtitle"] = page.subtitle
+        d["footer_text"] = page.footer_text or d["footer_text"]
 
         if self.exp.movement_manager.current_index > 0:
             try:

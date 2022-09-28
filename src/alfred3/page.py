@@ -843,6 +843,10 @@ class Page(_CoreCompositePage):
             including hex and RGB. Can be defined as a class
             attribute.
 
+        footer_text (str): Page-specific footer text. Replaces the ``footer_text``
+            defined in ``config.conf``. Can be defined as a class
+            attribute.
+
         {kwargs}
 
     Notes:
@@ -889,6 +893,7 @@ class Page(_CoreCompositePage):
         responsive_width: str = None,
         header_color: str = None,
         background_color: str = None,
+        footer_text: str = None,
         *args,
         **kwargs,
     ):
@@ -910,6 +915,10 @@ class Page(_CoreCompositePage):
         if background_color:
             self.background_color = background_color
 
+        self._footer_text = None
+        if footer_text:
+            self.footer_text = footer_text
+
     @property
     def fixed_width(self) -> str:
         """
@@ -925,6 +934,15 @@ class Page(_CoreCompositePage):
     @fixed_width.setter
     def fixed_width(self, value):
         self._fixed_width = value
+
+    @property
+    def footer_text(self) -> str:
+        """Page-specific footer text."""
+        return self._footer_text
+
+    @footer_text.setter
+    def footer_text(self, value):
+        self._footer_text = value
 
     @property
     def responsive_width(self):

@@ -683,7 +683,7 @@ class ProgressBar(LabelledElement):
             page in the experiment. If 'None', the experiment will
             try to infer the number of pages automatically, which may
             not always find the correct result. Defaults to *None*.
-        
+
         increments_of_five (bool): If *True* (default), the progress text
             activated by setting ``show_text=True`` will be displayed in
             increments of five. This can lead to a more consistent user
@@ -817,7 +817,6 @@ class ProgressBar(LabelledElement):
             exact_progress = (self.numerator / self.denominator) * 100
             if self.increments_of_five:
                 exact_progress = int(exact_progress / 5) * 5
-
 
             if not self.experiment.finished and not self.experiment.aborted:
 
@@ -957,6 +956,7 @@ class Alert(Text):
         return d
 
 
+@inherit_kwargs
 class ButtonLabels(SingleChoiceButtons):
     """
     Disabled buttons to use for labelling.
