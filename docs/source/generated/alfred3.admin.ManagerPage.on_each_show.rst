@@ -1,6 +1,0 @@
-ManagerPage.on\_each\_show()
-======================================
-
-.. currentmodule:: alfred3.admin
-
-.. automethod:: ManagerPage.on_each_show
