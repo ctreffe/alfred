@@ -32,6 +32,7 @@ from .element.display import (
 
 # from .element.input import MultipleChoiceList
 from .element.input import (
+    DateEntry,
     EmailEntry,
     HiddenInput,
     MatchEntry,
@@ -49,6 +50,7 @@ from .element.input import (
     SingleChoiceList,
     TextArea,
     TextEntry,
+    TimeEntry,
 )
 from .element.misc import (
     Callback,
