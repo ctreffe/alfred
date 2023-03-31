@@ -33,7 +33,6 @@ Types of changes
 
 - #220
 - #221
--
 
 ### Changed v2.4.0
 

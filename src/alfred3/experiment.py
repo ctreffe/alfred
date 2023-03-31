@@ -1486,14 +1486,20 @@ class ExperimentSession:
         experiment.
 
         """
-        txt = "The property ExperimentSession.session_status will be removed in the next major release."
+        txt = (
+            "The property ExperimentSession.session_status will be removed in the next"
+            " major release."
+        )
         FutureWarning(txt)
         self.log.warning(txt)
         return self._session_status
 
     @session_status.setter
     def session_status(self, status: str):
-        txt = "The property ExperimentSession.session_status will be removed in the next major release."
+        txt = (
+            "The property ExperimentSession.session_status will be removed in the next"
+            " major release."
+        )
         FutureWarning(txt)
         self.log.warning(txt)
         if not isinstance(status, str):
@@ -1556,14 +1562,20 @@ class ExperimentSession:
         This property can be used, e.g. for repeated measures designs
         with multiple experiment sessions for each participant.
         """
-        txt = "The property ExperimentSession.session will be removed in the next major release."
+        txt = (
+            "The property ExperimentSession.session will be removed in the next major"
+            " release."
+        )
         FutureWarning(txt)
         self.log.warning(txt)
         return self._session
 
     @session.setter
     def session(self, value: str):
-        txt = "The property ExperimentSession.session will be removed in the next major release."
+        txt = (
+            "The property ExperimentSession.session will be removed in the next major"
+            " release."
+        )
         FutureWarning(txt)
         self.log.warning(txt)
 
