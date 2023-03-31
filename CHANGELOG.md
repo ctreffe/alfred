@@ -26,6 +26,15 @@ Types of changes
 6. Security in case of vulnerabilities.
 -->
 
+## alfred3 v2.3.4 (Released 2023-03-31)
+
+
+### Fixed v2.3.4
+
+- Correctly export `DateEntry` and `TimeEntry` elements for date and time input
+- Removed dependency on mongomock for standard usage. It is still required for
+  development, since it is used in the unit tests.
+
 ## alfred3 v2.3.3 (Released 2022-06-18)
 
 ### Changed v2.3.3
