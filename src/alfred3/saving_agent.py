@@ -594,10 +594,17 @@ class MongoSavingAgent(SavingAgent):
         try:
             chost, cport = cls.client_info(client)
         except AttributeError:
-            import mongomock
+            try:
+                import mongomock
 
-            if isinstance(client, mongomock.MongoClient):
-                return True
+                if isinstance(client, mongomock.MongoClient):
+                    return True
+            except ImportError:
+                raise ImportError(
+                    "Running alfred3 tests requires mongomock. Please install mongomock"
+                    " and try again."
+                )
+
 
         if config:
             if not (config.get("host") == chost and config.get("port") == cport):
@@ -692,9 +699,15 @@ class MongoManager:
         ca_file = config.get("ca_file_path") if config.getboolean("use_ssl") else None
 
         if config.getboolean("mock", False):
-            import mongomock
+            try:
+                import mongomock
 
-            return mongomock.MongoClient()
+                return mongomock.MongoClient()
+            except ImportError:
+                raise ImportError(
+                    "Running alfred3 tests requires mongomock. Please install mongomock"
+                    " and try again."
+                )
 
         client = pymongo.MongoClient(
             host=config.get("host"),
@@ -1125,9 +1138,15 @@ class AutoMongoClient(pymongo.MongoClient):
 
     def __new__(cls, config: SectionProxy, **kwargs):
         if config.getboolean("mock", False):
-            import mongomock
+            try:
+                import mongomock
 
-            return mongomock.MongoClient()
+                return mongomock.MongoClient()
+            except ImportError:
+                raise ImportError(
+                    "Running alfred3 tests requires mongomock. Please install mongomock"
+                    " and try again."
+                )
 
         return super().__new__(cls)
 

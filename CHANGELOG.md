@@ -26,6 +26,25 @@ Types of changes
 6. Security in case of vulnerabilities.
 -->
 
+
+## alfred3 v2.4.0 (Released 2023-03-31)
+
+### Added v2.4.0
+
+- #220
+- #221
+-
+
+### Changed v2.4.0
+
+- #203
+
+### Fixed v2.4.0
+
+- #222
+- #223
+
+
 ## alfred3 v2.3.4 (Released 2023-03-31)
 
 
