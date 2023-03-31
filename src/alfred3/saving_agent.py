@@ -16,7 +16,6 @@ from pathlib import Path
 from typing import Union
 from uuid import uuid4
 
-import mongomock
 import pymongo
 from pymongo.collection import ReturnDocument
 
@@ -595,6 +594,8 @@ class MongoSavingAgent(SavingAgent):
         try:
             chost, cport = cls.client_info(client)
         except AttributeError:
+            import mongomock
+
             if isinstance(client, mongomock.MongoClient):
                 return True
 
@@ -691,6 +692,8 @@ class MongoManager:
         ca_file = config.get("ca_file_path") if config.getboolean("use_ssl") else None
 
         if config.getboolean("mock", False):
+            import mongomock
+
             return mongomock.MongoClient()
 
         client = pymongo.MongoClient(
@@ -1122,6 +1125,8 @@ class AutoMongoClient(pymongo.MongoClient):
 
     def __new__(cls, config: SectionProxy, **kwargs):
         if config.getboolean("mock", False):
+            import mongomock
+
             return mongomock.MongoClient()
 
         return super().__new__(cls)
