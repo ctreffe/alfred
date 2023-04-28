@@ -114,12 +114,12 @@ def linkcode_resolve(domain, info):
 
 # Remove auto-generated API docs from sidebars. They take too long to build.
 remove_from_toctrees = [
-    "generated/alfred3.page.*.rst",
-    "generated/alfred3.section.*.rst",
-    "generated/alfred3.randomizer.*.rst",
-    "generated/alfred3.experiment.*.rst",
-    "generated/alfred3.cli.*.rst",
-    "generated/alfred3.util.*.rst",
-    "generated/alfred3.admin.*.rst",
-    "generated/alfred3.element.*.*.rst",
+    "generated/alfred3.page.*.*.rst",
+    "generated/alfred3.section.*.*.rst",
+    "generated/alfred3.randomizer.*.*.rst",
+    "generated/alfred3.experiment.*.*.rst",
+    "generated/alfred3.cli.*.*.rst",
+    "generated/alfred3.util.*.*.rst",
+    "generated/alfred3.admin.*.*.rst",
+    "generated/alfred3.element.*.*.*.rst",
 ]
