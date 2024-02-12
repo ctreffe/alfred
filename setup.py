@@ -46,6 +46,7 @@ setuptools.setup(
         "cmarkgfm>=0.5",
         "requests>=2.25",
         "bleach>=3.3",
+        "pyyaml>=6.0",
     ],
     extras_require={
         "dev": [
