@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Iterator, List, Union
 from uuid import uuid4
 
+import yaml
 from cryptography.fernet import Fernet
 
 from . import element as elm
@@ -1410,6 +1411,46 @@ class ExperimentSession:
         """
         p = self.subpath(path)
         yield from util._read_csv_tolist(p, encoding=encoding, **kwargs)
+
+    def read_yaml_todict(self, path: Union[str, Path], encoding: str = "utf-8"):
+        """
+        Imports a ``.yaml`` file to a dict.
+
+        This method uses the library PyYAML, specifically the function
+        ``safe_load``. See the documentation of PyYAML at
+        https://pyyaml.org/wiki/PyYAMLDocumentation
+        for further information.
+
+        Args:
+            path: The path to the .yaml file. Usually, you want this to
+                be a relative path to a file in a subdirectory of the
+                experiment directory.
+            encoding: Encoding of the .yaml file. Defaults to 'utf-8'.
+
+        Returns:
+            dict: A dict representing the parsed yaml file.
+
+        Examples:
+
+            This example assumes that you have a .yaml file saved in your experiment
+            directory in the subdirectory resources::
+
+                import alfred3 as al
+
+                exp = al.Experiment()
+
+                @exp.member
+                class Test(al.Page):
+                    def on_exp_access(self):
+                        yaml_dict = self.exp.read_yaml_todict("resources/test_yaml.yaml")
+                        self += al.Text(str(yaml_dict))
+
+        """
+        yaml_path = self.subpath(path)
+        with open(yaml_path, encoding=encoding) as yamlfile:
+            yaml_dict = yaml.safe_load(yamlfile)
+
+        return yaml_dict
 
     @property
     def author(self) -> str:
