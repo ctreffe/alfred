@@ -302,7 +302,7 @@ class QuotaData:
     inclusive: bool
     type: str
     slots: List[dict] = field(default_factory=list)
-    busy: bool = False
+    busy: str = "false"
     additional_info: dict = field(default_factory=dict)
 
 
@@ -368,9 +368,9 @@ class QuotaIO:
 
     def load_markbusy_mongo(self) -> QuotaData:
         q = self.query
-        q["busy"] = False
+        q["busy"] = "false"
 
-        update = {"$set": {"busy": True}}
+        update = {"$set": {"busy": self.exp.session_id}}
         rd = ReturnDocument.AFTER
 
         data = self.db.find_one_and_update(filter=q, update=update, return_document=rd)
@@ -389,10 +389,10 @@ class QuotaIO:
         with open(self.path, encoding="utf-8") as fp:
             data = json.load(fp)
 
-        if data["busy"]:
+        if not data["busy"] == "false":
             return None
 
-        data["busy"] = True
+        data["busy"] = self.exp.session_id
         self.save_local(data)
         return QuotaData(**data)
 
@@ -411,7 +411,7 @@ class QuotaIO:
 
     def save_mongo(self, data: dict):
         q = self.query
-        q["busy"] = True
+        q["busy"] = self.exp.session_id
         self.db.find_one_and_update(filter=q, update={"$set": data})
 
     def release(self):
@@ -423,21 +423,25 @@ class QuotaIO:
 
     def release_mongo(self):
         q = self.query
-        q["busy"] = True
-        u = {"$set": {"busy": False}}
+        q["busy"] = self.exp.session_id
+        u = {"$set": {"busy": "false"}}
         self.db.find_one_and_update(filter=q, update=u)
 
     def release_local(self):
         with open(self.path, encoding="utf-8") as fp:
             data = json.load(fp)
+        if not data["busy"] == self.exp.session_id:
+            return
 
-        data["busy"] = False
+        data["busy"] = "false"
         self.save_local(data)
 
     def __enter__(self):
         data = self.load_markbusy()
         start = time.time()
-        wait = 15
+        wait = 30
+        min_tries = 5
+        n_tries = 0
         while not data:
             self.exp.log.debug(
                 "Could not load non-busy randomizer data. Trying again after waiting"
@@ -445,10 +449,13 @@ class QuotaIO:
             )
             time.sleep(random.random())
             data = self.load_markbusy()
-            if time.time() - start > wait:
+            n_tries += 1
+
+            if (n_tries > min_tries) and (time.time() - start > wait):
                 raise RuntimeError(
-                    f"Tried to load randomizer data for {wait} seconds. Could not load"
-                    " a data, since it was busy."
+                    f"Tried to load randomizer data for {wait} seconds and tried"
+                    f" {n_tries} times. Could not load data, since the randomizer was"
+                    " always busy."
                 )
         return data
 
