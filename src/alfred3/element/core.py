@@ -1672,6 +1672,9 @@ class InputElement(LabelledElement):
         save_data (bool): If *False*, this element will not save any
             data to the experiment data and will not appear in the
             codebook.
+        debug_value: Value to be used in debug mode. If *None* (default), alfred will
+            first try to use the element's ordinary default value. If there is no
+            default value, alfred will read the debug value from the config.conf.
 
         {kwargs}
 
@@ -1692,6 +1695,7 @@ class InputElement(LabelledElement):
         disabled: bool = False,
         no_input_hint: str = None,
         save_data: bool = True,
+        debug_value: Union[str, int, float, None] = None,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
@@ -1709,6 +1713,7 @@ class InputElement(LabelledElement):
         )  # documented in getter
         self.disabled: bool = disabled  # documented in getter
         self.save_data = save_data
+        self._debug_value = debug_value
 
         if default is not None:
             self.input = default
@@ -1801,6 +1806,10 @@ class InputElement(LabelledElement):
             config.conf. If no option is found, the return value is
             *None*
         """
+        if self._debug_value is not None:
+            return self._debug_value
+        elif self._default is not None:
+            return self._default
         name = f"{type(self).__name__}_default"
         return self.experiment.config.get("debug", name, fallback=None)
 
@@ -1824,8 +1833,6 @@ class InputElement(LabelledElement):
         """
         if self._default is not None:
             return self._default
-        elif self.debug_enabled:
-            return self.debug_value
         else:
             return None
 
@@ -2068,6 +2075,12 @@ class InputElement(LabelledElement):
                 self.page += fix
             except AttributeError:
                 pass
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+
+        if self.exp.config.getboolean("general", "debug"):
+            self.input = self.debug_value
 
 
 @dataclass
