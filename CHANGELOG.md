@@ -26,6 +26,9 @@ Types of changes
 6. Security in case of vulnerabilities.
 -->
 
+## Newer versions
+
+See https://github.com/ctreffe/alfred/releases
 
 ## alfred3 v2.4.0 (Released 2023-03-31)
 

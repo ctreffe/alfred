@@ -4,4 +4,4 @@
 # 3) we can import it into your module module
 
 
-__version__ = "2.5.0-dev"
+__version__ = "2.6.0"
