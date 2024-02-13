@@ -56,7 +56,6 @@ class DataManager:
         "exp_session_id",
         "exp_plugin_queries",
         "exp_session_timeout",
-        "session_status",
         "alfred_version",
         "type",
     }
@@ -93,7 +92,6 @@ class DataManager:
         data["exp_session_id"] = self._experiment.session_id
         data["exp_plugin_queries"] = self._experiment._plugin_data_queries
         data["exp_session_timeout"] = self._experiment.session_timeout
-        data["session_status"] = self._experiment.session_status
         data["alfred_version"] = self._experiment.alfred_version
         data["type"] = self.EXP_DATA
 
