@@ -1,0 +1,34 @@
+$(document).ready(function () {
+
+    function doCallback() {
+
+        {% if submit_first %}
+        var data = $("#form").serializeArray();
+        $.post("{{ set_data_url }}", data)
+        //.fail(alertOnFail);
+        //.fail(function(){console.log("FAIL")})
+        //.done(function(){console.log("SUCCESS")})
+        {% endif %}
+
+        $.get("{{ url }}", function (data) {
+
+            console.log("lazy")
+
+            // Handle your data here
+            if ("{{ followup }}" == "refresh") {
+                move(direction="stay");
+            } else if ("{{ followup }}" == "custom") {
+                {{ custom_js }}
+            } else if ("{{ followup }}" != "none") {
+                move(direction="{{ followup }}");
+            }
+
+            // Schedule the next request when the current one's complete
+            setTimeout(doCallback, {{ interval }} * 1000);
+    });
+}
+
+// Make the initial request
+doCallback();
+
+});
