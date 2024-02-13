@@ -16,6 +16,8 @@ setInterval(function() {
 
 $.get( "{{ url }}", function(data) {
 
+    console.log("greedy")
+
     if ("{{ followup }}" == "refresh") {
         move(direction="stay");
     } else if ("{{ followup }}" == "custom") {

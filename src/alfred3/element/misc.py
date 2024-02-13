@@ -495,6 +495,12 @@ class RepeatedCallback(Element):
             function specified in *func* was called. Only takes effect,
             if *followup* is set to 'custom'.
 
+        callback_behavior (str): Defines the behavior of the callback.
+            If ``"lazy"``(default), each callback will wait for
+            the previous call to return before a new execution. If
+            ``"greedy"``, a new call will always be made after the
+            interval is expired.
+
     Examples:
 
         The callback on the first page will trigger every 10 seconds.
@@ -517,7 +523,7 @@ class RepeatedCallback(Element):
     should_be_shown = False
 
     #: Javascript template
-    js_template = jinja_env.get_template("js/repeatedcallback.js.j2")
+    js_template = jinja_env.get_template("js/repeatedcallback_lazy.js.j2")
 
     def __init__(
         self,
@@ -526,6 +532,7 @@ class RepeatedCallback(Element):
         followup: str = "none",
         submit_first: bool = True,
         custom_js: str = "",
+        callback_behavior: str = "lazy",
     ):
         super().__init__()
         self.func = func
@@ -534,6 +541,13 @@ class RepeatedCallback(Element):
         self.url = None
         self.followup = followup
         self.custom_js = custom_js
+
+        if callback_behavior == "lazy":
+            self.js_template = jinja_env.get_template("js/repeatedcallback_lazy.js.j2")
+        elif callback_behavior == "greedy":
+            self.js_template = jinja_env.get_template(
+                "js/repeatedcallback_greedy.js.j2"
+            )
 
     def prepare_web_widget(self):
         # docstring inherited
