@@ -520,7 +520,10 @@ class MovementManager:
 
         self.current_index = self.index_of(self.first_visible_page)
         self.exp.root_section._enter()
-        self.current_page._on_showing_widget(show_time=time.time())
+        try:
+            self.current_page._on_showing_widget(show_time=time.time())
+        except AbortMove:
+            self.log.debug("Experiment was aborted during startup.")
 
 
 class UserInterface:
