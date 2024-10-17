@@ -1794,8 +1794,8 @@ class ExperimentSession:
 
         Args:
             msg (EmailMessage): The *msg* is a :class:`EmailMessage`
-                objects that holds information on the subject, the
-                recipient, and the text body.
+                objects that holds information on the sender, the subject, 
+                the recipient, and the text body.
             tls (bool): If *True*, will try to connect with the mail
                 server over tls. If *False* (default), will try to
                 connect over SSL.
@@ -1817,7 +1817,8 @@ class ExperimentSession:
         server = self.secrets.get("mail", "server")
         port = self.secrets.getint("mail", "port")
 
-        msg["From"] = formataddr((name, email))
+        if "From" not in msg:
+            msg["From"] = formataddr((name, email))
 
         if tls:
             with smtplib.SMTP(server, port) as smtp:
