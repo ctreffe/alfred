@@ -132,7 +132,6 @@ def get_exp_session(
     config_path: str = "",
     secrets_path: str = "tests/res/secrets-default.conf",
     sid: str = None,
-    timeout: int = None,
     **urlargs,
 ) -> ExperimentSession:
     """
@@ -148,7 +147,7 @@ def get_exp_session(
     sid = uuid4().hex if sid is None else sid
 
     session = exp.create_session(
-        session_id=sid, config=config, secrets=secrets, timeout=timeout, **urlargs
+        session_id=sid, config=config, secrets=secrets, **urlargs
     )
     return session
 
