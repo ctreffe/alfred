@@ -57,7 +57,7 @@ setuptools.setup(
             "python-dotenv",
             "bs4",
             "selenium",
-            "mongomock",
+            "mongomock<4.2",
             "sphinx==4.5.0",
             "sphinx-book-theme==0.3.2",
             "sphinx-remove-toctrees==0.0.3",
