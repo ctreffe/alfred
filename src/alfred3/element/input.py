@@ -826,10 +826,10 @@ class RangeInput(InputElement):
         if not self.should_be_shown:
             return True
 
-        if not self.force_input and not self._input:
+        if not self.force_input and self._input is None:
             return True
 
-        elif not self.input:
+        elif self.input is None:
             if not silent:
                 self.hint_manager.post_message(self.no_input_hint)
             return False
