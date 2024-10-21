@@ -1607,8 +1607,7 @@ class ExperimentSession:
             "The property ExperimentSession.session will be removed in the next major"
             " release."
         )
-        FutureWarning(txt)
-        self.log.warning(txt)
+        self.log.debug(txt)
         return self._session
 
     @session.setter
@@ -1617,8 +1616,7 @@ class ExperimentSession:
             "The property ExperimentSession.session will be removed in the next major"
             " release."
         )
-        FutureWarning(txt)
-        self.log.warning(txt)
+        self.log.debug(txt)
 
         if not isinstance(value, str):
             raise ValueError("Session must be a string")
