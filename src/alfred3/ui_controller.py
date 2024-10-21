@@ -3,6 +3,7 @@
 
 Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
 """
+
 import importlib.resources
 import time
 from dataclasses import dataclass
@@ -887,8 +888,17 @@ class UserInterface:
     def get_dynamic_file(self, identifier):
         return self._dynamic_files[identifier]
 
-    def add_dynamic_file(self, file_obj, content_type=None):
-        identifier = uuid4().hex
+    def add_dynamic_file(self, file_obj, content_type=None, identifier=None):
+        """
+        Args:
+            identifier: A string, a unique identifier for the file.
+        """
+        if identifier is not None and identifier in self._dynamic_files:
+            raise ValueError(
+                f"Cannot use identifier {identifier}, because it is already being used."
+            )
+
+        identifier = uuid4().hex if identifier is None else identifier
         while identifier in self._dynamic_files:
             identifier = uuid4().hex
 
