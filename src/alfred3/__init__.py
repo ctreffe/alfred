@@ -65,6 +65,7 @@ from .experiment import Experiment
 from .page import (
     AutoClosePage,
     AutoForwardPage,
+    BlankPage,
     NoDataPage,
     NoNavigationPage,
     NoSavingPage,
