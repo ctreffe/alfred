@@ -25,11 +25,11 @@ import logging
 import os
 import smtplib
 import time
+from collections.abc import Iterator
 from email.message import EmailMessage
 from email.utils import formataddr
 from inspect import isclass
 from pathlib import Path
-from typing import Iterator, List, Union
 from uuid import uuid4
 
 import yaml
@@ -68,11 +68,12 @@ class Experiment:
         style::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
-
                 def on_exp_access(self):
                     self += al.TextEntry(toplab="Enter something", name="text1")
 
@@ -105,17 +106,17 @@ class Experiment:
         #: A list of function that will be called upon creation of an
         #: experiment session. They are added with the :meth:`.setup`
         #: decorator
-        self.setup_functions: List[callable] = []
+        self.setup_functions: list[callable] = []
 
         #: A list of function that will be called upon finishing an
         #: experiment session. They are added with the :meth:`.finish`
         #: decorator
-        self.finish_functions: List[callable] = []
+        self.finish_functions: list[callable] = []
 
         #: A list of function that will be called upon aborting an
         #: experiment session. They are added with the :meth:`.abort`
         #: decorator
-        self.abort_functions: List[callable] = []
+        self.abort_functions: list[callable] = []
 
     def setup(self, func):
         """
@@ -142,11 +143,14 @@ class Experiment:
             access that same plugin later in a page hook::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
                     exp.plugins["a"] = "mock plugin"
+
 
                 @exp.member
                 class HelloWorld(al.Page):
@@ -263,7 +267,9 @@ class Experiment:
             Adding a page directly to the main content section::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class HelloWorld(al.Page):
@@ -275,9 +281,11 @@ class Experiment:
             Adding a page to a specific section::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
                 exp += al.Section(name="main")
+
 
                 @exp.member(of_section="main")
                 class HelloWorld(al.Page):
@@ -384,9 +392,9 @@ class Experiment:
 
                 exp = al.Experiment()
 
+
                 @exp.as_final_page
                 class Final(al.Page):
-
                     def on_exp_access(self):
                         self += al.Text("This is the final page.")
 
@@ -421,7 +429,6 @@ class Experiment:
         """
 
         if urlargs.get("admin") in ["true", "True", "TRUE"]:
-
             self.admin.setup_functions += self.setup_functions
             self.admin.final_page = _NothingHerePage(
                 name="__"
@@ -514,7 +521,7 @@ class Experiment:
                 parent = self.members[member_inst.parent_name]
                 parent += member_inst
 
-    def run(self, path: Union[str, Path] = None, **kwargs):
+    def run(self, path: str | Path = None, **kwargs):
         """
         Runs the experiment.
 
@@ -554,6 +561,7 @@ class Experiment:
             call this method at the end of your script.py::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
                 exp += al.Page(name="demo")
 
@@ -563,6 +571,7 @@ class Experiment:
             To start an experiment in test mode::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
                 exp += al.Page(name="demo")
 
@@ -573,6 +582,7 @@ class Experiment:
             window automatically::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
                 exp += al.Page(name="demo")
 
@@ -586,7 +596,7 @@ class Experiment:
         runner = ExperimentRunner(path=path)
         runner.auto_run(**kwargs)
 
-    def __iadd__(self, other: Union[Section, Page]):
+    def __iadd__(self, other: Section | Page):
         self.append(other, to_section="_content")
         return self
 
@@ -608,7 +618,6 @@ class ExperimentAdmin(Experiment):
         secrets: ExperimentSecrets,
         **urlargs,
     ):
-
         config.read_dict(self.admin_config)
 
         exp_session = ExperimentSession(
@@ -687,7 +696,6 @@ class ExperimentSession:
         timeout: int = None,
         **urlargs,
     ):
-
         self._plugins = _DictObj()  # docs in getter
         self._tmp = _DictObj()
 
@@ -697,8 +705,8 @@ class ExperimentSession:
         # experiment data
         self._plugin_data_queries = []
 
-        self._finish_functions: List[callable] = []  # docs in getter
-        self._abort_functions: List[callable] = []  # docs in getter
+        self._finish_functions: list[callable] = []  # docs in getter
+        self._abort_functions: list[callable] = []  # docs in getter
 
         self._condition = ""  # docs in getter
         self._session = ""  # docs in getter
@@ -857,7 +865,9 @@ class ExperimentSession:
             Example of redefining the experiment-wide progress bar::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
@@ -898,6 +908,7 @@ class ExperimentSession:
             two pages::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
                 exp += al.Page(name="page1")
@@ -979,14 +990,20 @@ class ExperimentSession:
             case, the experiment will abort::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class Screening(al.Page):
                     title = "Participant Screening"
 
                     def on_exp_access(self):
-                        self += al.NumberEntry(leftlab="Please enter your age", name="age", force_input=True)
+                        self += al.NumberEntry(
+                            leftlab="Please enter your age",
+                            name="age",
+                            force_input=True,
+                        )
 
                     def on_first_hide(self):
                         if int(self.exp.values.get("age")) < 25:
@@ -994,8 +1011,9 @@ class ExperimentSession:
                                 reason="screening",
                                 title="Experiment aborted",
                                 icon="users",
-                                msg="Sorry, you do not fulfill the criteria for participation."
-                                )
+                                msg="Sorry, you do not fulfill the criteria for "
+                                "participation.",
+                            )
         """
         if self.aborted:
             self.log.debug(
@@ -1061,12 +1079,12 @@ class ExperimentSession:
 
             The experiment is finished on hiding the first page::
                 import alfred3 as al
+
                 exp = al.Experiment()
 
 
                 @exp.member
                 class First(al.Page):
-
                     def on_exp_access(self):
                         self += al.TextEntry(name="el1")
 
@@ -1076,7 +1094,6 @@ class ExperimentSession:
 
                 @exp.member
                 class Second(al.Page):
-
                     def on_exp_access(self):
                         self += al.TextEntry(name="el2")
 
@@ -1115,7 +1132,6 @@ class ExperimentSession:
                 pg.close()
 
     def _export_data(self):
-
         if not self.config.getboolean("local_saving_agent", "use"):
             return
 
@@ -1254,7 +1270,7 @@ class ExperimentSession:
         self.root_section.finished_section.members.clear()
         self.root_section.finished_section += value
 
-    def subpath(self, path: Union[str, Path]) -> Path:
+    def subpath(self, path: str | Path) -> Path:
         """
         Returns the full path of an experiment subdirectory.
 
@@ -1272,7 +1288,7 @@ class ExperimentSession:
             return self.path / path
 
     def read_csv_todict(
-        self, path: Union[str, Path], encoding: str = "utf-8", **kwargs
+        self, path: str | Path, encoding: str = "utf-8", **kwargs
     ) -> Iterator[dict]:
         """
         Iterates over the rows in a .csv file, yielding dictionaries.
@@ -1292,49 +1308,61 @@ class ExperimentSession:
             Consider the following csv-file, located at
             ``files/data.csv`` in your experiment directory::
 
-                col1    ,   col2    ,   col3
-                text_a  ,   text_b  ,   text_c
-                text_d  ,   text_e  ,   text_f
+                col1, col2, col3
+                text_a, text_b, text_c
+                text_d, text_e, text_f
 
 
             When building a page, usual usage would be::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
+
                 @exp.member
-                class CSVDemoPage(al.Page):     # this could also be a Section
+                class CSVDemoPage(al.Page):  # this could also be a Section
                     name = "csv_demo"
 
                     def on_exp_access(self):
-
                         for row in self.exp.read_csv_todict("files/data.csv"):
                             print(row)
 
             The output would be the following::
 
-                {"col1": "text_a", "col2": "text_b", "col3": "text_c"}  # first iteration
-                {"col1": "text_d", "col2": "text_e", "col3": "text_f"}  # second iteration
+                {
+                    "col1": "text_a",
+                    "col2": "text_b",
+                    "col3": "text_c",
+                }  # first iteration
+                {
+                    "col1": "text_d",
+                    "col2": "text_e",
+                    "col3": "text_f",
+                }  # second iteration
 
             If you need a full list of the rows, you can wrap the
             function call in ``list()``::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
+
                 @exp.member
-                class CSVDemoPage(al.Page):     # this could also be a Section
+                class CSVDemoPage(al.Page):  # this could also be a Section
                     name = "csv_demo"
 
                     def on_exp_access(self):
-
                         data = list(self.exp.read_csv_todict("files/data.csv"))
                         print(data)
 
             The output would be the following::
 
-                [{"col1": "text_a", "col2": "text_b", "col3": "text_c"},
-                {"col1": "text_d", "col2": "text_e", "col3": "text_f"}]
+                [
+                    {"col1": "text_a", "col2": "text_b", "col3": "text_c"},
+                    {"col1": "text_d", "col2": "text_e", "col3": "text_f"},
+                ]
 
 
         """
@@ -1342,7 +1370,7 @@ class ExperimentSession:
         yield from util._read_csv_todict(p, encoding=encoding, **kwargs)
 
     def read_csv_tolist(
-        self, path: Union[str, Path], encoding: str = "utf-8", **kwargs
+        self, path: str | Path, encoding: str = "utf-8", **kwargs
     ) -> Iterator[list]:
         """
         Iterates over the rows in a .csv file, yielding lists.
@@ -1361,28 +1389,29 @@ class ExperimentSession:
 
             Consider the following csv-file::
 
-                col1    ,   col2    ,   col3
-                text_a  ,   text_b  ,   text_c
-                text_d  ,   text_e  ,   text_f
+                col1, col2, col3
+                text_a, text_b, text_c
+                text_d, text_e, text_f
 
 
             When building a page, usual usage would be::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
+
                 @exp.member
-                class CSVDemoPage(al.Page):     # this could also be a Section
+                class CSVDemoPage(al.Page):  # this could also be a Section
                     name = "csv_demo"
 
                     def on_exp_access(self):
-
                         for row in self.exp.read_csv_tolist("files/data.csv"):
                             print(row)
 
             The output would be the following::
 
-                ["col1", "col2", "col3"]        # first iteration yields column names
+                ["col1", "col2", "col3"]  # first iteration yields column names
                 ["text_a", "text_b", "text_c"]  # second iteration
                 ["text_a", "text_b", "text_c"]  # third iteration
 
@@ -1390,29 +1419,32 @@ class ExperimentSession:
             function call in ``list()``::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
+
                 @exp.member
-                class CSVDemoPage(al.Page):     # this could also be a Section
+                class CSVDemoPage(al.Page):  # this could also be a Section
                     name = "csv_demo"
 
                     def on_exp_access(self):
-
                         data = list(self.exp.read_csv_tolist("files/data.csv"))
                         print(data)
 
             The output would be the following::
 
-                [["col1", "col2", "col3"],
-                ["text_a", "text_b", "text_c"],
-                ["text_a", "text_b", "text_c"]]
+                [
+                    ["col1", "col2", "col3"],
+                    ["text_a", "text_b", "text_c"],
+                    ["text_a", "text_b", "text_c"],
+                ]
 
 
         """
         p = self.subpath(path)
         yield from util._read_csv_tolist(p, encoding=encoding, **kwargs)
 
-    def read_yaml_todict(self, path: Union[str, Path], encoding: str = "utf-8"):
+    def read_yaml_todict(self, path: str | Path, encoding: str = "utf-8"):
         """
         Imports a ``.yaml`` file to a dict.
 
@@ -1439,10 +1471,13 @@ class ExperimentSession:
 
                 exp = al.Experiment()
 
+
                 @exp.member
                 class Test(al.Page):
                     def on_exp_access(self):
-                        yaml_dict = self.exp.read_yaml_todict("resources/test_yaml.yaml")
+                        yaml_dict = self.exp.read_yaml_todict(
+                            "resources/test_yaml.yaml"
+                        )
                         self += al.Text(str(yaml_dict))
 
         """
@@ -1699,7 +1734,7 @@ class ExperimentSession:
             self.log.debug("No encryption key found. Encryptor was not set.")
             return None
 
-    def encrypt(self, data: Union[str, int, float]) -> str:
+    def encrypt(self, data: str | int | float) -> str:
         """
         Encrypts the input and returns the encrypted string.
 
@@ -1763,7 +1798,7 @@ class ExperimentSession:
         encrypted = self._encryptor.encrypt(d_bytes)
         return encrypted.decode()
 
-    def decrypt(self, data: Union[str, bytes]) -> str:
+    def decrypt(self, data: str | bytes) -> str:
         """
         Decrypts input and returns the decrypted object as `str`.
 
@@ -1792,7 +1827,7 @@ class ExperimentSession:
 
         Args:
             msg (EmailMessage): The *msg* is a :class:`EmailMessage`
-                objects that holds information on the sender, the subject, 
+                objects that holds information on the sender, the subject,
                 the recipient, and the text body.
             tls (bool): If *True*, will try to connect with the mail
                 server over tls. If *False* (default), will try to
@@ -1877,7 +1912,7 @@ class ExperimentSession:
                 " aborted."
             )
 
-    def jump(self, to: Union[str, int]):
+    def jump(self, to: str | int):
         """
         Jumps to a specific page in the experiment.
 
@@ -1937,7 +1972,7 @@ class ExperimentSession:
         return self.data_manager.session_data
 
     @property
-    def move_history(self) -> List[dict]:
+    def move_history(self) -> list[dict]:
         """
         A list, containing the movement history for the current session.
 
@@ -1998,7 +2033,7 @@ class ExperimentSession:
         return self.data_manager.client_data
 
     @property
-    def all_exp_data(self) -> List[dict]:
+    def all_exp_data(self) -> list[dict]:
         """
         list: List of all experiment datasets.
 
@@ -2017,6 +2052,7 @@ class ExperimentSession:
                 import pandas as pd
 
                 exp = al.Experiment()
+
 
                 @exp.member
                 class DemoPage(al.Page):
@@ -2037,7 +2073,7 @@ class ExperimentSession:
             return list(mongodata) + list(localdata)
 
     @property
-    def all_unlinked_data(self) -> List[dict]:
+    def all_unlinked_data(self) -> list[dict]:
         """
         list: List of all unlinked datasets.
 
@@ -2056,6 +2092,7 @@ class ExperimentSession:
                 import pandas as pd
 
                 exp = al.Experiment()
+
 
                 @exp.member
                 class DemoPage(al.Page):
@@ -2248,10 +2285,12 @@ class ExperimentSession:
     @property
     def finish_functions(self):
         """
-        List[callable]: A list of functions that will be called upon finishing an experiment session.
+        List[callable]: A list of functions that will be called upon finishing an
+        experiment session.
 
         See Also:
-            The :meth:`.Experiment.finish` decorator can be used to add functions to this list.
+            The :meth:`.Experiment.finish` decorator can be used to add functions to
+            this list.
         """
         return self._finish_functions
 
@@ -2262,10 +2301,12 @@ class ExperimentSession:
     @property
     def abort_functions(self):
         """
-        List[callable]: A list of functions that will be called upon aborting an experiment session.
+        List[callable]: A list of functions that will be called upon aborting an
+        experiment session.
 
         See Also:
-            The :meth:`.Experiment.abort` decorator can be used to add functions to this list.
+            The :meth:`.Experiment.abort` decorator can be used to add functions to this
+            list.
         """
         return self._abort_functions
 
@@ -2286,11 +2327,14 @@ class ExperimentSession:
         to two hours::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.setup
             def setup(exp):
                 exp.session_timeout = 60 * 60 * 2
+
 
             exp += al.Page(name="demo")
 
@@ -2419,11 +2463,12 @@ class ExperimentSession:
             param1 ('abc') on the first page::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class Demo(al.Page):
-
                     def on_exp_access(self):
                         param1 = self.exp.urlargs.get("param1")
                         self += al.Text(param1)
@@ -2444,11 +2489,14 @@ class ExperimentSession:
             Logging during setup::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
                     exp.log.info("Setup is starting")
+
 
                 exp += al.Page(name="demo")
 

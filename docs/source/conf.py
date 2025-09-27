@@ -90,7 +90,7 @@ pygments_style = "sphinx"
 
 # Monkey patch for issue #2044 (None by default for instance attributes? #2044)
 # Should be resolved in next release of sphinx
-from sphinx.ext.autodoc import ClassLevelDocumenter, InstanceAttributeDocumenter
+from sphinx.ext.autodoc import ClassLevelDocumenter, InstanceAttributeDocumenter  # noqa
 
 
 def iad_add_directive_header(self, sig):

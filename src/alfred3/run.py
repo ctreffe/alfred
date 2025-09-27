@@ -158,7 +158,6 @@ class ExperimentRunner:
         self.port = port
 
     def print_startup_message(self):
-
         msg_startup = (
             f" * Start local experiment using http://127.0.0.1:{self.port}/start\n"
         )
@@ -171,7 +170,6 @@ class ExperimentRunner:
         sys.stderr.writelines([msg_startup, msg_admin, msg_test])
 
     def _open_browser(self):
-
         # generate url
         expurl = f"http://127.0.0.1:{self.port}/start"
         expurl = expurl + "?" if self.debug_mode or self.test_mode else expurl
@@ -225,13 +223,16 @@ class ChromeKiosk:
 
     @classmethod
     def open(cls, url: str, path: str = None):
-        """Check operating system and call approriate opening method for opening url in Chrome in kiosk mode.
+        """
+        Check operating system and call approriate opening method for opening url in
+        Chrome in kiosk mode.
 
         This will only work, if Chrome is not currently running.
 
         Args:
             url: URL to open. Needs to start with "http://" or "https://"
-            path: Custom path to chrome.exe on Windows. If none is provided, the default paths for Windows 7 and 10 will be tried.
+            path: Custom path to chrome.exe on Windows. If none is provided, the
+                default paths for Windows 7 and 10 will be tried.
         """
         current_os = platform.system()
 

@@ -4,7 +4,6 @@ Provides elements that make stuff happen.
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
 
-from typing import Union
 from uuid import uuid4
 
 import cmarkgfm
@@ -32,14 +31,15 @@ class SubmittingButtons(SingleChoiceButtons):
         :class:`.HideNavigation` element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
                 name = "demo"
 
                 def on_exp_access(self):
-
                     self += al.HideNavigation()
                     self += al.SubmittingButtons("choice1", "choice2", name="b1")
 
@@ -74,14 +74,15 @@ class SubmittingBar(SingleChoiceBar):
         :class:`.HideNavigation` element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
                 name = "demo"
 
                 def on_exp_access(self):
-
                     self += al.HideNavigation()
                     self += al.SubmittingButtons("choice1", "choice2", name="b1")
 
@@ -122,7 +123,9 @@ class JumpButtons(SingleChoiceButtons):
         Simple jump buttons::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo1(al.Page):
@@ -132,12 +135,14 @@ class JumpButtons(SingleChoiceButtons):
                     self += al.JumpButtons(
                         ("jump to demo2", "demo2"),
                         ("jump to demo3", "demo3"),
-                        name="jump1"
-                        )
+                        name="jump1",
+                    )
+
 
             @exp.member
             class Demo2(al.Page):
                 name = "demo2"
+
 
             @exp.member
             class Demo3(al.Page):
@@ -147,7 +152,9 @@ class JumpButtons(SingleChoiceButtons):
         page, using the :meth:`.Page.on_first_show` hook::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo1(al.Page):
@@ -156,6 +163,7 @@ class JumpButtons(SingleChoiceButtons):
                 def on_exp_access(self):
                     self += al.TextEntry(toplab="Enter target page name", name="text1")
 
+
             @exp.member
             class Demo2(al.Page):
                 name = "demo2"
@@ -163,6 +171,7 @@ class JumpButtons(SingleChoiceButtons):
                 def on_first_show(self):
                     target = self.exp.values.get("text1")
                     self += al.JumpButtons(("jump to target", target), name="jump1")
+
 
             @exp.member
             class Demo3(al.Page):
@@ -174,13 +183,12 @@ class JumpButtons(SingleChoiceButtons):
     js_template = jinja_env.get_template("js/jumpbuttons.js.j2")
 
     def __init__(
-        self, *choice_labels, button_style: Union[str, list] = "btn-primary", **kwargs
+        self, *choice_labels, button_style: str | list = "btn-primary", **kwargs
     ):
         super().__init__(*choice_labels, button_style=button_style, **kwargs)
         self.choice_labels, self.targets = map(list, zip(*choice_labels))
 
     def prepare_web_widget(self):
-
         super().prepare_web_widget()
 
         if self.page.prefix_element_names and not self.page.has_been_shown:
@@ -222,7 +230,9 @@ class DynamicJumpButtons(JumpButtons):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo1(al.Page):
@@ -232,9 +242,11 @@ class DynamicJumpButtons(JumpButtons):
                     self += al.TextEntry(toplab="Enter a target page", name="text1")
                     self += al.DynamicJumpButtons(("Jump", "text1"), name="jump1")
 
+
             @exp.member
             class Demo2(al.Page):
                 name = "demo2"
+
 
             @exp.member
             class Demo3(al.Page):
@@ -246,7 +258,6 @@ class DynamicJumpButtons(JumpButtons):
     js_template = jinja_env.get_template("js/dynamic_jumpbuttons.js.j2")
 
     def validate_data(self):
-
         return True
         # cond1 = bool(self.data) if self.force_input else True
 
@@ -257,7 +268,8 @@ class DynamicJumpButtons(JumpButtons):
         #     if not cond2:
         #         break
 
-        # cond2 = all([target in self.experiment.root_section.all_pages for target in self.targets])
+        # cond2 = all([target in self.experiment.root_section.all_pages for target
+        # in self.targets])
         # return cond1 and cond2
 
 
@@ -305,7 +317,9 @@ class JumpList(Row):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo1(al.Page):
@@ -313,6 +327,7 @@ class JumpList(Row):
 
                 def on_exp_access(self):
                     self += al.JumpList()
+
 
             @exp.member
             class Demo2(al.Page):
@@ -328,13 +343,12 @@ class JumpList(Row):
         check_jumpfrom: bool = True,
         show_all_in_scope: bool = True,
         label: str = "Jump",
-        button_style: Union[str, list] = "btn-dark",
+        button_style: str | list = "btn-dark",
         button_round_corners: bool = False,
         debugmode: bool = False,
         display_page_name: bool = True,
         **kwargs,
     ):
-
         random_name = "jumplist_" + uuid4().hex
         name = kwargs.get("name", random_name)
         select_name = name + "_select"
@@ -363,11 +377,11 @@ class JumpList(Row):
         self.debugmode = debugmode
 
     def prepare_web_widget(self):
-
         super().prepare_web_widget()
 
         if not self.page.section.allow_jumpfrom:
-            # disable button (disabling the list is controlled via init arguments of the list)
+            # disable button
+            # (disabling the list is controlled via init arguments of the list)
             self.elements[1].disabled = True
 
         if self.debugmode:
@@ -447,11 +461,12 @@ class Button(Element):
         window on button click::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function)
 
@@ -463,18 +478,22 @@ class Button(Element):
         Example 2: An example with a jump after the function call::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
-                    self += al.Button("Demo Button", func=self.demo_function, followup="jump>page3")
+                    self += al.Button(
+                        "Demo Button", func=self.demo_function, followup="jump>page3"
+                    )
 
                 def demo_function(self):
                     print("\\nThis is a demonstration")
                     print(self.exp.exp_id)
                     print("\\n")
+
 
             exp += al.Page(title="Page 2", name="page2")
             exp += al.Page(title="Page 3", name="page3")
@@ -483,12 +502,12 @@ class Button(Element):
         Example 3: An example that uses values entered on the current page::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.TextEntry(leftlab="Enter", name="entry1")
                     self += al.Button("Demo Button", func=self.demo_function)
@@ -503,11 +522,12 @@ class Button(Element):
         was clicked::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.Button("Demo Button", func=self.demo_function)
 
@@ -584,7 +604,6 @@ class Button(Element):
         self.url = self.exp.ui.add_callable(self.func)
 
     def prepare_web_widget(self):
-
         self._js_code = []
         d = {}
         d["url"] = self.url
@@ -600,7 +619,7 @@ class Button(Element):
         # Round corners part
         if self.button_round_corners:
             self._css_code = []
-            css = f"#{ self.name } {{border-radius: 1rem;}}"
+            css = f"#{self.name} {{border-radius: 1rem;}}"
             self.add_css(css)
 
 
@@ -621,9 +640,9 @@ class BackButton(Button):
 
             exp = al.Experiment()
 
+
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.BackButton()
 
@@ -637,7 +656,6 @@ class BackButton(Button):
         button_block: bool = False,
         **kwargs,
     ):
-
         for arg in ["func", "submit_first", "custom_js"]:
             val = kwargs.pop(arg, None)
             if val is not None:
@@ -679,9 +697,9 @@ class ForwardButton(Button):
 
             exp = al.Experiment()
 
+
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.ForwardButton()
 
@@ -695,7 +713,6 @@ class ForwardButton(Button):
         button_block: bool = False,
         **kwargs,
     ):
-
         for arg in ["func", "submit_first", "custom_js"]:
             val = kwargs.pop(arg, None)
             if val is not None:

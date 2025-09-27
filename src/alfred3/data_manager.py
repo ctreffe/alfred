@@ -1,13 +1,14 @@
 """
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
+.. moduleauthor::
+    Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
 
 import copy
 import json
 import time
+from collections.abc import Iterator
 from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, Iterator, List, Union
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -126,7 +127,7 @@ class DataManager:
         return d
 
     @property
-    def codebook_data(self) -> Dict[str, dict]:
+    def codebook_data(self) -> dict[str, dict]:
         """dict: Returns codebook data for the current session."""
         exp = self.extract_codebook_data(self.session_data)
         unlinked = self.extract_codebook_data(self.unlinked_data)
@@ -134,7 +135,7 @@ class DataManager:
         return {**exp, **unlinked}
 
     @staticmethod
-    def extract_codebook_data(exp_data: dict) -> Dict[str, dict]:
+    def extract_codebook_data(exp_data: dict) -> dict[str, dict]:
         """
         Extracts codebook data from a full experiment data dictionary.
 
@@ -238,7 +239,7 @@ class DataManager:
         return fieldnames
 
     @staticmethod
-    def sort_fieldnames(fieldnames: List[str], template: List[str]) -> List[str]:
+    def sort_fieldnames(fieldnames: list[str], template: list[str]) -> list[str]:
         """
         Sorts the list fieldnames according to template.
 
@@ -274,8 +275,7 @@ class DataManager:
         return sorted(fieldnames, key=find_position)
 
     @classmethod
-    def sort_codebook_fieldnames(cls, fieldnames: List[str]) -> List[str]:
-
+    def sort_codebook_fieldnames(cls, fieldnames: list[str]) -> list[str]:
         t1 = ["exp_title", "exp_author", "exp_version", "alfred_version"]
         t2 = [
             "element_type",
@@ -460,7 +460,7 @@ class DataManager:
     def iterate_local_data(
         cls,
         data_type: str,
-        directory: Union[str, Path],
+        directory: str | Path,
         exp_version: str = None,
     ) -> Iterator[dict]:
         """Generator function, iterating over experiment data .json files
@@ -508,8 +508,8 @@ class DataManager:
 
 
 def decrypt_recursively(
-    data: Union[list, dict, int, float, str, bytes], key: bytes
-) -> Union[list, dict, int, float, str, bytes]:
+    data: list | dict | int | float | str | bytes, key: bytes
+) -> list | dict | int | float | str | bytes:
     """
     Used mainly for decrypting encrypted values in a nested dictionary.
     Can also decrypt single values.

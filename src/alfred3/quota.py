@@ -5,10 +5,10 @@ Module for quota functionality.
 import json
 import random
 import time
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from traceback import format_exception
-from typing import Iterator, List
 
 from pymongo.collection import ReturnDocument
 
@@ -18,10 +18,9 @@ from .exceptions import AllSlotsFull, SlotInconsistency
 
 @dataclass
 class SessionGroup:
-
-    sessions: List[str]
-    aborted_sessions: List[str] = field(default_factory=list)
-    expired_sessions: List[str] = field(default_factory=list)
+    sessions: list[str]
+    aborted_sessions: list[str] = field(default_factory=list)
+    expired_sessions: list[str] = field(default_factory=list)
 
     def query(self, expid) -> dict:
         d = {}
@@ -40,7 +39,7 @@ class SessionGroup:
             if data["exp_session_id"] in self.sessions:
                 yield data
 
-    def _get_fields(self, exp, fields: List[str]) -> list:
+    def _get_fields(self, exp, fields: list[str]) -> list:
         method = saving_method(exp)
         if "exp_session_id" not in fields:
             fields.append("exp_session_id")
@@ -51,19 +50,19 @@ class SessionGroup:
 
         return data
 
-    def _get_fields_mongo(self, exp, fields: List[str]) -> Iterator:
+    def _get_fields_mongo(self, exp, fields: list[str]) -> Iterator:
         q = self.query(exp.exp_id)
         projection_fields = {field: 1 for field in fields}
         projection = {**projection_fields, **{"_id": 0}}
         cursor = exp.db_main.find(q, projection=projection)
         return cursor
 
-    def _get_fields_local(self, exp, fields: List[str]) -> Iterator:
+    def _get_fields_local(self, exp, fields: list[str]) -> Iterator:
         cursor = self._load_local(exp)
         for sessiondata in cursor:
             yield {key: value for key, value in sessiondata.items() if key in fields}
 
-    def _remove_inactive_sessions(self, data: List[dict], move_to: List[str]) -> None:
+    def _remove_inactive_sessions(self, data: list[dict], move_to: list[str]) -> None:
         for session in data:
             sid = session["exp_session_id"]
             move_to.append(sid)
@@ -72,13 +71,13 @@ class SessionGroup:
             except ValueError:
                 pass
 
-    def finished(self, exp, data: List[dict] = None) -> bool:
+    def finished(self, exp, data: list[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_finished"])
         finished = [session["exp_finished"] for session in data]
         return bool(finished) and all(finished)
 
-    def aborted(self, exp, data: List[dict] = None) -> bool:
+    def aborted(self, exp, data: list[dict] = None) -> bool:
         if self.aborted_sessions:
             return True
 
@@ -98,7 +97,7 @@ class SessionGroup:
 
         return any_aborted
 
-    def expired(self, exp, data: List[dict] = None) -> bool:
+    def expired(self, exp, data: list[dict] = None) -> bool:
         if self.expired_sessions:
             return True
 
@@ -128,7 +127,7 @@ class SessionGroup:
 
         return bool(expired_sessions)
 
-    def started(self, exp, data: List[dict] = None) -> bool:
+    def started(self, exp, data: list[dict] = None) -> bool:
         if not data:
             data = self._get_fields(exp, ["exp_start_time"])
         start_time = [session["exp_start_time"] for session in data]
@@ -136,7 +135,7 @@ class SessionGroup:
             raise ValueError("Session not found.")
         return not any([t is None for t in start_time])
 
-    def most_recent_save(self, exp, data: List[dict] = None) -> float:
+    def most_recent_save(self, exp, data: list[dict] = None) -> float:
         if not data:
             data = self._get_fields(exp, ["exp_save_time"])
 
@@ -146,7 +145,7 @@ class SessionGroup:
         most_recent = max(save_time)
         return most_recent
 
-    def oldest_save(self, exp, data: List[dict] = None) -> float:
+    def oldest_save(self, exp, data: list[dict] = None) -> float:
         if not data:
             data = self._get_fields(exp, ["exp_save_time"])
 
@@ -182,12 +181,11 @@ class SessionGroup:
 
 @dataclass
 class Slot:
-
     label: str
-    session_groups: List[SessionGroup] = field(default_factory=list)
-    finished_sessions: List[str] = field(default_factory=list)
-    aborted_sessions: List[str] = field(default_factory=list)
-    expired_sessions: List[str] = field(default_factory=list)
+    session_groups: list[SessionGroup] = field(default_factory=list)
+    finished_sessions: list[str] = field(default_factory=list)
+    aborted_sessions: list[str] = field(default_factory=list)
+    expired_sessions: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.session_groups = [SessionGroup(**sdata) for sdata in self.session_groups]
@@ -239,7 +237,7 @@ class Slot:
     def open(self, exp) -> bool:
         return not self.finished(exp) and not self.pending(exp)
 
-    def __contains__(self, session_ids: List[str]) -> bool:
+    def __contains__(self, session_ids: list[str]) -> bool:
         group_contains_session = (
             session_ids == group.sessions for group in self.session_groups
         )
@@ -248,7 +246,7 @@ class Slot:
 
 @dataclass
 class SlotManager:
-    slots: List[dict]
+    slots: list[dict]
 
     def __post_init__(self):
         self.slots = [Slot(**slot_data) for slot_data in self.slots]
@@ -259,7 +257,7 @@ class SlotManager:
     def pending_slots(self, exp) -> Iterator[Slot]:
         return (slot for slot in self.slots if slot.pending(exp))
 
-    def find_slot(self, session_ids: List[str]) -> Slot:
+    def find_slot(self, session_ids: list[str]) -> Slot:
         for slot in self.slots:
             if session_ids in slot:
                 return slot
@@ -280,8 +278,7 @@ class SlotManager:
 
         return self._oldest_slot(slots, exp)
 
-    def _sparsest_slots(self, slots, exp) -> List[Slot]:
-
+    def _sparsest_slots(self, slots, exp) -> list[Slot]:
         npending = [slot.npending(exp) for slot in slots]
         n = min(npending)
         minimal_pending = [slot for slot in slots if slot.npending(exp) == n]
@@ -301,7 +298,7 @@ class QuotaData:
     exp_version: str
     inclusive: bool
     type: str
-    slots: List[dict] = field(default_factory=list)
+    slots: list[dict] = field(default_factory=list)
     busy: str = "false"
     additional_info: dict = field(default_factory=dict)
 
@@ -460,7 +457,6 @@ class QuotaIO:
         return data
 
     def __exit__(self, exc_type, exc_value, traceback):
-
         if exc_type and exc_type != AllSlotsFull:
             self.release()
             self.exp.abort(reason="quota_error")
@@ -518,14 +514,17 @@ class SessionQuota:
         A simple example on how to use the quota::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.setup
             def setup(exp):
                 quota = al.SessionQuota(10, exp)
                 quota.count()
 
-            exp += al.Page(title = "Hello, World!", name="hello_world")
+
+            exp += al.Page(title="Hello, World!", name="hello_world")
 
     """
 
@@ -573,7 +572,7 @@ class SessionQuota:
                 data.slots = self._generate_slots()
                 self.io.save(data)
 
-    def _generate_slots(self) -> List[dict]:
+    def _generate_slots(self) -> list[dict]:
         slots = [{"label": self.slot_label}] * self.nslots
         return slots
 
@@ -669,14 +668,17 @@ class SessionQuota:
             A simple example on how to use the quota::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
                     quota = al.SessionQuota(10, exp)
                     quota.count()
 
-                exp += al.Page(title = "Hello, World!", name="hello_world")
+
+                exp += al.Page(title="Hello, World!", name="hello_world")
         """
         with self.io as data:
             self.exp.log.debug("Loaded quota data. Starting to count.")

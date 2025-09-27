@@ -6,8 +6,8 @@ Provides fundamental element classes.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Iterator, List, Tuple, Union
 
 from jinja2 import Environment, PackageLoader, Template
 
@@ -84,7 +84,7 @@ class Element:
     def __init__(
         self,
         name: str = None,
-        font_size: Union[str, int] = None,
+        font_size: str | int = None,
         align: str = "left",
         width: str = "full",
         height: str = None,
@@ -92,7 +92,6 @@ class Element:
         showif: dict = None,
         instance_log: bool = False,
     ):
-
         self.name: str = name  # documented in getter property
         self.page = None  # documented in getter
         self.exp = None  # documented in getter
@@ -236,15 +235,17 @@ class Element:
             in the condition "one"::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
                     exp.condition = al.random_condition("one", "two")
 
+
                 @exp.member
                 class MyPage(al.Page):
-
                     def on_exp_access(self):
                         self += al.Text("This is text", showif={"exp_condition": "one"})
 
@@ -253,12 +254,13 @@ class Element:
             they spent more than 20 seconds on *page1*::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
                 exp += al.Page(name="FirstPage")
 
+
                 @exp.member
                 class SecondPage(al.Page):
-
                     def on_first_show(self):
                         if sum(self.exp.page1.durations) > 20:
                             self += al.Text("This is text")
@@ -279,7 +281,7 @@ class Element:
         self._showif = value
 
     @property
-    def converted_width(self) -> List[str]:
+    def converted_width(self) -> list[str]:
         """
         list: List of bootstrap column widths at different screen sizes.
 
@@ -382,7 +384,7 @@ class Element:
             return width[0]
 
     @element_width.setter
-    def element_width(self, value: List[int]):
+    def element_width(self, value: list[int]):
         try:
             for v in value:
                 if not isinstance(v, int):
@@ -464,23 +466,23 @@ class Element:
         return self.tree.replace("_root.", "")
 
     @property
-    def css_code(self) -> List[Tuple[int, str]]:
+    def css_code(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and CSS code."""
         return self._css_code
 
     @property
-    def css_urls(self) -> List[Tuple[int, str]]:
+    def css_urls(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and an url pointing
         to CSS code."""
         return self._css_urls
 
     @property
-    def js_code(self) -> List[Tuple[int, str]]:
+    def js_code(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and Javascript."""
         return self._js_code
 
     @property
-    def js_urls(self) -> List[Tuple[int, str]]:
+    def js_urls(self) -> list[tuple[int, str]]:
         """List[tuple]: A list of tuples, which contain a priority and an url pointing
         to JavaScript."""
         return self._js_urls
@@ -496,14 +498,14 @@ class Element:
 
             import alfred3 as al
 
-            class NewElement(al.Element):
 
+            class NewElement(al.Element):
                 @property
                 def template_data(self):
                     d = super().template_data
                     d["my_value"] = "this is my value"
 
-                    return d    # don't forget to return the dictionary!
+                    return d  # don't forget to return the dictionary!
 
         The call ``super().template_data`` applies the parent classes
         code to the current object. That way, you only need to define
@@ -532,7 +534,7 @@ class Element:
 
     # Private methods start here ---------------------------------------
 
-    def _evaluate_showif(self) -> List[bool]:
+    def _evaluate_showif(self) -> list[bool]:
         """Checks the showif conditions that refer to previous pages.
 
         Returns:
@@ -543,7 +545,6 @@ class Element:
         if self.showif:
             conditions = []
             for name, condition in self.showif.items():
-
                 # skip current page (showifs for current pages are checked elsewhere)
                 if name in self.page.all_input_elements:
                     continue
@@ -561,7 +562,6 @@ class Element:
         on_current_page = dict([cond for cond in self.showif.items() if cond[0] in pg])
 
         if on_current_page:
-
             t = jinja_env.get_template("js/showif.js.j2")
             js = t.render(showif=on_current_page, element=self.name)
             self.js_code.append((7, js))
@@ -842,24 +842,24 @@ class RowLayout:
 
         ::
 
-            layout = RowLayout(ncols=3) # 3 columns of equal width
+            layout = RowLayout(ncols=3)  # 3 columns of equal width
             layout.width_sm = [2, 8, 2]
 
     """
 
     def __init__(
-        self, ncols: int, valign_cols: List[str] = None, responsive: bool = True
+        self, ncols: int, valign_cols: list[str] = None, responsive: bool = True
     ):
         """Constructor method."""
         self.ncols: int = ncols
         self._valign_cols = valign_cols if valign_cols is not None else []
         self.responsive: bool = responsive  # documented in getter
 
-        self._width_xs: List[int] = None  # documented in getter
-        self._width_sm: List[int] = None  # documented in getter
-        self._width_md: List[int] = None  # documented in getter
-        self._width_lg: List[int] = None  # documented in getter
-        self._width_xl: List[int] = None  # documented in getter
+        self._width_xs: list[int] = None  # documented in getter
+        self._width_sm: list[int] = None  # documented in getter
+        self._width_md: list[int] = None  # documented in getter
+        self._width_lg: list[int] = None  # documented in getter
+        self._width_xl: list[int] = None  # documented in getter
 
     @property
     def ncols(self):
@@ -1036,7 +1036,7 @@ class RowLayout:
             out = breaks if breaks != "" else "col"
             return out
 
-    def format_breaks(self, breaks: List[int], bp: str) -> List[str]:
+    def format_breaks(self, breaks: list[int], bp: str) -> list[str]:
         """
         Takes a list of column sizes (in integers from 1 to 12) and
         returns a corresponding list of formatted Bootstrap column
@@ -1077,7 +1077,7 @@ class RowLayout:
         return out
 
     @property
-    def valign_cols(self) -> List[str]:
+    def valign_cols(self) -> list[str]:
         """
         List[str]: Vertical column alignments.
 
@@ -1134,7 +1134,7 @@ class RowLayout:
         return out
 
     @valign_cols.setter
-    def valign_cols(self, value: List[str]):
+    def valign_cols(self, value: list[str]):
         if len(value) > self.ncols:
             raise ValueError("Col position list length must be <= number of elements.")
         self._valign_cols = value
@@ -1215,7 +1215,9 @@ class Row(Element):
         A minimal experiment with a row::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -1237,7 +1239,9 @@ class Row(Element):
         "sm" breakpoint::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -1266,12 +1270,12 @@ class Row(Element):
     def __init__(
         self,
         *elements: Element,
-        valign_cols: List[str] = None,
+        valign_cols: list[str] = None,
         elements_full_width: bool = True,
         height: str = "auto",
         name: str = None,
         showif: dict = None,
-        layout: Union[RowLayout, Tuple[int]] = None,
+        layout: RowLayout | tuple[int] = None,
         **kwargs,
     ):
         """Constructor method."""
@@ -1332,7 +1336,6 @@ class Row(Element):
         self._elements_full_width = value
 
     def added_to_page(self, page):
-
         super().added_to_page(page)
 
         for element in self.elements:
@@ -1352,13 +1355,12 @@ class Row(Element):
                 breaks=self.layout.col_breaks(col=i),
                 vertical_position=self.layout.valign_cols[i],
                 element=element,
-                id=f"{self.name}_col{i+1}",
+                id=f"{self.name}_col{i + 1}",
             )
             yield col
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["columns"] = self._cols
         d["name"] = self.name
@@ -1383,7 +1385,9 @@ class Stack(Row):
         A minimal experiment with a stack in a row::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -1454,7 +1458,7 @@ class LabelledElement(Element):
         leftlab: str = None,
         rightlab: str = None,
         bottomlab: str = None,
-        layout: Union[RowLayout, Tuple[int]] = None,
+        layout: RowLayout | tuple[int] = None,
         **kwargs,
     ):
         """Constructor method."""
@@ -1506,7 +1510,6 @@ class LabelledElement(Element):
             raise TypeError("Layout must be an instance of 'alfred3.RowLayout'.")
 
     def added_to_page(self, page):
-
         super().added_to_page(page)
 
         for lab in ["toplab", "leftlab", "rightlab", "bottomlab"]:
@@ -1514,7 +1517,6 @@ class LabelledElement(Element):
                 getattr(self, lab).name = f"{self.name}_{lab}"
 
     def added_to_experiment(self, experiment):
-
         super().added_to_experiment(experiment)
         self._layout.responsive = self.experiment.config.getboolean(
             "layout", "responsive"
@@ -1629,7 +1631,6 @@ class LabelledElement(Element):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["toplab"] = self.toplab
         d["leftlab"] = self.leftlab
@@ -1688,14 +1689,14 @@ class InputElement(LabelledElement):
         self,
         toplab: str = None,
         force_input: bool = None,
-        default: Union[str, int, float] = None,
-        prefix: Union[str, Element] = None,
-        suffix: Union[str, Element] = None,
+        default: str | int | float = None,
+        prefix: str | Element = None,
+        suffix: str | Element = None,
         description: str = None,
         disabled: bool = False,
         no_input_hint: str = None,
         save_data: bool = True,
-        debug_value: Union[str, int, float, None] = None,
+        debug_value: str | int | float | None = None,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
@@ -1769,7 +1770,6 @@ class InputElement(LabelledElement):
         return self._hint_manager
 
     def _prepare_web_widget(self):
-
         super()._prepare_web_widget()
 
         try:
@@ -1793,7 +1793,7 @@ class InputElement(LabelledElement):
         return self.hint_manager.get_messages()
 
     @property
-    def debug_value(self) -> Union[str, None]:
+    def debug_value(self) -> str | None:
         """
         Union[str, None]: Value to be used as a default in debug mode.
 
@@ -1825,7 +1825,7 @@ class InputElement(LabelledElement):
         return False
 
     @property
-    def default(self) -> Union[str, int, float]:
+    def default(self) -> str | int | float:
         """
         Union[str, int, float]: Default value of this element.
 
@@ -1862,7 +1862,6 @@ class InputElement(LabelledElement):
 
     @property
     def template_data(self) -> dict:
-
         d = super().template_data
         d["default"] = self.default
         d["prefix"] = self.prefix
@@ -2048,7 +2047,6 @@ class InputElement(LabelledElement):
         return data
 
     def added_to_page(self, page):
-
         from .. import page as pg
 
         if not isinstance(page, pg._PageCore):
@@ -2131,7 +2129,7 @@ class ChoiceElement(InputElement, ABC):
 
     def __init__(
         self,
-        *choice_labels: Union[str, Element],
+        *choice_labels: str | Element,
         vertical: bool = False,
         align: str = "center",
         **kwargs,
@@ -2142,7 +2140,7 @@ class ChoiceElement(InputElement, ABC):
         self.vertical = vertical  # documented in getter
 
         #: List of choices that belong to this element.
-        self.choices: List[_Choice] = None
+        self.choices: list[_Choice] = None
 
     @property
     def vertical(self):
@@ -2179,17 +2177,15 @@ class ChoiceElement(InputElement, ABC):
             if isinstance(label, Element):
                 label.added_to_page(page)
                 label.should_be_shown = False
-                label.width = (  # in case of TextElement, b/c its default is a special width
+                label.width = (  # for TextElement, b/c its default is a special width
                     "full"
                 )
 
     def prepare_web_widget(self):
-
         self.choices = self.define_choices()
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["choices"] = self.choices
         d["vertical"] = self.vertical
@@ -2197,7 +2193,7 @@ class ChoiceElement(InputElement, ABC):
         return d
 
     @abstractmethod
-    def define_choices(self) -> List[_Choice]:
+    def define_choices(self) -> list[_Choice]:
         """
         Abstract method for the definition of the individual choices
         belonging to this element.
@@ -2209,7 +2205,6 @@ class ChoiceElement(InputElement, ABC):
 
     @property
     def codebook_data(self):
-
         d = super().codebook_data
 
         d["n_choices"] = len(self.choice_labels)

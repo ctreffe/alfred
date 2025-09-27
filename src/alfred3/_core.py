@@ -2,7 +2,6 @@
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 """
 
-
 from . import alfredlog
 from ._helper import _DictObj, check_name
 from .exceptions import AlfredError
@@ -56,7 +55,6 @@ class ExpMember:
         subtitle: str = None,
         vargs: dict = None,
     ):
-
         self.log = alfredlog.QueuedLoggingInterface(base_logger=__name__)
 
         self._should_be_shown = True
@@ -109,7 +107,9 @@ class ExpMember:
             Example of definig the *vargs* as a class attribute on a page::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class Demo(al.Page):
@@ -121,15 +121,17 @@ class ExpMember:
             Example of using the *vargs* in page instantiation::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 class TestPage(al.Page):
                     def on_exp_access(self):
                         self += al.Text(f"{self.vargs.test}")
 
+
                 @exp.member
                 class Test(al.Section):
-
                     def on_exp_access(self):
                         for i in range(3):
                             self += TestPage(name=f"p{i}", vargs={"test": 123})
@@ -176,6 +178,7 @@ class ExpMember:
             was entered on the first page::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
 
@@ -196,6 +199,7 @@ class ExpMember:
             was entered on the first page::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
 
 
@@ -207,13 +211,16 @@ class ExpMember:
 
                 @exp.member
                 class Main(al.Section):
-
                     def showif(self):
                         return self.exp.values.get("el1") == "yes"
 
                     def on_exp_access(self):
-                        self += al.Page(title="Showif Section Page 1", name="showif_page1")
-                        self += al.Page(title="Showif Section Page 2", name="showif_page2")
+                        self += al.Page(
+                            title="Showif Section Page 1", name="showif_page1"
+                        )
+                        self += al.Page(
+                            title="Showif Section Page 2", name="showif_page2"
+                        )
 
         """
         return True
@@ -323,7 +330,6 @@ class ExpMember:
         self._experiment = exp
 
     def _check_name_uniqueness(self, exp):
-
         if self.name in exp.root_section.all_updated_members:
             raise AlfredError(
                 f"Name '{self.name}' is already present in the experiment."

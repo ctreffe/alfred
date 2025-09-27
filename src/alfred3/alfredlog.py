@@ -7,10 +7,9 @@ import logging
 import queue
 import threading
 from pathlib import Path
-from typing import Union
 
 
-def prepare_file_handler(filepath: Union[str, Path]) -> logging.FileHandler:
+def prepare_file_handler(filepath: str | Path) -> logging.FileHandler:
     """Returns a :class:`~logging.FileHandler` and creates the necessary
     directories on the fly, if needed.
 
@@ -115,7 +114,6 @@ class QueuedLoggingInterface:
 
     @queue_logger.setter
     def queue_logger(self, logger):
-
         if self.queue_logger is not None:
             self.warning(
                 "Queue logger already present. Overriding queue logger "
@@ -136,7 +134,9 @@ class QueuedLoggingInterface:
         self.log_queued_messages()
 
     def loggername(self, obj, module: str) -> str:
-        """Returns a logger name for use in :class:`~alfred3.alfredlog.QueueLoggingInterface.
+        """
+        Returns a logger name for use in
+        :class:`~alfred3.alfredlog.QueueLoggingInterface.
 
         The name has the following format::
 
@@ -167,7 +167,6 @@ class QueuedLoggingInterface:
         name.append(type(obj).__name__)
 
         if "instance_log" in obj.__dict__:
-
             try:
                 if obj.instance_log:
                     try:
@@ -212,7 +211,6 @@ class QueuedLoggingInterface:
             self.queue_logger.setLevel(self._level)
 
     def _handle_msg(self, msg: str, level: str, *args, **kwargs):
-
         msg = f"session id={self.session_id} - " + msg
 
         if self.use_base_logger:

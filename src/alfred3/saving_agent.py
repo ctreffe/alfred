@@ -1,5 +1,6 @@
 """Provides flexible saving capabilities for alfred3 experiments.
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
+.. moduleauthor::
+    Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 
 """
 
@@ -13,7 +14,6 @@ import time
 from abc import ABC, abstractmethod
 from configparser import SectionProxy
 from pathlib import Path
-from typing import Union
 from uuid import uuid4
 
 import pymongo
@@ -74,9 +74,12 @@ def _save_looper(sleeptime: int = 1):
 
 def wait_for_saving_thread():
     """
-    .. todo:: implement end_session of Logger into this method and execute for all experiment types!
+    .. todo::
+        implement end_session of Logger into this method and execute for all
+        experiment types!
     """
-    # _logger.info("waiting until saving queue is empty. %s items left." % _queue.qsize())
+    # _logger.info("waiting until saving queue is empty.
+    # %s items left." % _queue.qsize())
     _queue.join()
 
 
@@ -167,7 +170,6 @@ class SavingAgent(ABC):
         self.encrypt = encrypt
 
         if self.encrypt and not self._experiment.secrets.get("encryption", "key"):
-
             raise ValueError(
                 f"Encryption was turned on for {self}, but the experiment does not have"
                 " an encryption key. Turn encryption off in the saving agent"
@@ -355,7 +357,7 @@ class LocalSavingAgent(SavingAgent):
     def __init__(
         self,
         filename: str,
-        directory: Union[str, Path],
+        directory: str | Path,
         activation_level: int = 1,
         experiment=None,
         name: str = None,
@@ -372,7 +374,7 @@ class LocalSavingAgent(SavingAgent):
         return self._filename
 
     @filename.setter
-    def filename(self, filename: Union[str, Path]):
+    def filename(self, filename: str | Path):
         f = Path(filename)
         if not f.suffix:
             f = Path(filename + ".json")
@@ -384,7 +386,7 @@ class LocalSavingAgent(SavingAgent):
         return self._directory
 
     @directory.setter
-    def directory(self, path: Union[str, Path]):
+    def directory(self, path: str | Path):
         directory = Path(path)
         if not directory.is_absolute():
             directory = Path(self._experiment.path) / directory
@@ -660,7 +662,6 @@ class AutoMongoSavingAgent(MongoSavingAgent):
         client: pymongo.MongoClient = None,
         experiment=None,
     ):
-
         if not client:
             client = AutoMongoClient(config=config)
 
@@ -682,7 +683,6 @@ class AutoMongoSavingAgent(MongoSavingAgent):
 
 
 class MongoManager:
-
     """Allows for the easy initialization of multiple MongoSavingAgents
     with overlapping configuration and shared MongoClients.
 
