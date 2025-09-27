@@ -111,8 +111,7 @@ class TestBasicMovement:
         exp.movement_manager.move("jump>Page2")
         assert exp.current_page.name == "Page2"
 
-    def test_jump_to_nonexistent_page(self):
-        ...
+    def test_jump_to_nonexistent_page(self): ...
 
     def test_page_should_not_be_shown(self, exp, caplog):
         # page with should_be_shown = False should be skipped

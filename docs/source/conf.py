@@ -90,7 +90,7 @@ pygments_style = "sphinx"
 
 # Monkey patch for issue #2044 (None by default for instance attributes? #2044)
 # Should be resolved in next release of sphinx
-from sphinx.ext.autodoc import ClassLevelDocumenter, InstanceAttributeDocumenter
+from sphinx.ext.autodoc import ClassLevelDocumenter, InstanceAttributeDocumenter  # noqa
 
 
 def iad_add_directive_header(self, sig):
@@ -114,12 +114,12 @@ def linkcode_resolve(domain, info):
 
 # Remove auto-generated API docs from sidebars. They take too long to build.
 remove_from_toctrees = [
-    "generated/alfred3.page.*.rst",
-    "generated/alfred3.section.*.rst",
-    "generated/alfred3.randomizer.*.rst",
-    "generated/alfred3.experiment.*.rst",
-    "generated/alfred3.cli.*.rst",
-    "generated/alfred3.util.*.rst",
-    "generated/alfred3.admin.*.rst",
-    "generated/alfred3.element.*.*.rst",
+    "generated/alfred3.page.*.*.rst",
+    "generated/alfred3.section.*.*.rst",
+    "generated/alfred3.randomizer.*.*.rst",
+    "generated/alfred3.experiment.*.*.rst",
+    "generated/alfred3.cli.*.*.rst",
+    "generated/alfred3.util.*.*.rst",
+    "generated/alfred3.admin.*.*.rst",
+    "generated/alfred3.element.*.*.*.rst",
 ]

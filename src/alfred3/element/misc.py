@@ -3,9 +3,9 @@ Provides elements that don't fit into the other categories.
 
 .. moduleauthor: Johannes Brachem <jbrachem@posteo.de>
 """
+
 import time
 from pathlib import Path
-from typing import Union
 
 from .._helper import inherit_kwargs
 from .core import Element, InputElement, jinja_env
@@ -47,7 +47,9 @@ class Style(Element):
         red. The element is selected by its id::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -61,7 +63,9 @@ class Style(Element):
         specific page red. The elements are selected by their class::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -112,7 +116,6 @@ class Style(Element):
 
     @property
     def css_urls(self):
-
         if self.url:
             return [(self.priority, self.url)]
         else:
@@ -141,7 +144,9 @@ class HideNavigation(Style):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -191,17 +196,18 @@ class JavaScript(Element):
             when a change to its input is detected::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class HelloWorld(al.Page):
                     name = "hello_world"
 
                     def on_exp_access(self):
-
                         js_code = '''
                         $( '#test_el' ).on('change', function() {
-                            move('forward') // the move() JavaScript function is provided by alfred3.
+                            move('forward') // the move() fun. is provided by alfred3.
                         })
                         '''
 
@@ -246,7 +252,6 @@ class JavaScript(Element):
 
     @property
     def js_urls(self):
-
         if self.url:
             return [(self.priority, self.url)]
         else:
@@ -265,7 +270,9 @@ class WebExitEnabler(JavaScript):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -297,7 +304,9 @@ class Value(InputElement):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -308,12 +317,12 @@ class Value(InputElement):
 
     """
 
-    def __init__(self, value: Union[str, int, float], name: str, description: str = ""):
+    def __init__(self, value: str | int | float, name: str, description: str = ""):
         """Constructor method."""
         super().__init__(name=name, description=description)
 
         #: The value that you want to save.
-        self.input: Union[str, int, float] = value
+        self.input: str | int | float = value
         self.should_be_shown = False
 
 
@@ -369,11 +378,12 @@ class Callback(Element):
         seconds. It will print the experiment id to the terminal::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.Callback(func=self.print_expid, delay=10)
 
@@ -495,17 +505,24 @@ class RepeatedCallback(Element):
             function specified in *func* was called. Only takes effect,
             if *followup* is set to 'custom'.
 
+        callback_behavior (str): Defines the behavior of the callback.
+            If ``"lazy"``(default), each callback will wait for
+            the previous call to return before a new execution. If
+            ``"greedy"``, a new call will always be made after the
+            interval is expired.
+
     Examples:
 
         The callback on the first page will trigger every 10 seconds.
         It will print the experiment id to the terminal::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.RepeatedCallback(func=self.print_expid, interval=10)
 
@@ -517,7 +534,7 @@ class RepeatedCallback(Element):
     should_be_shown = False
 
     #: Javascript template
-    js_template = jinja_env.get_template("js/repeatedcallback.js.j2")
+    js_template = jinja_env.get_template("js/repeatedcallback_lazy.js.j2")
 
     def __init__(
         self,
@@ -526,6 +543,7 @@ class RepeatedCallback(Element):
         followup: str = "none",
         submit_first: bool = True,
         custom_js: str = "",
+        callback_behavior: str = "lazy",
     ):
         super().__init__()
         self.func = func
@@ -534,6 +552,13 @@ class RepeatedCallback(Element):
         self.url = None
         self.followup = followup
         self.custom_js = custom_js
+
+        if callback_behavior == "lazy":
+            self.js_template = jinja_env.get_template("js/repeatedcallback_lazy.js.j2")
+        elif callback_behavior == "greedy":
+            self.js_template = jinja_env.get_template(
+                "js/repeatedcallback_greedy.js.j2"
+            )
 
     def prepare_web_widget(self):
         # docstring inherited
@@ -565,7 +590,9 @@ class HiddenInput(InputElement):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
