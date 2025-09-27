@@ -939,9 +939,12 @@ class SingleChoice(ChoiceElement):
             else:
                 if self.emojize:
                     label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(
-                    str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
-                )
+                if self.render_markdown:
+                    label = cmarkgfm.github_flavored_markdown_to_html(
+                        str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+                    )
+                choice.label = str(label)
+
             choice.type = "radio"
             choice.value = i
             choice.name = self.name
@@ -1157,9 +1160,11 @@ class MultipleChoice(ChoiceElement):
             else:
                 if self.emojize:
                     label = emojize(str(label), use_aliases=True)
-                choice.label = cmarkgfm.github_flavored_markdown_to_html(
-                    str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
-                )
+                if self.render_markdown:
+                    label = cmarkgfm.github_flavored_markdown_to_html(
+                        str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
+                    )
+                choice.label = str(label)
             choice.type = "checkbox"
             choice.value = i
             choice.id = f"{self.name}_choice{i}"
