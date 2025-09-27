@@ -26,13 +26,12 @@ For more detailed usage information, see::
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
-
 import csv
 import os
 import random
+from collections.abc import Iterator
 from itertools import chain
 from pathlib import Path
-from typing import Iterator, List, Union
 
 from .config import ExperimentConfig
 from .data_manager import DataManager, decrypt_recursively
@@ -80,7 +79,7 @@ class Exporter:
         elif data_type == DataManager.EXP_DATA:
             self.export_exp_data()
 
-    def _load(self, path: Union[str, Path]) -> list:
+    def _load(self, path: str | Path) -> list:
         """
         Returns a list of dictonaries with session data, read from an
         existing csv file.
@@ -91,7 +90,7 @@ class Exporter:
         return self.load(path, self.delimiter)
 
     @staticmethod
-    def load(path: Union[str, Path], delimiter: str) -> list:
+    def load(path: str | Path, delimiter: str) -> list:
         """
         Returns a list of dictonaries with session data, read from an
         existing csv file.
@@ -103,7 +102,7 @@ class Exporter:
             existing_data = [dict(row) for row in reader]
         return existing_data
 
-    def _write(self, data: Iterator[dict], fieldnames: List[str], path: Path):
+    def _write(self, data: Iterator[dict], fieldnames: list[str], path: Path):
         """
         Writes a list of session data dictionaries to a csv file.
 
@@ -113,7 +112,7 @@ class Exporter:
         self.write(data, fieldnames, path, self.delimiter)
 
     @staticmethod
-    def write(data: Iterator[dict], fieldnames: List[str], path: Path, delimiter: str):
+    def write(data: Iterator[dict], fieldnames: list[str], path: Path, delimiter: str):
         """
         Writes a list of session data dictionaries to a csv file.
 

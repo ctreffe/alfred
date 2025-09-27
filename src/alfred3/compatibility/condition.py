@@ -7,8 +7,8 @@ import random
 import time
 import warnings
 from collections import Counter
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field
-from typing import Iterator, List, Tuple
 
 from ..data_manager import get_data_of_session
 
@@ -65,7 +65,6 @@ class _Session:
 
 @dataclass
 class _Slot:
-
     condition: str
     timeout: int
     sessions: list
@@ -78,7 +77,6 @@ class _Slot:
         self.finished = finished
 
     def status(self, exp):
-
         if self.finished:
             return "finished"
 
@@ -154,7 +152,8 @@ class _ConditionIO:
     def load(self, atomic: bool = True) -> dict:
         if self.method == "mongo":
             if atomic:
-                # this will try a couple of times until if receives a version of the data that
+                # this will try a couple of times until if receives a version of the
+                # data that
                 # can be safely worked on (with no other assignment ongoing)
                 data = None
                 i = 0
@@ -172,9 +171,10 @@ class _ConditionIO:
                         break
                 return data
             else:
-
-                # if there is no data, this returns None and places an assignment_ongoing note in the DB
-                # if there is data, this returns the data and places an assignment_ongoing note in the DB
+                # if there is no data, this returns None and places an
+                # assignment_ongoing note in the DB
+                # if there is data, this returns the data and places an
+                # assignment_ongoing note in the DB
                 data = self.exp.db_misc.find_one_and_update(
                     self.query, {"$set": {"assignment_ongoing": True}}, upsert=True
                 )
@@ -195,7 +195,8 @@ class _ConditionIO:
                 data = {"slots": data["slots"]}
                 self.exp.db_misc.find_one_and_update(query, {"$set": data})
             else:
-                # this will replace the document, usually leading to releasing the assignment status
+                # this will replace the document, usually leading to releasing the
+                # assignment status
                 query = {**self.query, **{"assignment_ongoing": True}}
                 self.exp.db_misc.find_one_and_replace(query, data, upsert=True)
 
@@ -286,7 +287,8 @@ class ListRandomizer:
         in the condition that turned out to be larger.
         List randomization solves this problem, which is why it is commonly
         used in offline studies. Let's take an easy example. We might have
-        two conditions, a and b, each of which should be completed by three participants.
+        two conditions, a and b, each of which should be completed by three
+        participants.
         The order in which participants are assigned to a condition should be
         random. To achieve this, we create a list that contains a condition
         slot for each participant::
@@ -309,11 +311,15 @@ class ListRandomizer:
         is full, the experiment will immediately abort new sessions
         and display an abort page to new participants::
             import alfred3 as al
+
             exp = al.Experiment()
+
+
             @exp.setup
             def setup(exp):
                 randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
                 exp.condition = randomizer.get_condition()
+
 
             @exp.member
             class DemoPage(al.Page):
@@ -330,11 +336,15 @@ class ListRandomizer:
         simplified initialization, if you use the same sample size for
         all experiment conditions::
             import alfred3 as al
+
             exp = al.Experiment()
+
+
             @exp.setup
             def setup(exp):
                 randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
                 exp.condition = randomizer.get_condition()
+
 
             @exp.member
             class DemoPage(al.Page):
@@ -350,7 +360,7 @@ class ListRandomizer:
 
     def __init__(
         self,
-        *conditions: Tuple[str, int],
+        *conditions: tuple[str, int],
         exp,
         id: str = None,
         respect_version: bool = True,
@@ -428,11 +438,17 @@ class ListRandomizer:
         Examples:
             ::
                 import alfred3 as al
+
                 exp = al.Experiment()
+
+
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
+                    randomizer = al.ListRandomizer.balanced(
+                        "cond1", "cond2", n=10, exp=exp
+                    )
                     exp.condition = randomizer.get_condition()
+
 
                 @exp.member
                 class DemoPage(al.Page):
@@ -491,7 +507,9 @@ class ListRandomizer:
                 exp = al.Experiment()
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
+                    randomizer = al.ListRandomizer(
+                        ("cond1", 10), ("cond2", 10), exp=exp
+                    )
                     exp.condition = randomizer.get_condition()
 
                 @exp.member
@@ -509,15 +527,23 @@ class ListRandomizer:
             you can customize behavior by catching the "AllConditionsFull"
             exception::
                 import alfred3 as al
+
                 exp = al.Experiment()
+
+
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
+                    randomizer = al.ListRandomizer(
+                        ("cond1", 10), ("cond2", 10), exp=exp
+                    )
                     try:
                         exp.condition = randomizer.get_condition(raise_exception=True)
                     except al.AllConditionsFull:
                         full_page = al.Page(title="Experiment closed.", name="fullpage")
-                        full_page += al.Text("Sorry, the experiment currently does not accept any further participants")
+                        full_page += al.Text(
+                            "Sorry, the experiment currently does not accept any "
+                            "further participants"
+                        )
                         exp.abort(reason="full", page=full_page)
 
 
@@ -537,13 +563,21 @@ class ListRandomizer:
             the same behavior as the previous example, it is just a little
             more convenient::
                 import alfred3 as al
+
                 exp = al.Experiment()
+
+
                 @exp.setup
                 def setup(exp):
                     full_page = al.Page(title="Experiment closed.", name="fullpage")
-                    full_page += al.Text("Sorry, the experiment currently does not accept any further participants.")
+                    full_page += al.Text(
+                        "Sorry, the experiment currently does not accept any "
+                        "further participants."
+                    )
 
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp, abort_page=full_page)
+                    randomizer = al.ListRandomizer(
+                        ("cond1", 10), ("cond2", 10), exp=exp, abort_page=full_page
+                    )
 
                     exp.condition = randomizer.get_condition()
 
@@ -604,7 +638,6 @@ class ListRandomizer:
             raise ConditionInconsistency(msg)
 
     def _load_or_insert_data(self):
-
         # check if there is any data at all, independent of assignment_ongoing status
         data = self.io.load(atomic=False)
 
@@ -624,7 +657,7 @@ class ListRandomizer:
         if self.full:
             self.abort()
 
-    def _generate_slots(self) -> List[_Slot]:
+    def _generate_slots(self) -> list[_Slot]:
         slots = []
         for c in self.conditions:
             slots += [{"condition": c[0], "timeout": self.timeout}] * c[1]
@@ -649,7 +682,6 @@ class ListRandomizer:
         return d
 
     def _mark_slot_finished(self, exp):
-
         interact_data = self.exp.adata.get("interact", {})
         groupid = interact_data.get("groupid", None)
         if groupid is None:

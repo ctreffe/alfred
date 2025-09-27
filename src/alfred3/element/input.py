@@ -6,7 +6,6 @@ Provides elements that allow participant input.
 
 import re
 from datetime import datetime
-from typing import List, Tuple, Union
 
 import bleach
 import cmarkgfm
@@ -31,7 +30,9 @@ class TextEntry(InputElement):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -77,14 +78,12 @@ class TextEntry(InputElement):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["placeholder"] = self.placeholder
         return d
 
     @property
     def codebook_data(self):
-
         data = super().codebook_data
         data["placeholder"] = self.placeholder
         return data
@@ -103,7 +102,9 @@ class TextArea(TextEntry):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -122,7 +123,6 @@ class TextArea(TextEntry):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["area_nrows"] = self.area_nrows
         return d
@@ -151,13 +151,16 @@ class MatchEntry(TextEntry):
         Example for a MatchEntry element that will match any input::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
-                    self += al.MatchEntry(toplab="Enter text here", pattern=r".*", name="reg1")
+                    self += al.MatchEntry(
+                        toplab="Enter text here", pattern=r".*", name="reg1"
+                    )
 
     """
 
@@ -170,7 +173,6 @@ class MatchEntry(TextEntry):
         self._match_hint = match_hint  # documented in getter property
 
     def validate_data(self, silent: bool = False) -> bool:
-
         if not self.should_be_shown:
             return True
 
@@ -211,7 +213,6 @@ class MatchEntry(TextEntry):
 
     @property
     def codebook_data(self) -> dict:
-
         d = super().codebook_data
         d["regex_pattern"] = self.pattern.pattern
         return d
@@ -234,13 +235,16 @@ class RegEntry(MatchEntry):
         Example for a RegEntry element that will match any input::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
-                    self += al.RegEntry(toplab="Enter text here", pattern=r".*", name="reg1")
+                    self += al.RegEntry(
+                        toplab="Enter text here", pattern=r".*", name="reg1"
+                    )
 
     """
 
@@ -270,11 +274,12 @@ class EmailEntry(MatchEntry):
         Example for an EmailEntry element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.EmailEntry(toplab="Enter text here", name="email")
 
@@ -325,7 +330,6 @@ class PasswordEntry(RegEntry):
             )
 
     def validate_data(self, silent: bool = False) -> bool:
-
         if not self.should_be_shown:
             return True
 
@@ -380,7 +384,7 @@ class MultiplePasswordEntry(RegEntry):
 
     def __init__(
         self,
-        passwords: List[str],
+        passwords: list[str],
         force_input: bool = True,
         match_hint: str = None,
         **kwargs,
@@ -403,7 +407,6 @@ class MultiplePasswordEntry(RegEntry):
                 )
 
     def validate_data(self, silent: bool = False) -> bool:
-
         if not self.should_be_shown:
             return True
 
@@ -459,7 +462,9 @@ class NumberEntry(TextEntry):
         Using a NumberEntry element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -471,15 +476,14 @@ class NumberEntry(TextEntry):
     def __init__(
         self,
         ndecimals: int = 0,
-        min: Union[int, float] = None,
-        max: Union[int, float] = None,
-        decimal_signs: Union[str, tuple] = (",", "."),
+        min: int | float = None,
+        max: int | float = None,
+        decimal_signs: str | tuple = (",", "."),
         match_hint: str = None,
         **kwargs,
     ):
-
         self.ndecimals: int = ndecimals  # documented in getter property
-        self.decimal_signs: Tuple[str] = decimal_signs  # documented in getter property
+        self.decimal_signs: tuple[str] = decimal_signs  # documented in getter property
         self.min = min  # documented in getter property
         self.max = max  # documented in getter property
         self._match_hint = match_hint  # documented in getter property
@@ -499,12 +503,12 @@ class NumberEntry(TextEntry):
             self._ndecimals = value
 
     @property
-    def decimal_signs(self) -> Union[str, tuple]:
+    def decimal_signs(self) -> str | tuple:
         """Union[str, tuple]: Interpreted decimal signs."""
         return self._decimal_signs
 
     @decimal_signs.setter
-    def decimal_signs(self, value: Union[str, tuple]):
+    def decimal_signs(self, value: str | tuple):
         msg = "Decimals signs must be a string or a tuple of strings."
         if not isinstance(value, (str, tuple)):
             raise ValueError(msg)
@@ -517,12 +521,12 @@ class NumberEntry(TextEntry):
         self._decimal_signs = value
 
     @property
-    def min(self) -> Union[int, float]:
+    def min(self) -> int | float:
         """Union[int, float]: Minimum value that is accepted by this element."""
         return self._min
 
     @min.setter
-    def min(self, value: Union[int, float]):
+    def min(self, value: int | float):
         if value is None:
             self._min = None
         elif not isinstance(value, (int, float)):
@@ -531,12 +535,12 @@ class NumberEntry(TextEntry):
             self._min = value
 
     @property
-    def max(self) -> Union[int, float]:
+    def max(self) -> int | float:
         """Union[int, float]: Maximum value that is accepted by this element."""
         return self._max
 
     @max.setter
-    def max(self, value: Union[int, float]):
+    def max(self, value: int | float):
         if value is None:
             self._max = None
         elif not isinstance(value, (int, float)):
@@ -613,7 +617,6 @@ class NumberEntry(TextEntry):
             self._input = value
 
     def validate_data(self, silent: bool = False) -> bool:
-
         if not self.should_be_shown:
             return True
 
@@ -648,7 +651,6 @@ class NumberEntry(TextEntry):
 
     @property
     def codebook_data(self):
-
         data = super().codebook_data
         data["value"] = self.input
 
@@ -712,9 +714,9 @@ class RangeInput(InputElement):
 
             exp = al.Experiment()
 
+
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.RangeInput(name="range_demo")
     """
@@ -724,9 +726,9 @@ class RangeInput(InputElement):
 
     def __init__(
         self,
-        min: Union[float, int] = 0,
-        max: Union[float, int] = 100,
-        step: Union[float, int] = 1,
+        min: float | int = 0,
+        max: float | int = 100,
+        step: float | int = 1,
         display_input: bool = True,
         display_position: str = "top",
         align: str = "center",
@@ -785,7 +787,6 @@ class RangeInput(InputElement):
 
     @property
     def codebook_data(self):
-
         data = super().codebook_data
         data["value"] = self.input
         data["step"] = self.step
@@ -822,14 +823,13 @@ class RangeInput(InputElement):
             self._input = value
 
     def validate_data(self, silent: bool = False) -> bool:
-
         if not self.should_be_shown:
             return True
 
-        if not self.force_input and not self._input:
+        if not self.force_input and self._input is None:
             return True
 
-        elif not self.input:
+        elif self.input is None:
             if not silent:
                 self.hint_manager.post_message(self.no_input_hint)
             return False
@@ -891,7 +891,9 @@ class SingleChoice(ChoiceElement):
         A simple SingleChoice element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -903,7 +905,9 @@ class SingleChoice(ChoiceElement):
         Accessing the input to a SingleChoice element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -915,9 +919,8 @@ class SingleChoice(ChoiceElement):
 
             @exp.member
             class Show(al.Page):
-
                 def on_first_show(self):
-                    c1_answer = self.exp.values["c1"] # access value
+                    c1_answer = self.exp.values["c1"]  # access value
                     self += al.Text(f"Your answer was: {{c1_answer}}")
 
 
@@ -926,8 +929,7 @@ class SingleChoice(ChoiceElement):
     # Documented at :class:`.ChoiceElement`
     type: str = "radio"
 
-    def define_choices(self) -> List[_Choice]:
-
+    def define_choices(self) -> list[_Choice]:
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -971,7 +973,6 @@ class SingleChoice(ChoiceElement):
         return self.experiment.config.get("hints", "no_inputSingleChoice")
 
     def set_data(self, d):
-
         # Important: We need to have a check that ensures that the
         # generated name for the value of each choice is not used by
         # any other name in the experiment.
@@ -1039,7 +1040,9 @@ class MultipleChoice(ChoiceElement):
         A multiple choice element with three options::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1051,17 +1054,20 @@ class MultipleChoice(ChoiceElement):
         Accessing the input to a MultipleChoice element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
-                    self += al.MultipleChoice("a", "b", "c", toplab="Choose one or more", name="c1")
+                    self += al.MultipleChoice(
+                        "a", "b", "c", toplab="Choose one or more", name="c1"
+                    )
+
 
             @exp.member
             class Show(al.Page):
-
                 def on_first_show(self):
                     choices = self.exp.values.get("c1")
                     self += al.Text(f"Your answer is saved like this: {{choices}}")
@@ -1076,7 +1082,7 @@ class MultipleChoice(ChoiceElement):
         min: int = None,
         max: int = None,
         select_hint: str = None,
-        default: Union[int, List[int]] = None,
+        default: int | list[int] = None,
         **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
@@ -1132,19 +1138,16 @@ class MultipleChoice(ChoiceElement):
             return True
 
     def set_data(self, d):
-
         # Important: We need to have a check that ensures that the
         # generated name for the value of each choice is not used by
         # any other name in the experiment.
         # For this element, we implement it in the *define_choices*
         # method.
         for choice in self.choices:
-
             value = d.get(choice.name, None)
             self._input[f"choice{choice.value}"] = str(choice.value) == value
 
     def define_choices(self):
-
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -1240,7 +1243,9 @@ class SingleChoiceList(SingleChoice):
         A single choice list with a no-choice option as first option::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1248,9 +1253,8 @@ class SingleChoiceList(SingleChoice):
 
                 def on_exp_access(self):
                     self += al.SingleChoiceList(
-                        "-no selection-", "choi1", "choi2", "choi3",
-                         name="sel1"
-                         )
+                        "-no selection-", "choi1", "choi2", "choi3", name="sel1"
+                    )
 
 
         A single choice list with a no-choice option as first option that
@@ -1258,7 +1262,9 @@ class SingleChoiceList(SingleChoice):
         will not be accepted if force_input is True::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1266,15 +1272,16 @@ class SingleChoiceList(SingleChoice):
 
                 def on_exp_access(self):
                     self += al.SingleChoiceList(
-                        "", "choi1", "choi2", "choi3",
-                         name="sel1", force_input=True
-                         )
+                        "", "choi1", "choi2", "choi3", name="sel1", force_input=True
+                    )
 
 
         Accessing the value of a SingleChoiceList::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1282,15 +1289,14 @@ class SingleChoiceList(SingleChoice):
 
                 def on_exp_access(self):
                     self += al.SingleChoiceList(
-                        "-no selection-", "choi1", "choi2", "choi3",
-                         name="sel1"
-                         )
+                        "-no selection-", "choi1", "choi2", "choi3", name="sel1"
+                    )
+
 
             @exp.member
             class Show(al.Page):
-
                 def on_first_show(self):
-                    selection = self.exp.values["sel1"] # accesses selection
+                    selection = self.exp.values["sel1"]  # accesses selection
                     self += al.Text(f"You selected: {{selection}}")
 
     """
@@ -1308,8 +1314,7 @@ class SingleChoiceList(SingleChoice):
             )
         super().__init__(*choice_labels, default=default, **kwargs)
 
-    def define_choices(self) -> List[_Choice]:
-
+    def define_choices(self) -> list[_Choice]:
         choices = []
         for i, label in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -1394,7 +1399,8 @@ class SingleChoiceList(SingleChoice):
 #                 name = "demo"
 
 #                 def on_exp_access(self):
-#                     self += al.MultipleChoiceList("choi1", "choi2", "choi3", name="sel1")
+#                     self += al.MultipleChoiceList(
+# "choi1", "choi2", "choi3", name="sel1")
 
 #     """
 
@@ -1507,7 +1513,9 @@ class SingleChoiceButtons(SingleChoice):
                  name = "demo_page"
 
                  def on_exp_access(self):
-                    self += al.SingleChoiceButtons("Yes", "No", toplab="Choose one", name="c1")
+                    self += al.SingleChoiceButtons(
+                        "Yes", "No", toplab="Choose one", name="c1"
+                    )
 
 
              @exp.member
@@ -1532,18 +1540,18 @@ class SingleChoiceButtons(SingleChoice):
     def __init__(
         self,
         *choice_labels,
-        button_width: Union[str, list] = "equal",
-        button_style: Union[str, list] = "btn-outline-dark",
+        button_width: str | list = "equal",
+        button_style: str | list = "btn-outline-dark",
         button_round_corners: bool = True,
         **kwargs,
     ):
         super().__init__(*choice_labels, **kwargs)
-        self.button_width: Union[str, list] = button_width
-        self.button_style: Union[str, list] = button_style
+        self.button_width: str | list = button_width
+        self.button_style: str | list = button_style
         self.button_round_corners: bool = button_round_corners
 
     @property
-    def button_style(self) -> Union[str, list]:
+    def button_style(self) -> str | list:
         """Union[str, list]: See documentation for the initialization argument."""
         return self._button_style
 
@@ -1573,7 +1581,6 @@ class SingleChoiceButtons(SingleChoice):
 
     @property
     def template_data(self) -> dict:
-
         d = super().template_data
         d["button_style"] = self.button_style
         d["button_group_class"] = self.button_group_class
@@ -1585,7 +1592,8 @@ class SingleChoiceButtons(SingleChoice):
 
         if self.button_width == "equal":
             if not self.vertical:
-                # set button width to small value, because they will grow to fit the group
+                # set button width to small value, because they will grow to fit the
+                # group
                 css = f".btn.choice-button-{self.name} {{width: 10px;}} "
             else:
                 css = []
@@ -1641,10 +1649,8 @@ class SingleChoiceButtons(SingleChoice):
         """Adds css for rounded buttons."""
 
         spec = "border-radius: 1rem;"
-        css1 = f"div#{ self.name }.btn-group>label.btn.choice-button {{{spec}}}"
-        css2 = (
-            f"div#{ self.name }.btn-group-vertical>label.btn.choice-button {{{spec}}}"
-        )
+        css1 = f"div#{self.name}.btn-group>label.btn.choice-button {{{spec}}}"
+        css2 = f"div#{self.name}.btn-group-vertical>label.btn.choice-button {{{spec}}}"
         self.add_css(css1)
         self.add_css(css2)
 
@@ -1660,7 +1666,7 @@ class SingleChoiceButtons(SingleChoice):
             spec += f"border-top-{m}-radius: 0; "
             spec += f"border-bottom-{m}-radius: 0;"
             css = (
-                f"div#{ self.name }.btn-group>.btn.choice-button:not(:{exceptn}-child)"
+                f"div#{self.name}.btn-group>.btn.choice-button:not(:{exceptn}-child)"
                 f" {{{spec}}}"
             )
             self._css_code += [(7, css)]
@@ -1677,7 +1683,6 @@ class SingleChoiceButtons(SingleChoice):
             return ""
 
     def prepare_web_widget(self):
-
         super().prepare_web_widget()
 
         if self.button_toolbar:
@@ -1724,7 +1729,9 @@ class SingleChoiceBar(SingleChoiceButtons):
         A simple SingleChoiceBar element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1805,28 +1812,32 @@ class MultipleChoiceButtons(MultipleChoice, SingleChoiceButtons):
         Multiple choice buttons::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
                     self += al.MultipleChoiceButtons("Yes", "No", "Maybe", name="m1")
 
         Accessing the input to a MultipleChoiceButtons element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
-                    self += al.MultipleChoiceButtons("a", "b", "c", toplab="Choose one or more", name="c1")
+                    self += al.MultipleChoiceButtons(
+                        "a", "b", "c", toplab="Choose one or more", name="c1"
+                    )
+
 
             @exp.member
             class Show(al.Page):
-
                 def on_first_show(self):
                     choices = self.exp.values.get("c1")
                     self += al.Text(f"Your answer is saved like this: {{choices}}")
@@ -1871,7 +1882,9 @@ class MultipleChoiceBar(MultipleChoiceButtons):
         A multiple choice bar with three options::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1883,17 +1896,20 @@ class MultipleChoiceBar(MultipleChoiceButtons):
         Accessing the input to a MultipleChoiceBar element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
-
                 def on_exp_access(self):
-                    self += al.MultipleChoiceBar("a", "b", "c", toplab="Choose one or more", name="c1")
+                    self += al.MultipleChoiceBar(
+                        "a", "b", "c", toplab="Choose one or more", name="c1"
+                    )
+
 
             @exp.member
             class Show(al.Page):
-
                 def on_first_show(self):
                     choices = self.exp.values.get("c1")
                     self += al.Text(f"Your answer is saved like this: {{choices}}")
@@ -1943,7 +1959,9 @@ class SelectPageList(SingleChoiceList):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo1(al.Page):
@@ -1951,6 +1969,7 @@ class SelectPageList(SingleChoiceList):
 
                 def on_exp_access(self):
                     self += al.SelectPageList(name="select_page")
+
 
             @exp.member()
             class Target(al.Page):
@@ -1976,7 +1995,7 @@ class SelectPageList(SingleChoiceList):
         self.include_self = include_self
         self.display_page_name = display_page_name
 
-    def _determine_scope(self) -> List[str]:
+    def _determine_scope(self) -> list[str]:
         """
         Determines, which pages belong to the scope of the element *and*
         should appear in the dropdown.
@@ -2019,8 +2038,7 @@ class SelectPageList(SingleChoiceList):
 
         return choice_labels
 
-    def define_choices(self) -> List[_Choice]:
-
+    def define_choices(self) -> list[_Choice]:
         choices = []
         for i, page_name in enumerate(self.choice_labels, start=1):
             choice = _Choice()
@@ -2109,36 +2127,8 @@ class SelectPageList(SingleChoiceList):
         return checked
 
     def prepare_web_widget(self):
-
         self.choice_labels = self._determine_scope()
         self.choices = self.define_choices()
-
-
-@inherit_kwargs
-class HiddenInput(InputElement):
-    """
-    Provides a hidden entry field.
-
-    Args:
-        {kwargs}
-
-    Examples:
-        Minimum example::
-
-            import alfred3 as al
-            exp = al.Experiment()
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo"
-
-                def on_exp_access(self):
-                    self += al.HiddenInput(name="hi1", default="fixed")
-
-    """
-
-    base_template = jinja_env.get_template("html/EmptyElement.html.j2")
-    element_template = jinja_env.get_template("html/HiddenInputElement.html.j2")
 
 
 @inherit_kwargs
@@ -2159,7 +2149,9 @@ class DateEntry(InputElement):
         Minimum example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -2210,7 +2202,9 @@ class TimeEntry(InputElement):
         Minimum example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):

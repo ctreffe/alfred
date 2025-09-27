@@ -51,6 +51,7 @@ This is an overview of the modules, for which documentation is available.
 
    ~alfred3.experiment
    ~alfred3.randomizer
+   ~alfred3.quota.SessionQuota
    ~alfred3.section
    ~alfred3.page
    ~alfred3.element

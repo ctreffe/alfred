@@ -69,7 +69,6 @@ class TestMultiplePasswordEntry:
 
 class TestSingleChoiceElement:
     def test_data(self, exp):
-
         exp.testpage += al.SingleChoice("a", "b", name="test")
 
         exp.start()

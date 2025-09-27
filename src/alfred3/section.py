@@ -1,8 +1,10 @@
 """
 Sections organize movement between pages in an experiment.
 
-.. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
+.. moduleauthor::
+    Johannes Brachem <jbrachem@posteo.de>, Paul Wiemann <paulwiemann@gmail.com>
 """
+
 from random import shuffle
 
 from ._core import ExpMember
@@ -31,6 +33,7 @@ class Section(ExpMember):
         style::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
             exp += al.Section(name="main")
@@ -40,10 +43,14 @@ class Section(ExpMember):
         Using a basic section and filling it with a page in class style::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
+
             @exp.member
-            class Main(al.Section): pass
+            class Main(al.Section):
+                pass
+
 
             @exp.member(of_section="Main")
             class DemoPage(al.Page):
@@ -126,7 +133,6 @@ class Section(ExpMember):
             raise AttributeError(f"{self} has no attribute '{name}'.")
 
     def __setattr__(self, name, value):
-
         if "members" in self.__dict__ and name in self.members:
             if self.members[name] is value:
                 return
@@ -415,7 +421,6 @@ class Section(ExpMember):
         self._update_members_recursively()
 
     def _update_members(self):
-
         for member in self.members.values():
             if not member.experiment:
                 member.added_to_experiment(self.exp)
@@ -423,7 +428,6 @@ class Section(ExpMember):
                 member.added_to_section(self)
 
     def _update_members_recursively(self):
-
         self._update_members()
 
         for member in self.members.values():
@@ -431,7 +435,6 @@ class Section(ExpMember):
 
     def _generate_unset_tags_in_subtree(self):
         for i, member in enumerate(self.members.values(), start=1):
-
             if member.tag is None:
                 member.tag = str(i)
 
@@ -446,7 +449,6 @@ class Section(ExpMember):
         operator ``+=`` instead in order to add pages or subsections.
         """
         for item in items:
-
             if item.name in dir(self):
                 raise ValueError(f"Name of {item} is also an attribute of {self}.")
 
@@ -468,8 +470,8 @@ class Section(ExpMember):
 
     def on_exp_access(self):
         """
-        Executed *once*, when the :class:`.ExperimentSession` becomes
-        available to the section.
+        Executed *once*, when the :class:`.ExperimentSession` becomes available to the
+        section.
 
         .. warning:: We are currently questioning the four section hooks *on_enter*,
             *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish
@@ -479,13 +481,13 @@ class Section(ExpMember):
             use page hooks instead. The attributes :attr:`.Section.first_page`
             and :attr:`.Section.last_page` may be useful for you in this regard.
 
-            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may
-            at some point decide to introduce an alternative name for it in order
-            to avoid confusion with :meth:`.Page.on_exp_access`.
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we
+            may at some point decide to introduce an alternative name for it in order to
+            avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
-            See "How to use hooks" for a how to on using hooks and an overview
-            of available hooks.
+            See "How to use hooks" for a how to on using hooks and an overview of
+            available hooks.
 
         """
         pass
@@ -502,13 +504,13 @@ class Section(ExpMember):
             use page hooks instead. The attributes :attr:`.Section.first_page`
             and :attr:`.Section.last_page` may be useful for you in this regard.
 
-            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may
-            at some point decide to introduce an alternative name for it in order
-            to avoid confusion with :meth:`.Page.on_exp_access`.
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we
+            may at some point decide to introduce an alternative name for it in order to
+            avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
-            See "How to use hooks" for a how to on using hooks and an overview
-            of available hooks.
+            See "How to use hooks" for a how to on using hooks and an overview of
+            available hooks.
         """
         pass
 
@@ -524,24 +526,24 @@ class Section(ExpMember):
             use page hooks instead. The attributes :attr:`.Section.first_page`
             and :attr:`.Section.last_page` may be useful for you in this regard.
 
-            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may
-            at some point decide to introduce an alternative name for it in order
-            to avoid confusion with :meth:`.Page.on_exp_access`.
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we
+            may at some point decide to introduce an alternative name for it in order to
+            avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
-            See "How to use hooks" for a how to on using hooks and an overview
-            of available hooks.
+            See "How to use hooks" for a how to on using hooks and an overview of
+            available hooks.
         """
         pass
 
     def on_resume(self):
         """
-        Executed *every time* the experiment resumes from a direct subsection to this section.
+        Executed *every time* the experiment resumes from a direct subsection to this
+        section.
 
-        Resuming takes place, when a child section is left and the
-        next page is a direct child of the parent section. Then this
-        the parent section becomes the primary current section again: it
-        resumes its status.
+        Resuming takes place, when a child section is left and the next page is a direct
+        child of the parent section. Then this the parent section becomes the primary
+        current section again: it resumes its status.
 
         .. warning:: We are currently questioning the four section hooks *on_enter*,
             *on_hand_over*, *on_resume*, and *on_leave*. Everything that you may wish
@@ -551,13 +553,13 @@ class Section(ExpMember):
             use page hooks instead. The attributes :attr:`.Section.first_page`
             and :attr:`.Section.last_page` may be useful for you in this regard.
 
-            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may
-            at some point decide to introduce an alternative name for it in order
-            to avoid confusion with :meth:`.Page.on_exp_access`.
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we
+            may at some point decide to introduce an alternative name for it in order to
+            avoid confusion with :meth:`.Page.on_exp_access`.
 
         See Also:
-            See "How to use hooks" for a how to on using hooks and an overview
-            of available hooks.
+            See "How to use hooks" for a how to on using hooks and an overview of
+            available hooks.
         """
         pass
 
@@ -573,7 +575,8 @@ class Section(ExpMember):
             use page hooks instead. The attributes :attr:`.Section.first_page`
             and :attr:`.Section.last_page` may be useful for you in this regard.
 
-            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we may
+            The :meth:`.Section.on_exp_access` hook is not going anywhere, although we
+            may
             at some point decide to introduce an alternative name for it in order
             to avoid confusion with :meth:`.Page.on_exp_access`.
 
@@ -666,7 +669,6 @@ class Section(ExpMember):
             raise AbortMove
 
     def _validate(self, direction: str):
-
         if direction == "forward":
             self.validate_on_forward()
         elif direction == "backward":
@@ -690,7 +692,6 @@ class Section(ExpMember):
             ValidationError: If validation fails.
         """
         for page in self.pages.values():
-
             if not page._validate():
                 raise ValidationError()
 
@@ -830,6 +831,7 @@ class RevisitSection(Section):
         style::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
             exp += al.RevisitSection(name="main")
@@ -839,10 +841,14 @@ class RevisitSection(Section):
         Using a basic section and filling it with a page in class style::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
+
             @exp.member
-            class Main(al.RevisitSection): pass
+            class Main(al.RevisitSection):
+                pass
+
 
             @exp.member(of_section="Main")
             class DemoPage(al.Page):
@@ -888,6 +894,7 @@ class HideOnForwardSection(Section):
         You can test the section's behavior with this example::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
             main = al.Section(name="main")
@@ -932,6 +939,7 @@ class ForwardOnlySection(RevisitSection):
         style::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
             exp += al.ForwardOnlySection(name="main")
@@ -941,10 +949,14 @@ class ForwardOnlySection(RevisitSection):
         Using a basic section and filling it with a page in class style::
 
             import alfred3 as al
+
             exp = al.Experiment()
 
+
             @exp.member
-            class Main(al.ForwardOnlySection): pass
+            class Main(al.ForwardOnlySection):
+                pass
+
 
             @exp.member(of_section="Main")
             class DemoPage(al.Page):

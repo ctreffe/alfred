@@ -84,7 +84,6 @@ The current version is::
 
 """
 
-
 from itertools import chain
 from pathlib import Path
 

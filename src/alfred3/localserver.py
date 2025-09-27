@@ -18,7 +18,8 @@ from flask import (
 from . import alfredlog
 
 # def process_multiple_choice_lists(data: dict) -> dict:
-#     multiple_choice_lists = [name.replace("__multiple_", "")  for name in data if name.startswith("__multiple_")]
+#     multiple_choice_lists = [name.replace("__multiple_", "")
+# for name in data if name.startswith("__multiple_")]
 #     for name in multiple_choice_lists:
 #         data[name] = request.form.getlist(name)
 #         del data[f"__multiple_{name}"]
@@ -39,7 +40,6 @@ script = Script()
 
 @app.route("/start", methods=["GET", "POST"])
 def start():
-
     # this prevents an error in case of repeated calls to /start
     if script.exp_session is not None:
         script.log.warning(
@@ -104,7 +104,6 @@ def start():
 def experiment():
     try:
         if request.method == "POST":
-
             move = request.values.get("move", None)
             page_token = request.values.get("page_token", None)
 
