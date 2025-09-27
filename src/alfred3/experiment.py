@@ -1671,7 +1671,7 @@ class ExperimentSession:
 
             A string key can be generated with a few lines of python code:
 
-            >>> from cryptography.fernert import Fernet
+            >>> from cryptography.fernet import Fernet
             >>> key = Fernet.generate_key()
             >>> print(key.decode())
             biNJTMLgFYc5fKAd-DNi1ioh44BTnfAQGbozpDcXZ-M=
@@ -1691,7 +1691,8 @@ class ExperimentSession:
             return None
 
         if type(data) not in [str, int, float]:
-            raise TypeError("Input must be of type str, int, or float.")
+            raise TypeError(f"EncryptionError: Input must be of type str, "
+                            f"int, or float. Type received: {type(data)}")
 
         d_str = str(data)
         d_bytes = d_str.encode()
@@ -1717,7 +1718,8 @@ class ExperimentSession:
         elif type(data) is bytes:
             d_bytes = data
         else:
-            raise TypeError("Input must be of type str or bytes.")
+            raise TypeError(f"Input must be of type str or bytes."
+                            f"Type received: {type(data)}")
 
         d = self._encryptor.decrypt(d_bytes)
         return d.decode()
