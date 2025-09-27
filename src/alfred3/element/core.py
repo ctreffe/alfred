@@ -2116,11 +2116,17 @@ class ChoiceElement(InputElement, ABC):
     #: choice labels off, if necessary. Defaults to *True*.
     emojize: bool = True
 
+    #: Switch for turning markdown rendering in the
+    #: choice labels off, if necessary. Defaults to *True*.
+    render_markdown: bool = True
+
     def __init__(
         self,
         *choice_labels: Union[str, Element],
         vertical: bool = False,
         align: str = "center",
+        emojize: bool = True,
+        render_markdown: bool = True,
         **kwargs,
     ):
         super().__init__(align=align, **kwargs)
@@ -2130,6 +2136,10 @@ class ChoiceElement(InputElement, ABC):
 
         #: List of choices that belong to this element.
         self.choices: List[_Choice] = None
+
+        self.emojize = emojize
+
+        self.render_markdown = render_markdown
 
     @property
     def vertical(self):
