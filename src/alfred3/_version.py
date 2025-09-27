@@ -4,4 +4,4 @@
 # 3) we can import it into your module module
 
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
