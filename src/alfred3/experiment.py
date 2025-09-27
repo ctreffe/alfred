@@ -1790,8 +1790,10 @@ class ExperimentSession:
             return None
 
         if type(data) not in [str, int, float]:
-            raise TypeError(f"EncryptionError: Input must be of type str, "
-                            f"int, or float. Type received: {type(data)}")
+            raise TypeError(
+                f"EncryptionError: Input must be of type str, "
+                f"int, or float. Type received: {type(data)}"
+            )
 
         d_str = str(data)
         d_bytes = d_str.encode()
@@ -1817,8 +1819,9 @@ class ExperimentSession:
         elif type(data) is bytes:
             d_bytes = data
         else:
-            raise TypeError(f"Input must be of type str or bytes."
-                            f"Type received: {type(data)}")
+            raise TypeError(
+                f"Input must be of type str or bytes.Type received: {type(data)}"
+            )
 
         d = self._encryptor.decrypt(d_bytes)
         return d.decode()
