@@ -1141,17 +1141,19 @@ class BlankPage(Page):
         A minimal experiment with a single BlankPage::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.BlankPage):
                 def on_exp_access(self):
-
                     self += al.SubmittingButtons(
-                        "Yes", "No",
+                        "Yes",
+                        "No",
                         toplab="Do you agree to this statement?",
-                        name="submit1"
-                        )
+                        name="submit1",
+                    )
     """
 
     def added_to_experiment(self, experiment):

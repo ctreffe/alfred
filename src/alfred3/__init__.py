@@ -59,6 +59,7 @@ from .element.misc import WebExitEnabler as WebExitEnabler
 from .experiment import Experiment as Experiment
 from .page import AutoClosePage as AutoClosePage
 from .page import AutoForwardPage as AutoForwardPage
+from .page import BlankPage as BlankPage
 from .page import NoDataPage as NoDataPage
 from .page import NoNavigationPage as NoNavigationPage
 from .page import NoSavingPage as NoSavingPage
