@@ -4,7 +4,6 @@ Provides configuration handling for alfred3 experiments.
 .. moduleauthor:: Johannes Brachem <jbrachem@posteo.de>
 """
 
-
 import importlib
 import os
 import platform
@@ -54,7 +53,7 @@ class ExperimentConfig(ConfigParser):
         expdir: str = None,
         config_objects: list = None,
         inline_comment_prefixes: str = "#",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(inline_comment_prefixes=inline_comment_prefixes, **kwargs)
 
@@ -111,11 +110,7 @@ class ExperimentConfig(ConfigParser):
         Each section name is a first level key in the the dict, and the
         key values of the section becomes the dict in the second level::
 
-            {
-                'section_name': {
-                    'key': 'value'
-                }
-            }
+            {"section_name": {"key": "value"}}
 
         Returns:
             dict: A dictionary representation of the parser instance.

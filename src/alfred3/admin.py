@@ -2,7 +2,6 @@
 Functionality associated with alfred3's admin mode.
 """
 
-import typing as t
 from abc import ABC, abstractproperty
 from enum import Enum
 from functools import total_ordering
@@ -43,8 +42,8 @@ class AdminAccess(Enum):
         # secrets.conf
         [general]
         adminpass_lvl1 = demo
-        adminpass_lvl2 = use-better-passwords
-        adminpass_lvl3 = to-protect-access
+        adminpass_lvl2 = use - better - passwords
+        adminpass_lvl3 = to - protect - access
 
     You can specficy multiple passwords for the same level to enable
     a token-like authentication management. To specifiy multiple passwords,
@@ -52,9 +51,9 @@ class AdminAccess(Enum):
 
         # secrets.conf
         [general]
-        adminpass_lvl1 = demo|demopass-2
-        adminpass_lvl2 = use-better-passwords
-        adminpass_lvl3 = to-protect-access
+        adminpass_lvl1 = demo | demopass - 2
+        adminpass_lvl2 = use - better - passwords
+        adminpass_lvl3 = to - protect - access
 
 
     .. note:: Because of its special meaning for the separation of multiple
@@ -74,7 +73,6 @@ class AdminAccess(Enum):
 
 @inherit_kwargs
 class AdminPage(Page, ABC):
-
     """
     Base class for all pages to use in the admin mode.
 
@@ -101,6 +99,7 @@ class AdminPage(Page, ABC):
         In this example, we define a new admin page with access level 1::
             import alfred3 as al
             from alfred3.page import AdminPage, AdminAccess
+
 
             class MyAdminPage(AdminPage):
                 access_level = AdminAccess.LEVEL1
@@ -177,6 +176,7 @@ class SpectatorPage(AdminPage):
 
             exp = al.Experiment()
 
+
             @exp.member(admin=True)
             class MyAdminPage(admin.SpectatorPage):
                 def on_exp_access(self):
@@ -218,6 +218,7 @@ class OperatorPage(AdminPage):
             from alfred3 import admin
 
             exp = al.Experiment()
+
 
             @exp.member(admin=True)
             class MyAdminPage(admin.OperatorPage):
@@ -261,6 +262,7 @@ class ManagerPage(AdminPage):
 
             exp = al.Experiment()
 
+
             @exp.member(admin=True)
             class MyAdminPage(admin.ManagerPage):
                 def on_exp_access(self):
@@ -285,14 +287,12 @@ class _AuthPage(PasswordPage):
         # currently do not allow adding pages directly behind the current
         # one on moving forward
         if not self._validate_elements():
-
             # prevent double match hint
             [m for m in self.pw.hint_manager.get_messages()]
             return True
 
         admin_content = Section(name="admin_content")
         for member in self.admin_members.values():
-
             # exp.content is the admin section in admin mode
             if member.access_level <= self.exp.content.access_level:
                 admin_content += member
@@ -317,7 +317,7 @@ class _AdminSection(Section):
         self += auth_section
         super().added_to_experiment(exp)
 
-    def process_passwords(self, exp) -> t.Dict[str, list]:
+    def process_passwords(self, exp) -> dict[str, list]:
         pw1 = exp.secrets.get("general", "adminpass_lvl1")
         pw2 = exp.secrets.get("general", "adminpass_lvl2")
         pw3 = exp.secrets.get("general", "adminpass_lvl3")
@@ -331,7 +331,7 @@ class _AdminSection(Section):
         return pws
 
     @property
-    def password_list(self) -> t.List[str]:
+    def password_list(self) -> list[str]:
         pws = self.passwords
         return pws["lvl1"] + pws["lvl2"] + pws["lvl3"]
 
@@ -418,17 +418,32 @@ DELETE_UNLINKED_HTML = """
 
 
         <div class="form-group">
-            <label for="{{ name }}-confirm">Enter experiment title: <b>{{ exptitle }}</b></label>
-            <input type="text" class="form-control" id="{{ name }}-confirm" name="{{ name }}-confirm" aria-describedby="deleteConfirmation">
-            <small id="deleteConfirmation" class="form-text text-muted">This is a safety measure to ensure that you do not delete data accidentally.</small>
+            <label for="{{ name }}-confirm">
+            Enter experiment title: <b>{{ exptitle }}</b>
+            </label>
+            <input
+                type="text"
+                class="form-control"
+                id="{{ name }}-confirm"
+                name="{{ name }}-confirm"
+                aria-describedby="deleteConfirmation"
+            >
+
+            <small id="deleteConfirmation" class="form-text text-muted">
+            This is a safety measure to ensure that you do not delete data accidentally.
+            </small>
         </div>
 
         <span id="{{ name }}-spinner" class="mr-1"></span>
         <span id="{{ name }}-feedback"></span>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-danger" id="{{ name }}-delete"><i class="fas fa-trash-alt mr-2"></i>DELETE</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+        Close
+        </button>
+        <button type="button" class="btn btn-danger" id="{{ name }}-delete">
+        <i class="fas fa-trash-alt mr-2"></i>DELETE
+        </button>
 
       </div>
     </div>
@@ -443,7 +458,10 @@ $(document).ready(function() {
         console.log(value)
 
         if (value == "{{ exptitle }}") {
-            $( "#{{ name }}-spinner" ).html("<div class='spinner-border' role='status'><span class='sr-only'>Loading...</span></div>")
+            $( "#{{ name }}-spinner" ).html(
+                "<div class='spinner-border' role='status'>"
+                + "<span class='sr-only'>Loading...</span></div>"
+            )
             $.get("{{ url }}", function(data){
 
             setTimeout(function() {
@@ -484,7 +502,6 @@ class DeleteUnlinkedButton(Element):
         self.url = self.exp.ui.add_callable(self.delete)
 
     def prepare_web_widget(self):
-
         self._js_code = []
         d = {}
         d["url"] = self.url
@@ -518,13 +535,14 @@ class DeleteUnlinkedPage(ManagerPage):
 
             exp = al.Experiment()
 
+
             @exp.member(admin=True)
-            class DeleteUnlinkedDemo(DeleteUnlinkedPage): pass
+            class DeleteUnlinkedDemo(DeleteUnlinkedPage):
+                pass
 
 
             @exp.member
             class TestUnlink(al.UnlinkedDataPage):
-
                 def on_exp_access(self):
                     self += al.TextEntry(name="test")
     """

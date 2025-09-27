@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from thesmuggler import smuggle
 
 from alfred3.config import ExperimentConfig, ExperimentSecrets
+from alfred3.experiment import ExperimentSession
 from alfred3.run import ExperimentRunner
 
 
@@ -133,7 +134,7 @@ def get_exp_session(
     sid: str = None,
     timeout: int = None,
     **urlargs,
-):
+) -> ExperimentSession:
     """
     Returns an alfred3.experiment.ExperimentSession object based on the
     given script.py.

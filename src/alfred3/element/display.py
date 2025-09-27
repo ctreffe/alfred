@@ -8,7 +8,6 @@ import io
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Union
 from uuid import uuid4
 
 import cmarkgfm
@@ -33,7 +32,9 @@ class VerticalSpace(Element):
         Example of vertical space added between two text elements::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -53,7 +54,6 @@ class VerticalSpace(Element):
 
     @property
     def web_widget(self):
-
         # documented at baseclass
         return (
             "<div class='vertical-space-element' style='margin-bottom:"
@@ -86,7 +86,9 @@ class Html(Element):
         Adding a simple div to the experiment::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -102,10 +104,9 @@ class Html(Element):
     def __init__(
         self,
         html: str = None,
-        path: Union[Path, str] = None,
+        path: Path | str = None,
         **element_args,
     ):
-
         """Constructor method."""
         super().__init__(**element_args)
 
@@ -129,7 +130,6 @@ class Html(Element):
 
     @property
     def template_data(self) -> dict:
-
         d = super().template_data
         d["text"] = self.html_code
 
@@ -162,7 +162,9 @@ class Text(Element):
         to a page::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class HelloWorld(al.Page):
@@ -181,12 +183,11 @@ class Text(Element):
     def __init__(
         self,
         text: str = None,
-        path: Union[Path, str] = None,
+        path: Path | str = None,
         emojize: bool = True,
         render_markdown: bool = True,
         **kwargs,
     ):
-
         """Constructor method."""
         super().__init__(**kwargs)
 
@@ -235,7 +236,6 @@ class Text(Element):
 
     @property
     def template_data(self) -> dict:
-
         d = super().template_data
         d["text"] = self.render_text()
 
@@ -260,7 +260,9 @@ class Image(LabelledElement):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -276,7 +278,7 @@ class Image(LabelledElement):
     # Documented at :class:`.Element`
     element_template = jinja_env.get_template("html/ImageElement.html.j2")
 
-    def __init__(self, path: Union[str, Path] = None, url: str = None, **kwargs):
+    def __init__(self, path: str | Path = None, url: str = None, **kwargs):
         super().__init__(**kwargs)
 
         self.path = path
@@ -309,7 +311,6 @@ class Image(LabelledElement):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["src"] = self.src
         return d
@@ -339,7 +340,9 @@ class Audio(Image):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -357,7 +360,7 @@ class Audio(Image):
 
     def __init__(
         self,
-        path: Union[str, Path] = None,
+        path: str | Path = None,
         url: str = None,
         controls: bool = True,
         autoplay: bool = False,
@@ -372,7 +375,6 @@ class Audio(Image):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["controls"] = self.controls
         d["autoplay"] = self.autoplay
@@ -406,7 +408,9 @@ class Video(Audio):
         Minimal example::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -424,7 +428,7 @@ class Video(Audio):
 
     def __init__(
         self,
-        path: Union[str, Path] = None,
+        path: str | Path = None,
         url: str = None,
         allow_fullscreen: bool = True,
         video_height: str = "auto",
@@ -438,7 +442,6 @@ class Video(Audio):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["video_height"] = self.video_height
         d["video_width"] = self.video_width
@@ -466,14 +469,15 @@ class MatPlot(Element):
 
             from matplotlib.figure import Figure
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
                 name = "demo1"
 
                 def on_exp_access(self):
-
                     # build an example plot
                     fig = Figure()
                     ax = fig.add_subplot()
@@ -493,7 +497,6 @@ class MatPlot(Element):
         self.src = None
 
     def prepare_web_widget(self):
-
         out = io.BytesIO()
         self.fig.savefig(out, format="svg")
         out.seek(0)
@@ -501,7 +504,6 @@ class MatPlot(Element):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["src"] = self.src
         return d
@@ -515,7 +517,9 @@ class Hline(Element):
         Two text elements, separated by a horizontal line::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -561,7 +565,9 @@ class CodeBlock(Text):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -575,19 +581,17 @@ class CodeBlock(Text):
     def __init__(
         self,
         text: str = None,
-        path: Union[Path, str] = None,
+        path: Path | str = None,
         lang: str = "auto",
         width: str = "full",
         **element_args,
     ):
-
         """Constructor method."""
         super().__init__(text=text, path=path, width=width, **element_args)
         self.lang = lang if lang is not None else ""
 
     @property
     def text(self):
-
         if self.path:
             text = self.experiment.subpath(self.path).read_text(encoding="utf-8")
 
@@ -708,18 +712,25 @@ class ProgressBar(LabelledElement):
         Overriding the default experiment-wide progress bar::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.setup
             def setup(exp_session):
-                exp_session.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
+                exp_session.progress_bar = al.ProgressBar(
+                    show_text=True, bar_height="15px"
+                )
+
 
             exp += al.Page(name="example_page")
 
         Adding a progress bar as an element to a page::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Example(al.Page):
@@ -733,12 +744,15 @@ class ProgressBar(LabelledElement):
         progress bar *always* receives the name "*progress_bar_*"::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.setup
             def setup(exp):
                 exp.progress_bar = al.ProgressBar(show_text=True, bar_height="15px")
                 exp.progress_bar.add_css("#progress_bar_ {{font-size: 12pt;}}")
+
 
             exp += al.Page(name="example_page")
 
@@ -748,7 +762,7 @@ class ProgressBar(LabelledElement):
 
     def __init__(
         self,
-        progress: Union[str, float, int] = "auto",
+        progress: str | float | int = "auto",
         bar_height: str = "6px",
         show_text: bool = False,
         striped: bool = True,
@@ -782,7 +796,6 @@ class ProgressBar(LabelledElement):
         )
 
     def added_to_experiment(self, exp):
-
         super().added_to_experiment(exp)
 
         css = (
@@ -805,8 +818,7 @@ class ProgressBar(LabelledElement):
                 raise e
 
     @property
-    def progress(self) -> Union[int, float]:
-
+    def progress(self) -> int | float:
         if self._progress or self._progress == 0:  # manually defined via element
             return self._progress
 
@@ -819,7 +831,6 @@ class ProgressBar(LabelledElement):
                 exact_progress = int(exact_progress / 5) * 5
 
             if not self.experiment.finished and not self.experiment.aborted:
-
                 hi_bounded = min(round(exact_progress, 1), 95)
                 lo_bounded = max(hi_bounded, 1)
                 return lo_bounded
@@ -827,7 +838,7 @@ class ProgressBar(LabelledElement):
                 return 100
 
     @progress.setter
-    def progress(self, value: Union[int, float]):
+    def progress(self, value: int | float):
         try:
             assert isinstance(value, (int, float))
             assert 0 <= value and value <= 100
@@ -895,7 +906,6 @@ class ProgressBar(LabelledElement):
 
     @property
     def template_data(self):
-
         d = super().template_data
         d["progress"] = self.progress
         d["show_text"] = self._show_text
@@ -926,7 +936,9 @@ class Alert(Text):
         A simple alert::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -976,14 +988,15 @@ class ButtonLabels(SingleChoiceButtons):
         Using button labels to label single choice buttons::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
                 name = "demo"
 
                 def on_exp_access(self):
-
                     self += al.ButtonLabels("label1", "label2")
                     self += al.SingleChoiceButtons("choice1", "choice2", name="b1")
 
@@ -995,7 +1008,6 @@ class ButtonLabels(SingleChoiceButtons):
 
     @property
     def data(self):
-
         return {}
 
 
@@ -1018,14 +1030,15 @@ class BarLabels(ButtonLabels):
         Using button labels to label single choice buttons::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
                 name = "demo"
 
                 def on_exp_access(self):
-
                     self += al.BarLabels("label1", "label2")
                     self += al.SingleChoiceBar("choice1", "choice2", name="b1")
 
@@ -1063,7 +1076,9 @@ class CountUp(Element):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1126,7 +1141,9 @@ class CountDown(CountUp):
         Countdown running 30 seconds::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1136,7 +1153,9 @@ class CountDown(CountUp):
         Countdown running until a certain datetime is reached::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1149,8 +1168,8 @@ class CountDown(CountUp):
                         minute=30,
                         second=12,
                         font_size="big",
-                        align="center"
-                        )
+                        align="center",
+                    )
     """
 
     counter_js = jinja_env.get_template("js/countdown.js.j2")
@@ -1169,7 +1188,7 @@ class CountDown(CountUp):
         self.reset = reset
 
     @classmethod
-    def tilltime(cls, t: Union[int, float], **kwargs):
+    def tilltime(cls, t: int | float, **kwargs):
         """
         Alternative constructor for a countdown targeted at a specific
         unix timestamp.
@@ -1183,16 +1202,16 @@ class CountDown(CountUp):
             Countdown running until July 18th 2036, 13:20:00 is reached::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class Demo(al.Page):
                     def on_exp_access(self):
                         self += al.CounDown.tilltime(
-                            t=2_100_000_000,
-                            font_size="big",
-                            align="center"
-                            )
+                            t=2_100_000_000, font_size="big", align="center"
+                        )
 
         """
         if "end_after" in kwargs:
@@ -1234,7 +1253,9 @@ class CountDown(CountUp):
             Countdown running until a certain datetime is reached::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class Demo(al.Page):
@@ -1247,8 +1268,8 @@ class CountDown(CountUp):
                             minute=30,
                             second=12,
                             font_size="big",
-                            align="center"
-                            )
+                            align="center",
+                        )
         """
         if "end_after" in kwargs:
             raise TypeError(
@@ -1319,7 +1340,9 @@ class Card(Element):
         Basic usage::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1328,7 +1351,9 @@ class Card(Element):
                         header="Card Header",
                         title="Card title",
                         subtitle="Card subtitle",
-                        body=al.Text("**This text** is placed in the body.", align="center"),
+                        body=al.Text(
+                            "**This text** is placed in the body.", align="center"
+                        ),
                     )
 
     """
@@ -1337,11 +1362,11 @@ class Card(Element):
 
     def __init__(
         self,
-        header: Union[str, Element] = "",
-        title: Union[str, Element] = "",
-        subtitle: Union[str, Element] = "",
-        body: Union[str, Element] = "",
-        footer: Union[str, Element] = "",
+        header: str | Element = "",
+        title: str | Element = "",
+        subtitle: str | Element = "",
+        body: str | Element = "",
+        footer: str | Element = "",
         emojize: bool = True,
         render_markdown: bool = True,
         collapse: bool = False,
@@ -1407,7 +1432,7 @@ class Card(Element):
             return self._body
 
     @body.setter
-    def body(self, value: Union[str, Element]):
+    def body(self, value: str | Element):
         self._body = value
 
     def render_text(self, text: str) -> str:
@@ -1438,7 +1463,7 @@ class Card(Element):
             return self._title
 
     @title.setter
-    def title(self, value: Union[str, Element]):
+    def title(self, value: str | Element):
         self._title = value
 
     @property
@@ -1453,7 +1478,7 @@ class Card(Element):
             return self._subtitle
 
     @subtitle.setter
-    def subtitle(self, value: Union[str, Element]):
+    def subtitle(self, value: str | Element):
         self._subtitle = value
 
     @property
@@ -1468,7 +1493,7 @@ class Card(Element):
             return self._header
 
     @header.setter
-    def header(self, value: Union[str, Element]):
+    def header(self, value: str | Element):
         self._header = value
 
     @property
@@ -1483,5 +1508,5 @@ class Card(Element):
             return self._footer
 
     @footer.setter
-    def footer(self, value: Union[str, Element]):
+    def footer(self, value: str | Element):
         self._footer = value

@@ -1,0 +1,108 @@
+[project]
+name = "alfred3"
+dynamic = ["version"]
+description = "A library for rapid development of dynamic and interactive online experiments in the social sciences."
+readme = { file = "README.md", content-type = "text/markdown" }
+authors = [
+    { name = "Christian Treffenstädt" },
+    { name = "Johannes Brachem" },
+    { name = "Paul Wiemann" },
+]
+license = "MIT"
+license-files = ["LICENSE.md"]
+keywords = ["social science", "web experiment"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Science/Research",
+]
+
+
+requires-python = ">=3.13"
+dependencies = [
+    "pymongo>=3.10",
+    "cryptography>=3.4",
+    "jinja2>=2.11",
+    "Flask>=1.1",
+    "thesmuggler>=1.0",
+    "Click>=7.1",
+    "emoji>=1.2,<=1.6.3",
+    "cmarkgfm>=0.5",
+    "requests>=2.25",
+    "bleach>=3.3",
+    "pyyaml>=6.0",
+    "mongomock<4.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/ctreffe/alfred"
+Documentation = "https://alfredo3.psych.bio.uni-goettingen.de/docs/index.html"
+Repository = "https://github.com/ctreffe/alfred"
+
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pre-commit",
+    "black",
+    "flake8",
+    "python-dotenv",
+    "bs4",
+    "selenium",
+    "sphinx==4.5.0",
+    "sphinx-book-theme==0.3.2",
+    "sphinx-remove-toctrees==0.0.3",
+    "sphinx-copybutton==0.5.0",
+    "recommonmark",
+    "setuptools>=80.9.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+
+[tool.ruff.lint]
+extend-select = [
+    "F",  # pyflakes (flake8 core)
+    "E",  # pycodestyle errors (flake8)
+    "W",  # pycodestyle warnings (flake8)
+    "I",  # isort (import sorting)
+    "UP", # pyupgrade (modern syntax)
+]
+
+extend-ignore = []
+
+
+# Package layout under src/
+[tool.hatch.build.targets.wheel]
+packages = ["src/alfred3"]
+
+# Include non-Python files that were previously in package_data
+[tool.hatch.build]
+include = [
+  "src/alfred3/files/**",
+  "src/alfred3/static/css/**",
+  "src/alfred3/static/img/**",
+  "src/alfred3/static/js/**",
+  "src/alfred3/templates/**",
+  "src/alfred3/element/templates/**",
+  "src/alfred3/element/templates/html/**",
+  "src/alfred3/element/templates/js/**",
+]
+
+[tool.hatch.version]
+path = "src/alfred3/_version.py"
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[project.scripts]
+alfred3 = "alfred3.cli:cli"

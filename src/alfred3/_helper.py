@@ -10,13 +10,12 @@ import inspect
 import os
 import re
 import socket
-from typing import Union
 from urllib.parse import urlparse
 
 from cryptography.fernet import Fernet
 
 
-def fontsize_converter(font_argument: Union[int, str]) -> str:
+def fontsize_converter(font_argument: int | str) -> str:
     """
     FontsizeConverter checks any font arguments used in alfred and
     returns a fontsize variable compatible with any element or page in
@@ -50,8 +49,8 @@ def fontsize_converter(font_argument: Union[int, str]) -> str:
 
 def alignment_converter(alignment_argument, type="text"):
     """
-    AlignmentConverter checks any font arguments used in alfred and returns an alignment variable compatible
-    for different element types in alfred.
+    AlignmentConverter checks any font arguments used in alfred and returns an alignment
+    variable compatible for different element types in alfred.
 
     """
 
@@ -99,11 +98,9 @@ def alignment_converter(alignment_argument, type="text"):
 
 
 class Decrypter:
-
     _decrypter = None
 
     def decrypt_login(self, username=None, password=None, from_env=False):
-
         if not self._decrypter:
             # Fernet instance for decryption of login data
             if os.path.isfile("alfred_secrect.key"):
@@ -165,12 +162,10 @@ def is_url(url=None):
 
 
 def check_name(name: str):
-
     if name in ["exp", "experiment"]:
         raise ValueError(f"{name} cannot be chosen as a name.")
 
     if not re.match(pattern=r"^[a-zA-z](\d|_|[a-zA-Z])*$", string=name):
-
         raise ValueError(
             "Name must start with a letter and can include only "
             "letters (a-z, A-Z), digits (0-9), and underscores ('_')."
@@ -204,7 +199,7 @@ def add_indent(inp: str, spaces: int = 8) -> str:
         spaces: Number of spaces to indent each line by
     """
     splitted = inp.split("\n")
-    indented = f"\n{' '*spaces}".join(splitted)
+    indented = f"\n{' ' * spaces}".join(splitted)
     return " " * spaces + indented
 
 
@@ -377,6 +372,7 @@ def inherit_kwargs(
 
             from alfred3._helper import inherit_kwargs
 
+
             class Parent:
                 '''
                 Parent docstring.
@@ -410,7 +406,6 @@ def inherit_kwargs(
     def build_kwargs(klass):
         @functools.wraps(klass)
         def wrapper():
-
             # collect arguments from parent classes
             inherited_docs = {}
             parents = from_ if from_ is not None else klass.__bases__
@@ -433,7 +428,7 @@ def inherit_kwargs(
                     if m:
                         del inherited_docs[arg]
                 if include is not None:
-                    if not re.sub(r"(\s?\(.+\))?", "", arg) in include:
+                    if re.sub(r"(\s?\(.+\))?", "", arg) not in include:
                         del inherited_docs[arg]
 
             if sort_kwargs:

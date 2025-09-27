@@ -74,19 +74,16 @@ class TestConditionValidation:
         assert rd.get_condition()
 
     def test_change_of_n(self, strict_exp):
-
         rd = cond.ListRandomizer(("a", 10), ("b", 9), exp=strict_exp)
         with pytest.raises(ConditionInconsistency):
             rd.get_condition()
 
     def test_change_of_name(self, strict_exp):
-
         rd = cond.ListRandomizer(("a", 10), ("c", 10), exp=strict_exp)
         with pytest.raises(ConditionInconsistency):
             rd.get_condition()
 
     def test_add_condition(self, strict_exp):
-
         rd = cond.ListRandomizer(("a", 10), ("b", 10), ("c", 10), exp=strict_exp)
         with pytest.raises(ConditionInconsistency):
             rd.get_condition()
