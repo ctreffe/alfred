@@ -944,7 +944,7 @@ class SingleChoice(ChoiceElement):
                         str(label), options=cmarkgfmOptions.CMARK_OPT_UNSAFE
                     )
                 choice.label = str(label)
-            
+
             choice.type = "radio"
             choice.value = i
             choice.name = self.name
