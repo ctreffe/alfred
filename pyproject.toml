@@ -77,23 +77,9 @@ extend-select = [
 
 extend-ignore = []
 
-
 # Package layout under src/
 [tool.hatch.build.targets.wheel]
 packages = ["src/alfred3"]
-
-# Include non-Python files that were previously in package_data
-[tool.hatch.build]
-include = [
-  "src/alfred3/files/**",
-  "src/alfred3/static/css/**",
-  "src/alfred3/static/img/**",
-  "src/alfred3/static/js/**",
-  "src/alfred3/templates/**",
-  "src/alfred3/element/templates/**",
-  "src/alfred3/element/templates/html/**",
-  "src/alfred3/element/templates/js/**",
-]
 
 [tool.hatch.version]
 path = "src/alfred3/_version.py"
