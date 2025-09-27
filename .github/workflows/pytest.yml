@@ -1,35 +1,33 @@
-name: pytest
+name: pytest-pull
 
 on:
-  push:
-    branches: [master, develop]
   pull_request:
-    branches: [master, develop]
+    branches: [master]
+  push:
+    branches: [develop]
 
 jobs:
-  pytest:
-    runs-on: ${{ matrix.os }}
+  pytest-pull:
+    runs-on: ubuntu-latest
     timeout-minutes: 15
 
     strategy:
-      fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          # - macOS-latest
+        python-version: ["3.13"]
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.7"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install alfred
-        run: |
-          pip install .[dev]
-          pip list
+      - name: Install Package
+        run: uv sync --locked --group dev
+
       - name: Run pytest
-        run: pytest
+        run: uv run pytest
