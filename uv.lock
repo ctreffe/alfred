@@ -55,7 +55,7 @@ requires-dist = [
     { name = "emoji", specifier = ">=1.2,<=1.6.3" },
     { name = "flask", specifier = ">=1.1" },
     { name = "jinja2", specifier = ">=2.11" },
-    { name = "mongomock", specifier = "<4.2" },
+    { name = "mongomock" },
     { name = "pymongo", specifier = ">=3.10" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.25" },
