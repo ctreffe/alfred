@@ -1,14 +1,15 @@
 """
 Pages hold and organize elements.
 
-.. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
+.. moduleauthor::
+    Paul Wiemann <paulwiemann@gmail.com>, Johannes Brachem <jbrachem@posteo.de>
 """
+
 import string
 import time
-import typing as t
 from abc import ABC, abstractproperty
+from collections.abc import Iterator
 from functools import reduce
-from typing import Iterator, Union
 
 from . import element as elm
 from . import saving_agent
@@ -62,7 +63,7 @@ class _PageCore(ExpMember):
         prefix_element_names: bool = None,
         minimum_display_time: str = None,
         minimum_display_time_msg: str = None,
-        progress: Union[int, float] = None,
+        progress: int | float = None,
         **kwargs,
     ):
         self._minimum_display_time = "0s"
@@ -651,12 +652,14 @@ class _CoreCompositePage(_PageCore):
 
                 exp = al.Experiment()
 
+
                 @exp.member
                 class CustomMove(al.Page):
                     name = "custom_move"
 
                     def custom_move(self):
                         self.exp.jump(to="third")
+
 
                 exp += al.Page(name="second")
                 exp += al.Page(name="third")
@@ -743,11 +746,12 @@ class _CoreCompositePage(_PageCore):
             ::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.member
                 class Demo(al.Page):
-
                     def on_exp_access(self):
                         self += al.NumberEntry(name="e1", force_input=True)
                         self += al.NumberEntry(name="e2", force_input=True)
@@ -759,8 +763,8 @@ class _CoreCompositePage(_PageCore):
                         if not (e1 + e2) > 10:
                             self.exp.post_message(
                                 msg="The sum of your input values must be >10",
-                                level="danger"
-                                )
+                                level="danger",
+                            )
                             return False
 
                         return True
@@ -770,7 +774,6 @@ class _CoreCompositePage(_PageCore):
         return True
 
     def _validate(self):
-
         if not self.has_been_shown:
             if self.must_be_shown:
                 msg = self.exp.config.get("hints", "page_must_be_shown")
@@ -792,7 +795,6 @@ class _CoreCompositePage(_PageCore):
         return True
 
     def _validate_elements(self):
-
         return all([el.validate_data() for el in self.input_elements.values()])
 
 
@@ -861,7 +863,9 @@ class Page(_CoreCompositePage):
         class style::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.Page):
@@ -877,7 +881,9 @@ class Page(_CoreCompositePage):
         and extra large screens::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.Page):
@@ -1032,7 +1038,6 @@ class Page(_CoreCompositePage):
 
     def _set_width(self):
         if self.experiment.config.getboolean("layout", "responsive"):
-
             if self.responsive_width:
                 w = self._parse_responsive_width(self.responsive_width)
                 self += Style(code=self._responsive_media_query(w))
@@ -1069,25 +1074,25 @@ class Page(_CoreCompositePage):
     @property
     def _css_code(self):
         return reduce(
-            lambda l, element: l + element.css_code, self.elements.values(), []
+            lambda lll, element: lll + element.css_code, self.elements.values(), []
         )
 
     @property
     def _css_urls(self):
         return reduce(
-            lambda l, element: l + element.css_urls, self.elements.values(), []
+            lambda lll, element: lll + element.css_urls, self.elements.values(), []
         )
 
     @property
     def _js_code(self):
         return reduce(
-            lambda l, element: l + element.js_code, self.elements.values(), []
+            lambda lll, element: lll + element.js_code, self.elements.values(), []
         )
 
     @property
     def _js_urls(self):
         return reduce(
-            lambda l, element: l + element.js_urls, self.elements.values(), []
+            lambda lll, element: lll + element.js_urls, self.elements.values(), []
         )
 
 
@@ -1108,7 +1113,9 @@ class WidePage(Page):
         element::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.WidePage):
@@ -1135,19 +1142,21 @@ class NoNavigationPage(Page):
         participants can move forward via the SubmittingButtons::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.NoNavigationPage):
                 title = "This is a demo"
 
                 def on_exp_access(self):
-
                     self += al.SubmittingButtons(
-                        "Yes", "No",
+                        "Yes",
+                        "No",
                         toplab="Do you agree to this statement?",
-                        name="submit1"
-                        )
+                        name="submit1",
+                    )
     """
 
     def added_to_experiment(self, experiment):
@@ -1196,7 +1205,9 @@ class TimeoutPage(Page):
         timeout of 5 seconds expires::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.TimeoutPage):
@@ -1214,9 +1225,7 @@ class TimeoutPage(Page):
     timeout = None
     callbackargs = None
 
-    def __init__(
-        self, timeout: Union[str, int] = None, callbackargs: dict = None, **kwargs
-    ):
+    def __init__(self, timeout: str | int = None, callbackargs: dict = None, **kwargs):
         super().__init__(**kwargs)
 
         if callbackargs is not None:
@@ -1280,7 +1289,9 @@ class AutoForwardPage(TimeoutPage):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.AutoForwardPage):
@@ -1306,7 +1317,9 @@ class AutoClosePage(TimeoutPage):
         ::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class DemoPage(al.AutoClosePage):
@@ -1344,7 +1357,9 @@ class NoDataPage(Page):
         A simple NoDataPage::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.meber
             class DemoPage1(al.NoDataPage):
@@ -1352,7 +1367,10 @@ class NoDataPage(Page):
 
                 def on_exp_access(self):
                     self += al.TextEntry(placeholder="Enter something", name="el1")
-                    self += al.Alert(text="Note: input to this element WILL NOT BE SAVED!", category="danger")
+                    self += al.Alert(
+                        text="Note: input to this element WILL NOT BE SAVED!",
+                        category="danger",
+                    )
 
     """
 
@@ -1394,7 +1412,9 @@ class NoSavingPage(Page):
         Example 1, simple usage::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.meber
             class DemoPage1(al.NoSavingPage):
@@ -1410,19 +1430,32 @@ class NoSavingPage(Page):
 
                 def on_first_show(self):
                     user_input = self.exp.values.get("el1")
-                    self += al.Text(text=f"You input on the previous page: {{user_input}}")
+                    self += al.Text(
+                        text=f"You input on the previous page: {{user_input}}"
+                    )
 
-                    self += al.Text(text="Note that a 'NoSavingPage' does not trigger a saving event, but it does collect data! If a later page triggers a saving event, data from the 'NoSavingPage' will be saved to the experiment data! To prevent this behavior, use a 'NoDataPage' instead of 'NoSavingPage'.")
+                    self += al.Text(
+                        text=(
+                            "Note that a 'NoSavingPage' does not trigger a saving "
+                            "event, but it does collect data! If a later page "
+                            "triggers a "
+                            "saving event, data from the 'NoSavingPage' will be "
+                            "saved to "
+                            "the experiment data! To prevent this behavior, use a "
+                            "'NoDataPage' instead of 'NoSavingPage'."
+                        )
+                    )
 
 
         Example 2, a NoSavingPage that also does not collect any data::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class NoDataNoSavingPage(al.NoSavingPage):
-
                 data = {{}}
 
     """
@@ -1539,7 +1572,6 @@ class UnlinkedDataPage(NoDataPage):
             self.log.warning("No saving agent for unlinked data available.")
 
         for agent in self._experiment.data_saver.unlinked.agents.values():
-
             if self.encrypt == "agent":
                 data = self.experiment.data_manager.unlinked_data_with(agent)
             elif self.encrypt == "always":
@@ -1584,7 +1616,6 @@ class _CustomSavingPage(Page, ABC):
         Example 1: Saving ordinary page data (like other pages)::
 
             class MyPage(CustomSavingPage):
-
                 @property
                 def custom_save_data(self):
                     return self.data
@@ -1593,7 +1624,6 @@ class _CustomSavingPage(Page, ABC):
         Example 2: Saving a static dictionary::
 
             class MyPage(CustomSavingPage):
-
                 @property
                 def custom_save_data(self):
                     return {"key": "value"}
@@ -1658,7 +1688,6 @@ class _CustomSavingPage(Page, ABC):
         pass
 
     def save_data(self, level=1, sync=False):
-
         if not isinstance(self.custom_save_data, dict):
             raise ValueError(
                 "The porperty 'custom_page_data' must return a dictionary."
@@ -1689,7 +1718,6 @@ class _DefaultFinalPage(Page):
 
 
 class _NothingHerePage(Page):
-
     title = "There's nothing here"
 
     def on_exp_access(self):
@@ -1713,7 +1741,9 @@ class PasswordPage(WidePage):
         A minimal experiment with a password page::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.member
             class Demo(al.PasswordPage):
@@ -1724,7 +1754,7 @@ class PasswordPage(WidePage):
     password = None
     title = "Password required"
 
-    def __init__(self, password: t.Union[str, t.Tuple[str]] = None, **kwargs):
+    def __init__(self, password: str | tuple[str] = None, **kwargs):
         super().__init__(**kwargs)
         if password is not None:
             self.password = password

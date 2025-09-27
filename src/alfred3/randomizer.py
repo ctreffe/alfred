@@ -7,7 +7,6 @@ import random
 import time
 from collections import Counter
 from itertools import product
-from typing import List, Tuple
 
 from .compatibility.condition import ListRandomizer as OldListRandomizer
 from .data_manager import saving_method
@@ -135,7 +134,8 @@ class ListRandomizer(SessionQuota):
 
         List randomization solves this problem, which is why it is commonly
         used in offline studies. Let's take an easy example. We might have
-        two conditions, a and b, each of which should be completed by three participants.
+        two conditions, a and b, each of which should be completed by three
+        participants.
         The order in which participants are assigned to a condition should be
         random. To achieve this, we create a list that contains a condition
         slot for each participant::
@@ -165,18 +165,19 @@ class ListRandomizer(SessionQuota):
         and display an abort page to new participants::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.setup
             def setup(exp):
                 randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
                 exp.condition = randomizer.get_condition()
 
+
             @exp.member
             class DemoPage(al.Page):
-
                 def on_exp_access(self):
-
                     if self.exp.condition == "cond1":
                         lab = "label in condition 1"
 
@@ -190,18 +191,19 @@ class ListRandomizer(SessionQuota):
         all experiment conditions::
 
             import alfred3 as al
+
             exp = al.Experiment()
+
 
             @exp.setup
             def setup(exp):
                 randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
                 exp.condition = randomizer.get_condition()
 
+
             @exp.member
             class DemoPage(al.Page):
-
                 def on_exp_access(self):
-
                     if self.exp.condition == "cond1":
                         lab = "label in condition 1"
 
@@ -257,9 +259,9 @@ class ListRandomizer(SessionQuota):
 
     def __init__(
         self,
-        *conditions: Tuple[str, int],
+        *conditions: tuple[str, int],
         exp,
-        session_ids: List[str] = None,
+        session_ids: list[str] = None,
         respect_version: bool = True,
         inclusive: bool = False,
         random_seed=None,
@@ -268,7 +270,6 @@ class ListRandomizer(SessionQuota):
         mode: str = None,
         id: str = None,
     ):
-
         self.exp = exp
         self.respect_version = respect_version
         self.exp_version = self.exp.version if respect_version else ""
@@ -319,18 +320,21 @@ class ListRandomizer(SessionQuota):
             ::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer.balanced("cond1", "cond2", n=10, exp=exp)
+                    randomizer = al.ListRandomizer.balanced(
+                        "cond1", "cond2", n=10, exp=exp
+                    )
                     exp.condition = randomizer.get_condition()
+
 
                 @exp.member
                 class DemoPage(al.Page):
-
                     def on_exp_access(self):
-
                         if self.exp.condition == "cond1":
                             lab = "label in condition 1"
 
@@ -387,12 +391,11 @@ class ListRandomizer(SessionQuota):
 
                 exp = al.Experiment()
 
+
                 @exp.setup
                 def setup(exp):
                     randomizer = l.ListRandomizer.factors(
-                        ["a1", "a2"], ["b1", "b2"],
-                        n=20,
-                        exp=exp
+                        ["a1", "a2"], ["b1", "b2"], n=20, exp=exp
                     )
 
                     exp.condition = randomizer.get_condition()
@@ -408,12 +411,11 @@ class ListRandomizer(SessionQuota):
 
                 exp = al.Experiment()
 
+
                 @exp.setup
                 def setup(exp):
                     randomizer = al.ListRandomizer.factors(
-                        ["a1", "a2"], ["b1", "b2"],
-                        n=20,
-                        exp=exp
+                        ["a1", "a2"], ["b1", "b2"], n=20, exp=exp
                     )
 
                     exp.condition = randomizer.get_condition()
@@ -495,18 +497,21 @@ class ListRandomizer(SessionQuota):
             An example using the default behavior::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
+                    randomizer = al.ListRandomizer(
+                        ("cond1", 10), ("cond2", 10), exp=exp
+                    )
                     exp.condition = randomizer.get_condition()
+
 
                 @exp.member
                 class DemoPage(al.Page):
-
                     def on_exp_access(self):
-
                         if self.exp.condition == "cond1":
                             lab = "label in condition 1"
 
@@ -522,24 +527,29 @@ class ListRandomizer(SessionQuota):
 
                 import alfred3 as al
                 from alfred3 import exceptions as alexcept
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp)
+                    randomizer = al.ListRandomizer(
+                        ("cond1", 10), ("cond2", 10), exp=exp
+                    )
                     try:
                         exp.condition = randomizer.get_condition(raise_exception=True)
                     except alexcept.AllSlotsFull:
                         full_page = al.Page(title="Experiment closed.", name="fullpage")
-                        full_page += al.Text("Sorry, the experiment currently does not accept any further participants")
+                        full_page += al.Text(
+                            "Sorry, the experiment currently does not accept any "
+                            "further participants"
+                        )
                         exp.abort(reason="full", page=full_page)
 
 
                 @exp.member
                 class DemoPage(al.Page):
-
                     def on_exp_access(self):
-
                         if self.exp.condition == "cond1":
                             lab = "label in condition 1"
 
@@ -554,23 +564,28 @@ class ListRandomizer(SessionQuota):
             more convenient::
 
                 import alfred3 as al
+
                 exp = al.Experiment()
+
 
                 @exp.setup
                 def setup(exp):
                     full_page = al.Page(title="Experiment closed.", name="fullpage")
-                    full_page += al.Text("Sorry, the experiment currently does not accept any further participants.")
+                    full_page += al.Text(
+                        "Sorry, the experiment currently does not accept any "
+                        "further participants."
+                    )
 
-                    randomizer = al.ListRandomizer(("cond1", 10), ("cond2", 10), exp=exp, abort_page=full_page)
+                    randomizer = al.ListRandomizer(
+                        ("cond1", 10), ("cond2", 10), exp=exp, abort_page=full_page
+                    )
 
                     exp.condition = randomizer.get_condition()
 
 
                 @exp.member
                 class DemoPage(al.Page):
-
                     def on_exp_access(self):
-
                         if self.exp.condition == "cond1":
                             lab = "label in condition 1"
 
@@ -592,13 +607,13 @@ class ListRandomizer(SessionQuota):
                 data.slots = self._randomize_slots()
                 self.io.save(data)
 
-    def _generate_slots(self) -> List[dict]:
+    def _generate_slots(self) -> list[dict]:
         slots = []
         for name, n in self.conditions:
             slots += [{"label": name}] * n
         return slots
 
-    def _randomize_slots(self) -> List[dict]:
+    def _randomize_slots(self) -> list[dict]:
         slots = self._generate_slots()
         random.seed(self.random_seed)
         random.shuffle(slots)

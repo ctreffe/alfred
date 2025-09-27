@@ -27,7 +27,6 @@ These are the currently available commands::
 
 """
 
-
 import click
 
 from .extract import json_to_csv

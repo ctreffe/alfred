@@ -1,13 +1,14 @@
 """
 .. moduleauthor:: Paul Wiemann <paulwiemann@gmail.com>
 
-Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung und die Steuerelemente auf verschiedenen Interfaces verwalten.
+Das Modul *ui_controller* stellt die Klassen zur Verfügung, die die Darstellung und die
+Steuerelemente auf verschiedenen Interfaces verwalten.
 """
+
 import importlib.resources
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Union
 from uuid import uuid4
 
 from jinja2 import Environment, PackageLoader
@@ -151,7 +152,7 @@ class MovementManager:
         i = self.exp.root_section.all_page_names.index(page.name) - 1
         return self.exp.root_section.all_pages_list[i]
 
-    def find_page(self, query: Union[str, int]):
+    def find_page(self, query: str | int):
         """
         Find a page.
 
@@ -187,7 +188,7 @@ class MovementManager:
     def last_page(self):
         return self.exp.root_section.all_pages_list[-2]
 
-    def _skip_page(self, target_page, direction: str) -> Tuple[int, int]:
+    def _skip_page(self, target_page, direction: str) -> tuple[int, int]:
         """
         Returns:
             Tuple[int, int]: A tuple of the current page and the target
@@ -332,7 +333,7 @@ class MovementManager:
         self.current_index = self.index_of(target_page)
         self.current_page = self.exp.root_section.all_pages_list[self.current_index]
 
-    def _move(self, direction: str) -> Tuple[int, int]:
+    def _move(self, direction: str) -> tuple[int, int]:
         if self.exp.session_expired:
             return self.exp.abort(
                 reason="session timed out",
@@ -480,7 +481,6 @@ class MovementManager:
         self.history.append(move)
 
     def move(self, direction):
-
         if self.exp.session_expired:
             return self.exp.abort(
                 reason="session timed out",
@@ -517,10 +517,12 @@ class MovementManager:
             )
 
     def start(self):
-
         self.current_index = self.index_of(self.first_visible_page)
         self.exp.root_section._enter()
-        self.current_page._on_showing_widget(show_time=time.time())
+        try:
+            self.current_page._on_showing_widget(show_time=time.time())
+        except AbortMove:
+            self.log.debug("Experiment was aborted during startup.")
 
 
 class UserInterface:
@@ -638,7 +640,6 @@ class UserInterface:
                     )
 
         elif style == "goe":
-
             with importlib.resources.path(css, "goe.css") as f:
                 url = self.add_static_file(f, content_type="text/css")
                 self.css_urls.append((5, url))
@@ -718,7 +719,6 @@ class UserInterface:
         self.experiment.movement_manager.current_page.save_data()
 
     def _add_resources(self, resources: list, resource_type: str):
-
         if resource_type == "js":
             container = self.js_code
             pkg = js
@@ -832,7 +832,6 @@ class UserInterface:
 
     @property
     def basepath(self):
-
         if self._basepath is not None:
             return self._basepath
         else:
@@ -884,15 +883,22 @@ class UserInterface:
     def get_dynamic_file(self, identifier):
         return self._dynamic_files[identifier]
 
-    def add_dynamic_file(self, file_obj, content_type=None):
-        identifier = uuid4().hex
+    def add_dynamic_file(self, file_obj, content_type=None, identifier=None):
+        """
+        Args:
+            identifier: A string, a unique identifier for the file.
+        """
+        if identifier is not None and identifier in self._dynamic_files:
+            raise ValueError(
+                f"Cannot use identifier {identifier}, because it is already being used."
+            )
+
+        identifier = uuid4().hex if identifier is None else identifier
         while identifier in self._dynamic_files:
             identifier = uuid4().hex
 
         self._dynamic_files[identifier] = (file_obj, content_type)
-        url = "{basepath}/dynamicfile/{identifier}".format(
-            basepath=self._basepath, identifier=identifier
-        )
+        url = f"{self._basepath}/dynamicfile/{identifier}"
         return url
 
     def get_callable(self, identifier):
@@ -904,9 +910,7 @@ class UserInterface:
             identifier = uuid4().hex
 
         self._callables[identifier] = f
-        url = "{basepath}/callable/{identifier}".format(
-            basepath=self._basepath, identifier=identifier
-        )
+        url = f"{self._basepath}/callable/{identifier}"
         return url
 
     def start(self):

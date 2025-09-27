@@ -37,6 +37,7 @@ The current version offers the following options::
     --help                          Show this message and exit.
 
 """
+
 from pathlib import Path
 
 import click

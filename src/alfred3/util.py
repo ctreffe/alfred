@@ -8,8 +8,9 @@ Provides miscellaneous utilities for alfred experiments.
 """
 
 import csv
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator, Tuple, Union
+from typing import Any
 
 from emoji import emojize
 
@@ -97,7 +98,7 @@ def is_label(obj: Any) -> bool:
 
 
 def _read_csv_todict(
-    path: Union[str, Path], encoding: str = "utf-8", **kwargs
+    path: str | Path, encoding: str = "utf-8", **kwargs
 ) -> Iterator[dict]:
     with open(path, encoding=encoding) as csvfile:
         reader = csv.DictReader(csvfile, **kwargs)
@@ -105,7 +106,7 @@ def _read_csv_todict(
 
 
 def _read_csv_tolist(
-    path: Union[str, Path], encoding: str = "utf-8", **kwargs
+    path: str | Path, encoding: str = "utf-8", **kwargs
 ) -> Iterator[list]:
     with open(path, encoding=encoding) as csvfile:
         reader = csv.reader(csvfile, **kwargs)
@@ -143,7 +144,6 @@ def flatten_dict(
     """
     out = {}
     for key, val in d.items():
-
         if isinstance(val, dict):
             renamed = prefix_keys(d=val, prefix=key, sep=prefix_sep)
             flattened = flatten_dict(renamed)
@@ -278,7 +278,7 @@ def prefix_keys_safely(
     return prefix_keys(d=data, prefix=prefix, sep=sep)
 
 
-def multiple_choice_numbers(choice_dict: dict) -> Union[int, Tuple[int]]:
+def multiple_choice_numbers(choice_dict: dict) -> int | tuple[int]:
     """
     Finds the indexes of the choices saved for a multiple choice element.
 
