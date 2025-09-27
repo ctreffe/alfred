@@ -1,4 +1,4 @@
-name: pytest-pull
+name: pytest
 
 on:
   pull_request:
