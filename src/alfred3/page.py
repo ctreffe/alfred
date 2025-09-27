@@ -1130,6 +1130,41 @@ class WidePage(Page):
 
 
 @inherit_kwargs
+class BlankPage(Page):
+    """
+    A page with all default layout elements removed.
+
+    Args:
+        {kwargs}
+
+    Examples:
+        A minimal experiment with a single BlankPage::
+
+            import alfred3 as al
+
+            exp = al.Experiment()
+
+
+            @exp.member
+            class DemoPage(al.BlankPage):
+                def on_exp_access(self):
+                    self += al.SubmittingButtons(
+                        "Yes",
+                        "No",
+                        toplab="Do you agree to this statement?",
+                        name="submit1",
+                    )
+    """
+
+    def added_to_experiment(self, experiment):
+        super().added_to_experiment(experiment)
+        self += Style("#page-navigation {display: none;}")
+        self += Style("#logo-container {visibility: hidden;}")
+        self += Style("#footer-container {visibility: hidden;}")
+        self += Style("#progress_bar_ {visibility: hidden;}")
+
+
+@inherit_kwargs
 class NoNavigationPage(Page):
     """
     A page without navigation buttons.
