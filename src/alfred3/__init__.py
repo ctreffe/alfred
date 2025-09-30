@@ -56,6 +56,7 @@ from .element.misc import RepeatedCallback as RepeatedCallback
 from .element.misc import Style as Style
 from .element.misc import Value as Value
 from .element.misc import WebExitEnabler as WebExitEnabler
+from .element.misc import ContentProtector as ContentProtector
 from .experiment import Experiment as Experiment
 from .page import AutoClosePage as AutoClosePage
 from .page import AutoForwardPage as AutoForwardPage
