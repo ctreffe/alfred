@@ -289,6 +289,68 @@ class WebExitEnabler(JavaScript):
         super().__init__(code="allow_leaving();", priority=10)
 
 
+class ContentProtector(JavaScript):
+    """
+    Adds JavaScript and CSS based content protection to a page.
+
+    This element will disable printing, text selection & copying, as
+    well as the context menu and the shortcut for source code inspection.
+
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+
+            exp = al.Experiment()
+
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.ContentProtector()
+
+
+    """
+
+    def __init__(self):
+        """Constructor method"""
+        super().__init__(
+            code="""
+            /* Disable Printing */
+            
+            var style = document.createElement("style");
+            style.type = "text/css";
+            style.innerHTML = "@media print{* { display: none;}}";
+            document.head.appendChild(style);
+            
+            /* Disable text selection & copying */
+            
+            document.onselectstart = new Function("return false");
+            function ds(e){ return false; }
+            function ra(){ return true; }
+            document.onmousedown = ds;
+            document.onclick = ra;
+            
+            /* Disable context menu & block shortcuts */
+            
+            document.addEventListener("contextmenu", function(event) {
+                event.preventDefault();
+            });
+            document.addEventListener("keydown", function(e) {
+                if (e.ctrlKey && (e.which == 83 || e.which == 85)) {
+                    e.preventDefault();
+                    alert("Nicht erlaubt");
+                    return false;
+                }
+            });
+            """,
+            priority=10
+        )
+
+
+
 class Value(InputElement):
     """
     Value elements can be used to save data without any display.
