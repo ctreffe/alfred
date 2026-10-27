@@ -291,10 +291,11 @@ class WebExitEnabler(JavaScript):
 
 class ContentProtector(JavaScript):
     """
-    Adds JavaScript and CSS based content protection to a page.
+    Adds basic JavaScript and CSS based content-protection barriers to a page.
 
-    This element will disable printing, text selection & copying, as
-    well as the context menu and the shortcut for source code inspection.
+    Blocks selection of non-editable page content, the context menu, and
+    Ctrl+S/Ctrl+U, and adds CSS intended to hide content when printing.
+    Form fields and editable areas retain normal input and text selection.
 
     Examples:
         Minimal example::
@@ -325,13 +326,19 @@ class ContentProtector(JavaScript):
             style.innerHTML = "@media print{* { display: none;}}";
             document.head.appendChild(style);
             
-            /* Disable text selection & copying */
-            
-            document.onselectstart = new Function("return false");
-            function ds(e){ return false; }
-            function ra(){ return true; }
-            document.onmousedown = ds;
-            document.onclick = ra;
+            /* Protect displayed content without blocking normal input */
+
+            document.addEventListener("selectstart", function(event) {
+                var target = event.target;
+                var element = target.nodeType === 1 ? target : target.parentElement;
+                if (element && (
+                    element.closest("input, textarea, select") ||
+                    element.isContentEditable
+                )) {
+                    return;
+                }
+                event.preventDefault();
+            });
             
             /* Disable context menu & block shortcuts */
             
