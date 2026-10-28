@@ -48,6 +48,7 @@ from .element.input import TextArea as TextArea
 from .element.input import TextEntry as TextEntry
 from .element.input import TimeEntry as TimeEntry
 from .element.misc import Callback as Callback
+from .element.misc import ContentProtector as ContentProtector
 from .element.misc import Data as Data
 from .element.misc import HiddenInput as HiddenInput
 from .element.misc import HideNavigation as HideNavigation
@@ -56,7 +57,6 @@ from .element.misc import RepeatedCallback as RepeatedCallback
 from .element.misc import Style as Style
 from .element.misc import Value as Value
 from .element.misc import WebExitEnabler as WebExitEnabler
-from .element.misc import ContentProtector as ContentProtector
 from .experiment import Experiment as Experiment
 from .page import AutoClosePage as AutoClosePage
 from .page import AutoForwardPage as AutoForwardPage

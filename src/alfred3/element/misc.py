@@ -320,12 +320,12 @@ class ContentProtector(JavaScript):
         super().__init__(
             code="""
             /* Disable Printing */
-            
+
             var style = document.createElement("style");
             style.type = "text/css";
             style.innerHTML = "@media print{* { display: none;}}";
             document.head.appendChild(style);
-            
+
             /* Protect displayed content without blocking normal input */
 
             document.addEventListener("selectstart", function(event) {
@@ -339,9 +339,9 @@ class ContentProtector(JavaScript):
                 }
                 event.preventDefault();
             });
-            
+
             /* Disable context menu & block shortcuts */
-            
+
             document.addEventListener("contextmenu", function(event) {
                 event.preventDefault();
             });
@@ -353,9 +353,8 @@ class ContentProtector(JavaScript):
                 }
             });
             """,
-            priority=10
+            priority=10,
         )
-
 
 
 class Value(InputElement):
