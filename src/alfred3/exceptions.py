@@ -8,8 +8,6 @@ class AlfredError(Exception):
     Jede Exception des Frameworks ist von dieser Klasse abgeleitet.
     """
 
-    pass
-
 
 class ValidationError(AlfredError):
     pass

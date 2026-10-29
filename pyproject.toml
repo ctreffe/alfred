@@ -66,6 +66,9 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 testpaths = "tests"
 
+[tool.ruff]
+extend-exclude = ["CHANGELOG.md"]
+
 [tool.ruff.lint]
 extend-select = [
     "F",  # pyflakes (flake8 core)
@@ -75,7 +78,31 @@ extend-select = [
     "UP", # pyupgrade (modern syntax)
 ]
 
-extend-ignore = []
+# Baseline: rules from ruff's default set that the codebase does not satisfy
+# yet. Remove entries as the findings get fixed.
+extend-ignore = [
+    "B026",    # star-arg-unpacking-after-keyword-arg
+    "BLE001",  # blind-except
+    "C408",    # unnecessary-collection-call
+    "C414",    # unnecessary-double-cast-or-process
+    "C419",    # unnecessary-comprehension-in-call
+    "DTZ002",  # call-datetime-today
+    "PLW1510", # subprocess-run-without-check
+    "RUF012",  # mutable-class-default
+    "RUF013",  # implicit-optional
+    "RUF015",  # unnecessary-iterable-allocation-for-first-element
+    "S102",    # exec-builtin
+    "SIM101",  # duplicate-isinstance-call
+    "SIM102",  # collapsible-if
+    "SIM103",  # needless-bool
+    "SIM114",  # if-with-same-arms
+    "SIM118",  # in-dict-keys
+    "SIM201",  # negate-equal-op
+    "SIM210",  # if-expr-with-true-false
+    "SIM211",  # if-expr-with-false-true
+    "TRY004",  # type-check-without-type-error
+    "TRY201",  # verbose-raise
+]
 
 # Package layout under src/
 [tool.hatch.build.targets.wheel]

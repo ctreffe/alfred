@@ -67,19 +67,19 @@ class ExperimentRunner:
             p = Path(path).resolve()
             script0 = p / "script.py"
             if script0.is_file():
-                sys.stderr.writelines([f" * Using script '{str(script0)}'\n"])
+                sys.stderr.writelines([f" * Using script '{script0!s}'\n"])
                 return p
 
         fp = Path(sys.argv[0]).resolve().parent
         script2 = fp / "script.py"
         if script2.is_file():
-            sys.stderr.writelines([f" * Using script '{str(script2)}'\n"])
+            sys.stderr.writelines([f" * Using script '{script2!s}'\n"])
             return fp
 
         wd = Path.cwd()
         script1 = wd / "script.py"
         if script1.is_file():
-            sys.stderr.writelines([f" * Using script '{str(script1)}'\n"])
+            sys.stderr.writelines([f" * Using script '{script1!s}'\n"])
             return wd
 
         raise FileNotFoundError("No script.py found.")
@@ -273,7 +273,7 @@ class ChromeKiosk:
             chrome = existing_paths[0]
 
         if not chrome.exists():
-            raise FileNotFoundError(f"Did not find a chrome.exe at {str(chrome)}.")
+            raise FileNotFoundError(f"Did not find a chrome.exe at {chrome!s}.")
 
         subprocess.run([chrome, url, "--kiosk"])
 

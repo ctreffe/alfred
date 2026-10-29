@@ -63,7 +63,7 @@ class _PageCore(ExpMember):
         prefix_element_names: bool = None,
         minimum_display_time: str = None,
         minimum_display_time_msg: str = None,
-        progress: int | float = None,
+        progress: float = None,
         **kwargs,
     ):
         self._minimum_display_time = "0s"
@@ -267,7 +267,6 @@ class _PageCore(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def on_each_show(self):
         """
@@ -279,7 +278,6 @@ class _PageCore(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def _on_hiding_widget(self, hide_time: float = None):
         """
@@ -325,7 +323,6 @@ class _PageCore(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def on_each_hide(self):
         """
@@ -338,7 +335,6 @@ class _PageCore(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def on_close(self):
         """
@@ -355,7 +351,6 @@ class _PageCore(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def on_exp_access(self):
         """
@@ -370,7 +365,6 @@ class _PageCore(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def close(self):
         """
@@ -416,7 +410,6 @@ class _PageCore(ExpMember):
 
         Gets executed *every time* before the page is displayed.
         """
-        pass
 
     @property
     def _css_code(self):
@@ -438,7 +431,6 @@ class _PageCore(ExpMember):
         """
         Informs the page's input elements about user input.
         """
-        pass
 
 
 @inherit_kwargs
@@ -1305,7 +1297,6 @@ class TimeoutPage(Page):
             This hook is defined by :class:`.AutoForwardPage` and
             :class:`.AutoClosePage`.
         """
-        pass
 
 
 @inherit_kwargs
@@ -1500,7 +1491,6 @@ class NoSavingPage(Page):
         This page type does not save data on its own, so this method has
         no effect.
         """
-        pass
 
 
 @inherit_kwargs

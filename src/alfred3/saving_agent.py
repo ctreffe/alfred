@@ -308,7 +308,6 @@ class SavingAgent(ABC):
         """Method for executing the actual saving task. Must be defined
         by all children of :class:`SavingAgent`.
         """
-        pass
 
     def __str__(self):
         return (
@@ -395,13 +394,13 @@ class LocalSavingAgent(SavingAgent):
     def _check_directory(self):
         self.directory.mkdir(exist_ok=True, parents=True)
         if not self.directory.is_dir():
-            raise RuntimeError(f"Save path {str(self.directory)} must be an directory.")
+            raise RuntimeError(f"Save path {self.directory!s} must be an directory.")
 
         if not os.access(str(self.directory), os.R_OK):
-            raise RuntimeError(f"Save path {str(self.directory)} must be readable.")
+            raise RuntimeError(f"Save path {self.directory!s} must be readable.")
 
         if not os.access(str(self.directory), os.W_OK):
-            raise RuntimeError(f"Save path {str(self.directory)} must be writable.")
+            raise RuntimeError(f"Save path {self.directory!s} must be writable.")
 
     def _save(self, data: dict):
         """Write data to file."""

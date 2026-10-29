@@ -248,8 +248,6 @@ class RegEntry(MatchEntry):
 
     """
 
-    pass
-
 
 @inherit_kwargs
 class EmailEntry(MatchEntry):
@@ -476,8 +474,8 @@ class NumberEntry(TextEntry):
     def __init__(
         self,
         ndecimals: int = 0,
-        min: int | float = None,
-        max: int | float = None,
+        min: float = None,
+        max: float = None,
         decimal_signs: str | tuple = (",", "."),
         match_hint: str = None,
         **kwargs,
@@ -526,7 +524,7 @@ class NumberEntry(TextEntry):
         return self._min
 
     @min.setter
-    def min(self, value: int | float):
+    def min(self, value: float):
         if value is None:
             self._min = None
         elif not isinstance(value, (int, float)):
@@ -540,7 +538,7 @@ class NumberEntry(TextEntry):
         return self._max
 
     @max.setter
-    def max(self, value: int | float):
+    def max(self, value: float):
         if value is None:
             self._max = None
         elif not isinstance(value, (int, float)):
@@ -726,9 +724,9 @@ class RangeInput(InputElement):
 
     def __init__(
         self,
-        min: float | int = 0,
-        max: float | int = 100,
-        step: float | int = 1,
+        min: float = 0,
+        max: float = 100,
+        step: float = 1,
         display_input: bool = True,
         display_position: str = "top",
         align: str = "center",
@@ -2039,7 +2037,6 @@ class SelectPageList(SingleChoiceList):
                     "ValueError ignored in PageList while trying to remove self from"
                     " the list of choice labels."
                 )
-                pass
 
         return choice_labels
 

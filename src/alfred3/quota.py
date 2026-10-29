@@ -53,7 +53,7 @@ class SessionGroup:
     def _get_fields_mongo(self, exp, fields: list[str]) -> Iterator:
         q = self.query(exp.exp_id)
         projection_fields = {field: 1 for field in fields}
-        projection = {**projection_fields, **{"_id": 0}}
+        projection = {**projection_fields, "_id": 0}
         cursor = exp.db_main.find(q, projection=projection)
         return cursor
 
