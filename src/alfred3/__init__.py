@@ -48,6 +48,7 @@ from .element.input import TextArea as TextArea
 from .element.input import TextEntry as TextEntry
 from .element.input import TimeEntry as TimeEntry
 from .element.misc import Callback as Callback
+from .element.misc import ContentProtector as ContentProtector
 from .element.misc import Data as Data
 from .element.misc import HiddenInput as HiddenInput
 from .element.misc import HideNavigation as HideNavigation

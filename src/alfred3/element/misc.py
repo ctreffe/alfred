@@ -289,6 +289,74 @@ class WebExitEnabler(JavaScript):
         super().__init__(code="allow_leaving();", priority=10)
 
 
+class ContentProtector(JavaScript):
+    """
+    Adds basic JavaScript and CSS based content-protection barriers to a page.
+
+    Blocks selection of non-editable page content, the context menu, and
+    Ctrl+S/Ctrl+U, and adds CSS intended to hide content when printing.
+    Form fields and editable areas retain normal input and text selection.
+
+    Examples:
+        Minimal example::
+
+            import alfred3 as al
+
+            exp = al.Experiment()
+
+
+            @exp.member
+            class Demo(al.Page):
+                name = "demo"
+
+                def on_exp_access(self):
+                    self += al.ContentProtector()
+
+
+    """
+
+    def __init__(self):
+        """Constructor method"""
+        super().__init__(
+            code="""
+            /* Disable Printing */
+
+            var style = document.createElement("style");
+            style.type = "text/css";
+            style.innerHTML = "@media print{* { display: none;}}";
+            document.head.appendChild(style);
+
+            /* Protect displayed content without blocking normal input */
+
+            document.addEventListener("selectstart", function(event) {
+                var target = event.target;
+                var element = target.nodeType === 1 ? target : target.parentElement;
+                if (element && (
+                    element.closest("input, textarea, select") ||
+                    element.isContentEditable
+                )) {
+                    return;
+                }
+                event.preventDefault();
+            });
+
+            /* Disable context menu & block shortcuts */
+
+            document.addEventListener("contextmenu", function(event) {
+                event.preventDefault();
+            });
+            document.addEventListener("keydown", function(e) {
+                if (e.ctrlKey && (e.which == 83 || e.which == 85)) {
+                    e.preventDefault();
+                    alert("Nicht erlaubt");
+                    return false;
+                }
+            });
+            """,
+            priority=10,
+        )
+
+
 class Value(InputElement):
     """
     Value elements can be used to save data without any display.
