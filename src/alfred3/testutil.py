@@ -54,7 +54,7 @@ def prepare_secrets(tmp_path, secrets_path: str) -> str:
     SECRETS = Path(secrets_path).read_text(encoding="utf-8")
     secrets = SECRETS.format(
         host=os.getenv("MONGODB_HOST", "localhost"),
-        port=os.getenv("MONGODB_PORT", 27017),
+        port=os.getenv("MONGODB_PORT", "27017"),
         db=os.getenv("MONGODB_DATABASE", "alfred"),
         usr=os.getenv("MONGODB_USERNAME", "user"),
         pw=os.getenv("MONGODB_PASSWORD", "pass"),
@@ -75,14 +75,14 @@ def get_db(mock: bool = True):
     if mock:
         mc = mongomock.MongoClient(
             host=os.getenv("MONGODB_HOST", "localhost"),
-            port=int(os.getenv("MONGODB_PORT", 27017)),
+            port=int(os.getenv("MONGODB_PORT", "27017")),
             username=os.getenv("MONGODB_USERNAME", "user"),
             password=os.getenv("MONGODB_PASSWORD", "pass"),
         )
     else:
         mc = pymongo.MongoClient(
             host=os.getenv("MONGODB_HOST", "localhost"),
-            port=int(os.getenv("MONGODB_PORT", 27017)),
+            port=int(os.getenv("MONGODB_PORT", "27017")),
             # username=os.getenv("MONGODB_USERNAME", "user"),
             # password=os.getenv("MONGODB_PASSWORD", "pass"),
         )

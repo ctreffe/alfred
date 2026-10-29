@@ -110,10 +110,10 @@ class Decrypter:
                 key = os.environ.get("ALFRED_SECRET_KEY")
             try:
                 self._decrypter = Fernet(key)
-            except Exception:
-                RuntimeError(
+            except Exception as e:
+                raise RuntimeError(
                     "Unable to initialize Fernet decrypter: Secret key not found!"
-                )
+                ) from e
 
         if from_env:
             try:
