@@ -36,3 +36,11 @@ def test_normal_finish(expfin):
     expfin.forward()
     assert expfin.finished
     assert expfin.Second.is_closed
+
+
+def test_session_status_warns(expfin):
+    with pytest.warns(FutureWarning):
+        expfin.session_status = "test"
+
+    with pytest.warns(FutureWarning):
+        assert expfin.session_status == "test"

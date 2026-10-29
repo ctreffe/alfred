@@ -25,6 +25,7 @@ import logging
 import os
 import smtplib
 import time
+import warnings
 from collections.abc import Iterator
 from email.message import EmailMessage
 from email.utils import formataddr
@@ -1566,7 +1567,7 @@ class ExperimentSession:
             "The property ExperimentSession.session_status will be removed in the next"
             " major release."
         )
-        FutureWarning(txt)
+        warnings.warn(txt, FutureWarning, stacklevel=2)
         self.log.warning(txt)
         return self._session_status
 
@@ -1576,7 +1577,7 @@ class ExperimentSession:
             "The property ExperimentSession.session_status will be removed in the next"
             " major release."
         )
-        FutureWarning(txt)
+        warnings.warn(txt, FutureWarning, stacklevel=2)
         self.log.warning(txt)
         if not isinstance(status, str):
             raise TypeError
