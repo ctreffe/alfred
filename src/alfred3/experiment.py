@@ -1735,7 +1735,7 @@ class ExperimentSession:
             self.log.debug("No encryption key found. Encryptor was not set.")
             return None
 
-    def encrypt(self, data: str | int | float) -> str:
+    def encrypt(self, data: str | float) -> str:
         """
         Encrypts the input and returns the encrypted string.
 

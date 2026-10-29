@@ -37,7 +37,7 @@ def testexp(name):
         [
             "alfred3",
             "template",
-            f"--path={str(path)}",
+            f"--path={path!s}",
         ]
     )
 

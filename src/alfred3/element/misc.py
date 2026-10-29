@@ -317,7 +317,7 @@ class Value(InputElement):
 
     """
 
-    def __init__(self, value: str | int | float, name: str, description: str = ""):
+    def __init__(self, value: str | float, name: str, description: str = ""):
         """Constructor method."""
         super().__init__(name=name, description=description)
 
@@ -328,8 +328,6 @@ class Value(InputElement):
 
 class Data(Value):
     """Alias for :class:`.Value`."""
-
-    pass
 
 
 class Callback(Element):

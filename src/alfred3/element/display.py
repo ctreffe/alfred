@@ -762,7 +762,7 @@ class ProgressBar(LabelledElement):
 
     def __init__(
         self,
-        progress: str | float | int = "auto",
+        progress: str | float = "auto",
         bar_height: str = "6px",
         show_text: bool = False,
         striped: bool = True,
@@ -838,10 +838,10 @@ class ProgressBar(LabelledElement):
                 return 100
 
     @progress.setter
-    def progress(self, value: int | float):
+    def progress(self, value: float):
         try:
             assert isinstance(value, (int, float))
-            assert 0 <= value and value <= 100
+            assert 0 <= value <= 100
         except AssertionError:
             raise ValueError("Progress must be a number between 0 and 100.")
         self._progress = value
@@ -1188,7 +1188,7 @@ class CountDown(CountUp):
         self.reset = reset
 
     @classmethod
-    def tilltime(cls, t: int | float, **kwargs):
+    def tilltime(cls, t: float, **kwargs):
         """
         Alternative constructor for a countdown targeted at a specific
         unix timestamp.

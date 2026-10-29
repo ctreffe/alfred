@@ -158,7 +158,7 @@ class _ConditionIO:
                 data = None
                 i = 0
                 while not data:
-                    query = {**self.query, **{"assignment_ongoing": False}}
+                    query = {**self.query, "assignment_ongoing": False}
                     data = self.exp.db_misc.find_one_and_update(
                         query, {"$set": {"assignment_ongoing": True}}
                     )
@@ -197,7 +197,7 @@ class _ConditionIO:
             else:
                 # this will replace the document, usually leading to releasing the
                 # assignment status
-                query = {**self.query, **{"assignment_ongoing": True}}
+                query = {**self.query, "assignment_ongoing": True}
                 self.exp.db_misc.find_one_and_replace(query, data, upsert=True)
 
         elif self.method == "local":
@@ -206,7 +206,7 @@ class _ConditionIO:
 
     def abort(self):
         if self.method == "mongo":
-            query = {**self.query, **{"assignment_ongoing": True}}
+            query = {**self.query, "assignment_ongoing": True}
             self.exp.db_misc.find_one_and_update(
                 query, {"$set": {"assignment_ongoing": False}}
             )

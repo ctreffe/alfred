@@ -490,7 +490,6 @@ class Section(ExpMember):
             available hooks.
 
         """
-        pass
 
     def on_enter(self):
         """
@@ -512,7 +511,6 @@ class Section(ExpMember):
             See "How to use hooks" for a how to on using hooks and an overview of
             available hooks.
         """
-        pass
 
     def on_leave(self):
         """
@@ -534,7 +532,6 @@ class Section(ExpMember):
             See "How to use hooks" for a how to on using hooks and an overview of
             available hooks.
         """
-        pass
 
     def on_resume(self):
         """
@@ -561,7 +558,6 @@ class Section(ExpMember):
             See "How to use hooks" for a how to on using hooks and an overview of
             available hooks.
         """
-        pass
 
     def on_hand_over(self):
         """
@@ -585,7 +581,6 @@ class Section(ExpMember):
             of available hooks.
 
         """
-        pass
 
     def _enter(self):
         self.active = True

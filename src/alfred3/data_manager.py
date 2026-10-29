@@ -508,7 +508,7 @@ class DataManager:
 
 
 def decrypt_recursively(
-    data: list | dict | int | float | str | bytes, key: bytes
+    data: list | dict | float | str | bytes, key: bytes
 ) -> list | dict | int | float | str | bytes:
     """
     Used mainly for decrypting encrypted values in a nested dictionary.

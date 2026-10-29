@@ -62,4 +62,3 @@ class Page1(al.Page):
 @exp.member(of_section="basic_section")
 class Page2(Page1):
     name = "Page2"
-    pass

@@ -640,7 +640,6 @@ class Element:
         This method is supposed to be overridden by derived elements if
         necessary.
         """
-        pass
 
     # Magic methods start here -----------------------------------------
 
@@ -1689,14 +1688,14 @@ class InputElement(LabelledElement):
         self,
         toplab: str = None,
         force_input: bool = None,
-        default: str | int | float = None,
+        default: str | float = None,
         prefix: str | Element = None,
         suffix: str | Element = None,
         description: str = None,
         disabled: bool = False,
         no_input_hint: str = None,
         save_data: bool = True,
-        debug_value: str | int | float | None = None,
+        debug_value: str | float | None = None,
         **kwargs,
     ):
         super().__init__(toplab=toplab, **kwargs)
@@ -2015,7 +2014,6 @@ class InputElement(LabelledElement):
                 self.log.debug(
                     f"No data for {self} found in data dictionary. Moving on."
                 )
-                pass
 
     @property
     def codebook_data(self) -> dict:
@@ -2211,7 +2209,6 @@ class ChoiceElement(InputElement, ABC):
         Must be redefined by inheriting elements and return a list
         of :class:`.Choice` instances.
         """
-        pass
 
     @property
     def codebook_data(self):

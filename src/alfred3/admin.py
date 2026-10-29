@@ -123,7 +123,6 @@ class AdminPage(Page, ABC):
         Returns the access level that is needed to view this page in
         the admin mode.
         """
-        pass
 
     def _on_showing_widget(self, show_time):
         if not self.access_level <= self.exp.content.access_level:

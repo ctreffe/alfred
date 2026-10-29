@@ -122,7 +122,7 @@ def prefix_keys(d: dict, prefix: str, sep: str = "_") -> dict:
         >>> prefix_keys(d=a, prefix="demo")
         {"demo_k": "val"}
     """
-    keys = [prefix + sep + str(k) for k in d.keys()]
+    keys = [prefix + sep + str(k) for k in d]
     return {key: val for key, val in zip(keys, d.values())}
 
 
@@ -272,7 +272,7 @@ def prefix_keys_safely(
     if not sep:
         raise ValueError("Separator must not be empty.")
 
-    while any([str(k).startswith(prefix) for k in base.keys()]):
+    while any([str(k).startswith(prefix) for k in base]):
         prefix += sep
 
     return prefix_keys(d=data, prefix=prefix, sep=sep)
