@@ -29,36 +29,44 @@ _logger = logging.getLogger(__name__)
 # def _do_saving(self, data: dict, name: str, level: int, data_time: float):
 
 
+class _SavingEvent(threading.Event):
+    """Signal task completion while retaining an unexpected saving error."""
+
+    def __init__(self):
+        super().__init__()
+        self.exception = None
+
+
 def _save_worker():
     """Takes a data dictionary and saving_agent_controller from the
     global saving queue and calls the saving method of the controller.
     """
-    try:
-        while True:
-            try:
-                (
-                    _,
-                    t,
-                    lvl,
-                    _,
-                    event,
-                    data,
-                    sa_controller,
-                    agent_name,
-                ) = _queue.get_nowait()
-            except queue.Empty:
-                break
+    while True:
+        try:
+            (
+                _,
+                t,
+                lvl,
+                _,
+                event,
+                data,
+                sa_controller,
+                agent_name,
+            ) = _queue.get_nowait()
+        except queue.Empty:
+            break
+        try:
             sa_controller._do_saving(
                 data=data, agent_name=agent_name, level=lvl, data_time=t
             )
+        except Exception as exc:
+            event.exception = exc
+            _logger.critical(
+                "Saving task failed. Continuing with remaining tasks.", exc_info=True
+            )
+        finally:
             event.set()
             _queue.task_done()
-    except Exception as e:
-        _logger.critical(
-            "CRITICAL ERROR: Exception occured during save worker execution."
-        )
-        _logger.exception("")
-        raise e
 
 
 def _save_looper(sleeptime: int = 1):
@@ -887,15 +895,26 @@ class SavingAgentController:
                 True, the experiment will continue only after the task
                 was completed. Defaults to False.
             data_time: Time of saving
+
+        Raises:
+            SavingAgentRunException: If a synchronous saving task fails.
         """
-        for agent in self.agents.values():
-            self._queue_task(
-                data=data,
-                level=level,
-                agent_name=agent.name,
-                sync=sync,
-                data_time=data_time,
-            )
+        errors = []
+        for agent in tuple(self.agents.values()):
+            try:
+                self._queue_task(
+                    data=data,
+                    level=level,
+                    agent_name=agent.name,
+                    sync=sync,
+                    data_time=data_time,
+                )
+            except SavingAgentRunException as exc:
+                errors.append(exc)
+        if errors:
+            raise SavingAgentRunException(
+                "One or more saving tasks failed. All configured agents were attempted."
+            ) from errors[0]
 
     def save_with_agent(
         self,
@@ -917,6 +936,9 @@ class SavingAgentController:
             sync: Whether to synchronise the task. If
                 True, the experiment will continue only after the task
                 was completed. Defaults to False.
+
+        Raises:
+            SavingAgentRunException: If a synchronous saving task fails.
         """
         self._queue_task(
             data=data, level=level, agent_name=name, sync=sync, data_time=data_time
@@ -947,13 +969,17 @@ class SavingAgentController:
         task_id = uuid4()
 
         priority = 1 if sync else 5
-        e = threading.Event()
+        e = _SavingEvent()
 
         task = (priority, save_time, level, task_id, e, data, self, agent_name)
         _queue.put(task)
 
         if sync:
             e.wait()
+            if e.exception is not None:
+                raise SavingAgentRunException(
+                    f"Saving task for agent '{agent_name}' failed."
+                ) from e.exception
 
     def _do_saving(self, data: dict, agent_name: str, level: int, data_time: float):
         """
@@ -972,7 +998,7 @@ class SavingAgentController:
         agent = self.agents[agent_name]
         saved, reason = agent.save_data(data=data, level=level, data_time=data_time)
 
-        if not saved and not reason == "time":
+        if not saved and reason not in ("time", "level"):
             self.log.warning(
                 f"Saving with {agent} failed. Attempting to save with failure saving"
                 " agent now."
@@ -992,6 +1018,7 @@ class SavingAgentController:
                     " saving. Saving task was not completed."
                 )
                 self.log.critical(msg)
+                raise SavingAgentRunException(msg)
 
     def run_saving_agents(self, level: int, sync: bool = False):
         """Automatically gets experimental data, inserts the current
