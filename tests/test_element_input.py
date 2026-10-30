@@ -139,6 +139,51 @@ class TestMultipleChoiceElement:
 
         assert exp.values["test"]["choice1"] is True
 
+    def test_select_hint_default_message(self, exp):
+        # Regression test for #308: with no custom select_hint, an
+        # under/over-selection used to raise configparser.NoOptionError
+        # because alfred.conf shipped the key under the name
+        # "select_MultipleChoiceElement" while the code looked up
+        # "select_MultipleChoice".
+        exp.testpage += al.MultipleChoice(
+            "a", "b", "c", "d", name="test", min=2, max=3, force_input=True
+        )
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"test_choice1": "1"})
+
+        assert exp.testpage.test.validate_data() is False
+        assert "2" in exp.testpage.test.select_hint
+        assert "3" in exp.testpage.test.select_hint
+
+
+class TestRangeInput:
+    def test_default_zero_renders_as_zero(self, exp):
+        # Regression test for #307: a falsy default (e.g. 0) used to be
+        # dropped by the template's truthiness check ({% elif default %}),
+        # so the rendered <input> had no value attribute and browsers
+        # fell back to the slider's midpoint instead of 0.
+        exp.testpage += inp.RangeInput(min=0, max=100, default=0, name="test")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+
+        html = exp.testpage.test.render_inner_html(exp.testpage.test.template_data)
+        assert 'value="0"' in html
+
+    def test_nonzero_default_still_renders(self, exp):
+        exp.testpage += inp.RangeInput(min=0, max=100, default=10, name="test")
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+
+        html = exp.testpage.test.render_inner_html(exp.testpage.test.template_data)
+        assert 'value="10"' in html
+
 
 class TestMultipleButtons:
     def test_data(self, exp):
