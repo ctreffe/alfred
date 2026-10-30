@@ -48,7 +48,7 @@ would look like this::
    exp = al.Experiment()
 
    exp += al.Page(name="page1")
-   exp.page1 += al.NumberEntry(toplab="Enter a number", name="n1")
+   exp.page1 += al.NumberEntry(toplab="Enter a number", name="n1", force_input=True)
 
 
    @exp.member
@@ -59,6 +59,11 @@ would look like this::
          calculated_number = entered_number - 10
          self += al.Text(f"The result of our calculation is: {calculated_number}")
 
+
+The number is required because the next page uses it in a calculation.
+With an empty field, forward navigation is rejected; after entering 19,
+the second page displays 9.0. If your experiment allows missing answers,
+handle the missing value explicitly before calculating with it.
 
 In the sections below, you find a list of all available hooks - their
 documentation will contain further examples.

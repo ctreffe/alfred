@@ -12,6 +12,20 @@ these are the steps:
 3. Set up your experiment
 4. Add content to your experiment, i.e. Section, Pages, and Elements.
 
+Experiment definition and participant session
+---------------------------------------------
+
+``exp = al.Experiment()`` creates the experiment definition in *script.py*.
+You add the pages and sections that will be used for participant sessions.
+Each participant session receives its own :class:`.ExperimentSession`.
+
+Inside page and section hooks, ``self.exp`` refers to that participant's
+session. A function decorated with ``@exp.setup`` also receives the session
+as its argument. Use that session object for participant answers, condition
+assignment and other session-specific work. The definition object and a
+participant session have different roles, even when examples call both
+variables ``exp``.
+
 Set up the experiment directory
 -------------------------------
 

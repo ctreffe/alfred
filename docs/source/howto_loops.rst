@@ -31,14 +31,16 @@ This is an example experiment that employs a loop::
         def on_first_show(self):
             item = self.vargs.i
             stimulus = rivers[item]
+            position = self.position_in_section()
 
-            self.title = f"Task {item}"
+            self.title = f"Task {position}"
 
             self += al.Text("Please estimate the length of the following river:", align="center")
             self += al.Text(f"**{stimulus}**", font_size="large", align="center")
 
-            self += al.NumberEntry(placeholder="Enter a number", suffix="km", name=f"task_{item:02}")
-            self += al.Value(stimulus, name=f"item_{position:02}")
+            self += al.NumberEntry(placeholder="Enter a number", suffix="km", name=f"task_{item + 1:02}")
+            self += al.Value(stimulus, name=f"item_{item + 1:02}")
+            self += al.Value(position, name=f"position_{item + 1:02}")
 
 
     if __name__ == "__main__":
@@ -78,7 +80,7 @@ along with two buttons for rating::
     @exp.member
     class ImagePage(al.Page):
 
-        def on_exp_acess(self):
+        def on_exp_access(self):
             self += al.Image(path="images/img1.png")
 
             self += al.SingleChoiceButtons(
@@ -108,7 +110,7 @@ and add our page to the section in the section's *on_exp_access* hook::
 
     class ImagePage(al.Page):
 
-        def on_exp_acess(self):
+        def on_exp_access(self):
             self += al.Image(path="images/img1.png")
 
             self += al.SingleChoiceButtons(
@@ -139,12 +141,12 @@ Here's the code. This will not run; below we explain, why::
 
         def on_exp_access(self):
             for index in range(3):
-            self += ImagePage(name=f"img{index+1:02}")
+                self += ImagePage(name=f"img{index+1:02}")
 
 
     class ImagePage(al.Page):
 
-        def on_exp_acess(self):
+        def on_exp_access(self):
             self += al.Image(path="images/img1.png")
 
             self += al.SingleChoiceButtons(
@@ -181,9 +183,7 @@ looks in practice::
 
 
     class ImagePage(al.Page):
-        prefix_element_names = True
-
-        def on_exp_acess(self):
+        def on_exp_access(self):
             index = self.vargs.index
 
             self += al.Image(path="images/img1.png")
@@ -211,12 +211,11 @@ as before, using the loop index in the definition of our image path::
 
 
     class ImagePage(al.Page):
-        prefix_element_names = True
-
-        def on_exp_acess(self):
+        def on_exp_access(self):
             index = self.vargs.index
 
-            self += al.Image(path=f"images/img{index}.png")
+            filename = f"img{index + 1}.png"
+            self += al.Image(path=f"images/{filename}")
 
             self += al.SingleChoiceButtons(
             "Like it", "Don't like it",
@@ -280,12 +279,11 @@ its pages will be shown in random order::
 
 
     class ImagePage(al.Page):
-        prefix_element_names = True
-
-        def on_exp_acess(self):
+        def on_exp_access(self):
             index = self.vargs.index
 
-            self += al.Image(path=f"images/img{index}.png")
+            filename = f"img{index + 1}.png"
+            self += al.Image(path=f"images/{filename}")
 
             self += al.SingleChoiceButtons(
             "Like it", "Don't like it",
@@ -308,7 +306,7 @@ which our code is executed. In the previous code examples, we have
 constructed our ImagePage class in the *on_exp_access* hook, which
 was fine until now. Now, however, we need to be aware that the section
 will shuffle its pages *when we enter the section*, which is later than
-the execution of our page's *on_exp_access**. To deal with this, we
+the execution of our page's *on_exp_access*. To deal with this, we
 change the construction of our page to an *on_first_show* hook::
 
     import alfred3 as al
@@ -325,15 +323,14 @@ change the construction of our page to an *on_first_show* hook::
 
 
     class ImagePage(al.Page):
-        prefix_element_names = True
-
         def on_first_show(self): # change to on_first_show
             index = self.vargs.index
             position = self.position_in_section() # get position
 
             self.title = f"Task {position}" # use page position to give sensible title
 
-            self += al.Image(path=f"images/img{index + 1}.png")
+            filename = f"img{index + 1}.png"
+            self += al.Image(path=f"images/{filename}")
 
             self += al.SingleChoiceButtons(
             "Like it", "Don't like it",
@@ -344,6 +341,11 @@ change the construction of our page to an *on_first_show* hook::
             # we *save* position, and include the index of the
             # corresponding image in the *name*
             self += al.Value(position, name=f"position_img{index + 1:02}")
+
+These examples leave ``prefix_element_names`` at its default, *False*,
+because the generated element names are already unique. If you enable this
+option, Alfred adds the page name and an underscore to each input element
+name; the saved keys will then differ from the names listed below.
 
 If we save our data like this, we have all information that we need.
 Let's recap and connect to our warning from above:
@@ -369,7 +371,7 @@ Save order of appearance in element names
 We may wish to flip our saving strategy by saving the *order of appearance*
 in variable names and the *stimulus identity* in its own variable.
 To do this, we flip the use of the "index" and "position"
-variables in the *on_fist_show* hook like this::
+variables in the *on_first_show* hook like this::
 
     import alfred3 as al
     exp = al.Experiment()
@@ -385,15 +387,14 @@ variables in the *on_fist_show* hook like this::
 
 
     class ImagePage(al.Page):
-        prefix_element_names = True
-
         def on_first_show(self):
             index = self.vargs.index
             position = self.position_in_section() # get position
 
             self.title = f"Task {position}" # use page position to give sensible title
 
-            self += al.Image(path=f"images/img{index + 1}.png")
+            filename = f"img{index + 1}.png"
+            self += al.Image(path=f"images/{filename}")
 
             self += al.SingleChoiceButtons(
             "Like it", "Don't like it",
@@ -401,9 +402,9 @@ variables in the *on_fist_show* hook like this::
             name=f"rating_trial{position:02}"
             )
 
-            # we *save* position, and include the index of the
-            # corresponding image in the *name*
-            self += al.Value(f"img{index}.png", name=f"filename_img_trial{position:02}")
+            # Save the displayed filename; the variable name identifies
+            # the trial position.
+            self += al.Value(filename, name=f"filename_img_trial{position:02}")
 
 
 1. We can identify which image a rating belongs to through the Value element

@@ -95,7 +95,7 @@ Here's how - you simply set the argument *of_section* in the decorator
     import alfred3 as al
     exp = al.Experiment()
 
-    exp += al.OnlyForwardSection(name="main")
+    exp += al.ForwardOnlySection(name="main")
 
     @exp.member(of_section="main")
     class ExamplePage(al.Page):

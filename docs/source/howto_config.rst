@@ -25,11 +25,17 @@ everything else will be covered by alfred automatically. For example,
 a config.conf might often look like this, with only the metadata
 defined::
 
-   [metdata]
-   exp_title = My title
+   [metadata]
+   title = My title
    author = my@email.adress
    version = 1
    exp_id = my_exp_id
+
+Keep the section header together with the settings you copy. For example,
+``title`` belongs below ``[metadata]``; it is not a standalone setting. This
+also applies when editing *config.conf* in Mortimer. For settings you omit,
+Alfred uses the values from its defaults or other configuration files; see
+:doc:`adv_config`.
 
 Below, you find exhaustive commented versions of the default config.conf
 and secrets.conf files. They show and explain all available options.

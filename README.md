@@ -55,7 +55,7 @@ Further advantages include:
 
 ## Installation
 
-If you have Python 3.7 or newer installed, just install alfred3 via pip
+If you have Python 3.13 or newer installed, just install alfred3 via pip
 
 ```
 $ pip3 install alfred3
