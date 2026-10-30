@@ -1148,7 +1148,7 @@ class CountDown(CountUp):
             @exp.member
             class Demo(al.Page):
                 def on_exp_access(self):
-                    self += al.CounDown(end_after=30, font_size="big", align="center")
+                    self += al.CountDown(end_after=30, font_size="big", align="center")
 
         Countdown running until a certain datetime is reached::
 
@@ -1160,7 +1160,7 @@ class CountDown(CountUp):
             @exp.member
             class Demo(al.Page):
                 def on_exp_access(self):
-                    self += al.CounDown.tilldate(
+                    self += al.CountDown.tilldate(
                         year=2031,
                         month=1,
                         day=31,
@@ -1209,7 +1209,7 @@ class CountDown(CountUp):
                 @exp.member
                 class Demo(al.Page):
                     def on_exp_access(self):
-                        self += al.CounDown.tilltime(
+                        self += al.CountDown.tilltime(
                             t=2_100_000_000, font_size="big", align="center"
                         )
 
@@ -1260,7 +1260,7 @@ class CountDown(CountUp):
                 @exp.member
                 class Demo(al.Page):
                     def on_exp_access(self):
-                        self += al.CounDown.tilldate(
+                        self += al.CountDown.tilldate(
                             year=2031,
                             month=1,
                             day=31,

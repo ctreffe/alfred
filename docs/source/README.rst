@@ -12,7 +12,7 @@ Installation
 If you are starting from scratch, please go to our detailed installation video:
 https://youtu.be/of_3RDjCijI
 
-But if you already have Python 3.7 or newer installed, just install alfred3 via pip::
+But if you already have Python 3.13 or newer installed, just install alfred3 via pip::
 
     $ pip3 install alfred3
 
@@ -50,6 +50,15 @@ and visit http://127.0.0.1:5000/start to start the experiment.
 Of course, this "Hello, world" experiment does not contain much content:
 Only a single page with a heading. You can learn how to add content to an experiment in
 our tutorials, listed in the left sidebar under "how to".
+
+For your next steps:
+
+1. Follow :doc:`howto_exp` to add sections, pages and input elements.
+2. Use :doc:`howto_config` to set experiment metadata and configuration.
+3. Follow the small two-page example in :doc:`howto_hooks` to calculate with
+   an answer from the previous page. Entering 19 displays a result of 9.0.
+4. Use :doc:`howto_loops` when you need repeated trials, including saved
+   stimulus identities and presentation order.
 
 If you have never programmed in python before, you are welcome to visit our
 python introduction course: https://ctreffe.github.io/alspace/py3-tutorial
