@@ -47,6 +47,23 @@ See Also:
    - Defining your own config options
    - Defining default configuration across multiple experiments
 
+Colors and comments
+-------------------
+
+For example, set the header and background colors in *config.conf* like this::
+
+   [layout]
+   header_color =#ff9900
+   background_color =#ddeeff
+
+Keep the ``#`` directly after ``=`` for a hexadecimal color. A ``#`` preceded
+by whitespace starts an inline comment: ``header_color = #ff9900`` is read as
+an empty value. Do not put quotation marks around the color; they remain part
+of the value rather than escaping the ``#``.
+
+CSS color names and RGB expressions also work, for example
+``header_color = orange`` or ``header_color = rgb(255, 153, 0)``.
+
 config.conf
 -----------
 
