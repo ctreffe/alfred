@@ -1223,9 +1223,13 @@ class SingleChoiceList(SingleChoice):
         {kwargs}
 
     Notes:
-        The SingleChoiceList's input always defaults to the first option.
-        A typical way to remove meaning from this default is
-        to make the fist choice a no-choice option (see examples).
+        The ``default`` argument selects the initial option by its one-based
+        index; ``default=1`` selects the first option. To require an explicit
+        selection, use an empty string as the first label and set
+        ``force_input=True`` (see examples). A nonempty label such as
+        ``"-no selection-"`` is still a valid answer.
+
+        The ``align`` argument is not supported for this element.
 
         Different from pure :class:`.SingleChoice` elements, the
         SingleChoiceList saves its input as strings. The examples below
@@ -1234,7 +1238,7 @@ class SingleChoiceList(SingleChoice):
     See Also:
 
         - :class:`.SingleChoiceButtons`, :class:`.SingleChoiceBar`,
-          and class:`.SingleChoice` for alternatives for selecting
+          and :class:`.SingleChoice` for alternatives for selecting
           a single option.
         - The class :class:`.SubmittingButtons` is a version of
           SingleChoiceButtons that automatically moves the experiment

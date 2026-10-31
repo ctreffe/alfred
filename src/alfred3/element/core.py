@@ -496,10 +496,10 @@ class Element:
         redefine this property to add template data. When doing so,
         remember to retrieve the basic template data with ``super()``::
 
-            import alfred3 as al
+            from alfred3.element.core import Element
 
 
-            class NewElement(al.Element):
+            class NewElement(Element):
                 @property
                 def template_data(self):
                     d = super().template_data

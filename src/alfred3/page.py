@@ -1220,7 +1220,7 @@ class TimeoutPage(Page):
         {kwargs}
 
     See Also:
-        Timeout hook: :meth:`~.Page.on_timeout`
+        Timeout hook: :meth:`~alfred3.page.TimeoutPage.on_timeout`
 
     Examples:
         A minimal experiment with a single TimeoutPage, holding a text
@@ -1232,12 +1232,13 @@ class TimeoutPage(Page):
         timeout of 5 seconds expires::
 
             import alfred3 as al
+            from alfred3.page import TimeoutPage
 
             exp = al.Experiment()
 
 
             @exp.member
-            class DemoPage(al.TimeoutPage):
+            class DemoPage(TimeoutPage):
                 title = "This is a demo"
                 timeout = "5s"
 
