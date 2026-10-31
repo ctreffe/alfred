@@ -1235,8 +1235,8 @@ class ExperimentSession:
         of your design.
 
         Notes:
-            You do not need to define a name for the final page. The name
-            will be set automatically to '_final_page'.
+            The page must have a name when it is created. Assignment to this
+            property changes its name to ``_final_page``.
 
         See Also:
 
@@ -1249,12 +1249,17 @@ class ExperimentSession:
               way to go.
 
         Examples:
+            Define an experiment and customize the final page for each session::
 
-            >>> import alfred3 as al
-            >>> exp = al.ExperimentSession()
-            >>> exp.final_page = al.Page()
-            >>> exp.final_page
-            Page(class="Page", name="_final_page")
+                import alfred3 as al
+
+                exp = al.Experiment()
+                exp += al.Page(name="page1")
+
+
+                @exp.setup
+                def setup(session):
+                    session.final_page = al.Page(title="Thank you", name="thanks")
 
         """
 
@@ -1664,18 +1669,26 @@ class ExperimentSession:
         Appends Sections or Pages to the experiment's root section.
 
         While it is perfectly possible to use the :meth:`.append` method,
-        usually it is preferable to use to augmented assigment operator
+        usually it is preferable to use the augmented assignment operator
         ``+=`` to append members to the experiment.
 
         All members must have a unique name.
 
         Examples:
+            Append a page from a page hook during a session::
 
-            >>> import alfred3 as al
-            >>> exp = al.ExperimentSession()
-            >>> exp.append(al.Page(name="page1"))
-            >>> exp.members
-            {"page1": Page(class="Page", name="page1")}
+                import alfred3 as al
+
+                exp = al.Experiment()
+
+
+                @exp.member
+                class Start(al.Page):
+                    def on_first_show(self):
+                        self.exp.append(al.Page(name="page1"))
+
+            The first display of *Start* adds *page1*. The added page is then
+            available as ``self.exp.page1``.
 
         """
         if self.aborted:
