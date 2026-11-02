@@ -32,8 +32,7 @@ def test_timeout_does_not_release_an_unacquired_lock(monkeypatch):
     io.load_markbusy = Mock(return_value=None)
     io.release = Mock()
 
-    with pytest.raises(RuntimeError, match="always busy"):
-        with io:
-            pytest.fail("A busy quota must not enter its context")
+    with pytest.raises(RuntimeError, match="always busy"), io:
+        pytest.fail("A busy quota must not enter its context")
 
     io.release.assert_not_called()
