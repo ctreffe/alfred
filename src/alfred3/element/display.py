@@ -256,22 +256,25 @@ class Image(LabelledElement):
     Notes:
         You can specify *either* a path, or a url, but not both.
 
+        Use ``height`` to set the image height, for example ``height="80px"``.
+        Use ``align="center"`` to center the image within its element area.
+        ``position`` places that area on the page and takes effect only when
+        ``width`` is not ``"full"``. For example, ``width="medium"`` and
+        ``position="right"`` place the area on the right, while ``align`` still
+        controls the image inside it. On extra-small screens, the element area
+        is always full-width. These settings apply to both *path* and *url*.
+
     Examples:
-        Minimal example::
+        Place an image named *image.png* next to *script.py*::
 
             import alfred3 as al
 
             exp = al.Experiment()
+            exp += al.Page(name="images")
+            exp.images += al.Image(path="image.png", height="80px", align="center")
 
-
-            @exp.member
-            class Demo(al.Page):
-                name = "demo1"
-
-                def on_exp_access(self):
-                    pylogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Python_logo_and_wordmark.svg/1920px-Python_logo_and_wordmark.svg.png"
-
-                    self += al.Image(url=pylogo)
+            if __name__ == "__main__":
+                exp.run()
 
     """
 
