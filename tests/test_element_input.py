@@ -1,4 +1,5 @@
 import pytest
+from bs4 import BeautifulSoup
 
 import alfred3 as al
 import alfred3.element.input as inp
@@ -353,3 +354,94 @@ class TestNumberEntry:
 
 #         assert exp.values["test"]["choice1"] == True
 #         assert exp.values["test"]["choice2"] == True
+
+
+class TestRangeInput:
+    @pytest.mark.parametrize("default", [0, 0.0, 10, None])
+    def test_default_rendering(self, exp, default):
+        exp.testpage += al.RangeInput(name="slider", default=default)
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        slider = exp.testpage.slider
+        control = BeautifulSoup(slider.web_widget, "html.parser").select_one(
+            'input[type="range"]'
+        )
+
+        assert slider.input == default
+        if default is None:
+            assert "value" not in control.attrs
+        else:
+            assert float(control["value"]) == default
+            assert slider.data["slider"]["value"] == default
+
+    @pytest.mark.parametrize("value", [0, 0.0, "0"])
+    def test_zero_overrides_nonzero_default(self, exp, value):
+        exp.testpage += al.RangeInput(name="slider", default=10, force_input=True)
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"slider": value})
+        slider = exp.testpage.slider
+        control = BeautifulSoup(slider.web_widget, "html.parser").select_one(
+            'input[type="range"]'
+        )
+
+        assert slider.validate_data()
+        assert float(control["value"]) == 0
+        assert exp.values["slider"] == 0.0
+
+    @pytest.mark.parametrize("value", [None, ""])
+    def test_empty_input_stays_missing(self, value):
+        slider = al.RangeInput(name="slider", default=10)
+        slider.input = value
+
+        assert slider.input is None
+
+
+class TestMultipleChoiceHints:
+    @pytest.mark.parametrize(
+        "element", [al.MultipleChoice, al.MultipleChoiceButtons, al.MultipleChoiceBar]
+    )
+    @pytest.mark.parametrize("count", [1, 4])
+    def test_default_hint_rejects_invalid_count(self, exp, element, count):
+        exp.testpage += element(
+            "One", "Two", "Three", "Four", name="multi", min=2, max=3
+        )
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data(
+            {f"multi_choice{i}": str(i) for i in range(1, count + 1)}
+        )
+        multi = exp.testpage.multi
+
+        assert not multi.validate_data()
+        hint = multi.select_hint
+        assert "{min}" not in hint and "{max}" not in hint
+        assert "2" in hint and "3" in hint
+        assert hint in next(multi.corrective_hints).msg
+        assert sum(exp.values["multi"].values()) == count
+
+    @pytest.mark.parametrize("custom_config", [False, True])
+    def test_custom_hint_precedence(self, exp, custom_config):
+        exp.config.read_dict(
+            {"hints": {"select_MultipleChoice": "Select {min} to {max} choices."}}
+        )
+        options = {} if custom_config else {"select_hint": "Choose two or three."}
+        exp.testpage += al.MultipleChoice(
+            "One", "Two", "Three", name="multi", min=2, max=3, **options
+        )
+
+        exp.start()
+        exp.forward()
+        exp.testpage.prepare_web_widget()
+        exp.testpage._set_data({"multi_choice1": "1"})
+        multi = exp.testpage.multi
+
+        assert not multi.validate_data()
+        expected = "Select 2 to 3 choices." if custom_config else "Choose two or three."
+        assert multi.select_hint == expected

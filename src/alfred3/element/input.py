@@ -815,7 +815,7 @@ class RangeInput(InputElement):
 
     @input.setter
     def input(self, value: str):
-        if not value:
+        if value is None or value == "":
             self._input = None
         else:
             self._input = value
