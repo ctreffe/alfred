@@ -448,6 +448,9 @@ class QuotaIO:
             data = self.load_markbusy()
             n_tries += 1
 
+            if data:
+                break
+
             if (n_tries > min_tries) and (time.time() - start > wait):
                 raise RuntimeError(
                     f"Tried to load randomizer data for {wait} seconds and tried"
